@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 16: Assignment: stack &amp; queue problems · Basic Data Structures</title>
+<meta name="description" content="This module is an assignment that puts stacks and queues to work. You compare the pop order of a stack and a queue (once with the STL, once with your own linked-list classes), cancel pairs of characters with a stack, and simulate a ticket line with a queue. The big lesson: pick the container whose removal order matches the problem.">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+<link rel="stylesheet" href="../assets/site.css?v=3">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../index.html"><span aria-hidden="true">📘</span> <span>CSE Revision</span></a>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Basic Data Structures</a><span aria-hidden="true">›</span><span>Module 16</span></nav>
+  <div class="tools">
+    <button class="tbtn" id="searchBtn" type="button" aria-label="Search programs" title="Search (/)">🔍</button>
+    <button class="tbtn" id="recallBtn" type="button" aria-pressed="false" title="Recall mode: hide code so you can write it from memory">🧠<span class="lbl"> Recall</span></button>
+    <button class="tbtn" id="themeBtn" type="button" aria-label="Switch light/dark theme" title="Theme">🌓</button>
+  </div>
+</header>
+<div class="search" id="search" hidden>
+  <div class="search-box">
+    <input id="q" type="search" placeholder="Search programs, topics, problems…" autocomplete="off" aria-label="Search">
+    <button class="tbtn" id="searchClose" type="button" aria-label="Close search">✕</button>
+  </div>
+  <ol id="results" class="results"></ol>
+</div>
+<main class="wrap">
+
+<article class="module">
+  <header class="mhead">
+    <p class="eyebrow"><a href="index.html">Basic Data Structures</a> · Module 16</p>
+    <h1>Assignment: stack &amp; queue problems</h1>
+    <p class="lead">This module is an assignment that puts stacks and queues to work. You compare the pop order of a stack and a queue (once with the STL, once with your own linked-list classes), cancel pairs of characters with a stack, and simulate a ticket line with a queue. The big lesson: pick the container whose removal order matches the problem.</p>
+    <p class="chips"><span>5 programs</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/3_Basic%20Data%20Structures/Module%2016" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
+  </header>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-asignment-3-problem-1-same-or-not"><span class="n">1</span>Same or not (STL stack and queue)</a></li><li><a href="#p-assignment-3-problem-2-same-or-not-2"><span class="n">2</span>Same or not 2 (hand-made stack and queue)</a></li><li><a href="#p-assignment-3-problem-3-is-it-valid"><span class="n">3</span>Is it valid? (cancel 01 and 10 pairs)</a></li><li><a href="#p-assignment-3-problem-4-special-queries"><span class="n">4</span>Special queries (ticket line)</a></li><li><a href="#p-assignment-problem-5-elimination"><span class="n">5</span>Elimination (every 1 removes a 0 just before it)</a></li></ol></details></nav>
+  <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>LIFO vs FIFO</h4><p>A stack gives back the <strong>last</strong> value you pushed (LIFO). A queue gives back the <strong>first</strong> value you pushed (FIFO). So pushing the same list into both gives opposite removal orders.</p><pre class="snip">st.top();  // newest
+q.front(); // oldest</pre></div><div class="concept"><h4>Compare while popping</h4><p>To check if two containers remove items in the same order, look at <code>top()</code> and <code>front()</code> together, compare, then pop both. Stop at the first mismatch.</p></div><div class="concept"><h4>Stack as a cancel machine</h4><p>When a new character can cancel the one just before it, keep the not-yet-cancelled characters on a stack. The top is always the &#x27;previous available&#x27; character. If the stack is empty at the end, everything cancelled.</p><pre class="snip">if(!st.empty() &amp;&amp; st.top()==&#x27;0&#x27; &amp;&amp; c==&#x27;1&#x27;) st.pop();
+else st.push(c);</pre></div><div class="concept"><h4>Queue as a waiting line</h4><p>A ticket line is a queue: join at the back with <code>push</code>, leave from the front with <code>front()</code> + <code>pop()</code>. Always check <code>empty()</code> before reading the front.</p></div><div class="concept"><h4>Building your own stack/queue</h4><p>A doubly linked list with a <code>tail</code> pointer gives O(1) push/pop at the tail (a stack). A singly linked list with <code>head</code> and <code>tail</code> gives O(1) push at the tail and pop at the head (a queue).</p></div><div class="concept"><h4>Early size check</h4><p>If the two lists have different lengths, they can never be the same, so print <code>NO</code> right away. Read all input first, then decide.</p></div></div></section>
+  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
+<section class="prog" id="p-asignment-3-problem-1-same-or-not">
+  <div class="prog-h">
+    <span class="num">1</span>
+    <div class="prog-t">
+      <h3>Same or not (STL stack and queue)</h3>
+      <div class="meta"><code class="fname">asignment_3_problem_1_same_or_not.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(n) · Space O(n)</span></div>
+    </div>
+  </div>
+  <p class="what">Pushes <code>n</code> values into a <code>stack</code> and <code>m</code> values into a <code>queue</code>, then checks whether popping both gives the same sequence. Uses the STL containers.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 89 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2016/asignment_3_problem_1_same_or_not.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">There is a list of  values that were inserted into a stack and a list of  values that were inserted into a queue. You need to determine whether the stack and queue are the same or not based on the order in which the elements are removed.</span>
+
+<span class="cm">Note: You need to solve it using  Stack and Queue only.</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">First line will contain  and .</span>
+<span class="cm">Second line will contain stack  with  values.</span>
+<span class="cm">Third line will contain queue  with  values.</span>
+<span class="cm">Constraints</span>
+
+<span class="cm">Output Format</span>
+
+<span class="cm">Output YES if they were same, otherwise NO.</span>
+<span class="cm">Sample Input 0</span>
+
+<span class="cm">5 5</span>
+<span class="cm">10 20 30 40 50</span>
+<span class="cm">50 40 30 20 10</span>
+<span class="cm">Sample Output 0</span>
+
+<span class="cm">YES</span>
+<span class="cm">Sample Input 1</span>
+
+<span class="cm">4 4</span>
+<span class="cm">10 20 30 40</span>
+<span class="cm">10 20 30 40</span>
+<span class="cm">Sample Output 1</span>
+
+<span class="cm">NO</span>
+<span class="cm">Sample Input 2</span>
+
+<span class="cm">5 4</span>
+<span class="cm">1 2 3 4 5</span>
+<span class="cm">5 4 3 2</span>
+<span class="cm">Sample Output 2</span>
+
+<span class="cm">NO</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">stack</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">st</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">st</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">()){</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span>
+<span class="w">        </span><span class="n">st</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 89 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
+1 2 3 4
+4 3 2 1</pre><p class="io-note">First line n and m, then the stack values, then the queue values.</p></div><div class="io out"><div class="io-h">Output </div><pre>YES
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>YES</code>: the stack pops 4 3 2 1, and the queue was filled with 4 3 2 1, so it also removes 4 3 2 1.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>n</code> and <code>m</code>, then push <code>n</code> values into <code>st</code> and <code>m</code> values into <code>q</code>.</li><li>If <code>n != m</code>, the lengths differ, so print <code>NO</code> and stop.</li><li>While <code>st</code> is not empty, compare <code>st.top()</code> with <code>q.front()</code>.</li><li>On any mismatch print <code>NO</code> and return; otherwise pop both and continue.</li><li>If the loop finishes, every pair matched, so print <code>YES</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The size check comes <strong>after</strong> reading both lines on purpose. If you returned before reading, it would not matter here, but in multi-test problems leftover input would break the next case.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> If both lines are <code>1 2 3</code>, what is printed and why?</summary><div><code>NO</code>. The stack pops 3 first but the queue removes 1 first.</div></details>
+</section>
+<section class="prog" id="p-assignment-3-problem-2-same-or-not-2">
+  <div class="prog-h">
+    <span class="num">2</span>
+    <div class="prog-t">
+      <h3>Same or not 2 (hand-made stack and queue)</h3>
+      <div class="meta"><code class="fname">assignment_3_problem_2_same_or_not_2.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(n) · Space O(n)</span></div>
+    </div>
+  </div>
+  <p class="what">Same task as problem 1, but without the STL: <code>myStack</code> (doubly linked list) and <code>myQueue</code> (singly linked list) are written by hand and used exactly like the STL ones.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 197 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2016/assignment_3_problem_2_same_or_not_2.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Same or not 2</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">There is a list of  values that were inserted into a stack and a list of  values that were inserted into a queue. You need to determine whether the stack and queue are the same or not based on the order in which the elements are removed.</span>
+
+<span class="cm">Note: You cannot use any  here. You need to implement the stack and queue by yourself. You can use linked list or array as you want.</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">First line will contain  and .</span>
+<span class="cm">Second line will contain stack  with  values.</span>
+<span class="cm">Third line will contain queue  with  values.</span>
+<span class="cm">Constraints</span>
+
+<span class="cm">Output Format</span>
+
+<span class="cm">Output YES if they were same, otherwise NO.</span>
+<span class="cm">Sample Input 0</span>
+
+<span class="cm">5 5</span>
+<span class="cm">10 20 30 40 50</span>
+<span class="cm">50 40 30 20 10</span>
+<span class="cm">Sample Output 0</span>
+
+<span class="cm">YES</span>
+<span class="cm">Sample Input 1</span>
+
+<span class="cm">4 4</span>
+<span class="cm">10 20 30 40</span>
+<span class="cm">10 20 30 40</span>
+<span class="cm">Sample Output 1</span>
+
+<span class="cm">NO</span>
+<span class="cm">Sample Input 2</span>
+
+<span class="cm">5 4</span>
+<span class="cm">1 2 3 4 5</span>
+<span class="cm">5 4 3 2</span>
+<span class="cm">Sample Output 2</span>
+
+<span class="cm">NO</span>
+
+<span class="cm">*/</span>
+
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">prev</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">Node</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w"> </span>
+<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">myStack</span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">size1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">            </span><span class="n">size1</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">                </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">                </span><span class="k">return</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">            </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="p">;</span>
+<span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">pop</span><span class="p">(){</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">            </span><span class="n">size1</span><span class="o">--</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="p">;</span>
+<span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span>
+<span class="w">            </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span><span class="w"> </span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">tail</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">                </span><span class="n">head</span><span class="o">=</span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">                </span><span class="k">return</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">top</span><span class="p">(){</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">;</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">size</span><span class="p">(){</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">size1</span><span class="p">;</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="nf">empty</span><span class="p">(){</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">size1</span><span class="o">==</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">            </span><span class="c1">// return head==NULL; // O(1)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">myQueue</span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">size2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">            </span><span class="n">size2</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">                </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">                </span><span class="k">return</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">pop</span><span class="p">(){</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">            </span><span class="n">size2</span><span class="o">--</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
+<span class="w">            </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+<span class="w">            </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">front</span><span class="p">(){</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">back</span><span class="p">(){</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">size</span><span class="p">(){</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">size2</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="nf">empty</span><span class="p">(){</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">            </span><span class="c1">// return size == 0;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">myStack</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+<span class="w">    </span><span class="n">myQueue</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">st</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">st</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">()){</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span>
+<span class="w">        </span><span class="n">st</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 197 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
+1 2 3 4
+4 3 1 2</pre><p class="io-note">First line n and m, then the stack values, then the queue values.</p></div><div class="io out"><div class="io-h">Output </div><pre>NO
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>NO</code>: the first two pairs match (4 with 4, 3 with 3), but then the stack gives 2 while the queue gives 1.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>Node</code> holds <code>val</code>, <code>next</code> and <code>prev</code>.</li><li><code>myStack::push</code> adds at <code>tail</code>; <code>pop</code> deletes <code>tail</code> and moves <code>tail</code> back with <code>prev</code>; <code>top</code> returns <code>tail-&gt;val</code>.</li><li><code>myQueue::push</code> adds at <code>tail</code>; <code>pop</code> deletes <code>head</code> and moves <code>head</code> forward; <code>front</code> returns <code>head-&gt;val</code>.</li><li>Both reset the other end to <code>NULL</code> when the list becomes empty, so the next push starts fresh.</li><li><code>main</code> is the same as problem 1: read, check sizes, compare <code>top()</code> with <code>front()</code> while popping.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> <code>myStack::pop</code> has no empty check. Calling it on an empty stack dereferences <code>NULL</code>. Here it is safe because <code>main</code> only pops while <code>!st.empty()</code>.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why does the stack need a <code>prev</code> pointer but the queue does not?</summary><div>The stack removes from the tail, so after deleting it must step back to the previous node. The queue removes from the head and only ever moves forward with <code>next</code>.</div></details>
+</section>
+<section class="prog" id="p-assignment-3-problem-3-is-it-valid">
+  <div class="prog-h">
+    <span class="num">3</span>
+    <div class="prog-t">
+      <h3>Is it valid? (cancel 01 and 10 pairs)</h3>
+      <div class="meta"><code class="fname">assignment_3_problem_3_is_it_valid.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(|s|) per test · Space O(|s|)</span></div>
+    </div>
+  </div>
+  <p class="what">A <code>0</code> can delete a previous <code>1</code> and a <code>1</code> can delete a previous <code>0</code>. The string is valid if everything gets deleted. A stack keeps the characters still alive.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 91 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2016/assignment_3_problem_3_is_it_valid.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">Given a string  containing just the characters  and , determine if the input string is valid.</span>
+
+<span class="cm">An input string is valid if the string is empty after doing some operatios. The available operations are:</span>
+
+<span class="cm"> can delete its previous available character  along with itself. If there is no  available to delete, it will not delete itself.</span>
+<span class="cm"> can delete its previous available character  along with itself. If there is no  available to delete, it will not delete itself.</span>
+<span class="cm">Note: You need to solve it using STL Stack or Queue only.</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">First line will contain , the number of test cases.</span>
+<span class="cm">Next  lines will contain the string .</span>
+<span class="cm">Constraints</span>
+
+<span class="cm">. Here  means the length of the string.</span>
+<span class="cm">Output Format</span>
+
+<span class="cm">Output YES if the string is valid, otherwise NO.</span>
+<span class="cm">Sample Input 0</span>
+
+<span class="cm">10</span>
+<span class="cm">0011</span>
+<span class="cm">1010</span>
+<span class="cm">1100</span>
+<span class="cm">0101</span>
+<span class="cm">0001</span>
+<span class="cm">0111</span>
+<span class="cm">0110</span>
+<span class="cm">100101</span>
+<span class="cm">1110010</span>
+<span class="cm">0001011011</span>
+<span class="cm">Sample Output 0</span>
+
+<span class="cm">YES</span>
+<span class="cm">YES</span>
+<span class="cm">YES</span>
+<span class="cm">YES</span>
+<span class="cm">NO</span>
+<span class="cm">NO</span>
+<span class="cm">YES</span>
+<span class="cm">YES</span>
+<span class="cm">NO</span>
+<span class="cm">YES</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">stack</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">s</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">                </span><span class="n">st</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;0&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">st</span><span class="p">.</span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="p">){</span>
+<span class="w">                    </span><span class="n">st</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">                </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">st</span><span class="p">.</span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;0&#39;</span><span class="p">){</span>
+<span class="w">                    </span><span class="n">st</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">                </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">                    </span><span class="n">st</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 91 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3
+0110
+1001
+0001</pre><p class="io-note">First line t, then one binary string per line.</p></div><div class="io out"><div class="io-h">Output </div><pre>YES
+YES
+NO
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>YES YES NO</code> (one per line). In <code>0001</code> the three 0s pile up and only one of them is cancelled by the final 1.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>t</code> test cases; for each, read the string <code>s</code> and start an empty <code>stack&lt;char&gt;</code>.</li><li>For every character <code>c</code>: if the stack is empty, push it.</li><li>Otherwise, if <code>c</code> and <code>st.top()</code> are different digits, they cancel, so pop.</li><li>If they are the same digit, push <code>c</code>.</li><li>After the loop, an empty stack means <code>YES</code>, else <code>NO</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Because any different pair cancels, the answer is simply &#x27;the number of 0s equals the number of 1s&#x27;. The stack still shows the general pattern.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Trace <code>0110</code>: what does the stack hold after each character?</summary><div><code>0</code> → [0]; <code>1</code> cancels → []; <code>1</code> → [1]; <code>0</code> cancels → []. Empty, so YES.</div></details>
+</section>
+<section class="prog" id="p-assignment-3-problem-4-special-queries">
+  <div class="prog-h">
+    <span class="num">4</span>
+    <div class="prog-t">
+      <h3>Special queries (ticket line)</h3>
+      <div class="meta"><code class="fname">assignment_3_problem_4_special_queries.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(n) · Space O(n)</span></div>
+    </div>
+  </div>
+  <p class="what">Simulates a ticket counter line with a <code>queue&lt;string&gt;</code>. Command <code>0 name</code> adds a person; command <code>1</code> serves the front person or prints <code>Invalid</code> if the line is empty.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 99 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2016/assignment_3_problem_4_special_queries.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span>
+<span class="normal">97</span>
+<span class="normal">98</span>
+<span class="normal">99</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">You will be given  queries. In each query you will get a command. The command is of two types -</span>
+
+<span class="cm">You will be given  and  of a person who stood in a line of a ticket counter.</span>
+<span class="cm">You will be given only  which means the person in front of the line got the ticket and will be removed from the line. You need to print the name of that person who got that ticket. If there are no one in the line, print .</span>
+<span class="cm">Note: There can be multiple person in the line with same name. You need to solve it using STL Stack or Queue only.</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">First line will contain .</span>
+<span class="cm">Next  lines will contain the commands.</span>
+<span class="cm">Constraints</span>
+
+<span class="cm">. Here |Name| means the length of the string and it will not contain any space. The string will contain only small English alphabets.</span>
+<span class="cm">Output Format</span>
+
+<span class="cm">For each time someone get out of the line, print his/her name. Print a new line after that.</span>
+<span class="cm">Sample Input 0</span>
+
+<span class="cm">5</span>
+<span class="cm">0 rahim</span>
+<span class="cm">0 karim</span>
+<span class="cm">1</span>
+<span class="cm">0 sakib</span>
+<span class="cm">1</span>
+<span class="cm">Sample Output 0</span>
+
+<span class="cm">rahim</span>
+<span class="cm">karim</span>
+<span class="cm">Sample Input 1</span>
+
+<span class="cm">8</span>
+<span class="cm">1</span>
+<span class="cm">0 embappe</span>
+<span class="cm">0 neymar</span>
+<span class="cm">1 </span>
+<span class="cm">1</span>
+<span class="cm">0 messi</span>
+<span class="cm">1</span>
+<span class="cm">1</span>
+<span class="cm">Sample Output 1</span>
+
+<span class="cm">Invalid</span>
+<span class="cm">embappe</span>
+<span class="cm">neymar</span>
+<span class="cm">messi</span>
+<span class="cm">Invalid</span>
+<span class="cm">Sample Input 2</span>
+
+<span class="cm">6</span>
+<span class="cm">0 embappe</span>
+<span class="cm">0 embappe</span>
+<span class="cm">1 </span>
+<span class="cm">1</span>
+<span class="cm">0 messi</span>
+<span class="cm">1</span>
+<span class="cm">Sample Output 2</span>
+
+<span class="cm">embappe</span>
+<span class="cm">embappe</span>
+<span class="cm">messi</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">n</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">            </span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Invalid&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 99 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
+1
+0 rina
+0 tomal
+1
+1
+1</pre><p class="io-note">First line q, then one command per line.</p></div><div class="io out"><div class="io-h">Output </div><pre>Invalid
+rina
+tomal
+Invalid
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>Invalid</code>, <code>rina</code>, <code>tomal</code>, <code>Invalid</code>: the first and last <code>1</code> find an empty line; the middle two serve people in the order they joined.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read the number of queries <code>n</code> and create <code>queue&lt;string&gt; q</code>.</li><li>For each query read <code>x</code>.</li><li>If <code>x == 0</code>, read a name and <code>push</code> it to the back.</li><li>If <code>x == 1</code> and the queue is empty, print <code>Invalid</code>.</li><li>Otherwise print <code>q.front()</code> and <code>pop</code> it.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Never call <code>front()</code> on an empty queue: it is undefined behaviour. The <code>empty()</code> check must come first.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why is a queue (not a stack) right for this problem?</summary><div>People are served in the order they arrived: first in, first out.</div></details>
+</section>
+<section class="prog" id="p-assignment-problem-5-elimination">
+  <div class="prog-h">
+    <span class="num">5</span>
+    <div class="prog-t">
+      <h3>Elimination (every 1 removes a 0 just before it)</h3>
+      <div class="meta"><code class="fname">assignment_problem_5_elimination.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(|s|) per test · Space O(|s|)</span></div>
+    </div>
+  </div>
+  <p class="what">Only the pair <code>01</code> (a 0 followed by a 1) gets eliminated, and eliminations keep chaining. A stack handles the chaining automatically.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 86 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2016/assignment_problem_5_elimination.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">You will be given a binary string  (A binary string is a string which contains only 0 and 1) in which every  will eliminate its previously adjacent  and itself. After an elimination, if another elimination is possible, it will continue until no further eliminations can be made.</span>
+
+<span class="cm">For example, if the sequence is , then the  and  elements, as well as the  and  elements, will be eliminated, resulting in the string  (10 01 1 01 10 - Bold values are eliminated). After that, the 2nd and 3rd elements will be eliminated, resulting in the string 110 (1 01 10 - Bold values are eliminated). After that, no further eliminations can occur.</span>
+
+<span class="cm">You need to determine whether the string will be empty after all eliminations.</span>
+
+<span class="cm">Note: You need to solve it using STL Stack or Queue only.</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">First line will contain , the number of test cases.</span>
+<span class="cm">Each test case will contain the string .</span>
+<span class="cm">Constraints</span>
+
+<span class="cm">Output Format</span>
+
+<span class="cm">For each test case output YES if the string is empty after all eliminations, NO otherwise.</span>
+<span class="cm">Sample Input 0</span>
+
+<span class="cm">7</span>
+<span class="cm">01</span>
+<span class="cm">10</span>
+<span class="cm">0011</span>
+<span class="cm">0101</span>
+<span class="cm">01001110</span>
+<span class="cm">000111010011</span>
+<span class="cm">00011</span>
+<span class="cm">Sample Output 0</span>
+
+<span class="cm">YES</span>
+<span class="cm">NO</span>
+<span class="cm">YES</span>
+<span class="cm">YES</span>
+<span class="cm">NO</span>
+<span class="cm">YES</span>
+<span class="cm">NO</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">n</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="n">stack</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">s</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">                </span><span class="n">st</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
+<span class="w">                </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;0&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="p">){</span>
+<span class="w">                </span><span class="n">st</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">st</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="w">        </span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 86 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3
+0011
+10
+010011</pre><p class="io-note">First line t, then one binary string per line.</p></div><div class="io out"><div class="io-h">Output </div><pre>YES
+NO
+YES
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>YES</code>, <code>NO</code>, <code>YES</code>. <code>10</code> stays because a 0 cannot remove the 1 before it.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>For each test, read <code>s</code> and start an empty <code>stack&lt;char&gt;</code>.</li><li>If the stack is empty, push <code>c</code> and move on.</li><li>If <code>st.top() == &#x27;0&#x27;</code> and <code>c == &#x27;1&#x27;</code>, the pair <code>01</code> disappears, so pop.</li><li>Otherwise push <code>c</code> (this includes a <code>0</code> after a <code>1</code>, which does <strong>not</strong> cancel).</li><li>Empty stack at the end → <code>YES</code>, else <code>NO</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Compare with problem 3: there both <code>01</code> and <code>10</code> cancel. Here only <code>01</code> does, so the order of characters matters, not just the counts.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Does <code>0101</code> become empty? Show the stack.</summary><div>Yes. <code>0</code> → [0]; <code>1</code> pops → []; <code>0</code> → [0]; <code>1</code> pops → [].</div></details>
+</section></section>
+  
+  <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>Stack = last in, first out; queue = first in, first out.</li><li>To compare two containers, check the fronts/tops together and pop both.</li><li>A stack is the natural tool for &#x27;cancel with the previous available item&#x27; problems, including chain reactions.</li><li>Always check <code>empty()</code> before <code>top()</code>, <code>front()</code> or <code>pop()</code>.</li><li>A hand-made stack and queue are just linked lists with the right end pointers.</li></ul></section>
+  <section class="block" id="quiz"><h2>✅ Check yourself</h2><details class="check"><summary>You push 1 2 3 into a stack and 3 2 1 into a queue. Are they &#x27;same&#x27;?</summary><div>Yes. The stack pops 3 2 1 and the queue removes 3 2 1.</div></details><details class="check"><summary>Why does a stack handle chained eliminations like <code>0011</code> without extra loops?</summary><div>After a pair is removed, the new top is the character that now sits just before the next one, so the next comparison is automatically against it.</div></details><details class="check"><summary>What is the time cost of push and pop in the linked-list stack and queue?</summary><div>O(1) each, because they only touch the head or tail pointer.</div></details></section>
+  <nav class="pager"><a class="prev" href="../data-structures/module-15.html"><small>← Previous</small><b>Module 15</b><span>Stack &amp; queue problem practice</span></a><a class="next" href="../data-structures/module-17.html"><small>Next →</small><b>Module 17</b><span>Binary trees &amp; depth-first traversals</span></a></nav>
+</article>
+</main>
+<footer class="foot">
+  <p>Shammunul's revision notes from the Phitron CSE program. Code written while taking the course; outputs are real runs
+  (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
+</footer>
+<script>window.SITE_ROOT="../";</script>
+<script src="../assets/search-index.js?v=3" defer></script>
+<script src="../assets/site.js?v=3" defer></script>
+</body>
+</html>

@@ -1,0 +1,429 @@
+{
+  "module_id": "3-basic-data-structures--module-6",
+  "title": "Singly linked list: insertion, input & recursion",
+  "overview": "This module turns the hand-built list into real operations: insert at the head, at the tail (slow and O(1) versions), and at any index, plus reading a list from input until `-1`. It explains why `head` must be passed as a reference to a pointer, and uses recursion to print a list backwards. The practice day applies these to size, duplicates, the middle element, indexed inserts and a sorted check.",
+  "concepts": [
+    {"term": "Reference to a pointer", "explain": "Passing `Node* head` gives the function a copy of the address, so changing `head` inside does nothing outside. `Node* &head` passes the pointer itself, so the caller sees the new head.", "snippet": "void insert_at_head(Node* &head, int val)"},
+    {"term": "Insert at head, O(1)", "explain": "Point the new node at the current head, then make the new node the head. Order matters: link first, move head second.", "snippet": "newNode->next = head;\nhead = newNode;"},
+    {"term": "Insert at tail, O(n) vs O(1)", "explain": "Without a tail pointer you walk to the last node every time (O(n)). Keeping a `tail` pointer lets you attach directly and move `tail` forward (O(1)).", "snippet": "tail->next = newNode;\ntail = newNode;"},
+    {"term": "Empty list case", "explain": "When `head == NULL` there is no node to attach to, so the new node becomes both head and tail.", "snippet": null},
+    {"term": "Insert at an index", "explain": "Walk to the node just before the position (`idx - 1` steps), then point the new node at its successor and the previous node at the new node.", "snippet": "newNode->next = tmp->next;\ntmp->next = newNode;"},
+    {"term": "Reading until a sentinel", "explain": "Read values in a loop and stop when you see `-1`; each other value is added at the tail.", "snippet": null},
+    {"term": "Recursion for reverse printing", "explain": "Call the function on `next` first and print afterwards. The prints then happen while the calls return, from the last node back to the first.", "snippet": "print_reverse(tmp->next);\ncout << tmp->val;"},
+    {"term": "Visited array", "explain": "When values are small (at most 100), a `bool visited[101]` array detects repeats in one pass.", "snippet": null}
+  ],
+  "files": [
+    {
+      "file": "reference_of_a_pointer.cpp",
+      "title": "Passing a pointer by reference",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Compares `fun(int* p)`, which gets a copy of the pointer, with `fun2(int* &p)`, which gets the caller's pointer itself.",
+      "steps": [
+        "In `main`, `p` points to `x = 10`.",
+        "`fun(p)` prints `*p` (10), then makes its own copy point to a local `y`. `main`'s `p` is untouched, so `*p` is still 10.",
+        "`fun` prints `&p`, the address of its copy, which differs from `main`'s `&p`.",
+        "`fun2(p)` sets `p = NULL`. Because `p` is a reference, `main`'s pointer really becomes NULL.",
+        "`fun2` prints the same address as `main`'s `&p`, showing it is the same variable."
+      ],
+      "complexity": null,
+      "input": null,
+      "input_note": null,
+      "output_note": "Addresses vary per machine. Compare them: inside `fun` the address of `p` differs from `main`'s, while inside `fun2` it equals `main`'s. The `10` line shows `fun` did not change `main`'s pointer.",
+      "watch_out": "After `fun2`, `p` is NULL, so `*p` would crash. Also, pointing a pointer at a local variable (`p = &y`) that outlives the function would leave it dangling.",
+      "check": {"q": "Why does `insert_at_head` need `Node* &head` rather than `Node* head`?", "a": "It changes which node `head` points to; without the reference, only the function's copy would change."}
+    },
+    {
+      "file": "insert_at_head.cpp",
+      "title": "Insert at head",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Adds new nodes in front of the list in O(1).",
+      "steps": [
+        "Build `10 -> 20 -> 30`.",
+        "`insert_at_head` creates `newNode`, sets `newNode->next = head`, then `head = newNode`.",
+        "Insert 100, 200, 300; each becomes the new first node.",
+        "Print the list."
+      ],
+      "complexity": "Insert O(1) · Print O(n)",
+      "input": null,
+      "input_note": null,
+      "output_note": "`300 200 100 10 20 30`, one per line. The last value inserted is first.",
+      "watch_out": "Swapping the two lines (`head = newNode` first) makes the new node point to itself and loses the old list.",
+      "check": {"q": "Inserting 1, 2, 3 at the head of an empty list gives what order?", "a": "3 -> 2 -> 1."}
+    },
+    {
+      "file": "insert_at_head_p.cpp",
+      "title": "Insert at head (practice copy)",
+      "kind": "variant",
+      "same_as": "insert_at_head.cpp",
+      "problem": null,
+      "what": "A re-typed copy of `insert_at_head.cpp`. The only difference is that `print_linked_list` takes `Node* &head`, which is unnecessary but harmless because it does not change `head`.",
+      "steps": [
+        "Same list, same three head inserts, same print."
+      ],
+      "complexity": "Insert O(1) · Print O(n)",
+      "input": null,
+      "input_note": null,
+      "output_note": "Same output: `300 200 100 10 20 30`.",
+      "watch_out": null,
+      "check": {"q": "Does a print function need the head by reference?", "a": "No. It only reads the list, so a plain `Node*` copy is enough."}
+    },
+    {
+      "file": "insert_at_tail.cpp",
+      "title": "Insert at tail (walk to the end)",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Appends nodes by walking from `head` to the last node each time.",
+      "steps": [
+        "If `head == NULL`, the new node becomes `head`.",
+        "Otherwise move `tmp` until `tmp->next == NULL` (the last node).",
+        "Set `tmp->next = newNode`.",
+        "Append 100, 200, 300 to `10 -> 20 -> 30` and print."
+      ],
+      "complexity": "Insert O(n) · Print O(n)",
+      "input": null,
+      "input_note": null,
+      "output_note": "`10 20 30 100 200 300`, one per line: new values appear in the order they were added.",
+      "watch_out": "Building a list of n values this way costs O(n^2) in total.",
+      "check": {"q": "Why does the walk stop at `tmp->next == NULL` here instead of `tmp == NULL`?", "a": "We need to stand on the last node to attach to it; `tmp == NULL` would walk past it."}
+    },
+    {
+      "file": "insert_at_tail_p.cpp",
+      "title": "Insert at tail (practice copy)",
+      "kind": "variant",
+      "same_as": "insert_at_tail.cpp",
+      "problem": null,
+      "what": "A re-typed copy of `insert_at_tail.cpp`, but the constructor has a bug that makes it run forever.",
+      "steps": [
+        "Same list and same three tail inserts as the original."
+      ],
+      "complexity": "Insert O(n) · Print O(n)",
+      "input": null,
+      "input_note": null,
+      "output_note": "No useful output: the program times out while walking to the tail.",
+      "watch_out": "The constructor says `this->next = next;` which copies the uninitialised member into itself, so `next` holds garbage instead of NULL. The walk to the tail follows garbage addresses and never ends. Fix: `this->next = NULL;`.",
+      "check": {"q": "Why must the constructor set `next = NULL`?", "a": "Every loop over the list stops on NULL; a garbage `next` makes loops run into random memory."}
+    },
+    {
+      "file": "insert_at_tail_optimized.cpp",
+      "title": "Insert at tail in O(1) with a tail pointer",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Keeps a `tail` pointer to the last node so appending needs no walk.",
+      "steps": [
+        "Build `10 -> 20 -> 30` and let `tail` point to the 30 node.",
+        "`insert_at_tail(head, tail, val)` takes both pointers by reference.",
+        "Empty list: `head = tail = newNode`.",
+        "Otherwise `tail->next = newNode` and `tail = newNode`.",
+        "Append 100, 200, 300 and print."
+      ],
+      "complexity": "Insert O(1) · Print O(n)",
+      "input": null,
+      "input_note": null,
+      "output_note": "Same result as the slow version: `10 20 30 100 200 300`. Only the speed differs.",
+      "watch_out": "The `tail` pointer must always be kept in sync. If another function adds or removes the last node, it must update `tail` too.",
+      "check": {"q": "Why is `tail` passed by reference?", "a": "The function moves `tail` to the new node, and the caller must see that change."}
+    },
+    {
+      "file": "insert_at_tail_optimized_p.cpp",
+      "title": "Insert at tail O(1) (practice copy)",
+      "kind": "variant",
+      "same_as": "insert_at_tail_optimized.cpp",
+      "problem": null,
+      "what": "A re-typed copy of the optimized tail insert, with the function renamed `insert_at_tail_optimized`. It does not compile.",
+      "steps": [
+        "Same idea: attach at `tail`, then move `tail`."
+      ],
+      "complexity": "Insert O(1) · Print O(n)",
+      "input": null,
+      "input_note": null,
+      "output_note": "No output: compile error.",
+      "watch_out": "`a->next = b;` uses `b`, which does not exist here (the third node is called `tail`). Write `a->next = tail;`. The constructor also has `this->next = next;`, which must be `this->next = NULL;`.",
+      "check": {"q": "In this program, which node should `a->next` point to?", "a": "The node stored in `tail` (value 30)."}
+    },
+    {
+      "file": "insert_at_any_index.cpp",
+      "title": "Insert at any index",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Inserts a value at a 0-based position in the middle of the list by walking to the node just before it.",
+      "steps": [
+        "Start with `10 -> 20 -> 30`.",
+        "`insert_at_any_index` moves `tmp` from head `idx - 1` times (the loop starts at `i = 1`), landing on the node before position `idx`.",
+        "`newNode->next = tmp->next` keeps the rest of the list attached.",
+        "`tmp->next = newNode` links the new node in.",
+        "Insert 1000 at index 2, then 2000 at index 2, then 3000 at index 3."
+      ],
+      "complexity": "Time O(idx) per insert · Space O(1)",
+      "input": null,
+      "input_note": null,
+      "output_note": "`10 20 2000 3000 1000 30`. Trace it: after the first insert `10 20 1000 30`; 2000 goes in front of 1000; 3000 goes between 2000 and 1000.",
+      "watch_out": "There is no check for index 0 (use insert at head) or for an index past the end (`tmp` would become NULL and crash).",
+      "check": {"q": "What happens if you swap the two linking lines?", "a": "`tmp->next` is overwritten first, so `newNode->next` points to `newNode` itself and the rest of the list is lost."}
+    },
+    {
+      "file": "insert_at_any_index_p.cpp",
+      "title": "Insert at any index (practice copy)",
+      "kind": "variant",
+      "same_as": "insert_at_any_index.cpp",
+      "problem": null,
+      "what": "A re-typed copy of `insert_at_any_index.cpp` with the same three inserts, but with the constructor bug `this->next = next;`.",
+      "steps": [
+        "Same inserts as the original; the two linking statements are written on one line."
+      ],
+      "complexity": "Time O(idx) per insert · Space O(1)",
+      "input": null,
+      "input_note": null,
+      "output_note": "The first six lines are correct (`10 20 2000 3000 1000 30`). Then random numbers repeat forever until the program times out.",
+      "watch_out": "The last node's `next` is garbage instead of NULL, so printing runs past the end into random memory. Fix the constructor to `this->next = NULL;`.",
+      "check": {"q": "Why do the first six values still print correctly?", "a": "Those nodes' `next` pointers were set explicitly by the program; only the last node keeps the garbage `next`."}
+    },
+    {
+      "file": "input_a_linked_list.cpp",
+      "title": "Read a linked list until -1",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Starts with an empty list and adds each input value at the tail (O(1) with a tail pointer) until `-1` appears.",
+      "steps": [
+        "`head` and `tail` start as NULL.",
+        "Loop: read `val`; stop on `-1`.",
+        "Otherwise call `insert_at_tail(head, tail, val)`.",
+        "Print the list."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "10 20 30 40 -1\n",
+      "input_note": "Values separated by spaces, ending with -1.",
+      "output_note": "`10 20 30 40`, one per line, in input order. The `-1` is not stored.",
+      "watch_out": "If the input ends without `-1`, `cin >> val` fails, `val` keeps its last value and the loop never ends. `while (cin >> val && val != -1)` is safer.",
+      "check": {"q": "Why does the first insert need a special case?", "a": "With an empty list there is no tail node to attach to, so the new node becomes both head and tail."}
+    },
+    {
+      "file": "input_a_linked_list_p.cpp",
+      "title": "Read a linked list (practice copy)",
+      "kind": "variant",
+      "same_as": "input_a_linked_list.cpp",
+      "problem": null,
+      "what": "A re-typed copy of `input_a_linked_list.cpp` with no real changes.",
+      "steps": [
+        "Same reading loop and O(1) tail insert."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "10 20 30 40 -1\n",
+      "input_note": "Values ending with -1.",
+      "output_note": "Same output: `10 20 30 40`.",
+      "watch_out": null,
+      "check": {"q": "What would the list look like if you used insert at head instead?", "a": "Reversed: 40 30 20 10."}
+    },
+    {
+      "file": "printing_reverse_printing.cpp",
+      "title": "Recursion: print forward and backward",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Two recursive functions: print-then-recurse gives 1..5, recurse-then-print gives 5..1. This is the idea behind printing a list in reverse.",
+      "steps": [
+        "Base case: stop when `i > n`.",
+        "`recursion_1_to_n` prints `i` before calling itself with `i+1`, so numbers come out on the way down.",
+        "`recursion_n_to_1` calls itself first and prints afterwards, so numbers come out on the way back up."
+      ],
+      "complexity": "Time O(n) · Space O(n) call stack",
+      "input": null,
+      "input_note": null,
+      "output_note": "`1 2 3 4 5` then `5 4 3 2 1`, one per line.",
+      "watch_out": null,
+      "check": {"q": "Which print happens first in `recursion_n_to_1(1, 5)`?", "a": "5, printed by the deepest call once `i = 6` returns."}
+    },
+    {
+      "file": "reverse_linked_list_printing.cpp",
+      "title": "Print a linked list in reverse",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads a list and prints it backwards with recursion, without changing any links.",
+      "steps": [
+        "Read values until `-1` and append each at the tail.",
+        "`print_reverse(tmp)` returns immediately if `tmp` is NULL.",
+        "Otherwise it first calls `print_reverse(tmp->next)`.",
+        "Only after that call returns does it print `tmp->val`."
+      ],
+      "complexity": "Time O(n) · Space O(n) call stack",
+      "input": "10 20 30 40 -1\n",
+      "input_note": "Values ending with -1.",
+      "output_note": "`40 30 20 10`, one per line: the reverse of the input order.",
+      "watch_out": "Very long lists (hundreds of thousands of nodes) can overflow the call stack.",
+      "check": {"q": "Does `print_reverse` change the list?", "a": "No. It only reads nodes; the list stays 10 -> 20 -> 30 -> 40."}
+    },
+    {
+      "file": "reversed_linked_list_printing_p.cpp",
+      "title": "Print in reverse (practice copy)",
+      "kind": "variant",
+      "same_as": "reverse_linked_list_printing.cpp",
+      "problem": null,
+      "what": "A re-typed copy of `reverse_linked_list_printing.cpp` with a typo that stops it compiling.",
+      "steps": [
+        "Same reading loop and recursive reverse print."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "10 20 30 40 -1\n",
+      "input_note": "Values ending with -1.",
+      "output_note": "No output: compile error.",
+      "watch_out": "`cout << tmp->val << end;` should be `endl`. With that fix it prints `40 30 20 10`.",
+      "check": {"q": "What is the base case of `print_reverse`?", "a": "`tmp == NULL`: return without printing."}
+    },
+    {
+      "file": "practice_problem_1_print_list.cpp",
+      "title": "Size of a linked list",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads a list and counts its nodes with `get_size`.",
+      "steps": [
+        "Build the list from input until `-1`.",
+        "`get_size` walks from head and adds 1 for each node until NULL.",
+        "Print the count."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "2 1 5 3 4 8 9 -1\n",
+      "input_note": "Values ending with -1.",
+      "output_note": "`7`: seven values before the `-1`.",
+      "watch_out": null,
+      "check": {"q": "What does `get_size` return for an empty list?", "a": "0: the loop never runs because `head` is NULL."}
+    },
+    {
+      "file": "practice_problem_1_print_list_p.cpp",
+      "title": "Size of a linked list (practice copy)",
+      "kind": "variant",
+      "same_as": "practice_problem_1_print_list.cpp",
+      "problem": null,
+      "what": "A re-typed copy of the size program with no real changes.",
+      "steps": [
+        "Same build and count."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "5 1 4 5 -1\n",
+      "input_note": "Values ending with -1.",
+      "output_note": "`4`: duplicates count as separate nodes.",
+      "watch_out": null,
+      "check": {"q": "How could you track the size in O(1) instead of walking the list?", "a": "Keep a counter and increase it on every insert (and decrease it on every delete)."}
+    },
+    {
+      "file": "practice_problem_2_has_duplicate.cpp",
+      "title": "Does the list have a duplicate?",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "Uses a `visited` array of 101 booleans (values are at most 100) to spot a repeated value in one pass.",
+      "steps": [
+        "Build the list.",
+        "Walk it; if `visited[tmp->val]` is already true, print `YES` and return.",
+        "Otherwise mark `visited[tmp->val] = true` and move on.",
+        "If the walk finishes, print `NO`."
+      ],
+      "complexity": "Time O(n) · Space O(101)",
+      "input": "2 4 5 6 7 4 -1\n",
+      "input_note": "Values (0..100) ending with -1.",
+      "output_note": "`YES`: the second 4 is found already marked.",
+      "watch_out": "The array only works because values are at most 100. A value above 100 would write outside the array.",
+      "check": {"q": "Why size the array 101 and not 100?", "a": "Value 100 needs index 100, which exists only when the size is 101."}
+    },
+    {
+      "file": "practice_problem_2_has_duplicate_p.cpp",
+      "title": "Has duplicate (practice copy)",
+      "kind": "variant",
+      "same_as": "practice_problem_2_has_duplicate.cpp",
+      "problem": null,
+      "what": "A re-typed copy, except `has_duplicate` is declared `bool` while still printing and using a bare `return;`.",
+      "steps": [
+        "Same visited-array logic."
+      ],
+      "complexity": "Time O(n) · Space O(101)",
+      "input": "2 4 5 6 7 4 -1\n",
+      "input_note": "Values ending with -1.",
+      "output_note": "`YES`, same as the original.",
+      "watch_out": "A `bool` function must return a value. It only compiles here because of the `-fpermissive` flag; a normal compiler rejects `return;`. Either make it `void` or return `true`/`false` and print in `main`.",
+      "check": {"q": "How would you rewrite it to return a bool properly?", "a": "Return `true` when a repeat is found and `false` at the end; `main` prints YES or NO based on the result."}
+    },
+    {
+      "file": "practice_problem_3_print_middle.cpp",
+      "title": "Print the middle element(s)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "Finds the size first, then walks to the middle. For an even size it prints both middle values.",
+      "steps": [
+        "Build the list and compute `size` with `get_size`.",
+        "Even size: walk `size/2 - 1` steps and print `tmp->val` and `tmp->next->val`.",
+        "Odd size: walk `size/2` steps and print `tmp->val`."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "1 2 3 4 5 6 -1\n",
+      "input_note": "Values ending with -1.",
+      "output_note": "First line `6` is the size (a debug print), then `3 4`, the two middle values of an even-length list.",
+      "watch_out": "The extra `cout << size` line would fail a judge that expects only the middle values; remove it. An empty list would crash on `tmp->val`.",
+      "check": {"q": "For `2 4 6 8 10`, how many steps does `tmp` take and what is printed?", "a": "2 steps (size/2), printing 6."}
+    },
+    {
+      "file": "practice_problem_4_insert_at_index.cpp",
+      "title": "Insert at index with queries",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "Intended to read a list, then for each `(index, value)` query insert at head, tail or middle (or print Invalid) and print the list. As written it never finishes.",
+      "steps": [
+        "Read the list until `-1` (intended).",
+        "For each query, get the current `size`.",
+        "Index below 0 or above `size`: print `Invalid`.",
+        "Index 0: insert at head. Index equal to `size`: insert at tail. Otherwise insert in the middle.",
+        "Print the list (intended after every query)."
+      ],
+      "complexity": "Time O(n) per query · Space O(n)",
+      "input": "10 20 30 -1\n1 40\n5 50\n0 100\n",
+      "input_note": "List values ending with -1, then lines of `index value`.",
+      "output_note": "No output: the program runs until the time limit.",
+      "watch_out": "The first loop never reads input (`cin >> val` is missing), so it checks an uninitialised `val` and inserts forever. Fix: `while (cin >> val && val != -1)`. Also, the list is printed only once at the end (it should print after each valid query), each value goes on its own line, and on an empty list index 0 would insert twice (both `idx == 0` and `idx == size` match); use `else if`.",
+      "check": {"q": "Which index values are valid for a list of size 3?", "a": "0, 1, 2 and 3 (0 = head, 3 = tail)."}
+    },
+    {
+      "file": "practice_problem_5_is_duplicate.cpp",
+      "title": "Is the list sorted ascending?",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "Despite the file name, this checks whether the list is in ascending order by comparing each node with the next one.",
+      "steps": [
+        "Read values with `while (cin >> val)` and stop on `-1`.",
+        "`ascending_sort_check` looks at each node `tmp` and its `tmp->next`.",
+        "If the next value is smaller, print `NO` and return.",
+        "If the walk finishes, print `YES`."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "5 2 6 8 -1\n",
+      "input_note": "Values ending with -1. This input breaks the order at the very first pair, the only kind of input the buggy loop can finish on.",
+      "output_note": "`NO`, because 2 is smaller than 5.",
+      "watch_out": "The loop never moves `tmp` forward (`tmp = tmp->next;` is missing), so whenever the first pair is in order it loops forever. Add `tmp = tmp->next;` at the end of the loop body. An empty list would also crash on `tmp->next`.",
+      "check": {"q": "After fixing the bug, what does `1 5 6 8 9 -1` print?", "a": "YES."}
+    }
+  ],
+  "practice_links": [],
+  "recap": [
+    "Pass `head` (and `tail`) as `Node* &` whenever the function may change them.",
+    "Head insert: `newNode->next = head; head = newNode;`, O(1).",
+    "Tail insert is O(1) with a tail pointer, O(n) without.",
+    "Middle insert: stop one node early, link the new node to the rest first, then link the previous node to it.",
+    "Always set `next = NULL` in the constructor; garbage pointers cause endless loops.",
+    "Recurse first, print later to print a list backwards."
+  ],
+  "check_yourself": [
+    {"q": "What is wrong with `void insert_at_head(Node* head, int val)`?", "a": "The function changes only its copy of `head`, so the caller's list never gets the new first node."},
+    {"q": "Why is building a list of n values with the walking tail insert O(n^2)?", "a": "Each insert walks the whole current list: 1 + 2 + ... + n steps in total."},
+    {"q": "To insert at 0-based index 3, which node must `tmp` stop on?", "a": "The node at index 2, the one just before the new position."},
+    {"q": "How much extra memory does recursive reverse printing use?", "a": "O(n), one stack frame per node."}
+  ]
+}

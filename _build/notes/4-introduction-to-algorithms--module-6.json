@@ -1,0 +1,255 @@
+{
+  "module_id": "4-introduction-to-algorithms--module-6",
+  "title": "Cycle detection & weighted adjacency lists",
+  "overview": "This module asks: does a graph contain a cycle? In an undirected graph a visited neighbour that is not your parent means a cycle; in a directed graph you need to know whether the neighbour is still on the current DFS path. It also shows how to store edge weights, preparing for Dijkstra.",
+  "concepts": [
+    {
+      "term": "Weighted adjacency list",
+      "explain": "Store `pair<int,int>{neighbour, weight}` in each list.",
+      "snippet": "vector<pair<int,int>> adj[n];\nadj[a].push_back({b, w});"
+    },
+    {
+      "term": "Undirected cycle rule",
+      "explain": "While exploring `u`, if a neighbour `v` is already visited and `v` is not `u`'s parent, there is another way to reach `v`, so a cycle exists.",
+      "snippet": null
+    },
+    {
+      "term": "Parent tracking",
+      "explain": "Record `parent[child] = u` when discovering a child (or pass `parent` as a DFS argument).",
+      "snippet": null
+    },
+    {
+      "term": "Directed cycle rule",
+      "explain": "Keep `pathvisit[]`: true while a node is on the current recursion path. Reaching a node that is still on the path means a back edge, a cycle.",
+      "snippet": "pathvisit[u] = true;\n... dfs children ...\npathvisit[u] = false;"
+    },
+    {
+      "term": "Why the undirected rule fails for directed graphs",
+      "explain": "In a directed graph two arrows can meet at the same node (0→2, 1→2) without any cycle, so \"already visited\" is not enough.",
+      "snippet": null
+    },
+    {
+      "term": "Disconnected graphs",
+      "explain": "Start a search from every unvisited node so no piece is skipped.",
+      "snippet": null
+    }
+  ],
+  "files": [
+    {
+      "file": "adj_list_for_weighted_graph.cpp",
+      "title": "Adjacency list with weights",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads `a b c` edges and stores `{b, c}` in `a`'s list and `{a, c}` in `b`'s list, then prints them.",
+      "steps": [
+        "`vector<pair<int,int>> adj_list[n]`.",
+        "For each edge push `{b, c}` to `a` and `{a, c}` to `b`.",
+        "Print each node's neighbours as `node (weight)`."
+      ],
+      "complexity": "Time O(n + e) · Space O(n + e)",
+      "input": "4 4\n0 1 5\n0 2 3\n1 3 2\n2 3 7\n",
+      "input_note": "`n e`, then e lines `a b weight`.",
+      "output_note": "`0 -> 1 (5)2 (3)` means node 0 connects to 1 with cost 5 and to 2 with cost 3 (there is no space between items, so read carefully).",
+      "watch_out": "Add a space after `)` in the print for easier reading.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "What does `p.second` hold in this list?",
+        "a": "The weight of the edge."
+      }
+    },
+    {
+      "file": "detect_cycle_in_undirected_graph_bfs.cpp",
+      "title": "Undirected cycle detection (BFS)",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "BFS from every unvisited node; a visited neighbour that is not the current node's parent means a cycle.",
+      "steps": [
+        "Set `parent` to -1 and `cycle = false`.",
+        "In BFS, for each `child` of `par`: if `vis[child]` and `parent[par] != child`, set `cycle = true`.",
+        "Unvisited children are pushed with `parent[child] = par`.",
+        "Loop over all nodes to cover every component, then print the result."
+      ],
+      "complexity": "Time O(V + E) · Space O(V)",
+      "input": "5 4\n0 1\n1 2\n2 0\n3 4\n",
+      "input_note": "5 nodes: triangle 0-1-2 plus a separate edge 3-4.",
+      "output_note": "Prints `Cycle Detected` (the triangle 0-1-2).",
+      "watch_out": "Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why is seeing your own parent again not a cycle?",
+        "a": "In an undirected graph the edge back to your parent is the same edge you came through."
+      }
+    },
+    {
+      "file": "detect_cycle_in_undirected_graph_dfs.cpp",
+      "title": "Undirected cycle detection (DFS)",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Same parent rule written with recursive DFS.",
+      "steps": [
+        "`dfs(src)` marks `src`.",
+        "For each `child`: visited and not `parent[src]` → cycle.",
+        "Unvisited child: set `parent[child] = src` and recurse."
+      ],
+      "complexity": "Time O(V + E) · Space O(V)",
+      "input": "5 4\n0 1\n1 2\n2 3\n3 4\n",
+      "input_note": "A simple path 0-1-2-3-4 (a tree, so no cycle).",
+      "output_note": "Prints `No Cycle`: the edges form a simple path 0-1-2-3-4.",
+      "watch_out": "Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "A connected undirected graph has V nodes and V edges. Must it have a cycle?",
+        "a": "Yes. A tree has exactly V-1 edges; one more always makes a cycle."
+      }
+    },
+    {
+      "file": "detect_cycle_in_directed_graph_dfs.cpp",
+      "title": "Directed cycle detection (DFS + path array)",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Uses `pathvisit` to know which nodes are on the current DFS path; an edge to such a node closes a cycle.",
+      "steps": [
+        "On entering `src`: `vis[src] = pathvisit[src] = true`.",
+        "For each child: if it is visited **and** on the path, set `cycle = true`.",
+        "If it is not visited, recurse.",
+        "On leaving `src`: `pathvisit[src] = false`."
+      ],
+      "complexity": "Time O(V + E) · Space O(V)",
+      "input": "4 4\n0 1\n1 2\n2 3\n3 1\n",
+      "input_note": "Directed edges 0→1→2→3→1 (the loop is 1-2-3).",
+      "output_note": "Prints `Cycle Detected`: 1 -> 2 -> 3 -> 1 loops back to a node still on the path.",
+      "watch_out": "Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why must `pathvisit[src]` be reset to false when DFS leaves `src`?",
+        "a": "Once we back out, `src` is no longer on the current path; a later arrow into it is not a cycle."
+      }
+    },
+    {
+      "file": "extra_problem_undirected_graph_cycle_dfs.cpp",
+      "title": "GFG - Detect cycle in an undirected graph (DFS)",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "GFG - Detect cycle in an undirected graph",
+        "url": "https://www.geeksforgeeks.org/problems/detect-cycle-in-an-undirected-graph/1"
+      },
+      "what": "Returns true as soon as the DFS finds a visited neighbour that is not its parent; `parent` is passed as an argument.",
+      "steps": [
+        "`isCycle` loops over all nodes and starts `dfs(i, -1, ...)` on unvisited ones.",
+        "`dfs` marks `src`; a visited `child != parent` returns true.",
+        "An unvisited child is explored with `dfs(child, src, ...)`; a true result is passed up at once."
+      ],
+      "complexity": "Time O(V + E) · Space O(V)",
+      "input": "2\n3 3\n0 1\n1 2\n2 0\n4 3\n0 1\n1 2\n2 3\n",
+      "input_note": "Driver format: number of cases; each is `V E` then E edges. A triangle, then a simple path.",
+      "output_note": "`isCycle = true` for the triangle and `isCycle = false` for the path.",
+      "watch_out": null,
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n",
+      "driver": "int main() {\n    int t;\n    cin >> t;\n    while (t--) {\n        int V, E;\n        cin >> V >> E;\n        vector<vector<int>> adj(V);\n        for (int i = 0; i < E; i++) {\n            int a, b; cin >> a >> b;\n            adj[a].push_back(b);\n            adj[b].push_back(a);\n        }\n        Solution s;\n        cout << \"isCycle = \" << (s.isCycle(adj) ? \"true\" : \"false\") << endl;\n    }\n}",
+      "check": {
+        "q": "What is the benefit of passing `parent` as a parameter instead of a global array?",
+        "a": "Each call carries its own parent, so no extra array is needed and the code is self-contained."
+      }
+    },
+    {
+      "file": "cses_counting_rooms.cpp",
+      "title": "CSES 1192 - Counting Rooms",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "CSES 1192 - Counting Rooms",
+        "url": "https://cses.fi/problemset/task/1192"
+      },
+      "what": "Counts connected floor areas with DFS on the grid.",
+      "steps": [
+        "Read the map.",
+        "For each unvisited `.` cell: `dfs` and `cnt++`.",
+        "`dfs` spreads over valid, unvisited `.` cells."
+      ],
+      "complexity": "Time O(n·m) · Space O(n·m)",
+      "input": "5 8\n########\n#..#...#\n####.#.#\n#..#...#\n########\n",
+      "input_note": "The sample building from the task.",
+      "output_note": "Prints `3`: the two small rooms on the left and the big room on the right.",
+      "watch_out": "On a 1000x1000 open map the recursion can go 10^6 calls deep. That is fine with a big judge stack but would crash on a default 1 MB stack; BFS avoids the risk. Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Which Module 4 assignment is this the same as?",
+        "a": "Count apartments."
+      }
+    },
+    {
+      "file": "leetcode_maximum_number_of_fish_in_a_grid.cpp",
+      "title": "LeetCode 2658 - Maximum Fish (again)",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 2658 - Maximum Number of Fish in a Grid",
+        "url": "https://leetcode.com/problems/maximum-number-of-fish-in-a-grid/"
+      },
+      "what": "The same solution as in Module 5, solved again on this practice day: DFS sums the fish in each pond and keeps the best.",
+      "steps": [
+        "`total = 0` before each DFS from a water cell.",
+        "DFS adds cell values over connected water cells.",
+        "`mx = max(total, mx)`."
+      ],
+      "complexity": "Time O(n·m) · Space O(n·m)",
+      "input": "4 4\n0 2 1 0\n4 0 0 3\n1 0 0 4\n0 3 2 0\n",
+      "input_note": "Driver format: `n m`, then the grid. LeetCode example 1.",
+      "output_note": "`findMaxFish = 7`, as expected.",
+      "watch_out": null,
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n",
+      "driver": "int main() {\n    int n, m;\n    cin >> n >> m;\n    vector<vector<int>> grid(n, vector<int>(m));\n    for (auto &row : grid)\n        for (int &x : row) cin >> x;\n    Solution *s = new Solution();\n    cout << \"findMaxFish = \" << s->findMaxFish(grid) << endl;\n}",
+      "check": {
+        "q": "Which cells can the fisher move through?",
+        "a": "Only water cells (value > 0)."
+      }
+    }
+  ],
+  "practice_links": [
+    {
+      "name": "Detect cycle in an undirected graph",
+      "url": "https://www.geeksforgeeks.org/problems/detect-cycle-in-an-undirected-graph/1",
+      "site": "GeeksforGeeks"
+    },
+    {
+      "name": "Counting Rooms",
+      "url": "https://cses.fi/problemset/task/1192",
+      "site": "CSES"
+    },
+    {
+      "name": "Maximum Number of Fish in a Grid",
+      "url": "https://leetcode.com/problems/maximum-number-of-fish-in-a-grid/description/",
+      "site": "LeetCode"
+    }
+  ],
+  "recap": [
+    "Weighted list: `adj[a].push_back({b, w})`.",
+    "Undirected cycle: visited neighbour that is not the parent.",
+    "Directed cycle: neighbour still on the current DFS path (`pathvisit`).",
+    "Always loop over all nodes for disconnected graphs."
+  ],
+  "check_yourself": [
+    {
+      "q": "Directed edges 0→1, 0→2, 1→2. Is there a cycle?",
+      "a": "No. Node 2 is reached twice, but it is not on the path when reached the second time."
+    },
+    {
+      "q": "Why can BFS detect undirected cycles but is awkward for directed ones?",
+      "a": "BFS has no notion of the current path, which the directed rule needs."
+    },
+    {
+      "q": "What changes in the adjacency list for a directed weighted graph?",
+      "a": "Push only `{b, w}` into `adj[a]`, not the reverse."
+    }
+  ]
+}

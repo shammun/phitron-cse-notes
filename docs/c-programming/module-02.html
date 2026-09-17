@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 02: Operators, overflow &amp; decision making · Introduction to Programming</title>
+<meta name="description" content="This module covers the operators you use every day (`%`, `==`, `++`/`--`) and how to avoid integer overflow when multiplying. It then covers the ways C makes decisions: `if`, else-if ladders, nested `if`, and `switch`. A few files contain small logic mistakes, and spotting them is good practice.">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+<link rel="stylesheet" href="../assets/site.css?v=3">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../index.html"><span aria-hidden="true">📘</span> <span>CSE Revision</span></a>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Introduction to Programming</a><span aria-hidden="true">›</span><span>Module 02</span></nav>
+  <div class="tools">
+    <button class="tbtn" id="searchBtn" type="button" aria-label="Search programs" title="Search (/)">🔍</button>
+    <button class="tbtn" id="recallBtn" type="button" aria-pressed="false" title="Recall mode: hide code so you can write it from memory">🧠<span class="lbl"> Recall</span></button>
+    <button class="tbtn" id="themeBtn" type="button" aria-label="Switch light/dark theme" title="Theme">🌓</button>
+  </div>
+</header>
+<div class="search" id="search" hidden>
+  <div class="search-box">
+    <input id="q" type="search" placeholder="Search programs, topics, problems…" autocomplete="off" aria-label="Search">
+    <button class="tbtn" id="searchClose" type="button" aria-label="Close search">✕</button>
+  </div>
+  <ol id="results" class="results"></ol>
+</div>
+<main class="wrap">
+
+<article class="module">
+  <header class="mhead">
+    <p class="eyebrow"><a href="index.html">Introduction to Programming</a> · Module 02</p>
+    <h1>Operators, overflow &amp; decision making</h1>
+    <p class="lead">This module covers the operators you use every day (<code>%</code>, <code>==</code>, <code>++</code>/<code>--</code>) and how to avoid integer overflow when multiplying. It then covers the ways C makes decisions: <code>if</code>, else-if ladders, nested <code>if</code>, and <code>switch</code>. A few files contain small logic mistakes, and spotting them is good practice.</p>
+    <p class="chips"><span>9 programs</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/1_Introduction%20to%20Programming%20Language/Module%2002" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
+  </header>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-bool"><span class="n">1</span>bool from a comparison</a></li><li><a href="#p-float-this-taht"><span class="n">2</span>Remainder and avoiding overflow</a></li><li><a href="#p-plus-plus"><span class="n">3</span>Pre/post increment and decrement</a></li><li><a href="#p-marks"><span class="n">4</span>Grade from marks (else-if ladder)</a></li><li><a href="#p-odd-positive"><span class="n">5</span>Even/odd and positive/negative</a></li><li><a href="#p-q"><span class="n">6</span>Two independent ifs (quiz)</a></li><li><a href="#p-inside-else"><span class="n">7</span>Nested if / else</a></li><li><a href="#p-switch"><span class="n">8</span>switch: grade and weekday</a></li><li><a href="#p-tempcoderunnerfile"><span class="n">9</span>Editor leftover (not a program)</a></li></ol></details></nav>
+  <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Comparison gives 0 or 1</h4><p>In C, <code>a == b</code> evaluates to 1 (true) or 0 (false). <code>&lt;stdbool.h&gt;</code> adds the <code>bool</code> type and the words <code>true</code> and <code>false</code>.</p><pre class="snip">bool result = (5 == 7); // 0</pre></div><div class="concept"><h4>Modulus <code>%</code></h4><p><code>a % b</code> is the remainder after dividing <code>a</code> by <code>b</code>: <code>5 % 3</code> is 2. It is used for even/odd and divisibility tests.</p></div><div class="concept"><h4>Overflow and <code>1LL *</code></h4><p><code>int * int</code> is calculated in <code>int</code> even when you store the result in a <code>long long</code>, so 100000*100000 overflows. Make one side a <code>long long</code> first.</p><pre class="snip">long long r = 1LL * a * b;</pre></div><div class="concept"><h4>Pre vs post increment</h4><p><code>a++</code> gives the old value and then adds 1. <code>++a</code> adds 1 first and gives the new value. The same rule holds for <code>--</code>.</p></div><div class="concept"><h4>Else-if ladder order</h4><p>Conditions are checked from the top, so put the strictest one first (<code>&gt;= 80</code> before <code>&gt;= 70</code>). A later branch with the same condition can never run.</p></div><div class="concept"><h4>Dangling else</h4><p>An <code>else</code> always belongs to the nearest unmatched <code>if</code> in its block. Braces make the pairing obvious.</p></div><div class="concept"><h4>switch / case / break</h4><p><code>switch</code> jumps to the <code>case</code> that matches the value. <code>break</code> stops there; without it, execution falls through into the next case. <code>default</code> handles every other value.</p></div></div></section>
+  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
+<section class="prog" id="p-bool">
+  <div class="prog-h">
+    <span class="num">1</span>
+    <div class="prog-t">
+      <h3>bool from a comparison</h3>
+      <div class="meta"><code class="fname">bool.C</code><span class="badge k-lesson">Lesson</span></div>
+    </div>
+  </div>
+  <p class="what">Stores the result of <code>a == b</code> in a <code>bool</code> and prints it as a number.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>C · 11 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2002/bool.C" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 11 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>0
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> The program prints <code>0</code> because 5 is not equal to 7.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Include <code>&lt;stdbool.h&gt;</code> to get the <code>bool</code> type.</li><li><code>a = 5</code>, <code>b = 7</code>, so <code>a == b</code> is false.</li><li>Printing a <code>bool</code> with <code>%d</code> shows 0 for false and 1 for true.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The file extension is uppercase <code>.C</code>. Some compilers treat <code>.C</code> as C++, so rename it to <code>.c</code> to be safe.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> What would the program print if <code>b</code> were 5?</summary><div><code>1</code></div></details>
+</section>
+<section class="prog" id="p-float-this-taht">
+  <div class="prog-h">
+    <span class="num">2</span>
+    <div class="prog-t">
+      <h3>Remainder and avoiding overflow</h3>
+      <div class="meta"><code class="fname">float_this_taht.c</code><span class="badge k-lesson">Lesson</span></div>
+    </div>
+  </div>
+  <p class="what">Prints <code>5 % 3</code>, then multiplies 100000 by 100000 safely by starting the calculation with <code>1LL</code>.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>C · 32 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2002/float_this_taht.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;math.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="o">%</span><span class="mi">3</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// int a = 100000;</span>
+<span class="w">    </span><span class="c1">// int b = 100000;</span>
+<span class="w">    </span><span class="c1">// // int a = 100000, b = 100000;</span>
+<span class="w">    </span><span class="c1">// long long result = (long long) a * b;  </span>
+<span class="w">    </span><span class="c1">// printf(&quot;%lld&quot;, result);</span>
+
+<span class="w">    </span><span class="c1">// Another way to do the same thing</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100000</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100000</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1L</span><span class="n">L</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">  </span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%lld&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Another way to do the same thing</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="c1">// int a = 100000;</span>
+<span class="w">    </span><span class="c1">// long long b = 100000;</span>
+<span class="w">    </span><span class="c1">// long long result = a * b;</span>
+<span class="w">    </span><span class="c1">// printf(&quot;%lld&quot;, result);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="c1">// Another way to do the same thing</span>
+<span class="w">    </span><span class="c1">// long long a = 100000;</span>
+<span class="w">    </span><span class="c1">// long long b = 100000;</span>
+<span class="w">    </span><span class="c1">// long long result = a * b;</span>
+<span class="w">    </span><span class="c1">// printf(&quot;%lld&quot;, result);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 32 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>2
+10000000000</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> The first line is <code>2</code>. The second is <code>10000000000</code> (10^10), which is correct because the multiplication was done in <code>long long</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>5 % 3</code> is 2.</li><li><code>a</code> and <code>b</code> are both <code>int</code> with value 100000. Their product, 10^10, is too large for <code>int</code>.</li><li><code>1LL * a * b</code> starts as <code>long long</code>, so the whole multiplication happens in 64 bits.</li><li>The commented-out code shows other fixes: cast with <code>(long long) a * b</code>, or declare the variables as <code>long long</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> There is no newline after the last <code>printf</code>, so your terminal prompt appears right after the number.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why is <code>long long r = a * b;</code> (with <code>int a, b</code>) still wrong?</summary><div><code>a * b</code> is calculated in <code>int</code> first and overflows. Only the already-wrong result is then converted to <code>long long</code>.</div></details>
+</section>
+<section class="prog" id="p-plus-plus">
+  <div class="prog-h">
+    <span class="num">3</span>
+    <div class="prog-t">
+      <h3>Pre/post increment and decrement</h3>
+      <div class="meta"><code class="fname">plus_plus.c</code><span class="badge k-lesson">Lesson</span></div>
+    </div>
+  </div>
+  <p class="what">Shows the difference between <code>a++</code>, <code>++b</code>, <code>c--</code> and <code>--d</code> by printing each variable during the operation and again afterwards.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>C · 29 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2002/plus_plus.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Demonstrating post-increment (a++)</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15</span><span class="p">;</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Post-increment: a++ </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Value of a during print: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="o">++</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Value of a after increment: %d</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Demonstrating pre-increment (++b)</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">30</span><span class="p">;</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Pre-increment: ++b </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Value of b after increment: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">++</span><span class="n">b</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Value of b in next statement: %d</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Demonstrating post-decrement (c--)</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">40</span><span class="p">;</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Post-decrement: c-- </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Value of c during print: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="o">--</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Value of c after decrement: %d</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Demonstrating pre-decrement (--d)</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">40</span><span class="p">;</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Pre-decrement: --d </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Value of d after decrement: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">--</span><span class="n">d</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Value of d in next statement: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 29 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>Post-increment: a++ 
+Value of a during print: 15
+Value of a after increment: 16
+
+Pre-increment: ++b 
+Value of b after increment: 31
+Value of b in next statement: 31
+
+Post-decrement: c-- 
+Value of c during print: 40
+Value of c after decrement: 39
+
+Pre-decrement: --d 
+Value of d after decrement: 39
+Value of d in next statement: 39
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Compare each pair of lines: the post forms (15, then 16; 40, then 39) change the value after it is used. The pre forms (31, 31; 39, 39) change it before.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>printf(&quot;%d&quot;, a++)</code> prints 15 and only then makes <code>a</code> 16.</li><li><code>printf(&quot;%d&quot;, ++b)</code> makes <code>b</code> 31 first, so it prints 31.</li><li><code>c--</code> prints 40, and <code>c</code> becomes 39 afterwards.</li><li><code>--d</code> makes <code>d</code> 39 first, so it prints 39.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> If <code>x = 3</code>, what are <code>y</code> and <code>x</code> after <code>y = x++ * 2;</code>?</summary><div><code>y = 6</code> (it uses the old value 3) and <code>x = 4</code>.</div></details>
+</section>
+<section class="prog" id="p-marks">
+  <div class="prog-h">
+    <span class="num">4</span>
+    <div class="prog-t">
+      <h3>Grade from marks (else-if ladder)</h3>
+      <div class="meta"><code class="fname">marks.c</code><span class="badge k-lesson">Lesson</span></div>
+    </div>
+  </div>
+  <p class="what">Gives a letter grade for a fixed <code>marks = 76</code> using an else-if ladder.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>C · 14 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2002/marks.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">marks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">76</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">marks</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">80</span><span class="p">){</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;A+&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">marks</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">70</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">marks</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">70</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;A-&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 14 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>A</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> The program prints <code>A</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>The first test, <code>marks &gt;= 80</code>, fails for 76.</li><li>The next test, <code>marks &gt;= 70</code>, passes, so the program prints <code>A</code> and skips the rest of the ladder.</li><li>The last branch never runs (see Watch out).</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The third branch repeats <code>marks &gt;= 70</code>, so <code>A-</code> can never be printed. It was probably meant to be <code>marks &gt;= 60</code>.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why must <code>&gt;= 80</code> be checked before <code>&gt;= 70</code>?</summary><div>An 85 also passes <code>&gt;= 70</code>. If that test came first, 85 would get <code>A</code> instead of <code>A+</code>.</div></details>
+</section>
+<section class="prog" id="p-odd-positive">
+  <div class="prog-h">
+    <span class="num">5</span>
+    <div class="prog-t">
+      <h3>Even/odd and positive/negative</h3>
+      <div class="meta"><code class="fname">odd_positive.c</code><span class="badge k-lesson">Lesson</span></div>
+    </div>
+  </div>
+  <p class="what">Uses two separate if/else blocks to label <code>x = 4</code> as even or odd, and as positive or negative.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>C · 24 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2002/odd_positive.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">%</span><span class="mi">2</span><span class="o">!=</span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Even &quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Odd &quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Positive &quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Negative &quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 24 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>Odd Positive </pre></div></div>
+  <p class="readout"><b>Reading the output.</b> It prints <code>Odd Positive </code>, but 4 is even: the labels in the first block are swapped (see Watch out).</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>The first block tests <code>x % 2 != 0</code>.</li><li>The second block tests <code>x &gt; 0</code>.</li><li>The two blocks are independent, so both always print something.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> <code>x % 2 != 0</code> is true for odd numbers, but that branch prints &quot;Even&quot;. Fix: test <code>x % 2 == 0</code> for Even. Also, 0 falls into &quot;Negative&quot;; add an <code>else if (x == 0)</code> branch.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> What does this program print for <code>x = 0</code>, and is that right?</summary><div><code>Odd Negative</code> (the first part because of the swap bug). 0 is really even and is neither positive nor negative.</div></details>
+</section>
+<section class="prog" id="p-q">
+  <div class="prog-h">
+    <span class="num">6</span>
+    <div class="prog-t">
+      <h3>Two independent ifs (quiz)</h3>
+      <div class="meta"><code class="fname">q.c</code><span class="badge k-lesson">Lesson</span></div>
+    </div>
+  </div>
+  <p class="what">A quiz-style snippet: the first <code>if</code> has no else, and the second is an if/else. With <code>x = 5</code>, both <code>if</code> blocks run.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>C · 14 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2002/q.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;hello &quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;hi&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;no&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 14 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>hello hi</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> The output is <code>hello hi</code> on one line.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>x &lt; 10</code> is true, so it prints <code>hello </code>.</li><li><code>x == 5</code> is true, so it prints <code>hi</code>. The <code>else</code> belongs only to this second <code>if</code>.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> What would print for <code>x = 12</code>?</summary><div><code>no</code>. The first if is false and prints nothing, and the second if&#x27;s else prints <code>no</code>.</div></details>
+</section>
+<section class="prog" id="p-inside-else">
+  <div class="prog-h">
+    <span class="num">7</span>
+    <div class="prog-t">
+      <h3>Nested if / else</h3>
+      <div class="meta"><code class="fname">inside_else.c</code><span class="badge k-lesson">Lesson</span></div>
+    </div>
+  </div>
+  <p class="what">An <code>if</code> with another if/else inside it. Because the outer condition is false, the inner block is skipped completely.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>C · 22 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2002/inside_else.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;inside if if</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;inside if else</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;inside else</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 22 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>inside else
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> The program prints <code>inside else</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>x = 0</code>, so <code>x == 1</code> is false.</li><li>The whole inner if/else is skipped.</li><li>The outer <code>else</code> runs and prints <code>inside else</code>.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> Can <code>inside if if</code> ever be printed by this code?</summary><div>No. It needs <code>x == 1</code> and <code>x == 0</code> to be true at the same time.</div></details>
+</section>
+<section class="prog" id="p-switch">
+  <div class="prog-h">
+    <span class="num">8</span>
+    <div class="prog-t">
+      <h3>switch: grade and weekday</h3>
+      <div class="meta"><code class="fname">switch.c</code><span class="badge k-lesson">Lesson</span></div>
+    </div>
+  </div>
+  <p class="what">Reads a grade letter and a day number. Each one goes through a <code>switch</code> that prints a message, with a <code>default</code> branch for invalid values.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 58 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2002/switch.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">grade</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">day</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Enter your grade (A, B, C, D, F): &quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%c&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">grade</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">switch</span><span class="p">(</span><span class="n">grade</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="sc">&#39;A&#39;</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Excellent!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="sc">&#39;B&#39;</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Well done!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="sc">&#39;C&#39;</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Good!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="sc">&#39;D&#39;</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Sufficient!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="sc">&#39;F&#39;</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Failed!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">default</span><span class="o">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Invalid grade!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Enter your day (1-7): &quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">day</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">switch</span><span class="p">(</span><span class="n">day</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="mi">1</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Monday</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="mi">2</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Tuesday</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="mi">3</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Wednesday</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="mi">4</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Thursday</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="mi">5</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Friday</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="mi">6</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Saturday</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="mi">7</span><span class="p">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Sunday</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">default</span><span class="o">:</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Invalid day!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 58 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>B
+5</pre><p class="io-note">A grade letter on line 1, then a day number from 1 to 7.</p></div><div class="io out"><div class="io-h">Output </div><pre>Enter your grade (A, B, C, D, F): Well done!
+Enter your day (1-7): Friday
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> The prompts and answers appear on the same lines because the input is not echoed: <code>Enter your grade ...: Well done!</code>, then <code>Enter your day (1-7): Friday</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>grade</code> with <code>%c</code> and switch on it: <code>&#x27;A&#x27;</code> prints Excellent, <code>&#x27;B&#x27;</code> prints Well done, and so on.</li><li>Each <code>case</code> ends with <code>break</code> so only its own message prints.</li><li>Read <code>day</code> with <code>%d</code> (which skips the leftover newline) and switch on 1 to 7.</li><li>Any other value goes to <code>default</code>, which prints an Invalid message.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> What happens if you delete the <code>break</code> after <code>case &#x27;B&#x27;</code>?</summary><div>Execution falls through, so grade B prints <code>Well done!</code> and then <code>Good!</code>.</div></details>
+</section>
+<section class="prog" id="p-tempcoderunnerfile">
+  <div class="prog-h">
+    <span class="num">9</span>
+    <div class="prog-t">
+      <h3>Editor leftover (not a program)</h3>
+      <div class="meta"><code class="fname">tempCodeRunnerFile.c</code><span class="badge k-setup">Setup</span></div>
+    </div>
+  </div>
+  <p class="what">A temporary file that VS Code&#x27;s Code Runner created when only a selection was run. It holds a single fragment, <code>else if(marks &gt;= 70)</code>.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>C · 2 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2002/tempCodeRunnerFile.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">marks</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">70</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 2 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>tempCodeRunnerFile.c:2:5: error: expected identifier or &#x27;(&#x27; before &#x27;else&#x27;
+     else if(marks &gt;= 70)
+     ^~~~</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> There is no output because the file does not compile.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>There is no logic to follow. It is a copy of one line from marks.c.</li><li>You can safely delete such files; they are not part of the lesson.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The compile error <code>expected identifier or &#x27;(&#x27; before &#x27;else&#x27;</code> is expected. Add <code>tempCodeRunnerFile.*</code> to <code>.gitignore</code>.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why can&#x27;t a line starting with <code>else</code> compile on its own?</summary><div>An <code>else</code> must follow an <code>if</code> block inside a function.</div></details>
+</section></section>
+  
+  <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>Comparisons give 1 or 0, and <code>bool</code> makes that clearer.</li><li>Use <code>1LL * a * b</code> so the multiplication happens in 64 bits.</li><li><code>x++</code> uses the old value; <code>++x</code> uses the new one.</li><li>Order an else-if ladder from strictest to loosest, and never repeat a condition.</li><li>In a <code>switch</code>, end each case with <code>break</code> unless you want fall-through.</li></ul></section>
+  <section class="block" id="quiz"><h2>✅ Check yourself</h2><details class="check"><summary><code>int a = 50000, b = 50000; long long r = a * b;</code> Is <code>r</code> correct?</summary><div>No. 2.5×10^9 overflows <code>int</code> before it is stored. Use <code>1LL * a * b</code>.</div></details><details class="check"><summary>What does <code>x % 2 == 1</code> return for <code>x = -3</code> in C?</summary><div>False, because <code>-3 % 2</code> is -1. Test odd numbers with <code>x % 2 != 0</code>.</div></details><details class="check"><summary>When is a <code>switch</code> a better fit than an else-if ladder?</summary><div>When you compare one integer or char against a list of exact values.</div></details><details class="check"><summary>What is printed by <code>int i = 5; printf(&quot;%d %d&quot;, i++, i);</code>?</summary><div>The result is undefined: C does not say which argument is evaluated first. Never change and read the same variable in one call.</div></details></section>
+  <nav class="pager"><a class="prev" href="../c-programming/module-01.html"><small>← Previous</small><b>Module 01</b><span>C program structure, data types &amp; input/output</span></a><a class="next" href="../c-programming/module-3.html"><small>Next →</small><b>Module 3</b><span>Practice: variables, formatted I/O &amp; simple loops</span></a></nav>
+</article>
+</main>
+<footer class="foot">
+  <p>Shammunul's revision notes from the Phitron CSE program. Code written while taking the course; outputs are real runs
+  (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
+</footer>
+<script>window.SITE_ROOT="../";</script>
+<script src="../assets/search-index.js?v=3" defer></script>
+<script src="../assets/site.js?v=3" defer></script>
+</body>
+</html>

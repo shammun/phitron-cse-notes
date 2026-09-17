@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 19: Passing arrays and strings to functions, and more recursion · Introduction to Programming</title>
+<meta name="description" content="Module 19 combines functions, pointers and recursion. Arrays and strings reach a function as the address of their first element, so the function can change the caller&#x27;s data. Pointer parameters let a function hand back more than one result, such as a min and a max. On the recursion side there are factorial, printing digits, and a two-ended palindrome check.">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+<link rel="stylesheet" href="../assets/site.css?v=3">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../index.html"><span aria-hidden="true">📘</span> <span>CSE Revision</span></a>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Introduction to Programming</a><span aria-hidden="true">›</span><span>Module 19</span></nav>
+  <div class="tools">
+    <button class="tbtn" id="searchBtn" type="button" aria-label="Search programs" title="Search (/)">🔍</button>
+    <button class="tbtn" id="recallBtn" type="button" aria-pressed="false" title="Recall mode: hide code so you can write it from memory">🧠<span class="lbl"> Recall</span></button>
+    <button class="tbtn" id="themeBtn" type="button" aria-label="Switch light/dark theme" title="Theme">🌓</button>
+  </div>
+</header>
+<div class="search" id="search" hidden>
+  <div class="search-box">
+    <input id="q" type="search" placeholder="Search programs, topics, problems…" autocomplete="off" aria-label="Search">
+    <button class="tbtn" id="searchClose" type="button" aria-label="Close search">✕</button>
+  </div>
+  <ol id="results" class="results"></ol>
+</div>
+<main class="wrap">
+
+<article class="module">
+  <header class="mhead">
+    <p class="eyebrow"><a href="index.html">Introduction to Programming</a> · Module 19</p>
+    <h1>Passing arrays and strings to functions, and more recursion</h1>
+    <p class="lead">Module 19 combines functions, pointers and recursion. Arrays and strings reach a function as the address of their first element, so the function can change the caller&#x27;s data. Pointer parameters let a function hand back more than one result, such as a min and a max. On the recursion side there are factorial, printing digits, and a two-ended palindrome check.</p>
+    <p class="chips"><span>11 programs</span><span>5 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
+  </header>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-call-by-value-reference"><span class="n">1</span>Call by value vs call by reference</a></li><li><a href="#p-passing-array-in-function"><span class="n">2</span>Pass an array to a function</a></li><li><a href="#p-passing-string-in-function1"><span class="n">3</span>Pass a string: length</a></li><li><a href="#p-passing-string-in-function2"><span class="n">4</span>Change a string inside a function</a></li><li><a href="#p-pointer-as-parameter-of-array"><span class="n">5</span>Pointer parameters: arithmetic, changes and strcpy</a></li><li><a href="#p-factorial"><span class="n">6</span>Factorial by recursion</a></li><li><a href="#p-print-digits"><span class="n">7</span>Print the digits of a number</a></li><li><a href="#p-palindrome"><span class="n">8</span>Palindrome array by recursion</a></li><li><a href="#p-max-min"><span class="n">9</span>Max and Min (with a function)</a></li><li><a href="#p-shift-zeros"><span class="n">10</span>Shift Zeros</a></li><li><a href="#p-max-number"><span class="n">11</span>Mountain rows 1..N..1 (header says Max Number)</a></li></ol></details></nav>
+  <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Call by value vs by reference</h4><p>A plain <code>int</code> parameter is a copy. An <code>int*</code> parameter holds the caller&#x27;s address, so writing to <code>*y</code> changes the original.</p><pre class="snip">void fun(int x, int *y){ x *= 10; *y *= 10; }</pre></div><div class="concept"><h4>Arrays decay to pointers</h4><p><code>int x[]</code> and <code>int *x</code> mean the same thing in a parameter list. The function gets the address only, so the size must be passed as a separate argument.</p><pre class="snip">int sum(int x[], int n);</pre></div><div class="concept"><h4>Strings in functions</h4><p>A <code>char[]</code> string is passed the same way. Changes such as <code>x[0] = toupper(x[0])</code> show up in the caller, and <code>strlen</code> still works because of the <code>&#x27;\0&#x27;</code>.</p></div><div class="concept"><h4>Several results through pointers</h4><p><code>minMax(arr, n, &amp;mn, &amp;mx)</code> fills in two answers, because a function can return only one value.</p></div><div class="concept"><h4>Recursion with a return value</h4><p><code>factorial(n) = n * factorial(n-1)</code>, and <code>factorial(0) = 1</code>. Use <code>long long</code>, because factorials grow very fast.</p></div><div class="concept"><h4>Digits by recursion</h4><p><code>n % 10</code> is the last digit, and <code>n / 10</code> is the number without it. Recurse first and print afterwards to get the digits from left to right.</p></div><div class="concept"><h4>Two-ended recursion</h4><p>A palindrome check compares <code>a[i]</code> with <code>a[j]</code>, then recurses on <code>i+1</code> and <code>j-1</code>. It stops with true once <code>i &gt; j</code>.</p><pre class="snip">return a[i] == a[j] &amp;&amp; isPal(a, i+1, j-1);</pre></div></div></section>
+  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
+<section class="prog" id="p-call-by-value-reference">
+  <div class="prog-h">
+    <span class="num">1</span>
+    <div class="prog-t">
+      <h3>Call by value vs call by reference</h3>
+      <div class="meta"><code class="fname">call_by_value_reference.c</code><span class="badge k-lesson">Lesson</span></div>
+    </div>
+  </div>
+  <p class="what"><code>fun(a, &amp;b)</code> multiplies both of its parameters by 10. Only <code>b</code> changes in <code>main</code>.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>C · 43 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/call_by_value_reference.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm"> * This program demonstrates two different ways of passing parameters to functions:</span>
+<span class="cm"> * 1. Call by Value: A copy of the value is passed to the function</span>
+<span class="cm"> * 2. Call by Reference: The memory address (reference) of the variable is passed</span>
+<span class="cm"> */</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="cm">/* Function that takes two parameters:</span>
+<span class="cm"> * x: Called by value - receives a copy of the original value</span>
+<span class="cm"> * y: Called by reference - receives the memory address of the original variable</span>
+<span class="cm"> */</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">fun</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">y</span><span class="p">){</span>
+<span class="w">    </span><span class="cm">/* When we modify &#39;x&#39;, we&#39;re only changing the local copy.</span>
+<span class="cm">     * The original variable &#39;a&#39; in main() remains unchanged */</span>
+<span class="w">    </span><span class="n">x</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">  </span><span class="c1">// Same as: x = x * 10</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* When we modify &#39;*y&#39;, we&#39;re changing the value at the memory address</span>
+<span class="cm">     * that y points to. This affects the original variable &#39;b&#39; in main() */</span>
+<span class="w">    </span><span class="o">*</span><span class="n">y</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="c1">// Same as: *y = *y * 10</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Prints: x = 100, *y = 200</span>
+<span class="cm">     * Shows the local values inside the function */</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Inside function: x = %d, *y = %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">y</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="cm">/* Initialize two variables:</span>
+<span class="cm">     * a will be passed by value</span>
+<span class="cm">     * b will be passed by reference */</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Function call:</span>
+<span class="cm">     * a is passed by value - only its value (10) is sent</span>
+<span class="cm">     * &amp;b passes the memory address of b - allows function to modify original b */</span>
+<span class="w">    </span><span class="n">fun</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">b</span><span class="p">);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Prints: a = 10, b = 200</span>
+<span class="cm">     * a remains unchanged because it was passed by value</span>
+<span class="cm">     * b is modified because it was passed by reference */</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;After function call: a = %d, b = %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 43 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>Inside function: x = 100, *y = 200
+After function call: a = 10, b = 200
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>Inside function: x = 100, *y = 200</code>, then <code>After function call: a = 10, b = 200</code>. <code>a</code> is unchanged and <code>b</code> has changed.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>a = 10</code> and <code>b = 20</code>.</li><li><code>fun</code> gets <code>x</code>, a copy of 10, and <code>y</code>, the address of <code>b</code>.</li><li><code>x *= 10</code> changes only the copy, and <code>*y *= 10</code> changes <code>b</code> itself.</li><li><code>fun</code> prints <code>x = 100, *y = 200</code>, and <code>main</code> then prints <code>a = 10, b = 200</code>.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> How would you make <code>a</code> change too?</summary><div>Make the first parameter <code>int *x</code>, call <code>fun(&amp;a, &amp;b)</code>, and write <code>*x *= 10</code>.</div></details>
+</section>
+<section class="prog" id="p-passing-array-in-function">
+  <div class="prog-h">
+    <span class="num">2</span>
+    <div class="prog-t">
+      <h3>Pass an array to a function</h3>
+      <div class="meta"><code class="fname">passing_array_in_function.c</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n) · Space O(1)</span></div>
+    </div>
+  </div>
+  <p class="what"><code>fun(a, 10)</code> adds up the array. The function gets the array&#x27;s address and its length.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 46 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/passing_array_in_function.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm"> * This program demonstrates how arrays are passed to functions in C</span>
+<span class="cm"> * Important concepts shown:</span>
+<span class="cm"> * 1. Arrays are always passed by reference in C</span>
+<span class="cm"> * 2. When passing array to function, we need to pass its size separately</span>
+<span class="cm"> * 3. Array notation [] in parameter is same as using pointer *</span>
+<span class="cm"> */</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="cm">/* Function that takes two parameters:</span>
+<span class="cm"> * x[]: Array parameter - Actually receives address of first element</span>
+<span class="cm"> *      Writing int x[] is same as writing int* x</span>
+<span class="cm"> * n: Size of array - Needed because array size information is lost when passed</span>
+<span class="cm"> */</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">fun</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="cm">/* Loop through array using index</span>
+<span class="cm">     * Since we have array&#39;s address, we can access elements using [] operator</span>
+<span class="cm">     * x[i] is same as *(x + i) in pointer arithmetic</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w">  </span><span class="c1">// Add each element to sum</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span><span class="w">  </span><span class="c1">// Return total sum</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="cm">/* Initialize array with 10 elements</span>
+<span class="cm">     * a[10] allocates space for 10 integers</span>
+<span class="cm">     * {1,2,...10} initializes those spaces with values</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">};</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Call function by passing:</span>
+<span class="cm">     * a: Array name (automatically converts to address of first element)</span>
+<span class="cm">     * 10: Size of array</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fun</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Print result using printf</span>
+<span class="cm">     * %d is format specifier for integers</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Sum of array elements: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 46 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>Sum of array elements: 55
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>Sum of array elements: 55</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>int a[10] = {1,...,10}</code>.</li><li><code>fun(int x[], int n)</code> loops over <code>x[0]</code> to <code>x[n-1]</code> and adds each one to <code>sum</code>.</li><li>It returns 55, which <code>main</code> prints.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Inside <code>fun</code>, <code>sizeof(x)</code> is the size of a pointer, not of the array. That&#x27;s why <code>n</code> has to be passed in.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> If <code>fun</code> did <code>x[0] = 99</code>, would <code>a[0]</code> in <code>main</code> change?</summary><div>Yes. <code>x</code> points to <code>a</code>&#x27;s memory.</div></details>
+</section>
+<section class="prog" id="p-passing-string-in-function1">
+  <div class="prog-h">
+    <span class="num">3</span>
+    <div class="prog-t">
+      <h3>Pass a string: length</h3>
+      <div class="meta"><code class="fname">passing_string_in_function1.c</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n) · Space O(1)</span></div>
+    </div>
+  </div>
+  <p class="what"><code>length(a)</code> calls <code>strlen</code> on the string it receives and prints the result.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>C · 13 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/passing_string_in_function1.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">length</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">x</span><span class="p">[]){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strlen</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Length of string: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">a</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;programmer&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="n">length</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 13 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>Length of string: 10
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>Length of string: 10</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>char a[] = &quot;programmer&quot;</code> holds 10 characters plus <code>&#x27;\0&#x27;</code>.</li><li><code>length(char x[])</code> gets the address of the string.</li><li><code>strlen(x)</code> counts up to <code>&#x27;\0&#x27;</code> and gets 10.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> Why doesn&#x27;t a string need a separate size argument, unlike an int array?</summary><div>The <code>&#x27;\0&#x27;</code> at the end tells functions where the string stops.</div></details>
+</section>
+<section class="prog" id="p-passing-string-in-function2">
+  <div class="prog-h">
+    <span class="num">4</span>
+    <div class="prog-t">
+      <h3>Change a string inside a function</h3>
+      <div class="meta"><code class="fname">passing_string_in_function2.c</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(1) · Space O(1)</span></div>
+    </div>
+  </div>
+  <p class="what"><code>makeFirstCharUpper</code> capitalises the first letter, and the change is still there back in <code>main</code>.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 54 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/passing_string_in_function2.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm"> * This program demonstrates how strings are passed to functions and modified in C</span>
+<span class="cm"> * Important concepts shown:</span>
+<span class="cm"> * 1. Strings are character arrays in C</span>
+<span class="cm"> * 2. Like regular arrays, strings are passed by reference</span>
+<span class="cm"> * 3. Changes made to string in function affect original string</span>
+<span class="cm"> * 4. Various string manipulation functions from different headers:</span>
+<span class="cm"> *    - stdio.h for input/output (printf)</span>
+<span class="cm"> *    - string.h for string operations </span>
+<span class="cm"> *    - ctype.h for character operations (toupper)</span>
+<span class="cm"> */</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ctype.h&gt;</span>
+
+<span class="cm">/* Function that takes a string parameter:</span>
+<span class="cm"> * char x[]: String parameter - Actually receives address of first character</span>
+<span class="cm"> *           Writing char x[] is same as writing char* x</span>
+<span class="cm"> * The function modifies first character to uppercase</span>
+<span class="cm"> */</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">makeFirstCharUpper</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">x</span><span class="p">[]){</span>
+<span class="w">    </span><span class="cm">/* toupper() from ctype.h converts character to uppercase</span>
+<span class="cm">     * x[0] accesses first character of string</span>
+<span class="cm">     * Since we have string&#39;s address, changes affect original string</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toupper</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Print modified string using %s format specifier</span>
+<span class="cm">     * %s tells printf to expect a string (char array)</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="cm">/* Initialize string using array initialization</span>
+<span class="cm">     * char a[] automatically allocates enough space for &quot;programmer&quot;</span>
+<span class="cm">     * Including null terminator \0 at end</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">a</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;programmer&quot;</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Call function by passing string &#39;a&#39;</span>
+<span class="cm">     * Array name &#39;a&#39; automatically converts to address of first character</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">makeFirstCharUpper</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Print string again to show it&#39;s permanently modified</span>
+<span class="cm">     * This is because strings are passed by reference</span>
+<span class="cm">     * Any changes in function affect original string</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;After function call, there is also change to original string: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 54 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>Programmer
+After function call, there is also change to original string: Programmer
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Both lines show <code>Programmer</code>, because the function changed <code>main</code>&#x27;s array.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>x[0] = toupper(x[0])</code> (from <code>&lt;ctype.h&gt;</code>) turns <code>p</code> into <code>P</code>.</li><li>The function prints <code>Programmer</code>.</li><li><code>main</code> prints <code>a</code> again, and it is <code>Programmer</code> there too.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> This only works because <code>a</code> is an array. Changing a string literal (<code>char *s = &quot;programmer&quot;; s[0] = &#x27;P&#x27;;</code>) is undefined behaviour and often crashes.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> What does <code>toupper(&#x27;P&#x27;)</code> return?</summary><div><code>&#x27;P&#x27;</code>. Characters that are already uppercase, and characters that aren&#x27;t letters, come back unchanged.</div></details>
+</section>
+<section class="prog" id="p-pointer-as-parameter-of-array">
+  <div class="prog-h">
+    <span class="num">5</span>
+    <div class="prog-t">
+      <h3>Pointer parameters: arithmetic, changes and strcpy</h3>
+      <div class="meta"><code class="fname">pointer_as_parameter_of_array.c</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n) · Space O(1)</span></div>
+    </div>
+  </div>
+  <p class="what">Prints an array with <code>*(x + i)</code>, changes a string through a <code>char*</code>, and copies one string into another with <code>strcpy</code> inside a function.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 104 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/pointer_as_parameter_of_array.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm"> * This program demonstrates two different ways to access array elements:</span>
+<span class="cm"> * 1. Using pointer arithmetic (*(ptr + index))</span>
+<span class="cm"> * 2. Using array indexing notation (array[index])</span>
+<span class="cm"> * Both methods achieve the same result but use different syntax</span>
+<span class="cm"> *</span>
+<span class="cm"> * The program also shows different ways to format output:</span>
+<span class="cm"> * - %d for integers: Used to print single integer values</span>
+<span class="cm"> * - %s for strings: Used to print character arrays (strings) until null terminator</span>
+<span class="cm"> * This helps understand how C handles different data types in printf</span>
+<span class="cm"> */</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+
+<span class="cm">/* Function that takes two parameters:</span>
+<span class="cm"> * int *x: Pointer to first element of array</span>
+<span class="cm"> *         Arrays decay to pointers when passed to functions</span>
+<span class="cm"> * int n: Size of array - needed because size information is lost when array is passed</span>
+<span class="cm"> *</span>
+<span class="cm"> * This function uses %d formatter because it prints individual integers</span>
+<span class="cm"> * Each integer is accessed using pointer arithmetic and printed separately</span>
+<span class="cm"> */</span>
+
+<span class="c1">// The array parameter ar[] is interpreted as a pointer to the first element of the array.</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">fun</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="cm">/* First way to access array elements: Pointer arithmetic</span>
+<span class="cm">     * *(x + i) means:</span>
+<span class="cm">     * - Start at address x</span>
+<span class="cm">     * - Move i positions forward (each position is sizeof(int) bytes)</span>
+<span class="cm">     * - Get value at that address using *</span>
+<span class="cm">     * </span>
+<span class="cm">     * Using %d formatter because we&#39;re printing one integer at a time</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">i</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/* Function that takes a string parameter</span>
+<span class="cm"> * Uses %s formatter because it handles entire string at once</span>
+<span class="cm"> * %s automatically prints characters until it finds null terminator (\0)</span>
+<span class="cm"> * This is more efficient than printing character by character</span>
+<span class="cm"> */</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">fun2</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">){</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w">  </span><span class="c1">// Print entire string using %s</span>
+<span class="w">    </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;c&#39;</span><span class="p">;</span><span class="w">  </span><span class="c1">// Modify first character - shows strings are mutable</span>
+<span class="p">}</span>
+
+<span class="cm">/* Function demonstrating string manipulation</span>
+<span class="cm"> * Takes two string parameters and copies second into first</span>
+<span class="cm"> * Uses strcpy which is designed for string copying</span>
+<span class="cm"> * strcpy automatically handles null terminator</span>
+<span class="cm"> */</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">fun3</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">y</span><span class="p">){</span>
+<span class="w">    </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;c&#39;</span><span class="p">;</span><span class="w">  </span><span class="c1">// First modify initial character</span>
+<span class="w">    </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strcpy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">);</span><span class="w">  </span><span class="c1">// Then copy entire string y into x</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="cm">/* Initialize array with 5 integers</span>
+<span class="cm">     * Elements are stored in consecutive memory locations</span>
+<span class="cm">     * Will be printed using %d formatter in fun() - one integer at a time</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">};</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Pass array to function</span>
+<span class="cm">     * &#39;a&#39; automatically converts to address of first element</span>
+<span class="cm">     * Same as writing &amp;a[0]</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">fun</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* Second way to access array elements: Array indexing</span>
+<span class="cm">     * a[i] is actually converted by compiler to *(a + i)</span>
+<span class="cm">     * This is more readable than pointer arithmetic</span>
+<span class="cm">     * Both methods work exactly the same way internally</span>
+<span class="cm">     * Still using %d because we&#39;re printing integers one at a time</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">5</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* String operations using %s formatter</span>
+<span class="cm">     * b[] is a character array (string) initialized with &quot;programmer&quot;</span>
+<span class="cm">     * Will be printed using %s which handles entire string at once</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">b</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;programmer&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="n">fun2</span><span class="p">(</span><span class="n">b</span><span class="p">);</span><span class="w">  </span><span class="c1">// Demonstrates string printing and modification</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span><span class="w">  </span><span class="c1">// Show modified string</span>
+
+<span class="w">    </span><span class="cm">/* More string operations showing copying</span>
+<span class="cm">     * Both d and e are character arrays with space for 10 chars</span>
+<span class="cm">     * Will be printed using %s formatter</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">d</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;air&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;apple&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="n">fun3</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span><span class="w">  </span><span class="c1">// Copy e into d after modifying first char</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">);</span><span class="w">  </span><span class="c1">// Show result of string copy</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 104 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>12345
+12345
+programmer
+crogrammer
+apple
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>12345</code>, <code>12345</code>, <code>programmer</code>, <code>crogrammer</code>, <code>apple</code>. The <code>&#x27;c&#x27;</code> written into <code>d</code> gets overwritten by the copy.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>fun(a, 5)</code> prints <code>*(x+i)</code> with no spaces, giving <code>12345</code>. <code>main</code> then prints <code>a[i]</code> the same way.</li><li><code>fun2(b)</code> prints <code>programmer</code>, then sets <code>x[0] = &#x27;c&#x27;</code>. <code>main</code> then prints <code>crogrammer</code>.</li><li><code>fun3(d, e)</code> first sets <code>d[0] = &#x27;c&#x27;</code>, then <code>strcpy(d, e)</code> overwrites the whole string with <code>apple</code>.</li><li><code>main</code> prints <code>d</code>, which is now <code>apple</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> <code>x = strcpy(x, y)</code> only changes the local pointer <code>x</code>, which doesn&#x27;t matter here. What matters is that <code>strcpy</code> wrote into the memory <code>x</code> points to. <code>d</code> must be big enough to hold <code>y</code>.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Is <code>*(x + 2)</code> the same as <code>x[2]</code>?</summary><div>Yes. The array notation is shorthand for the pointer version.</div></details>
+</section>
+<section class="prog" id="p-factorial">
+  <div class="prog-h">
+    <span class="num">6</span>
+    <div class="prog-t">
+      <h3>Factorial by recursion</h3>
+      <div class="meta"><code class="fname">factorial.c</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n) · Space O(n) stack</span></div>
+    </div>
+  </div>
+  <p class="what"><code>factorial(n)</code> returns <code>n * factorial(n - 1)</code>, and it stops at <code>factorial(0) = 1</code>.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 47 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/factorial.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm"> * This program calculates factorial of a number using recursion</span>
+<span class="cm"> * Important concepts shown:</span>
+<span class="cm"> * 1. Use of long long data type for large numbers</span>
+<span class="cm"> * 2. Different format specifiers in scanf/printf</span>
+<span class="cm"> * 3. Recursive function implementation</span>
+<span class="cm"> */</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="cm">/* Function that calculates factorial recursively:</span>
+<span class="cm"> * Parameter:</span>
+<span class="cm"> * n: Integer number whose factorial needs to be calculated</span>
+<span class="cm"> * Returns: long long because factorial can be a very large number</span>
+<span class="cm"> * </span>
+<span class="cm"> * Uses recursion by calling itself with (n-1) until n becomes 0</span>
+<span class="cm"> * For example: factorial(5) = 5 * factorial(4)</span>
+<span class="cm"> *                           = 5 * 4 * factorial(3)</span>
+<span class="cm"> *                           = 5 * 4 * 3 * factorial(2)</span>
+<span class="cm"> *                           = 5 * 4 * 3 * 2 * factorial(1)</span>
+<span class="cm"> *                           = 5 * 4 * 3 * 2 * 1 * factorial(0)</span>
+<span class="cm"> *                           = 5 * 4 * 3 * 2 * 1 * 1</span>
+<span class="cm"> *                           = 120</span>
+<span class="cm"> */</span>
+<span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">factorial</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">  </span><span class="c1">// Base case: factorial of 0 is 1</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w">  </span><span class="c1">// Recursive case: n! = n * (n-1)!</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="cm">/* scanf with %d format specifier:</span>
+<span class="cm">     * %d is used for reading integer value</span>
+<span class="cm">     * &amp;n passes address where input should be stored</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* printf with %lld format specifier:</span>
+<span class="cm">     * %lld is used because factorial returns long long</span>
+<span class="cm">     * Regular %d can&#39;t handle such large numbers</span>
+<span class="cm">     * \n adds newline after printing result</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%lld</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">));</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 47 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5</pre><p class="io-note">n = 5.</p></div><div class="io out"><div class="io-h">Output </div><pre>120
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>120</code> (5×4×3×2×1).</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>n</code>.</li><li>Base case: <code>n == 0</code> returns 1.</li><li>Otherwise, return <code>n * factorial(n - 1)</code>.</li><li>Print the result with <code>%lld</code>, because the return type is <code>long long</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> A <code>long long</code> can hold values only up to 20!. A negative <code>n</code> never reaches the base case.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> List the calls made for <code>factorial(3)</code>.</summary><div>factorial(3) → factorial(2) → factorial(1) → factorial(0). They return 1, 1, 2, 6 on the way back.</div></details>
+</section>
+<section class="prog" id="p-print-digits">
+  <div class="prog-h">
+    <span class="num">7</span>
+    <div class="prog-t">
+      <h3>Print the digits of a number</h3>
+      <div class="meta"><code class="fname">print_digits.c</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(digits) per number · Space O(digits)</span></div>
+    </div>
+  </div>
+  <p class="what">For each test case, prints the digits of the number from left to right with spaces between them. The recursion strips off the last digit and prints it only after the rest of the number has been printed.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 65 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/print_digits.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm"> * This program prints individual digits of numbers using recursion</span>
+<span class="cm"> * Important concepts shown:</span>
+<span class="cm"> * 1. Recursive function to break down number into digits</span>
+<span class="cm"> * 2. Use of modulo (%) operator to extract last digit</span>
+<span class="cm"> * 3. Integer division (/) to remove last digit</span>
+<span class="cm"> * 4. Different format specifiers in scanf/printf</span>
+<span class="cm"> */</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="cm">/* Function that prints digits of a number recursively:</span>
+<span class="cm"> * Parameter:</span>
+<span class="cm"> * n: Integer number whose digits need to be printed</span>
+<span class="cm"> * </span>
+<span class="cm"> * Uses recursion by:</span>
+<span class="cm"> * 1. Getting last digit using n % 10 </span>
+<span class="cm"> * 2. Removing last digit using n / 10</span>
+<span class="cm"> * 3. Recursively calling with remaining digits</span>
+<span class="cm"> * 4. Printing current digit after recursive call returns</span>
+<span class="cm"> *</span>
+<span class="cm"> * For example: printDigits(123)</span>
+<span class="cm"> * First gets 3 (123 % 10), calls printDigits(12)</span>
+<span class="cm"> * Then gets 2 (12 % 10), calls printDigits(1)</span>
+<span class="cm"> * Then gets 1 (1 % 10), calls printDigits(0)</span>
+<span class="cm"> * Base case reached, starts printing: 1 2 3</span>
+<span class="cm"> */</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printDigits</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w">  </span><span class="c1">// Base case: when no digits left</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">  </span><span class="c1">// Get rightmost digit</span>
+<span class="w">    </span><span class="n">printDigits</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span><span class="w"> </span><span class="c1">// Recursive call with remaining digits</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">digit</span><span class="p">);</span><span class="w"> </span><span class="c1">// Print digit with space using %d formatter</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="cm">/* First scanf reads number of test cases</span>
+<span class="cm">     * %d format specifier used for reading integer input</span>
+<span class="cm">     * &amp;n passes address where input should be stored</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">t</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* Loop runs n times for n test cases</span>
+<span class="cm">     * For each test case:</span>
+<span class="cm">     * 1. Read a number using scanf with %d</span>
+<span class="cm">     * 2. Call printDigits to print its digits</span>
+<span class="cm">     * 3. Print newline to separate test cases</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">t</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">        </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;0</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="n">printDigits</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// Add newline after printing all digits</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 65 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3
+121
+0
+4056</pre><p class="io-note">3 test cases, including 0 and a number with a 0 inside it.</p></div><div class="io out"><div class="io-h">Output </div><pre>1 2 1 
+0
+4 0 5 6 
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>1 2 1</code>, then <code>0</code>, then <code>4 0 5 6</code>. The 0 inside 4056 is printed correctly because the function only stops when the whole remaining number is 0.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>t</code>, the number of test cases.</li><li>For each <code>n</code>: if it is 0, print <code>0</code> directly, because the recursion would print nothing.</li><li><code>printDigits(n)</code>: return if <code>n == 0</code>. Otherwise save <code>digit = n % 10</code>, call <code>printDigits(n / 10)</code>, then print <code>digit</code>.</li><li>Print a newline after each number.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> A negative number would print negative digits, because <code>%</code> keeps the sign. Handle the sign first if negatives are allowed.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why is <code>n == 0</code> handled in <code>main</code>?</summary><div><code>printDigits(0)</code> returns at once and prints nothing.</div></details>
+</section>
+<section class="prog" id="p-palindrome">
+  <div class="prog-h">
+    <span class="num">8</span>
+    <div class="prog-t">
+      <h3>Palindrome array by recursion</h3>
+      <div class="meta"><code class="fname">palindrome.c</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(n) · Space O(n) stack</span></div>
+    </div>
+  </div>
+  <p class="what"><code>isPalindrome(a, i, j)</code> checks the outer pair and then the rest of the array inside it.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>C · 28 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/palindrome.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">isPalindrome</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">isPalindrome</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="mi">-1</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">isPalindrome</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="mi">-1</span><span class="p">)){</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;YES</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;NO</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 28 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5
+1 2 3 2 1</pre><p class="io-note">5 numbers.</p></div><div class="io out"><div class="io-h">Output </div><pre>YES
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>YES</code>: 1=1, 2=2, and the middle 3 matches itself.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>n</code> and the array.</li><li>Base case: when <code>i &gt; j</code>, every pair has matched, so return 1.</li><li>Otherwise, return <code>a[i] == a[j] &amp;&amp; isPalindrome(a, i+1, j-1)</code>.</li><li><code>&amp;&amp;</code> stops early: at the first mismatch the recursive call is skipped.</li><li>Print <code>YES</code> or <code>NO</code>.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> For an even length such as <code>1 2 2 1</code>, which call hits the base case?</summary><div><code>isPalindrome(a, 2, 1)</code>, because i has passed j.</div></details>
+</section>
+<section class="prog" id="p-max-min">
+  <div class="prog-h">
+    <span class="num">9</span>
+    <div class="prog-t">
+      <h3>Max and Min (with a function)</h3>
+      <div class="meta"><code class="fname">max_min.c</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(n) · Space O(1) extra</span><a class="prob" href="https://codeforces.com/group/MWSDmqGsZm/contest/223205/problem/G" target="_blank" rel="noopener">↗ Codeforces group - Max and Min</a></div>
+    </div>
+  </div>
+  <p class="what"><code>minMax(arr, n, &amp;min, &amp;max)</code> finds both answers in one pass and writes them back through the pointers.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 108 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/max_min.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm">Max and MIN</span>
+<span class="cm">time limit per test1 second</span>
+<span class="cm">memory limit per test64 megabytes</span>
+<span class="cm">Given an array A of size N. Print the minimum and the maximum number in the array.</span>
+
+<span class="cm">Note: Solve this problem using function.</span>
+
+<span class="cm">Input</span>
+<span class="cm">First line will contain a number N (1 ≤ N ≤ 103) number of elements.</span>
+
+<span class="cm">Second line will contain N numbers (0 ≤ Xi ≤ 105).</span>
+
+<span class="cm">Output</span>
+<span class="cm">Print the minimum and the maximum number separated by a space.</span>
+
+<span class="cm">Example</span>
+<span class="cm">InputCopy</span>
+<span class="cm">5</span>
+<span class="cm">10 13 95 1 3</span>
+<span class="cm">OutputCopy</span>
+<span class="cm">1 95</span>
+<span class="cm">*/</span>
+
+<span class="cm">/*</span>
+<span class="cm"> * This program finds minimum and maximum values in an array using functions</span>
+<span class="cm"> * Important concepts shown:</span>
+<span class="cm"> * 1. Passing arrays and pointers as function parameters</span>
+<span class="cm"> * 2. Using scanf/printf with different format specifiers</span>
+<span class="cm"> * 3. Pointer dereferencing to modify values</span>
+<span class="cm"> */</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="cm">/* Function that finds minimum and maximum values in array:</span>
+<span class="cm"> * Parameters:</span>
+<span class="cm"> * arr[]: Integer array to search through</span>
+<span class="cm"> * n: Size of array</span>
+<span class="cm"> * *min: Pointer to store minimum value</span>
+<span class="cm"> * *max: Pointer to store maximum value</span>
+<span class="cm"> * </span>
+<span class="cm"> * Algorithm:</span>
+<span class="cm"> * 1. Initialize min and max to first element</span>
+<span class="cm"> * 2. Compare each element with current min/max</span>
+<span class="cm"> * 3. Update min/max through pointers if new value found</span>
+<span class="cm"> *</span>
+<span class="cm"> * Uses pointer dereferencing (*min, *max) to modify </span>
+<span class="cm"> * original variables in calling function</span>
+<span class="cm"> */</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">minMax</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">arr</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">min</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">max</span><span class="p">){</span>
+<span class="w">    </span><span class="cm">/* Initialize both min and max to first element</span>
+<span class="cm">     * Use pointer dereferencing to modify values</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="o">*</span><span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="w">    </span><span class="o">*</span><span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cm">/* Loop through remaining elements</span>
+<span class="cm">     * Compare each with current min and max</span>
+<span class="cm">     * Update if new min/max found using pointer dereferencing</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="o">*</span><span class="n">min</span><span class="p">){</span>
+<span class="w">            </span><span class="o">*</span><span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">*</span><span class="n">max</span><span class="p">){</span>
+<span class="w">            </span><span class="o">*</span><span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="cm">/* scanf with %d format specifier:</span>
+<span class="cm">     * %d is used for reading integer input</span>
+<span class="cm">     * &amp;n passes address where input should be stored</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* Create array of size n</span>
+<span class="cm">     * Will store input numbers</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cm">/* Read n integers into array</span>
+<span class="cm">     * Using %d format specifier for each integer</span>
+<span class="cm">     * &amp;arr[i] passes address of array element</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">min</span><span class="p">,</span><span class="w"> </span><span class="n">max</span><span class="p">;</span>
+<span class="w">    </span><span class="cm">/* Call minMax function:</span>
+<span class="cm">     * Pass array, size, and addresses of min/max</span>
+<span class="cm">     * Function will modify min and max through pointers</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">minMax</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">min</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">max</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* printf with %d format specifiers:</span>
+<span class="cm">     * Two %d used because printing two integers</span>
+<span class="cm">     * Space between %d adds space between numbers</span>
+<span class="cm">     * \n adds newline after printing</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">min</span><span class="p">,</span><span class="w"> </span><span class="n">max</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 108 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5
+10 13 95 1 3</pre><p class="io-note">The judge&#x27;s example.</p></div><div class="io out"><div class="io-h">Output </div><pre>1 95
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>1 95</code>, which matches the expected answer.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>n</code> and the array.</li><li>Inside <code>minMax</code>: <code>*min = *max = arr[0]</code>.</li><li>For <code>i</code> from 1: if <code>arr[i]</code> is smaller than <code>*min</code> or bigger than <code>*max</code>, update that value.</li><li><code>main</code> prints <code>min max</code>.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> Why pass <code>&amp;min</code> and <code>&amp;max</code> instead of returning them?</summary><div>A C function can return only one value, but here there are two results.</div></details>
+</section>
+<section class="prog" id="p-shift-zeros">
+  <div class="prog-h">
+    <span class="num">10</span>
+    <div class="prog-t">
+      <h3>Shift Zeros</h3>
+      <div class="meta"><code class="fname">shift_zeros.c</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(n) · Space O(1) extra</span><a class="prob" href="https://codeforces.com/group/MWSDmqGsZm/contest/223205/problem/N" target="_blank" rel="noopener">↗ Codeforces group - Shift Zeros</a></div>
+    </div>
+  </div>
+  <p class="what">Moves every non-zero value to the front, keeping their order, and fills the rest with zeros. It all happens inside the array itself.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 124 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/shift_zeros.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm">Shift Zeros</span>
+<span class="cm">time limit per test1 second</span>
+<span class="cm">memory limit per test256 megabytes</span>
+<span class="cm">Given an array A</span>
+<span class="cm"> of size N</span>
+<span class="cm">. Print the array elements after shifting all zeroes in array A</span>
+<span class="cm"> to the right.</span>
+
+<span class="cm">Note: Solve this problem using function.</span>
+
+<span class="cm">Input</span>
+<span class="cm">First line will contain a number N</span>
+<span class="cm"> (1≤N≤103)</span>
+<span class="cm"> number of elements.</span>
+
+<span class="cm">Second line will contain N</span>
+<span class="cm"> numbers (0≤Ai≤103)</span>
+<span class="cm">.</span>
+
+<span class="cm">Output</span>
+<span class="cm">Print the array after shifting right all its zeros.</span>
+
+<span class="cm">Examples</span>
+<span class="cm">InputCopy</span>
+<span class="cm">4</span>
+<span class="cm">2 0 0 5</span>
+<span class="cm">OutputCopy</span>
+<span class="cm">2 5 0 0 </span>
+<span class="cm">InputCopy</span>
+<span class="cm">5</span>
+<span class="cm">1 5 0 7 4</span>
+<span class="cm">OutputCopy</span>
+<span class="cm">1 5 7 4 0 </span>
+<span class="cm">*/</span>
+
+<span class="cm">/*</span>
+<span class="cm"> * This program shifts all zeros in an array to the right while maintaining</span>
+<span class="cm"> * the relative order of non-zero elements</span>
+<span class="cm"> * Important concepts shown:</span>
+<span class="cm"> * 1. Array manipulation using functions</span>
+<span class="cm"> * 2. Use of format specifiers in scanf/printf</span>
+<span class="cm"> * 3. In-place array modification</span>
+<span class="cm"> */</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="cm">/* Function that shifts zeros to right in an array:</span>
+<span class="cm"> * Parameters:</span>
+<span class="cm"> * arr[]: Integer array to be modified</span>
+<span class="cm"> * n: Size of array</span>
+<span class="cm"> * </span>
+<span class="cm"> * Algorithm:</span>
+<span class="cm"> * 1. Keep track of position where next non-zero should go</span>
+<span class="cm"> * 2. Scan array and move non-zeros to front</span>
+<span class="cm"> * 3. Fill remaining positions with zeros</span>
+<span class="cm"> *</span>
+<span class="cm"> * For example: arr = [2,0,0,5]</span>
+<span class="cm"> * First pass: Move non-zeros to front</span>
+<span class="cm"> * - Move 2 to index 0</span>
+<span class="cm"> * - Move 5 to index 1</span>
+<span class="cm"> * Second pass: Fill remaining with zeros</span>
+<span class="cm"> * - Put 0 at index 2</span>
+<span class="cm"> * - Put 0 at index 3</span>
+<span class="cm"> * Result: [2,5,0,0]</span>
+<span class="cm"> */</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">shiftZeros</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">arr</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">nonZeroIndex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">// Tracks where next non-zero should go</span>
+
+<span class="w">    </span><span class="cm">/* First pass: Move all non-zero elements to front</span>
+<span class="cm">     * Maintains relative order of non-zero elements</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">            </span><span class="n">arr</span><span class="p">[</span><span class="n">nonZeroIndex</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">            </span><span class="n">nonZeroIndex</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Second pass: Fill remaining positions with zeros</span>
+<span class="cm">     * From nonZeroIndex to end of array</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="n">nonZeroIndex</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="cm">/* scanf with %d format specifier:</span>
+<span class="cm">     * %d is used for reading integer value</span>
+<span class="cm">     * &amp;n passes address where input should be stored</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Create array of size n</span>
+<span class="cm">     * Will store input numbers</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cm">/* Read n integers into array</span>
+<span class="cm">     * Using %d format specifier for each integer</span>
+<span class="cm">     * &amp;arr[i] passes address of array element</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Call function to shift zeros right</span>
+<span class="cm">     * Array is passed by reference so original array is modified</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="n">shiftZeros</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* Print modified array</span>
+<span class="cm">     * Using %d format specifier for each integer</span>
+<span class="cm">     * Add space between numbers for readability</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span><span class="w">  </span><span class="c1">// Note space after %d</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// Add newline after printing array</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 124 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
+0 3 0 0 8 1</pre><p class="io-note">6 numbers with zeros mixed in.</p></div><div class="io out"><div class="io-h">Output </div><pre>3 8 1 0 0 0 
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>3 8 1 0 0 0</code>: the non-zero values are in their original order, and the zeros are at the end.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>nonZeroIndex</code> is the next free spot at the front.</li><li>For each <code>arr[i]</code> that isn&#x27;t 0, copy it to <code>arr[nonZeroIndex]</code> and add 1 to the index.</li><li>Then set <code>arr[nonZeroIndex..n-1]</code> to 0.</li><li>The function changed <code>main</code>&#x27;s array directly, so <code>main</code> just prints it.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> Why is it safe to write <code>arr[nonZeroIndex] = arr[i]</code> in place?</summary><div><code>nonZeroIndex</code> is never ahead of <code>i</code>, so the value you overwrite has already been read.</div></details>
+</section>
+<section class="prog" id="p-max-number">
+  <div class="prog-h">
+    <span class="num">11</span>
+    <div class="prog-t">
+      <h3>Mountain rows 1..N..1 (header says Max Number)</h3>
+      <div class="meta"><code class="fname">max_number.c</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(sum of N) · Space O(T)</span></div>
+    </div>
+  </div>
+  <p class="what">The comment at the top describes the Max Number problem, but the code solves a different task. For each <code>N</code> it prints <code>1 2 … N … 2 1</code>. <code>firstPart</code> counts up and <code>secondPart</code> counts down.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 55 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/max_number.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm">Max Number</span>
+<span class="cm">time limit per test1 second</span>
+<span class="cm">memory limit per test64 megabytes</span>
+<span class="cm">Given a number N and an array A of N numbers. Print the maximum value in this array.</span>
+
+<span class="cm">Note: Solve this problem using recursion.</span>
+
+<span class="cm">Input</span>
+<span class="cm">First line contains a number N (1 ≤ N ≤ 103) number of elements.</span>
+
+<span class="cm">Second line contains N numbers ( - 109 ≤ Ai ≤ 109).</span>
+
+<span class="cm">Output</span>
+<span class="cm">Print the maximum value in this array.</span>
+
+<span class="cm">Example</span>
+<span class="cm">InputCopy</span>
+<span class="cm">5</span>
+<span class="cm">1 -3 5 4 -6</span>
+<span class="cm">OutputCopy</span>
+<span class="cm">5</span>
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">firstPart</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">secondPart</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="n">n</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">T</span><span class="p">;</span><span class="w"> </span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">N</span><span class="p">[</span><span class="mi">10005</span><span class="p">];</span>
+<span class="w">    </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">T</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">T</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">N</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">T</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">firstPart</span><span class="p">(</span><span class="n">N</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="n">secondPart</span><span class="p">(</span><span class="n">N</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 55 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3
+1
+3
+5</pre><p class="io-note">The format this code reads: T, then T values.</p></div><div class="io out"><div class="io-h">Output </div><pre>1 
+1 2 3 2 1 
+1 2 3 4 5 4 3 2 1 
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>1</code>, <code>1 2 3 2 1</code> and <code>1 2 3 4 5 4 3 2 1</code>, each row ending with a space.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>T</code>, then <code>T</code> numbers into <code>N[]</code>.</li><li>For each one, <code>firstPart(N[i])</code> prints 1 up to N.</li><li><code>secondPart(N[i])</code> prints N−1 down to 1.</li><li>Print a newline after each row.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> <strong>This doesn&#x27;t solve Max Number.</strong> It uses no recursion and ignores the array format. A recursive solution would be <code>int mx(int i){ if(i == n-1) return a[i]; int r = mx(i+1); return a[i] &gt; r ? a[i] : r; }</code>. The practice link is in the list below.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> What row does this code print for N = 2?</summary><div><code>1 2 1</code>.</div></details>
+</section></section>
+  <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://codeforces.com/group/MWSDmqGsZm/contest/223205/problem/N" target="_blank" rel="noopener">Shift Zeros (Function)</a><span class="site">Codeforces</span></li><li><a href="https://codeforces.com/group/MWSDmqGsZm/contest/223205/problem/G" target="_blank" rel="noopener">Max and Min (Function)</a><span class="site">Codeforces</span></li><li><a href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/K" target="_blank" rel="noopener">Max Number (Recursion)</a><span class="site">Codeforces</span></li><li><a href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/I" target="_blank" rel="noopener">Count Vowels (Recursion)</a><span class="site">Codeforces</span></li><li><a href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/P" target="_blank" rel="noopener">Log2 (Recursion)</a><span class="site">Codeforces</span></li></ul></section>
+  <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>Plain parameters are copies. Pointer parameters reach the caller&#x27;s variables.</li><li>Arrays and strings are passed as addresses, so functions can change them. Pass the size of an array along with it.</li><li>Use pointer parameters when a function has more than one result.</li><li>Recursion with a return value: factorial, digits, palindrome.</li><li><code>n % 10</code> gives the last digit, and <code>n / 10</code> removes it.</li></ul></section>
+  <section class="block" id="quiz"><h2>✅ Check yourself</h2><details class="check"><summary>Inside <code>void f(int x[])</code>, what is <code>sizeof(x)</code>?</summary><div>The size of a pointer (usually 8 bytes on 64-bit), not the size of the array.</div></details><details class="check"><summary>How would you count the vowels in a string recursively?</summary><div><code>count(s, i)</code>: if <code>s[i] == &#x27;\0&#x27;</code>, return 0. Otherwise return <code>isVowel(s[i]) + count(s, i+1)</code>.</div></details><details class="check"><summary>What is 20! compared with the largest <code>long long</code>?</summary><div>About 2.4×10^18, which still fits (the limit is about 9.2×10^18). 21! does not fit.</div></details></section>
+  <nav class="pager"><a class="prev" href="../c-programming/module-18.html"><small>← Previous</small><b>Module 18</b><span>Recursion basics</span></a><a class="next" href="../c-programming/module-20.html"><small>Next →</small><b>Module 20</b><span>Final exam: matrices, functions, big numbers and strings</span></a></nav>
+</article>
+</main>
+<footer class="foot">
+  <p>Shammunul's revision notes from the Phitron CSE program. Code written while taking the course; outputs are real runs
+  (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
+</footer>
+<script>window.SITE_ROOT="../";</script>
+<script src="../assets/search-index.js?v=3" defer></script>
+<script src="../assets/site.js?v=3" defer></script>
+</body>
+</html>

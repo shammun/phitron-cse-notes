@@ -1,0 +1,218 @@
+{
+  "module_id": "4-introduction-to-algorithms--module-10",
+  "title": "Floyd-Warshall: all-pairs shortest paths",
+  "overview": "This module moves from single-source shortest paths (Dijkstra, Bellman-Ford) to **all-pairs** shortest paths with Floyd-Warshall. You keep one n x n matrix and let every node, one by one, act as a stop-over. The same matrix also tells you whether a negative cycle exists. The practice day repeats Bellman-Ford and Floyd-Warshall on judge problems.",
+  "concepts": [
+    {
+      "term": "Adjacency matrix as a distance table",
+      "explain": "`adj_mat[i][j]` holds the best known cost from `i` to `j`. Start with 0 on the diagonal, the edge weight where an edge exists, and infinity everywhere else.",
+      "snippet": "adj_mat[i][j] = (i == j) ? 0 : INT_MAX;"
+    },
+    {
+      "term": "Relax through a middle node k",
+      "explain": "For each pair (i, j) ask: is going i -> k -> j cheaper than what I have? If yes, overwrite. The outer loop **must** be `k`, so that after round k every path may use nodes 0..k as stop-overs.",
+      "snippet": "for k: for i: for j:\n  if (d[i][k] + d[k][j] < d[i][j]) d[i][j] = d[i][k] + d[k][j];"
+    },
+    {
+      "term": "Guard against infinity",
+      "explain": "`INT_MAX + something` overflows and becomes a huge negative number. Always check that both halves are not infinity before adding.",
+      "snippet": "if (d[i][k] != INT_MAX && d[k][j] != INT_MAX && ...)"
+    },
+    {
+      "term": "Negative cycle check",
+      "explain": "After the three loops, if any `d[i][i]` is below 0, node `i` sits on a cycle whose total weight is negative, so shortest paths are not defined.",
+      "snippet": null
+    },
+    {
+      "term": "Bellman-Ford recap",
+      "explain": "Relax every edge V-1 times. One extra pass that still improves something means a negative cycle is reachable from the source.",
+      "snippet": null
+    },
+    {
+      "term": "Choosing the algorithm",
+      "explain": "Dijkstra: one source, no negative edges, O(E log V). Bellman-Ford: one source, negative edges allowed, O(V·E). Floyd-Warshall: every pair, small n (about n <= 500), O(n^3).",
+      "snippet": null
+    }
+  ],
+  "files": [
+    {
+      "file": "floyd-warshall.cpp",
+      "title": "Floyd-Warshall on a directed graph",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads a weighted directed graph into a matrix, runs the triple loop, and prints the shortest distance between every pair (INF when unreachable).",
+      "steps": [
+        "Read `n` nodes and `e` edges; build `adj_mat[n][n]` with 0 on the diagonal and `INT_MAX` elsewhere.",
+        "For each edge `a b c` store `adj_mat[a][b] = c` (only one direction, the graph is directed).",
+        "Outer loop `k` picks the stop-over node; inner loops `i`, `j` try every pair.",
+        "If both `adj_mat[i][k]` and `adj_mat[k][j]` are finite and their sum is smaller, update `adj_mat[i][j]`.",
+        "Print the matrix row by row, writing `INF` for `INT_MAX`."
+      ],
+      "complexity": "Time O(n^3) · Space O(n^2)",
+      "input": "4 5\n0 1 3\n1 2 1\n0 2 7\n2 3 2\n3 0 6\n",
+      "input_note": "n e, then e lines `from to weight`. Nodes are 0-based.",
+      "output_note": "Row i, column j is the cheapest cost from i to j. Row 0 is `0 3 4 6`: the direct edge 0->2 costs 7, but 0->1->2 costs 3+1 = 4, so the table keeps 4. Row 1 starts with 9 because 1->2->3->0 = 1+2+6.",
+      "watch_out": "`INT_MAX` comes from `<climits>`; the file does not include it and only compiles because this compiler pulls it in through another header. Add `#include <climits>` to be safe.",
+      "check": {
+        "q": "Why must `k` be the outermost loop?",
+        "a": "Because after finishing round k, every pair already knows the best path that uses only nodes 0..k in the middle. If k were inside, a pair could be finalised before the stop-over nodes it needs were processed."
+      },
+      "prelude": null,
+      "driver": null
+    },
+    {
+      "file": "detect_negative_weighted_cycle_Floyd_warshall.cpp",
+      "title": "Detect a negative cycle with Floyd-Warshall",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Same triple loop as before, then checks the diagonal. A negative `adj_mat[i][i]` means a negative cycle, otherwise the full distance table is printed.",
+      "steps": [
+        "Build the matrix and run Floyd-Warshall exactly as in `floyd-warshall.cpp`.",
+        "Set `cycle = false`, then look at every `adj_mat[i][i]`.",
+        "The diagonal starts at 0. It can only drop below 0 if some path leaves `i` and comes back with a total cost below zero.",
+        "If `cycle` is true print the warning, otherwise print the matrix."
+      ],
+      "complexity": "Time O(n^3) · Space O(n^2)",
+      "input": "3 3\n0 1 2\n1 2 -3\n2 0 -1\n",
+      "input_note": "The cycle 0->1->2->0 costs 2 + (-3) + (-1) = -2.",
+      "output_note": "The program prints `Negative weighted cycle detected` because going round the cycle makes `adj_mat[0][0]` negative. Remove the edge `2 0 -1` and you get a normal table instead.",
+      "watch_out": null,
+      "check": {
+        "q": "Graph 0->1 (4), 1->0 (-4). Is there a negative cycle?",
+        "a": "No. The cycle costs 4 + (-4) = 0, so the diagonal stays 0, not below 0."
+      },
+      "prelude": null,
+      "driver": null
+    },
+    {
+      "file": "practice_day_1_problem1_bellman_ford.cpp",
+      "title": "GfG: Distance from the source (Bellman-Ford)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "GeeksforGeeks - Distance from the Source (Bellman-Ford)",
+        "url": "https://www.geeksforgeeks.org/problems/distance-from-the-source-bellman-ford-algorithm/1"
+      },
+      "what": "The judge's `bellmanFord` function: returns the distance of every node from `src`, 10^8 for unreachable nodes, or `{-1}` if a negative cycle is reachable.",
+      "steps": [
+        "Create `dist(V, 100000000)` (the judge's 'infinity') and set `dist[src] = 0`.",
+        "Repeat `V-1` times: for every edge `u v w`, if `dist[u]` is finite and `dist[u] + w < dist[v]`, update `dist[v]`.",
+        "Why V-1? A shortest path without cycles has at most V-1 edges, and each pass fixes at least one more edge of it.",
+        "Do one more pass over all edges. If anything still improves, return `{-1}`.",
+        "Otherwise return `dist`."
+      ],
+      "complexity": "Time O(V·E) · Space O(V)",
+      "input": "3 4\n0 1 5\n1 0 3\n1 2 -1\n2 0 1\n2\n",
+      "input_note": "V E, then E edges `u v w`, then the source. This is the judge's second example.",
+      "output_note": "Prints `dist = 1 6 0`, matching the judge's expected `[1, 6, 0]`: from 2 the edge to 0 costs 1, and 2->0->1 costs 1+5 = 6. If a negative cycle were reachable you would see `dist = -1`.",
+      "watch_out": "The file only holds the judge's `Solution` class; the page adds a small test driver to run it.",
+      "check": {
+        "q": "Why check `dist[u] != 100000000` before relaxing?",
+        "a": "An unreachable `u` has no real distance. Adding a negative `w` to the 'infinity' value would wrongly make `v` look reachable."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;",
+      "driver": "int main() {\n    int V, E;\n    cin >> V >> E;\n    vector<vector<int>> edges(E, vector<int>(3));\n    for (auto &e : edges) cin >> e[0] >> e[1] >> e[2];\n    int src;\n    cin >> src;\n    vector<int> dist = Solution().bellmanFord(V, edges, src);\n    cout << \"dist =\";\n    for (int x : dist) cout << \" \" << x;\n    cout << endl;\n    return 0;\n}"
+    },
+    {
+      "file": "practice_day_1_problem2_floyd_warshall.cpp",
+      "title": "GfG: Implementing Floyd-Warshall",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "GeeksforGeeks - Implementing Floyd Warshall",
+        "url": "https://www.geeksforgeeks.org/problems/implementing-floyd-warshall2042/1"
+      },
+      "what": "The matrix uses -1 for 'no edge'. The solution turns -1 into infinity, runs Floyd-Warshall in place, then turns infinity back into -1.",
+      "steps": [
+        "Replace every `-1` with `INT_MAX` so the comparisons work (otherwise -1 would look like a very cheap edge).",
+        "Run the usual `k`, `i`, `j` loops with the infinity guard.",
+        "Replace every remaining `INT_MAX` with `-1` to match the judge's format.",
+        "The driver `main` reads `tc` test cases, calls `shortestDistance`, and prints each matrix followed by `~`."
+      ],
+      "complexity": "Time O(n^3) per test · Space O(1) extra",
+      "input": "2\n3\n0 1 43\n1 0 6\n-1 -1 0\n2\n0 25\n-1 0\n",
+      "input_note": "Number of tests; for each: n, then the n x n matrix.",
+      "output_note": "First test: `0 1 43` becomes `0 1 7` because 0->1->2 costs 1+6. Row 2 stays `-1 -1 0` since node 2 has no outgoing edges. Each matrix ends with a `~` line.",
+      "watch_out": "The 'convert sentinel, compute, convert back' pattern matters: forgetting the first step makes -1 act like a negative edge.",
+      "check": {
+        "q": "What goes wrong if you skip turning -1 into infinity?",
+        "a": "The algorithm treats -1 as an edge of weight -1, so it happily routes through 'missing' edges and produces wrong, too-small distances."
+      },
+      "prelude": null,
+      "driver": null
+    },
+    {
+      "file": "shortest_route_2.cpp",
+      "title": "CSES Shortest Routes II (Floyd-Warshall with queries)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "CSES 1672 - Shortest Routes II",
+        "url": "https://cses.fi/problemset/task/1672"
+      },
+      "what": "Undirected graph with possibly repeated roads. Run Floyd-Warshall once with `long long` distances, then answer each query `s d` in O(1), printing -1 when unreachable.",
+      "steps": [
+        "Fill the matrix for nodes 1..n: 0 on the diagonal, `LLONG_MAX` elsewhere.",
+        "For every road keep the cheapest one: `adj_mat[a][b] = min(adj_mat[a][b], c)` and the same for `[b][a]`.",
+        "Run the triple loop once; this is the expensive O(n^3) part.",
+        "For each query just look up `adj_mat[s][d]`; print -1 if it is still `LLONG_MAX`."
+      ],
+      "complexity": "Time O(n^3 + q) · Space O(n^2)",
+      "input": "4 3\n1 2 5\n2 3 2\n1 3 10\n3\n1 3\n3 1\n1 4\n",
+      "input_note": "n m q, m roads `a b c`, then q queries `s d`. Nodes are 1-based.",
+      "output_note": "The program crashes (access violation) before printing anything. Once fixed it would print 7, 7 and -1 (1->2->3 beats the direct road of 10; node 4 has no roads).",
+      "watch_out": "The matrix is declared `long long adj_mat[n][n]` but the loops use indices 1..n, so index n is outside the array and the program crashes. Fix: declare `adj_mat[n+1][n+1]` (or a global `[505][505]`). Also, a 500x500 local `long long` array is 2 MB; making it global is safer.",
+      "check": {
+        "q": "Why read all roads with `min(...)` instead of plain assignment?",
+        "a": "There can be several roads between the same two cities. A later, more expensive road must not overwrite a cheaper one that was read earlier."
+      },
+      "prelude": null,
+      "driver": null
+    }
+  ],
+  "practice_links": [
+    {
+      "name": "Bellman-Ford (Distance from the Source)",
+      "url": "https://www.geeksforgeeks.org/problems/distance-from-the-source-bellman-ford-algorithm/1",
+      "site": "GeeksforGeeks"
+    },
+    {
+      "name": "Implementing Floyd Warshall",
+      "url": "https://www.geeksforgeeks.org/problems/implementing-floyd-warshall2042/1",
+      "site": "GeeksforGeeks"
+    },
+    {
+      "name": "Dijkstra? (20C)",
+      "url": "https://codeforces.com/problemset/problem/20/C",
+      "site": "Codeforces"
+    },
+    {
+      "name": "Shortest Routes II",
+      "url": "https://cses.fi/problemset/task/1672",
+      "site": "CSES"
+    }
+  ],
+  "recap": [
+    "Floyd-Warshall = three loops, `k` outside, relax `d[i][j]` through `k`.",
+    "Initialise with 0 on the diagonal and infinity elsewhere; guard every addition against infinity.",
+    "A negative value on the diagonal after the loops means a negative cycle.",
+    "Use it when n is small and you need many pair queries: pay O(n^3) once, answer each query in O(1).",
+    "Keep the minimum when the input can repeat an edge."
+  ],
+  "check_yourself": [
+    {
+      "q": "n = 400. Is Floyd-Warshall fast enough?",
+      "a": "400^3 = 64 million simple steps, which is fine within about a second."
+    },
+    {
+      "q": "When would you pick Bellman-Ford over Floyd-Warshall?",
+      "a": "When you only need distances from one source (or n is too big for n^3) and edges can be negative."
+    },
+    {
+      "q": "Why use `long long` for distances in Shortest Routes II?",
+      "a": "A path can use up to n-1 roads each costing up to 10^9, so the total can exceed the `int` limit."
+    }
+  ]
+}

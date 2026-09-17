@@ -1,0 +1,261 @@
+{
+  "module_id": "4-introduction-to-algorithms--module-7",
+  "title": "Dijkstra's shortest path",
+  "overview": "When edges have weights, BFS levels are no longer shortest distances. Dijkstra's algorithm fixes this by always expanding the node with the smallest known distance, using a min-priority queue. The module builds a naive queue version first, then the optimized priority-queue version, and practises it on GFG, CSES and LeetCode.",
+  "concepts": [
+    {
+      "term": "Distance array",
+      "explain": "`dis[v]` = best cost found so far from the source; start with `INT_MAX` (infinity) and `dis[src] = 0`.",
+      "snippet": null
+    },
+    {
+      "term": "Relaxation",
+      "explain": "For an edge `u → v` with weight `w`: if `dis[u] + w < dis[v]`, update `dis[v]` and push `v` again.",
+      "snippet": "if(d + w < dis[v]){ dis[v] = d + w; pq.push({dis[v], v}); }"
+    },
+    {
+      "term": "Min-priority queue of pairs",
+      "explain": "`priority_queue<pair<int,int>, vector<pair<int,int>>, greater<pair<int,int>>>` pops the smallest pair; pairs compare by `first`, so store `{distance, node}`.",
+      "snippet": null
+    },
+    {
+      "term": "Naive vs optimized",
+      "explain": "A plain queue works but may re-process nodes many times. The priority queue processes the closest node first, giving O((V + E) log V).",
+      "snippet": null
+    },
+    {
+      "term": "No negative edges",
+      "explain": "Dijkstra assumes a node's distance is final once popped as the smallest; a negative edge can break that. Use Bellman-Ford then.",
+      "snippet": null
+    },
+    {
+      "term": "Components again",
+      "explain": "Building Roads: the number of new roads needed is (components − 1); connect one representative of each piece to the next.",
+      "snippet": null
+    }
+  ],
+  "files": [
+    {
+      "file": "priority_queue_of_pairs.cpp",
+      "title": "Min-heap of pairs",
+      "kind": "setup",
+      "same_as": null,
+      "problem": null,
+      "what": "Pushes four pairs into a min-priority queue and prints the top, showing that pairs are ordered by their first value.",
+      "steps": [
+        "Declare the queue with `greater<pair<int,int>>` so the smallest comes out first.",
+        "Push `{10,2}`, `{5,3}`, `{1,4}`, `{3,5}`.",
+        "Print `pq.top()`."
+      ],
+      "complexity": "Push/pop O(log n)",
+      "input": null,
+      "input_note": null,
+      "output_note": "It prints `1 4`: the pair with the smallest first value. Without `greater` it would print `10 2`.",
+      "watch_out": null,
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why does Dijkstra push `{distance, node}` and not `{node, distance}`?",
+        "a": "Pairs compare by `first`, and we want the smallest distance on top."
+      }
+    },
+    {
+      "file": "dijkstra_naive.cpp",
+      "title": "Dijkstra with a plain queue",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Relaxes edges using an ordinary FIFO queue of `{node, distance}` pairs.",
+      "steps": [
+        "Set every `dis[i] = INT_MAX`, then `dis[0] = 0`.",
+        "Pop a pair `(par_node, par_dist)`.",
+        "For each `(child_node, child_dist)`: if `par_dist + child_dist < dis[child_node]`, update and push the child.",
+        "Nodes can enter the queue many times; the loop ends when nothing improves."
+      ],
+      "complexity": "Worst case exponential-ish re-processing; fine for tiny graphs",
+      "input": "4 5\n0 1 10\n0 2 3\n2 1 4\n1 3 2\n2 3 8\n",
+      "input_note": "`n e`, then e lines `a b w` (undirected). Source is node 0.",
+      "output_note": "The real output is **empty**: the program never prints the distances (see watch out). The distances it computes are 0, 7, 3, 9.",
+      "watch_out": "After `dijkstra(0)` the code resets `dis` to `INT_MAX` a second time instead of printing it - a copy-paste slip. Replace the second loop with `cout << i << \"->\" << dis[i] << endl;`.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why is the plain-queue version slower?",
+        "a": "It may pop a node with an outdated larger distance and re-relax its edges many times."
+      }
+    },
+    {
+      "file": "dijkstra_optimized.cpp",
+      "title": "Dijkstra with a priority queue",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "The standard Dijkstra: a min-heap always gives the closest unfinished node.",
+      "steps": [
+        "Initialise `dis` to `INT_MAX`, push `{0, src}`.",
+        "Pop the smallest `{par_dist, par_node}`.",
+        "Relax every edge from `par_node`, pushing `{dis[child], child}` when improved.",
+        "Print `i->dis[i]` for all nodes."
+      ],
+      "complexity": "Time O((V + E) log V) · Space O(V + E)",
+      "input": "4 5\n0 1 10\n0 2 3\n2 1 4\n1 3 2\n2 3 8\n",
+      "input_note": "`n e`, then e lines `a b w`. The direct edge 0-1 costs 10, but 0-2-1 costs 3 + 4 = 7.",
+      "output_note": "`1->7` shows Dijkstra chose the cheaper two-edge path over the direct edge; `3->9` is 0-2-1-3.",
+      "watch_out": "Nodes can be popped with an outdated distance; adding `if (par_dist > dis[par_node]) continue;` skips that extra work.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why would BFS give the wrong answer for node 1 here?",
+        "a": "BFS counts edges, so it would pick the direct 1-edge path costing 10."
+      }
+    },
+    {
+      "file": "problem_implement_dijkstra.cpp",
+      "title": "GFG - Implementing Dijkstra",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "GFG - Implementing Dijkstra Algorithm",
+        "url": "https://www.geeksforgeeks.org/problems/implementing-dijkstra-set-1-adjacency-matrix/1"
+      },
+      "what": "The same priority-queue Dijkstra as a function that takes the adjacency list and returns the distance vector.",
+      "steps": [
+        "`dist` is a local vector of `INT_MAX`.",
+        "Push `{0, src}` and relax edges as usual.",
+        "Return `dist`."
+      ],
+      "complexity": "Time O((V + E) log V) · Space O(V)",
+      "input": "4 5\n0 1 10\n0 2 3\n2 1 4\n1 3 2\n2 3 8\n0\n",
+      "input_note": "Driver format: `V E`, E lines `a b w`, then `src`. Same graph as the lesson.",
+      "output_note": "`dist[1] = 7` and `dist[3] = 9`, the same as `dijkstra_optimized.cpp`.",
+      "watch_out": null,
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n",
+      "driver": "int main() {\n    int V, E;\n    cin >> V >> E;\n    vector<vector<pair<int, int>>> adj(V);\n    for (int i = 0; i < E; i++) {\n        int a, b, w; cin >> a >> b >> w;\n        adj[a].push_back({b, w});\n        adj[b].push_back({a, w});\n    }\n    int src; cin >> src;\n    vector<int> d = dijkstra(adj, src);\n    for (int i = 0; i < V; i++) cout << \"dist[\" << i << \"] = \" << d[i] << endl;\n}",
+      "check": {
+        "q": "What does `dist[x]` stay at if x is unreachable?",
+        "a": "`INT_MAX`."
+      }
+    },
+    {
+      "file": "problem_network_delay_time.cpp",
+      "title": "LeetCode 743 - Network Delay Time",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 743 - Network Delay Time",
+        "url": "https://leetcode.com/problems/network-delay-time/"
+      },
+      "what": "Run Dijkstra from `k` on a directed graph; the answer is the largest distance, or -1 if some node is unreachable.",
+      "steps": [
+        "Build directed edges `a → b` with time `c` (nodes are 1-based, arrays have room).",
+        "`dijkstra(k, n)` fills `dis[1..n]`.",
+        "If any `dis[i]` is still `INT_MAX`, return -1.",
+        "Otherwise return the maximum `dis[i]`: the moment the last node hears the signal."
+      ],
+      "complexity": "Time O((V + E) log V) · Space O(V + E)",
+      "input": "2\n3 4 2\n2 1 1\n2 3 1\n3 4 1\n1 2 2\n1 2 1\n",
+      "input_note": "Driver format: cases; each `m n k` then m lines `u v w`. Case 1 is LeetCode example 1; case 2 starts at node 2 with only the edge 1→2.",
+      "output_note": "`2` (expected answer of example 1) and `-1` (from node 2 the signal cannot reach node 1).",
+      "watch_out": null,
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n",
+      "driver": "int main() {\n    int t;\n    cin >> t;\n    while (t--) {\n        int m, n, k;               // m = number of edges, n = nodes, k = start\n        cin >> m >> n >> k;\n        vector<vector<int>> times(m, vector<int>(3));\n        for (auto &e : times) cin >> e[0] >> e[1] >> e[2];\n        Solution s;\n        cout << \"networkDelayTime = \" << s.networkDelayTime(times, n, k) << endl;\n    }\n}",
+      "check": {
+        "q": "Why the maximum distance and not the sum?",
+        "a": "The signal travels to all nodes at the same time; we wait until the farthest one receives it."
+      }
+    },
+    {
+      "file": "gfg_undirected_graph_cycle_bfs.cpp",
+      "title": "GFG - Detect cycle (BFS version)",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "GFG - Detect cycle in an undirected graph",
+        "url": "https://www.geeksforgeeks.org/problems/detect-cycle-in-an-undirected-graph/1"
+      },
+      "what": "Tries the Module 6 parent rule with BFS, storing `{node, parent}` pairs in the queue.",
+      "steps": [
+        "`isCycle` loops over all nodes and starts BFS on unvisited ones.",
+        "The queue holds `{child, curr}` so each node knows its parent.",
+        "A visited neighbour that is not the parent should mean a cycle."
+      ],
+      "complexity": "Time O(V + E) · Space O(V)",
+      "input": "2\n3 3\n0 1\n1 2\n2 0\n4 3\n0 1\n1 2\n2 3\n",
+      "input_note": "Driver format: cases; each `V E` then E edges. A triangle, then a simple path.",
+      "output_note": "The real output is a compile error: `'V' was not declared`. With both fixes below it would print `true` then `false`.",
+      "watch_out": "Two mistakes. (1) `vector<bool> vis(V, false)` uses `V`, which does not exist here; use `n`. (2) The check uses the function argument `parent` (always -1) instead of the popped node's parent `par`, so every edge back to a parent would look like a cycle. Write `if (vis[child] && par != child)`.",
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n",
+      "driver": "int main() {\n    int t;\n    cin >> t;\n    while (t--) {\n        int V, E;\n        cin >> V >> E;\n        vector<vector<int>> adj(V);\n        for (int i = 0; i < E; i++) {\n            int a, b; cin >> a >> b;\n            adj[a].push_back(b);\n            adj[b].push_back(a);\n        }\n        Solution s;\n        cout << \"isCycle = \" << (s.isCycle(adj) ? \"true\" : \"false\") << endl;\n    }\n}",
+      "check": {
+        "q": "Which parent must be compared in the BFS version?",
+        "a": "The parent of the node just popped from the queue (`par`), stored alongside it."
+      }
+    },
+    {
+      "file": "problem_building_roads.cpp",
+      "title": "CSES 1666 - Building Roads",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "CSES 1666 - Building Roads",
+        "url": "https://cses.fi/problemset/task/1666"
+      },
+      "what": "Counts components with DFS and joins each component's first node to the next one's; k = components − 1 new roads.",
+      "steps": [
+        "Build the adjacency list.",
+        "Loop over nodes; each unvisited node starts a DFS and its number is saved in `components`.",
+        "Print `k = components.size() - 1`.",
+        "Print pairs `components[i] components[i+1]`."
+      ],
+      "complexity": "Time O(n + m) · Space O(n + m)",
+      "input": "4 2\n1 2\n3 4\n",
+      "input_note": "The task's sample: 4 cities, roads 1-2 and 3-4.",
+      "output_note": "The real run **crashes** (status is an access-violation code) and prints nothing. The intended output is `1` then `2 3` (or any valid pair like `1 3`).",
+      "watch_out": "Cities are numbered 1..n, but `adj` has size `n`, so `adj[n]` is out of range. Fix: `vector<vector<int>> adj(n + 1)`, `vis(n + 1)`, loop `i` from 1 to n and save `i` (not `i+1`).",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why are exactly (components − 1) roads enough?",
+        "a": "Linking the pieces in a chain connects them all, and fewer links would leave some piece separate."
+      }
+    }
+  ],
+  "practice_links": [
+    {
+      "name": "Implementing Dijkstra Algorithm",
+      "url": "https://www.geeksforgeeks.org/problems/implementing-dijkstra-set-1-adjacency-matrix/1",
+      "site": "GeeksforGeeks"
+    },
+    {
+      "name": "Building Roads",
+      "url": "https://cses.fi/problemset/task/1666/",
+      "site": "CSES"
+    },
+    {
+      "name": "Network Delay Time",
+      "url": "https://leetcode.com/problems/network-delay-time/description/",
+      "site": "LeetCode"
+    }
+  ],
+  "recap": [
+    "Weighted shortest path, no negative edges → Dijkstra.",
+    "Min-heap of `{dist, node}` with `greater<>`.",
+    "Relax: `if (d + w < dis[v])` update and push.",
+    "Start distances at `INT_MAX`; unreachable nodes stay there.",
+    "Watch 1-based node numbers when sizing arrays."
+  ],
+  "check_yourself": [
+    {
+      "q": "Why does Dijkstra fail with negative edges?",
+      "a": "A node popped as \"closest\" could later get a smaller distance through a negative edge, but it is treated as final."
+    },
+    {
+      "q": "What is the complexity of the priority-queue version?",
+      "a": "O((V + E) log V)."
+    },
+    {
+      "q": "In `priority_queue<pair<int,int>>` without `greater`, which pair is on top?",
+      "a": "The largest one (max-heap)."
+    }
+  ]
+}

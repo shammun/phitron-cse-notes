@@ -1,0 +1,253 @@
+{
+  "module_id": "1-introduction-to-programming-language--module-19-recursion-and-pointer",
+  "title": "Passing arrays and strings to functions, and more recursion",
+  "overview": "Module 19 combines functions, pointers and recursion. Arrays and strings reach a function as the address of their first element, so the function can change the caller's data. Pointer parameters let a function hand back more than one result, such as a min and a max. On the recursion side there are factorial, printing digits, and a two-ended palindrome check.",
+  "concepts": [
+    {"term": "Call by value vs by reference", "explain": "A plain `int` parameter is a copy. An `int*` parameter holds the caller's address, so writing to `*y` changes the original.", "snippet": "void fun(int x, int *y){ x *= 10; *y *= 10; }"},
+    {"term": "Arrays decay to pointers", "explain": "`int x[]` and `int *x` mean the same thing in a parameter list. The function gets the address only, so the size must be passed as a separate argument.", "snippet": "int sum(int x[], int n);"},
+    {"term": "Strings in functions", "explain": "A `char[]` string is passed the same way. Changes such as `x[0] = toupper(x[0])` show up in the caller, and `strlen` still works because of the `'\\0'`.", "snippet": null},
+    {"term": "Several results through pointers", "explain": "`minMax(arr, n, &mn, &mx)` fills in two answers, because a function can return only one value.", "snippet": null},
+    {"term": "Recursion with a return value", "explain": "`factorial(n) = n * factorial(n-1)`, and `factorial(0) = 1`. Use `long long`, because factorials grow very fast.", "snippet": null},
+    {"term": "Digits by recursion", "explain": "`n % 10` is the last digit, and `n / 10` is the number without it. Recurse first and print afterwards to get the digits from left to right.", "snippet": null},
+    {"term": "Two-ended recursion", "explain": "A palindrome check compares `a[i]` with `a[j]`, then recurses on `i+1` and `j-1`. It stops with true once `i > j`.", "snippet": "return a[i] == a[j] && isPal(a, i+1, j-1);"}
+  ],
+  "files": [
+    {
+      "file": "call_by_value_reference.c",
+      "title": "Call by value vs call by reference",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "`fun(a, &b)` multiplies both of its parameters by 10. Only `b` changes in `main`.",
+      "steps": [
+        "`a = 10` and `b = 20`.",
+        "`fun` gets `x`, a copy of 10, and `y`, the address of `b`.",
+        "`x *= 10` changes only the copy, and `*y *= 10` changes `b` itself.",
+        "`fun` prints `x = 100, *y = 200`, and `main` then prints `a = 10, b = 200`."
+      ],
+      "complexity": null,
+      "input": null,
+      "input_note": null,
+      "output_note": "`Inside function: x = 100, *y = 200`, then `After function call: a = 10, b = 200`. `a` is unchanged and `b` has changed.",
+      "watch_out": null,
+      "check": {"q": "How would you make `a` change too?", "a": "Make the first parameter `int *x`, call `fun(&a, &b)`, and write `*x *= 10`."}
+    },
+    {
+      "file": "passing_array_in_function.c",
+      "title": "Pass an array to a function",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "`fun(a, 10)` adds up the array. The function gets the array's address and its length.",
+      "steps": [
+        "`int a[10] = {1,...,10}`.",
+        "`fun(int x[], int n)` loops over `x[0]` to `x[n-1]` and adds each one to `sum`.",
+        "It returns 55, which `main` prints."
+      ],
+      "complexity": "Time O(n) · Space O(1)",
+      "input": null,
+      "input_note": null,
+      "output_note": "`Sum of array elements: 55`.",
+      "watch_out": "Inside `fun`, `sizeof(x)` is the size of a pointer, not of the array. That's why `n` has to be passed in.",
+      "check": {"q": "If `fun` did `x[0] = 99`, would `a[0]` in `main` change?", "a": "Yes. `x` points to `a`'s memory."}
+    },
+    {
+      "file": "passing_string_in_function1.c",
+      "title": "Pass a string: length",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "`length(a)` calls `strlen` on the string it receives and prints the result.",
+      "steps": [
+        "`char a[] = \"programmer\"` holds 10 characters plus `'\\0'`.",
+        "`length(char x[])` gets the address of the string.",
+        "`strlen(x)` counts up to `'\\0'` and gets 10."
+      ],
+      "complexity": "Time O(n) · Space O(1)",
+      "input": null,
+      "input_note": null,
+      "output_note": "`Length of string: 10`.",
+      "watch_out": null,
+      "check": {"q": "Why doesn't a string need a separate size argument, unlike an int array?", "a": "The `'\\0'` at the end tells functions where the string stops."}
+    },
+    {
+      "file": "passing_string_in_function2.c",
+      "title": "Change a string inside a function",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "`makeFirstCharUpper` capitalises the first letter, and the change is still there back in `main`.",
+      "steps": [
+        "`x[0] = toupper(x[0])` (from `<ctype.h>`) turns `p` into `P`.",
+        "The function prints `Programmer`.",
+        "`main` prints `a` again, and it is `Programmer` there too."
+      ],
+      "complexity": "Time O(1) · Space O(1)",
+      "input": null,
+      "input_note": null,
+      "output_note": "Both lines show `Programmer`, because the function changed `main`'s array.",
+      "watch_out": "This only works because `a` is an array. Changing a string literal (`char *s = \"programmer\"; s[0] = 'P';`) is undefined behaviour and often crashes.",
+      "check": {"q": "What does `toupper('P')` return?", "a": "`'P'`. Characters that are already uppercase, and characters that aren't letters, come back unchanged."}
+    },
+    {
+      "file": "pointer_as_parameter_of_array.c",
+      "title": "Pointer parameters: arithmetic, changes and strcpy",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Prints an array with `*(x + i)`, changes a string through a `char*`, and copies one string into another with `strcpy` inside a function.",
+      "steps": [
+        "`fun(a, 5)` prints `*(x+i)` with no spaces, giving `12345`. `main` then prints `a[i]` the same way.",
+        "`fun2(b)` prints `programmer`, then sets `x[0] = 'c'`. `main` then prints `crogrammer`.",
+        "`fun3(d, e)` first sets `d[0] = 'c'`, then `strcpy(d, e)` overwrites the whole string with `apple`.",
+        "`main` prints `d`, which is now `apple`."
+      ],
+      "complexity": "Time O(n) · Space O(1)",
+      "input": null,
+      "input_note": null,
+      "output_note": "`12345`, `12345`, `programmer`, `crogrammer`, `apple`. The `'c'` written into `d` gets overwritten by the copy.",
+      "watch_out": "`x = strcpy(x, y)` only changes the local pointer `x`, which doesn't matter here. What matters is that `strcpy` wrote into the memory `x` points to. `d` must be big enough to hold `y`.",
+      "check": {"q": "Is `*(x + 2)` the same as `x[2]`?", "a": "Yes. The array notation is shorthand for the pointer version."}
+    },
+    {
+      "file": "factorial.c",
+      "title": "Factorial by recursion",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "`factorial(n)` returns `n * factorial(n - 1)`, and it stops at `factorial(0) = 1`.",
+      "steps": [
+        "Read `n`.",
+        "Base case: `n == 0` returns 1.",
+        "Otherwise, return `n * factorial(n - 1)`.",
+        "Print the result with `%lld`, because the return type is `long long`."
+      ],
+      "complexity": "Time O(n) · Space O(n) stack",
+      "input": "5\n",
+      "input_note": "n = 5.",
+      "output_note": "`120` (5×4×3×2×1).",
+      "watch_out": "A `long long` can hold values only up to 20!. A negative `n` never reaches the base case.",
+      "check": {"q": "List the calls made for `factorial(3)`.", "a": "factorial(3) → factorial(2) → factorial(1) → factorial(0). They return 1, 1, 2, 6 on the way back."}
+    },
+    {
+      "file": "print_digits.c",
+      "title": "Print the digits of a number",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "For each test case, prints the digits of the number from left to right with spaces between them. The recursion strips off the last digit and prints it only after the rest of the number has been printed.",
+      "steps": [
+        "Read `t`, the number of test cases.",
+        "For each `n`: if it is 0, print `0` directly, because the recursion would print nothing.",
+        "`printDigits(n)`: return if `n == 0`. Otherwise save `digit = n % 10`, call `printDigits(n / 10)`, then print `digit`.",
+        "Print a newline after each number."
+      ],
+      "complexity": "Time O(digits) per number · Space O(digits)",
+      "input": "3\n121\n0\n4056\n",
+      "input_note": "3 test cases, including 0 and a number with a 0 inside it.",
+      "output_note": "`1 2 1`, then `0`, then `4 0 5 6`. The 0 inside 4056 is printed correctly because the function only stops when the whole remaining number is 0.",
+      "watch_out": "A negative number would print negative digits, because `%` keeps the sign. Handle the sign first if negatives are allowed.",
+      "check": {"q": "Why is `n == 0` handled in `main`?", "a": "`printDigits(0)` returns at once and prints nothing."}
+    },
+    {
+      "file": "palindrome.c",
+      "title": "Palindrome array by recursion",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "`isPalindrome(a, i, j)` checks the outer pair and then the rest of the array inside it.",
+      "steps": [
+        "Read `n` and the array.",
+        "Base case: when `i > j`, every pair has matched, so return 1.",
+        "Otherwise, return `a[i] == a[j] && isPalindrome(a, i+1, j-1)`.",
+        "`&&` stops early: at the first mismatch the recursive call is skipped.",
+        "Print `YES` or `NO`."
+      ],
+      "complexity": "Time O(n) · Space O(n) stack",
+      "input": "5\n1 2 3 2 1\n",
+      "input_note": "5 numbers.",
+      "output_note": "`YES`: 1=1, 2=2, and the middle 3 matches itself.",
+      "watch_out": null,
+      "check": {"q": "For an even length such as `1 2 2 1`, which call hits the base case?", "a": "`isPalindrome(a, 2, 1)`, because i has passed j."}
+    },
+    {
+      "file": "max_min.c",
+      "title": "Max and Min (with a function)",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {"name": "Codeforces group - Max and Min", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223205/problem/G"},
+      "what": "`minMax(arr, n, &min, &max)` finds both answers in one pass and writes them back through the pointers.",
+      "steps": [
+        "Read `n` and the array.",
+        "Inside `minMax`: `*min = *max = arr[0]`.",
+        "For `i` from 1: if `arr[i]` is smaller than `*min` or bigger than `*max`, update that value.",
+        "`main` prints `min max`."
+      ],
+      "complexity": "Time O(n) · Space O(1) extra",
+      "input": "5\n10 13 95 1 3\n",
+      "input_note": "The judge's example.",
+      "output_note": "`1 95`, which matches the expected answer.",
+      "watch_out": null,
+      "check": {"q": "Why pass `&min` and `&max` instead of returning them?", "a": "A C function can return only one value, but here there are two results."}
+    },
+    {
+      "file": "shift_zeros.c",
+      "title": "Shift Zeros",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {"name": "Codeforces group - Shift Zeros", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223205/problem/N"},
+      "what": "Moves every non-zero value to the front, keeping their order, and fills the rest with zeros. It all happens inside the array itself.",
+      "steps": [
+        "`nonZeroIndex` is the next free spot at the front.",
+        "For each `arr[i]` that isn't 0, copy it to `arr[nonZeroIndex]` and add 1 to the index.",
+        "Then set `arr[nonZeroIndex..n-1]` to 0.",
+        "The function changed `main`'s array directly, so `main` just prints it."
+      ],
+      "complexity": "Time O(n) · Space O(1) extra",
+      "input": "6\n0 3 0 0 8 1\n",
+      "input_note": "6 numbers with zeros mixed in.",
+      "output_note": "`3 8 1 0 0 0`: the non-zero values are in their original order, and the zeros are at the end.",
+      "watch_out": null,
+      "check": {"q": "Why is it safe to write `arr[nonZeroIndex] = arr[i]` in place?", "a": "`nonZeroIndex` is never ahead of `i`, so the value you overwrite has already been read."}
+    },
+    {
+      "file": "max_number.c",
+      "title": "Mountain rows 1..N..1 (header says Max Number)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "The comment at the top describes the Max Number problem, but the code solves a different task. For each `N` it prints `1 2 … N … 2 1`. `firstPart` counts up and `secondPart` counts down.",
+      "steps": [
+        "Read `T`, then `T` numbers into `N[]`.",
+        "For each one, `firstPart(N[i])` prints 1 up to N.",
+        "`secondPart(N[i])` prints N−1 down to 1.",
+        "Print a newline after each row."
+      ],
+      "complexity": "Time O(sum of N) · Space O(T)",
+      "input": "3\n1\n3\n5\n",
+      "input_note": "The format this code reads: T, then T values.",
+      "output_note": "`1`, `1 2 3 2 1` and `1 2 3 4 5 4 3 2 1`, each row ending with a space.",
+      "watch_out": "**This doesn't solve Max Number.** It uses no recursion and ignores the array format. A recursive solution would be `int mx(int i){ if(i == n-1) return a[i]; int r = mx(i+1); return a[i] > r ? a[i] : r; }`. The practice link is in the list below.",
+      "check": {"q": "What row does this code print for N = 2?", "a": "`1 2 1`."}
+    }
+  ],
+  "practice_links": [
+    {"name": "Shift Zeros (Function)", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223205/problem/N", "site": "Codeforces"},
+    {"name": "Max and Min (Function)", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223205/problem/G", "site": "Codeforces"},
+    {"name": "Max Number (Recursion)", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/K", "site": "Codeforces"},
+    {"name": "Count Vowels (Recursion)", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/I", "site": "Codeforces"},
+    {"name": "Log2 (Recursion)", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/P", "site": "Codeforces"}
+  ],
+  "recap": [
+    "Plain parameters are copies. Pointer parameters reach the caller's variables.",
+    "Arrays and strings are passed as addresses, so functions can change them. Pass the size of an array along with it.",
+    "Use pointer parameters when a function has more than one result.",
+    "Recursion with a return value: factorial, digits, palindrome.",
+    "`n % 10` gives the last digit, and `n / 10` removes it."
+  ],
+  "check_yourself": [
+    {"q": "Inside `void f(int x[])`, what is `sizeof(x)`?", "a": "The size of a pointer (usually 8 bytes on 64-bit), not the size of the array."},
+    {"q": "How would you count the vowels in a string recursively?", "a": "`count(s, i)`: if `s[i] == '\\0'`, return 0. Otherwise return `isVowel(s[i]) + count(s, i+1)`."},
+    {"q": "What is 20! compared with the largest `long long`?", "a": "About 2.4×10^18, which still fits (the limit is about 9.2×10^18). 21! does not fit."}
+  ]
+}

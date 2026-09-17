@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 22: Heaps: insert and delete, plus BST practice · Basic Data Structures</title>
+<meta name="description" content="This module introduces the binary heap: a complete binary tree stored in a plain array, where every parent is bigger (max heap) or smaller (min heap) than its children. You learn how to insert by bubbling a value up and how to delete the root by moving the last value to the top and pushing it down. The practice problems apply BST ideas (in-order is sorted, the BST rule lets you skip branches) and a simple top-two scan.">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+<link rel="stylesheet" href="../assets/site.css?v=3">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../index.html"><span aria-hidden="true">📘</span> <span>CSE Revision</span></a>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Basic Data Structures</a><span aria-hidden="true">›</span><span>Module 22</span></nav>
+  <div class="tools">
+    <button class="tbtn" id="searchBtn" type="button" aria-label="Search programs" title="Search (/)">🔍</button>
+    <button class="tbtn" id="recallBtn" type="button" aria-pressed="false" title="Recall mode: hide code so you can write it from memory">🧠<span class="lbl"> Recall</span></button>
+    <button class="tbtn" id="themeBtn" type="button" aria-label="Switch light/dark theme" title="Theme">🌓</button>
+  </div>
+</header>
+<div class="search" id="search" hidden>
+  <div class="search-box">
+    <input id="q" type="search" placeholder="Search programs, topics, problems…" autocomplete="off" aria-label="Search">
+    <button class="tbtn" id="searchClose" type="button" aria-label="Close search">✕</button>
+  </div>
+  <ol id="results" class="results"></ol>
+</div>
+<main class="wrap">
+
+<article class="module">
+  <header class="mhead">
+    <p class="eyebrow"><a href="index.html">Basic Data Structures</a> · Module 22</p>
+    <h1>Heaps: insert and delete, plus BST practice</h1>
+    <p class="lead">This module introduces the binary heap: a complete binary tree stored in a plain array, where every parent is bigger (max heap) or smaller (min heap) than its children. You learn how to insert by bubbling a value up and how to delete the root by moving the last value to the top and pushing it down. The practice problems apply BST ideas (in-order is sorted, the BST rule lets you skip branches) and a simple top-two scan.</p>
+    <p class="chips"><span>10 programs</span><span>8 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/3_Basic%20Data%20Structures/Module%2022" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
+  </header>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-insert-in-max-heap"><span class="n">1</span>Insert into a max heap</a></li><li><a href="#p-insert-in-min-heap"><span class="n">2</span>Insert into a min heap</a></li><li><a href="#p-delete-in-max-heap"><span class="n">3</span>Delete the root of a max heap</a></li><li><a href="#p-delete-in-min-heap"><span class="n">4</span>Delete the root of a min heap</a></li><li><a href="#p-code360-insert-into-a-binary-search-tree"><span class="n">5</span>Code360: insert into a BST</a></li><li><a href="#p-leetcode-range-sum-of-bst"><span class="n">6</span>LeetCode 938: range sum of BST</a></li><li><a href="#p-leetcode-minimum-absolute-differene-in-bst"><span class="n">7</span>LeetCode 530: minimum absolute difference in BST</a></li><li><a href="#p-leetcode-increasing-order-search-tree"><span class="n">8</span>LeetCode 897: increasing order search tree</a></li><li><a href="#p-leetcode-maximum-products-of-two-elements-of-an-array"><span class="n">9</span>LeetCode 1464: maximum product of two elements</a></li><li><a href="#p-code360-4th-highest-element"><span class="n">10</span>Code360: fourth largest element</a></li></ol></details></nav>
+  <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Heap as an array</h4><p>A heap is a complete tree, so it fits in an array with no gaps. For index <code>i</code>, the children are at <code>2*i + 1</code> and <code>2*i + 2</code>, and the parent is at <code>(i - 1) / 2</code>.</p><pre class="snip">int par_idx = (cur_idx - 1) / 2;
+int left_idx = 2 * cur_idx + 1;
+int right_idx = 2 * cur_idx + 2;</pre></div><div class="concept"><h4>Max heap vs min heap</h4><p>In a max heap every parent is at least as big as its children, so the largest value sits at index 0. A min heap is the mirror: the smallest value is at the top.</p></div><div class="concept"><h4>Insert = push back, then bubble up</h4><p>Add the value at the end of the array, then keep swapping it with its parent while it beats the parent. It stops at the root or when the parent is already better.</p></div><div class="concept"><h4>Delete root = move last to top, then push down</h4><p>Copy the last element into index 0 and remove the last slot. Then swap the top with its better child (bigger for max heap, smaller for min heap) until neither child beats it.</p></div><div class="concept"><h4>O(log n) operations</h4><p>A complete tree with n nodes has height about log2(n), and bubbling up or down moves one level per swap, so both operations are O(log n).</p></div><div class="concept"><h4>BST in-order is sorted</h4><p>Several problems here rely on it: the closest pair of values in a BST is always adjacent in in-order, and relinking nodes in in-order gives an increasing chain.</p></div></div></section>
+  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
+<section class="prog" id="p-insert-in-max-heap">
+  <div class="prog-h">
+    <span class="num">1</span>
+    <div class="prog-t">
+      <h3>Insert into a max heap</h3>
+      <div class="meta"><code class="fname">insert_in_max_heap.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(log n) · Space O(1) extra</span></div>
+    </div>
+  </div>
+  <p class="what">Reads an array that is already a max heap, adds one new value and bubbles it up to its correct place, then prints the array.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>CPP · 36 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/insert_in_max_heap.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">swap</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">],</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]);</span>
+<span class="w">            </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_idx</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">v</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 36 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
+60 40 50 10 30 20
+55</pre><p class="io-note">n, then a valid max heap of n values in array order, then the value to insert.</p></div><div class="io out"><div class="io-h">Output </div><pre>60 40 55 10 30 20 50 
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>60 40 55 10 30 20 50</code>: 55 started at index 6, beat its parent 50 at index 2 and swapped, then stopped under 60 because 55 &lt; 60.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>n</code> and the heap into <code>v</code>, then read <code>val</code> and <code>push_back</code> it.</li><li><code>cur_idx</code> starts at the last index, where the new value sits.</li><li>Compute <code>par_idx = (cur_idx - 1) / 2</code>. If <code>v[cur_idx] &gt; v[par_idx]</code>, swap them and move <code>cur_idx</code> up to the parent.</li><li>Stop when the value is not bigger than its parent, or when it reaches index 0.</li><li>Print the array: it is still a valid max heap.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The input array must already be a heap; the program does not build one from arbitrary values.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> If you inserted 70 instead of 55, what would the array become?</summary><div><code>70 40 60 10 30 20 50</code>: 70 swaps with 50 (index 2) and then with 60 (index 0).</div></details>
+</section>
+<section class="prog" id="p-insert-in-min-heap">
+  <div class="prog-h">
+    <span class="num">2</span>
+    <div class="prog-t">
+      <h3>Insert into a min heap</h3>
+      <div class="meta"><code class="fname">insert_in_min_heap.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(log n) · Space O(1) extra</span></div>
+    </div>
+  </div>
+  <p class="what">The mirror of the max heap insert: the new value bubbles up while it is smaller than its parent.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>CPP · 35 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/insert_in_min_heap.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">swap</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">],</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]);</span>
+<span class="w">            </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_idx</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">v</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 35 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
+10 20 30 40 50 60
+5</pre><p class="io-note">n, then a valid min heap, then the value to insert.</p></div><div class="io out"><div class="io-h">Output </div><pre>5 20 10 40 50 60 30 
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>5 20 10 40 50 60 30</code>: 5 swapped with 30 (index 2), then with 10 (index 0), and is now the smallest value at the top.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read the existing min heap and the new value, then append the value.</li><li>While <code>cur_idx != 0</code>, compare with the parent at <code>(cur_idx - 1) / 2</code>.</li><li>Swap when <code>v[cur_idx] &lt; v[par_idx]</code>; otherwise stop.</li><li>Print the array.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> What is the only change from the max heap version?</summary><div>The comparison: <code>&lt;</code> instead of <code>&gt;</code> when deciding to swap with the parent.</div></details>
+</section>
+<section class="prog" id="p-delete-in-max-heap">
+  <div class="prog-h">
+    <span class="num">3</span>
+    <div class="prog-t">
+      <h3>Delete the root of a max heap</h3>
+      <div class="meta"><code class="fname">delete_in_max_heap.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n log n) to build, O(log n) to delete · Space O(n)</span></div>
+    </div>
+  </div>
+  <p class="what">Builds a max heap by inserting values one by one, prints it, then removes the root by moving the last value up and pushing it down.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 115 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/delete_in_max_heap.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">insert_heap</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">){</span>
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">swap</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">],</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]);</span>
+<span class="w">            </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_idx</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">heap_input</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="n">insert_heap</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">print_heap</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">){</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">v</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="cm">/*</span>
+
+<span class="cm">void delete_heap_mine(vector&lt;int&gt; &amp;v){</span>
+<span class="cm">    v[0] = v.back(); // v[0] = v[v.size() - 1];</span>
+<span class="cm">    v.pop_back();</span>
+
+<span class="cm">    int cur_idx = 0;</span>
+
+<span class="cm">    while(true){</span>
+<span class="cm">        int left_idx = (2 * cur_idx) + 1;</span>
+<span class="cm">        int right_idx = (2 * cur_idx) + 2;</span>
+<span class="cm">        if(left_idx &gt;= v.size()){</span>
+<span class="cm">            break;</span>
+<span class="cm">        }</span>
+<span class="cm">        if(right_idx &gt;= v.size()){</span>
+<span class="cm">            break;</span>
+<span class="cm">        }</span>
+<span class="cm">        if(left_idx &lt; v.size() &amp;&amp; right_idx &lt; v.size()){</span>
+<span class="cm">            if(v[left_idx] &gt; v[right_idx] &amp;&amp; v[left_idx] &gt; v[cur_idx]){</span>
+<span class="cm">                swap(v[left_idx], v[cur_idx]);</span>
+<span class="cm">                cur_idx = left_idx;</span>
+<span class="cm">            } else if(v[right_idx] &gt; v[left_idx] &amp;&amp; v[right_idx] &gt; v[cur_idx]){</span>
+<span class="cm">                swap(v[right_idx], v[cur_idx]);</span>
+<span class="cm">                cur_idx = right_idx;</span>
+<span class="cm">            } else{</span>
+<span class="cm">                break;</span>
+<span class="cm">            }</span>
+<span class="cm">        }</span>
+<span class="cm">    }</span>
+<span class="cm">}</span>
+
+<span class="cm">*/</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">delete_heap</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">){</span>
+<span class="w">    </span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">back</span><span class="p">();</span>
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">left_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cur_idx</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">right_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cur_idx</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+
+
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">left_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MIN</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">right_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MIN</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">left_idx</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">()){</span>
+<span class="w">            </span><span class="n">left_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">left_idx</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">right_idx</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">()){</span>
+<span class="w">            </span><span class="n">right_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">right_idx</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">left_val</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">right_val</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">left_val</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">swap</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">left_idx</span><span class="p">],</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]);</span>
+<span class="w">            </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left_idx</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">right_val</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">left_val</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">right_val</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">swap</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">right_idx</span><span class="p">],</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]);</span>
+<span class="w">            </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">right_idx</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">heap_input</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">print_heap</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">delete_heap</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 115 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
+10 40 20 50 30 60</pre><p class="io-note">n, then n values in any order.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>delete_in_max_heap.cpp: In function &#x27;void delete_heap(std::vector&lt;int&gt;&amp;)&#x27;:
+delete_in_max_heap.cpp:103:11: error: a function-definition is not allowed here before &#x27;{&#x27; token
+ int main(){
+           ^
+delete_in_max_heap.cpp:115:1: error: expected &#x27;}&#x27; at end of input
+ }
+ ^
+delete_in_max_heap.cpp:69:33: note: to match this &#x27;{&#x27;
+ void delete_heap(vector&lt;int&gt; &amp;v){
+                                 ^</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> There is no output: the file does not compile (see below). With the fix it prints the heap <code>60 40 50 10 30 20</code>; the delete then changes it to <code>50 40 20 10 30</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>heap_input</code> reads <code>n</code> values and calls <code>insert_heap</code> for each, so the vector is a max heap after every step.</li><li><code>delete_heap</code> copies <code>v.back()</code> into <code>v[0]</code> and pops the last element.</li><li>In a loop it reads the child values; a missing child counts as <code>INT_MIN</code> so it never wins.</li><li>If the left child is the bigger child and beats the current value, swap with it and move down; same for the right child.</li><li>When neither child is bigger, the heap is fixed and the function returns.</li><li>The commented-out <code>delete_heap_mine</code> stopped as soon as the right child was missing, which can leave a left child bigger than its parent. The final version fixes that with the <code>INT_MIN</code> trick.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> <code>delete_heap</code> is missing its closing <code>}</code>, so the compiler sees <code>main</code> inside it and fails with <code>a function-definition is not allowed here</code>. Fix: add <code>}</code> before <code>int main()</code>. Also <code>main</code> never prints after deleting; add <code>print_heap(v);</code> after <code>delete_heap(v);</code> to see the result.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why swap with the bigger child and not just any child that beats the parent?</summary><div>The bigger child becomes the new parent of the other child, so it must be at least as big as that child, or the heap rule breaks.</div></details>
+</section>
+<section class="prog" id="p-delete-in-min-heap">
+  <div class="prog-h">
+    <span class="num">4</span>
+    <div class="prog-t">
+      <h3>Delete the root of a min heap</h3>
+      <div class="meta"><code class="fname">delete_in_min_heap.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n log n) to build, O(log n) to delete · Space O(n)</span></div>
+    </div>
+  </div>
+  <p class="what">The min heap version of root deletion: the moved value is pushed down towards the smaller child, and missing children count as <code>INT_MAX</code>.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 121 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/delete_in_min_heap.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Min heap -- Root value is always smaller than its child nodes</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">insert_heap</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">){</span>
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">swap</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">],</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]);</span>
+<span class="w">            </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_idx</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">heap_input</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="n">insert_heap</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">print_heap</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">){</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">v</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="cm">/* The code below is wrong.</span>
+
+<span class="cm">void delete_heap_mine(vector&lt;int&gt; &amp;v){</span>
+<span class="cm">    v[0] = v.back(); // v[0] = v[v.size() - 1];</span>
+<span class="cm">    v.pop_back();</span>
+
+<span class="cm">    int cur_idx = 0;</span>
+
+<span class="cm">    while(true){</span>
+<span class="cm">        int left_idx = (2 * cur_idx) + 1;</span>
+<span class="cm">        int right_idx = (2 * cur_idx) + 2;</span>
+<span class="cm">        if(left_idx &gt;= v.size()){</span>
+<span class="cm">            break;</span>
+<span class="cm">        }</span>
+<span class="cm">        if(right_idx &gt;= v.size()){</span>
+<span class="cm">            break;</span>
+<span class="cm">        }</span>
+<span class="cm">        if(left_idx &lt; v.size() &amp;&amp; right_idx &lt; v.size()){</span>
+<span class="cm">            if(v[left_idx] &gt; v[right_idx] &amp;&amp; v[left_idx] &gt; v[cur_idx]){</span>
+<span class="cm">                swap(v[left_idx], v[cur_idx]);</span>
+<span class="cm">                cur_idx = left_idx;</span>
+<span class="cm">            } else if(v[right_idx] &gt; v[left_idx] &amp;&amp; v[right_idx] &gt; v[cur_idx]){</span>
+<span class="cm">                swap(v[right_idx], v[cur_idx]);</span>
+<span class="cm">                cur_idx = right_idx;</span>
+<span class="cm">            } else{</span>
+<span class="cm">                break;</span>
+<span class="cm">            }</span>
+<span class="cm">        }</span>
+<span class="cm">    }</span>
+<span class="cm">}</span>
+
+<span class="cm">*/</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">delete_heap</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">){</span>
+<span class="w">    </span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">back</span><span class="p">();</span>
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">left_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cur_idx</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">right_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cur_idx</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+
+
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">left_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">right_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">left_idx</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">()){</span>
+<span class="w">            </span><span class="n">left_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">left_idx</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">right_idx</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">()){</span>
+<span class="w">            </span><span class="n">right_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">right_idx</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">left_val</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">right_val</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">left_val</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">swap</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">left_idx</span><span class="p">],</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]);</span>
+<span class="w">            </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left_idx</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">right_val</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">left_val</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">right_val</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">swap</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">right_idx</span><span class="p">],</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]);</span>
+<span class="w">            </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">right_idx</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">heap_input</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">print_heap</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">delete_heap</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 121 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
+10 40 20 50 30 60</pre><p class="io-note">n, then n values in any order.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>delete_in_min_heap.cpp: In function &#x27;void delete_heap(std::vector&lt;int&gt;&amp;)&#x27;:
+delete_in_min_heap.cpp:109:11: error: a function-definition is not allowed here before &#x27;{&#x27; token
+ int main(){
+           ^
+delete_in_min_heap.cpp:121:1: error: expected &#x27;}&#x27; at end of input
+ }
+ ^
+delete_in_min_heap.cpp:75:33: note: to match this &#x27;{&#x27;
+ void delete_heap(vector&lt;int&gt; &amp;v){
+                                 ^</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> There is no output: the same missing brace stops it compiling. With the fix it prints <code>10 30 20 50 40 60</code>, and the delete leaves <code>20 30 60 50 40</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>insert_heap</code> bubbles up while the value is smaller than its parent.</li><li><code>delete_heap</code> moves the last value to index 0 and pops the back.</li><li>Missing children are treated as <code>INT_MAX</code>, so they never look smaller.</li><li>Swap with the smaller child while it is smaller than the current value; stop otherwise.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The same bug as the max heap file: <code>delete_heap</code> has no closing <code>}</code>, so compilation fails. Add <code>}</code> before <code>int main()</code>, and add <code>print_heap(v);</code> after the delete to see the result.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why use <code>INT_MAX</code> for a missing child in a min heap?</summary><div>The code looks for a child smaller than the current value; <code>INT_MAX</code> is never smaller, so a missing child is never chosen.</div></details>
+</section>
+<section class="prog" id="p-code360-insert-into-a-binary-search-tree">
+  <div class="prog-h">
+    <span class="num">5</span>
+    <div class="prog-t">
+      <h3>Code360: insert into a BST</h3>
+      <div class="meta"><code class="fname">code360_Insert_into_a_binary_search_tree.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(h) · Space O(h) recursion</span><a class="prob" href="https://www.naukri.com/code360/problems/insert-into-a-binary-search-tree_1279913" target="_blank" rel="noopener">↗ Code360 - Insert Into A Binary Search Tree</a></div>
+    </div>
+  </div>
+  <p class="what">A short recursive BST insert that returns the (possibly new) root of each subtree.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>CPP · 43 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/code360_Insert_into_a_binary_search_tree.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">https://www.naukri.com/code360/problems/insert-into-a-binary-search-tree_1279913?leftPanelTabValue=PROBLEM</span>
+
+<span class="cm"> Insert Into A Binary Search Tree</span>
+
+<span class="cm">*/</span>
+
+
+
+<span class="cm">/************************************************************</span>
+
+<span class="cm">    Following is the TreeNode class structure</span>
+
+<span class="cm">    template &lt;typename T&gt;</span>
+<span class="cm">    class TreeNode</span>
+<span class="cm">    {</span>
+<span class="cm">    public:</span>
+<span class="cm">        T val;</span>
+<span class="cm">        TreeNode&lt;T&gt; *left, *right;</span>
+<span class="cm">        TreeNode() : val(0), left(NULL), right(NULL) {}</span>
+<span class="cm">        TreeNode(T x) : val(x), left(NULL), right(NULL) {}</span>
+<span class="cm">        TreeNode(T x, TreeNode&lt;T&gt; *left, TreeNode&lt;T&gt; *right) : val(x), left(left), right(right) {}</span>
+<span class="cm">    };</span>
+
+
+<span class="cm">************************************************************/</span>
+
+<span class="n">TreeNode</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;*</span><span class="w"> </span><span class="n">insertionInBST</span><span class="p">(</span><span class="n">TreeNode</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;*</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// Write your code here.</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">root</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TreeNode</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">insertionInBST</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">insertionInBST</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 43 lines ▾</button>
+  </div>
+  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TreeNode</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="n">T</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="o">*</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">right</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="p">()</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">val</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="n">left</span><span class="p">(</span><span class="nb">NULL</span><span class="p">),</span><span class="w"> </span><span class="n">right</span><span class="p">(</span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="p">(</span><span class="n">T</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">val</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="w"> </span><span class="n">left</span><span class="p">(</span><span class="nb">NULL</span><span class="p">),</span><span class="w"> </span><span class="n">right</span><span class="p">(</span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="p">};</span>
+</pre></div>
+<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">inorder</span><span class="p">(</span><span class="n">TreeNode</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;*</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="n">inorder</span><span class="p">(</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span><span class="w"> </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w"> </span><span class="n">inorder</span><span class="p">(</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;*</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">insertionInBST</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;after inserting &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, inorder: &quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="n">inorder</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;root = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
+8 3 10 1 6 14</pre><p class="io-note">n, then n values inserted one by one into an empty BST.</p></div><div class="io out"><div class="io-h">Output </div><pre>after inserting 8, inorder: 8 
+after inserting 3, inorder: 3 8 
+after inserting 10, inorder: 3 8 10 
+after inserting 1, inorder: 1 3 8 10 
+after inserting 6, inorder: 1 3 6 8 10 
+after inserting 14, inorder: 1 3 6 8 10 14 
+root = 8
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> After each insert the in-order walk is still sorted (<code>3 8</code>, <code>3 8 10</code>, ... <code>1 3 6 8 10 14</code>), which shows every value went to the right place. The first value, 8, stays the root.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>If <code>root</code> is <code>NULL</code>, the empty spot has been found: return a new node holding <code>val</code>.</li><li>If <code>val</code> is smaller, set <code>root-&gt;left</code> to the result of inserting into the left subtree.</li><li>Otherwise set <code>root-&gt;right</code> to the result of inserting into the right subtree.</li><li>Return <code>root</code> so the parent keeps pointing to the same node.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> Why does this version not need <code>Node* &amp;root</code>?</summary><div>It returns the new subtree root and the caller stores it in <code>root-&gt;left</code> or <code>root-&gt;right</code>, so no reference is needed.</div></details>
+</section>
+<section class="prog" id="p-leetcode-range-sum-of-bst">
+  <div class="prog-h">
+    <span class="num">6</span>
+    <div class="prog-t">
+      <h3>LeetCode 938: range sum of BST</h3>
+      <div class="meta"><code class="fname">leetcode_range_sum_of_BST.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(n) worst case, often much less · Space O(h)</span><a class="prob" href="https://leetcode.com/problems/range-sum-of-bst/" target="_blank" rel="noopener">↗ LeetCode 938 - Range Sum of BST</a></div>
+    </div>
+  </div>
+  <p class="what">Adds up all values between <code>low</code> and <code>high</code>, using the BST rule to skip subtrees that cannot contain any value in range.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 52 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/leetcode_range_sum_of_BST.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">https://leetcode.com/problems/range-sum-of-bst/description/</span>
+
+<span class="cm">Range sum of BST</span>
+
+<span class="cm">Given the root node of a binary search tree and two integers low and high, return the sum of values of all nodes with a value in the inclusive range [low, high].</span>
+
+<span class="cm">Example 1</span>
+<span class="cm">Input: root = [10,5,15,3,7,null,18], low = 7, high = 15</span>
+<span class="cm">Output: 32</span>
+<span class="cm">Explanation: Nodes 7, 10, and 15 are in the range [7, 15]. 7 + 10 + 15 = 32.</span>
+
+<span class="cm">Example 2</span>
+<span class="cm">Input: root = [10,5,15,3,7,13,18,1,null,6], low = 6, high = 10</span>
+<span class="cm">Output: 23</span>
+<span class="cm">Explanation: Nodes 6, 7, and 10 are in the range [6, 10]. 6 + 7 + 10 = 23.</span>
+
+
+
+<span class="cm">*/</span>
+
+
+<span class="cm">/**</span>
+<span class="cm"> * Definition for a binary tree node.</span>
+<span class="cm"> * struct TreeNode {</span>
+<span class="cm"> *     int val;</span>
+<span class="cm"> *     TreeNode *left;</span>
+<span class="cm"> *     TreeNode *right;</span>
+<span class="cm"> *     TreeNode() : val(0), left(nullptr), right(nullptr) {}</span>
+<span class="cm"> *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}</span>
+<span class="cm"> *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}</span>
+<span class="cm"> * };</span>
+<span class="cm"> */</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">rangeSumBST</span><span class="p">(</span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">low</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">){</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">rangeSumBST</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">high</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">){</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">rangeSumBST</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rangeSumBST</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rangeSumBST</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 52 lines ▾</button>
+  </div>
+  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">TreeNode</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="w"> </span><span class="o">*</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">right</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">val</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="w"> </span><span class="n">left</span><span class="p">(</span><span class="k">nullptr</span><span class="p">),</span><span class="w"> </span><span class="n">right</span><span class="p">(</span><span class="k">nullptr</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="p">};</span>
+</pre></div>
+<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="c1">// read a tree in level order; -1 means &quot;no child&quot;</span>
+<span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="nf">readTree</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TreeNode</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">TreeNode</span><span class="o">*&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">cur</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TreeNode</span><span class="p">(</span><span class="n">l</span><span class="p">);</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TreeNode</span><span class="p">(</span><span class="n">r</span><span class="p">);</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readTree</span><span class="p">();</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">high</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;rangeSumBST = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">Solution</span><span class="p">().</span><span class="n">rangeSumBST</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 5 15 3 7 -1 18 -1 -1 -1 -1 -1 -1
+7 15</pre><p class="io-note">Tree values in level order, -1 for a missing child (tree <code>[10,5,15,3,7,null,18]</code>), then <code>low high</code> (LeetCode example 1).</p></div><div class="io out"><div class="io-h">Output </div><pre>rangeSumBST = 32
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>rangeSumBST = 32</code>, as LeetCode expects: 7 + 10 + 15. Node 3 is never visited, because 5 is below <code>low</code> and the search goes only to its right.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>An empty tree contributes 0.</li><li>If the node is below <code>low</code>, its whole left subtree is too small, so only search the right.</li><li>If the node is above <code>high</code>, only search the left.</li><li>Otherwise the node is in range: add its value plus the sums from both sides.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> With <code>low = 7</code> and the node 5, why can the left subtree of 5 be skipped?</summary><div>Everything to the left of 5 is smaller than 5, so it is also below 7.</div></details>
+</section>
+<section class="prog" id="p-leetcode-minimum-absolute-differene-in-bst">
+  <div class="prog-h">
+    <span class="num">7</span>
+    <div class="prog-t">
+      <h3>LeetCode 530: minimum absolute difference in BST</h3>
+      <div class="meta"><code class="fname">leetcode_minimum_absolute_differene_in_BST.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(n) · Space O(h)</span><a class="prob" href="https://leetcode.com/problems/minimum-absolute-difference-in-bst/" target="_blank" rel="noopener">↗ LeetCode 530 - Minimum Absolute Difference in BST</a></div>
+    </div>
+  </div>
+  <p class="what">Walks the BST in order (sorted order) and compares each value with the one just before it; the smallest gap is the answer.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 46 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/leetcode_minimum_absolute_differene_in_BST.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Minimum Absolute Difference in BST</span>
+<span class="cm">https://leetcode.com/problems/minimum-absolute-difference-in-bst/description/</span>
+
+
+<span class="cm">*/</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * Definition for a binary tree node.</span>
+<span class="cm"> * struct TreeNode {</span>
+<span class="cm"> *     int val;</span>
+<span class="cm"> *     TreeNode *left;</span>
+<span class="cm"> *     TreeNode *right;</span>
+<span class="cm"> *     TreeNode() : val(0), left(nullptr), right(nullptr) {}</span>
+<span class="cm"> *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}</span>
+<span class="cm"> *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}</span>
+<span class="cm"> * };</span>
+<span class="cm"> */</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+
+<span class="w">    </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">min_diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">inorderTraversal</span><span class="p">(</span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">node</span><span class="p">){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">node</span><span class="p">){</span>
+<span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">inorderTraversal</span><span class="p">(</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">prev</span><span class="p">){</span>
+<span class="w">            </span><span class="n">min_diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">min_diff</span><span class="p">,</span><span class="w"> </span><span class="n">abs</span><span class="p">(</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">prev</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">));</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">inorderTraversal</span><span class="p">(</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="nf">getMinimumDifference</span><span class="p">(</span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">inorderTraversal</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">min_diff</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 46 lines ▾</button>
+  </div>
+  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">TreeNode</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="w"> </span><span class="o">*</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">right</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">val</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="w"> </span><span class="n">left</span><span class="p">(</span><span class="k">nullptr</span><span class="p">),</span><span class="w"> </span><span class="n">right</span><span class="p">(</span><span class="k">nullptr</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="p">};</span>
+</pre></div>
+<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="c1">// read a tree in level order; -1 means &quot;no child&quot;</span>
+<span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="nf">readTree</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TreeNode</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">TreeNode</span><span class="o">*&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">cur</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TreeNode</span><span class="p">(</span><span class="n">l</span><span class="p">);</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TreeNode</span><span class="p">(</span><span class="n">r</span><span class="p">);</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readTree</span><span class="p">();</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;getMinimumDifference = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">Solution</span><span class="p">().</span><span class="n">getMinimumDifference</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 2 6 1 3 -1 -1 -1 -1 -1 -1</pre><p class="io-note">Tree values in level order, -1 for a missing child (tree <code>[4,2,6,1,3]</code>, the LeetCode example).</p></div><div class="io out"><div class="io-h">Output </div><pre>getMinimumDifference = 1
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>getMinimumDifference = 1</code>, as LeetCode expects. The in-order walk visits 1 2 3 4 6, and neighbouring values such as 1 and 2 differ by 1.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>prev</code> remembers the last node visited and <code>min_diff</code> starts at <code>INT_MAX</code>.</li><li><code>inorderTraversal</code> goes left first, then handles the current node, then goes right.</li><li>When <code>prev</code> exists, update <code>min_diff</code> with <code>node-&gt;val - prev-&gt;val</code>.</li><li>Set <code>prev = node</code> and continue; return <code>min_diff</code> at the end.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> Why is it enough to compare only neighbours in in-order?</summary><div>In-order gives sorted values, and in a sorted list the smallest gap is always between two adjacent values.</div></details>
+</section>
+<section class="prog" id="p-leetcode-increasing-order-search-tree">
+  <div class="prog-h">
+    <span class="num">8</span>
+    <div class="prog-t">
+      <h3>LeetCode 897: increasing order search tree</h3>
+      <div class="meta"><code class="fname">leetcode_increasing_order_search_tree.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(n) · Space O(h)</span><a class="prob" href="https://leetcode.com/problems/increasing-order-search-tree/" target="_blank" rel="noopener">↗ LeetCode 897 - Increasing Order Search Tree</a></div>
+    </div>
+  </div>
+  <p class="what">Relinks the BST nodes, in in-order, into a chain where every node has only a right child.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 50 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/leetcode_increasing_order_search_tree.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">https://leetcode.com/problems/increasing-order-search-tree/</span>
+
+<span class="cm">Increasing Order Search Tree</span>
+
+<span class="cm">Input: root = [5,3,6,2,4,null,8,1,null,null,null,7,9]</span>
+<span class="cm">Output: [1,null,2,null,3,null,4,null,5,null,6,null,7,null,8,null,9]</span>
+
+<span class="cm">*/</span>
+
+
+
+<span class="cm">/**</span>
+<span class="cm"> * Definition for a binary tree node.</span>
+<span class="cm"> * struct TreeNode {</span>
+<span class="cm"> *     int val;</span>
+<span class="cm"> *     TreeNode *left;</span>
+<span class="cm"> *     TreeNode *right;</span>
+<span class="cm"> *     TreeNode() : val(0), left(nullptr), right(nullptr) {}</span>
+<span class="cm"> *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}</span>
+<span class="cm"> *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}</span>
+<span class="cm"> * };</span>
+<span class="cm"> */</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">inorder</span><span class="p">(</span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">current</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">node</span><span class="p">){</span>
+<span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">inorder</span><span class="p">(</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">current</span><span class="p">);</span>
+
+<span class="w">        </span><span class="n">node</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="n">current</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="p">;</span>
+<span class="w">        </span><span class="n">current</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="p">;</span><span class="w">    </span>
+
+<span class="w">        </span><span class="n">inorder</span><span class="p">(</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">current</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">increasingBST</span><span class="p">(</span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TreeNode</span><span class="p">(</span><span class="mi">999</span><span class="p">);</span>
+<span class="w">        </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">start</span><span class="p">;</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="n">inorder</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">current</span><span class="p">);</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">start</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 50 lines ▾</button>
+  </div>
+  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">TreeNode</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="w"> </span><span class="o">*</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">right</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">val</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="w"> </span><span class="n">left</span><span class="p">(</span><span class="k">nullptr</span><span class="p">),</span><span class="w"> </span><span class="n">right</span><span class="p">(</span><span class="k">nullptr</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="p">};</span>
+</pre></div>
+<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="c1">// read a tree in level order; -1 means &quot;no child&quot;</span>
+<span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="nf">readTree</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TreeNode</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">TreeNode</span><span class="o">*&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">cur</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TreeNode</span><span class="p">(</span><span class="n">l</span><span class="p">);</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TreeNode</span><span class="p">(</span><span class="n">r</span><span class="p">);</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">cur</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readTree</span><span class="p">();</span>
+<span class="w">    </span><span class="n">TreeNode</span><span class="o">*</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Solution</span><span class="p">().</span><span class="n">increasingBST</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;chain:&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">)</span><span class="w"> </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">t</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;(left child!)&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 3 6 2 4 -1 8 1 -1 -1 -1 7 9 -1 -1 -1 -1 -1 -1</pre><p class="io-note">Tree values in level order, -1 for a missing child (tree <code>[5,3,6,2,4,null,8,1,null,null,null,7,9]</code>, the LeetCode example).</p></div><div class="io out"><div class="io-h">Output </div><pre>chain: 1 2 3 4 5 6 7 8 9
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>chain: 1 2 3 4 5 6 7 8 9</code>: following only <code>right</code> pointers visits the values in sorted order, matching LeetCode&#x27;s answer. The driver would print <code>(left child!)</code> if any node still had a left child; none does.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>A dummy node <code>start</code> (value 999) sits before the chain; <code>current</code> points to the last node of the chain.</li><li><code>inorder</code> visits the left subtree first.</li><li>For the current node it clears <code>node-&gt;left</code>, attaches the node as <code>current-&gt;right</code>, and moves <code>current</code> to it.</li><li>Then it visits the right subtree; <code>current</code> is passed by reference so every call extends the same chain.</li><li><code>increasingBST</code> returns <code>start-&gt;right</code>, the first real node.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Setting <code>node-&gt;left = NULL</code> is safe only because the left subtree has already been visited before that line.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> What is the dummy node for?</summary><div>It gives <code>current</code> something to attach the first real node to, so the code needs no special case for the head of the chain.</div></details>
+</section>
+<section class="prog" id="p-leetcode-maximum-products-of-two-elements-of-an-array">
+  <div class="prog-h">
+    <span class="num">9</span>
+    <div class="prog-t">
+      <h3>LeetCode 1464: maximum product of two elements</h3>
+      <div class="meta"><code class="fname">leetcode_maximum_products_of_two_elements_of_an_array.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(n) · Space O(1)</span><a class="prob" href="https://leetcode.com/problems/maximum-product-of-two-elements-in-an-array/" target="_blank" rel="noopener">↗ LeetCode 1464 - Maximum Product of Two Elements in an Array</a></div>
+    </div>
+  </div>
+  <p class="what">Finds the two largest numbers in one pass and returns <code>(max1 - 1) * (max2 - 1)</code>.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>CPP · 44 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/leetcode_maximum_products_of_two_elements_of_an_array.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">https://leetcode.com/problems/maximum-product-of-two-elements-in-an-array/description/</span>
+
+<span class="cm">Maximum Product of Two Elements in an Array</span>
+
+<span class="cm">Given the array of integers nums, you will choose two different indices i and j of </span>
+<span class="cm">that array. Return the maximum value of (nums[i]-1)*(nums[j]-1).</span>
+<span class="cm"> </span>
+
+<span class="cm">Example 1:</span>
+
+<span class="cm">Input: nums = [3,4,5,2]</span>
+<span class="cm">Output: 12 </span>
+<span class="cm">Explanation: If you choose the indices i=1 and j=2 (indexed from 0), you will get the </span>
+<span class="cm">maximum value, that is, (nums[1]-1)*(nums[2]-1) = (4-1)*(5-1) = 3*4 = 12. </span>
+<span class="cm">Example 2:</span>
+
+<span class="cm">Input: nums = [1,5,4,5]</span>
+<span class="cm">Output: 16</span>
+<span class="cm">Explanation: Choosing the indices i=1 and j=3 (indexed from 0), you will get the </span>
+<span class="cm">maximum value of (5-1)*(5-1) = 16.</span>
+
+
+<span class="cm">*/</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">maxProduct</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">max_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">max_second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">nums</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">num</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">max_first</span><span class="p">){</span>
+<span class="w">                </span><span class="n">max_second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max_first</span><span class="p">;</span>
+<span class="w">                </span><span class="n">max_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">num</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">num</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">max_second</span><span class="p">){</span>
+<span class="w">                </span><span class="n">max_second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">num</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">max_first</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">max_second</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 44 lines ▾</button>
+  </div>
+  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+</pre></div>
+<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nums</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">nums</span><span class="p">)</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;maxProduct = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">Solution</span><span class="p">().</span><span class="n">maxProduct</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
+4
+3 4 5 2
+4
+1 5 4 5</pre><p class="io-note">Number of tests, then for each test n and the n numbers (the two LeetCode examples).</p></div><div class="io out"><div class="io-h">Output </div><pre>maxProduct = 12
+maxProduct = 16
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>maxProduct = 12</code> (4*3 from 5 and 4) and <code>maxProduct = 16</code> (4*4 from the two 5s), both as LeetCode expects. The second case shows the <code>else if</code> keeps a repeated maximum as the second largest.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Keep <code>max_first</code> (largest so far) and <code>max_second</code> (second largest).</li><li>A number bigger than <code>max_first</code> pushes the old largest down to <code>max_second</code> and takes first place.</li><li>Otherwise, if it beats <code>max_second</code>, it replaces that.</li><li>Return the product of both values minus one.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Starting both maxima at 0 works only because the problem guarantees positive values. A max heap (<code>priority_queue</code>) popped twice gives the same answer.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> For <code>[1,5,4,5]</code>, what are <code>max_first</code> and <code>max_second</code> at the end?</summary><div>Both are 5: the second 5 is not bigger than <code>max_first</code> but is bigger than 4, so it becomes <code>max_second</code>. The answer is 16.</div></details>
+</section>
+<section class="prog" id="p-code360-4th-highest-element">
+  <div class="prog-h">
+    <span class="num">10</span>
+    <div class="prog-t">
+      <h3>Code360: fourth largest element</h3>
+      <div class="meta"><code class="fname">code360_4th_highest_element.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(n log n) · Space O(n)</span><a class="prob" href="https://www.naukri.com/code360/problems/fourth-largest-element-in-the-array_1792782" target="_blank" rel="noopener">↗ Code360 - Fourth Largest Element In The Array</a></div>
+    </div>
+  </div>
+  <p class="what">Sorts the array in decreasing order and returns the element at index 3, or <code>INT_MIN</code> when there are fewer than four elements.</p>
+  <div class="codebox-wrap">
+    <div class="code-bar">
+      <span>CPP · 31 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/code360_4th_highest_element.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">https://www.naukri.com/code360/problems/fourth-largest-element-in-the-array_1792782?leftPanelTabValue=PROBLEM</span>
+
+<span class="cm">4th Largest Element In The Array</span>
+
+<span class="cm">*/</span>
+
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;climits&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">getFourthLargest</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">arr</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+
+<span class="w">    </span><span class="n">sort</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span><span class="w"> </span><span class="n">arr</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">greater</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vec_arr</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">vec_arr</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">vec_arr</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-2147483648</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">vec_arr</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 31 lines ▾</button>
+  </div>
+  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+</pre></div>
+<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;getFourthLargest = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">getFourthLargest</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
+5
+3 6 1 9 5
+3
+4 8 2</pre><p class="io-note">Number of tests, then for each test n and the n numbers.</p></div><div class="io out"><div class="io-h">Output </div><pre>getFourthLargest = 3
+getFourthLargest = -2147483648
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>getFourthLargest = 3</code>: sorted high to low, the array is 9 6 5 3 1, so index 3 holds 3. The second test has only 3 numbers, so it prints <code>-2147483648</code> (INT_MIN), the value the problem asks for when there is no 4th element.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>sort(arr, arr + n, greater&lt;int&gt;())</code> puts the biggest value first.</li><li>The values are copied into <code>vec_arr</code>.</li><li>If there are fewer than 4 values, return <code>-2147483648</code> (the smallest int).</li><li>Otherwise return <code>vec_arr[3]</code>, the fourth largest.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The file uses <code>greater&lt;int&gt;</code> without including <code>&lt;functional&gt;</code>. It works on the judge (and here, because the test driver&#x27;s prelude adds <code>&lt;bits/stdc++.h&gt;</code>), but may fail with other compilers. The copy into <code>vec_arr</code> is not needed: check <code>n &lt; 4</code> and return <code>arr[3]</code> directly. A min heap of size 4 would find the answer in O(n log 4).</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> How could a min heap of size 4 find the fourth largest value?</summary><div>Push each value and pop whenever the size exceeds 4; at the end the heap holds the four largest and its top is the fourth largest.</div></details>
+</section></section>
+  <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://leetcode.com/problems/convert-sorted-array-to-binary-search-tree/" target="_blank" rel="noopener">Convert Sorted Array to Binary Search Tree</a><span class="site">LeetCode</span></li><li><a href="https://leetcode.com/problems/range-sum-of-bst/" target="_blank" rel="noopener">Range Sum of BST</a><span class="site">LeetCode</span></li><li><a href="https://leetcode.com/problems/search-in-a-binary-search-tree/" target="_blank" rel="noopener">Search in a Binary Search Tree</a><span class="site">LeetCode</span></li><li><a href="https://leetcode.com/problems/maximum-product-of-two-elements-in-an-array/" target="_blank" rel="noopener">Maximum Product of Two Elements in an Array</a><span class="site">LeetCode</span></li><li><a href="https://leetcode.com/problems/minimum-absolute-difference-in-bst/" target="_blank" rel="noopener">Minimum Absolute Difference in BST</a><span class="site">LeetCode</span></li><li><a href="https://leetcode.com/problems/increasing-order-search-tree/" target="_blank" rel="noopener">Increasing Order Search Tree</a><span class="site">LeetCode</span></li><li><a href="https://www.codingninjas.com/studio/problems/insert-into-a-binary-search-tree_1279913" target="_blank" rel="noopener">Insert Into A Binary Search Tree</a><span class="site">Code360</span></li><li><a href="https://www.codingninjas.com/studio/problems/fourth-largest-element-in-the-array_1792782" target="_blank" rel="noopener">Fourth Largest Element In The Array</a><span class="site">Code360</span></li></ul></section>
+  <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>A heap is a complete binary tree stored in an array: children at <code>2i+1</code>, <code>2i+2</code>, parent at <code>(i-1)/2</code>.</li><li>Insert: append, then bubble up while the value beats its parent.</li><li>Delete root: move the last value to the top, then push it down towards the better child.</li><li>Both heap operations are O(log n).</li><li>In-order traversal of a BST gives sorted values; many BST problems build on that.</li></ul></section>
+  <section class="block" id="quiz"><h2>✅ Check yourself</h2><details class="check"><summary>In a heap array, what is the parent index of index 9 and the children of index 4?</summary><div>Parent of 9 is (9 - 1) / 2 = 4. Children of 4 are 9 and 10.</div></details><details class="check"><summary>Is the array <code>50 30 40 35 10</code> a valid max heap?</summary><div>No. Index 3 (value 35) has parent index 1 (value 30), and 35 &gt; 30.</div></details><details class="check"><summary>Why can&#x27;t we just delete <code>v[0]</code> with <code>erase</code> in a heap?</summary><div>Shifting every element left scrambles the parent-child positions, so the heap rule breaks and the cost is O(n). Moving the last element up and pushing it down keeps the shape and costs O(log n).</div></details></section>
+  <nav class="pager"><a class="prev" href="../data-structures/module-21.html"><small>← Previous</small><b>Module 21</b><span>Binary search trees: search, insert, build from a sorted array</span></a><a class="next" href="../data-structures/module-23.html"><small>Next →</small><b>Module 23</b><span>STL map, set, priority queue &amp; review problems</span></a></nav>
+</article>
+</main>
+<footer class="foot">
+  <p>Shammunul's revision notes from the Phitron CSE program. Code written while taking the course; outputs are real runs
+  (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
+</footer>
+<script>window.SITE_ROOT="../";</script>
+<script src="../assets/search-index.js?v=3" defer></script>
+<script src="../assets/site.js?v=3" defer></script>
+</body>
+</html>

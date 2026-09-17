@@ -1,0 +1,324 @@
+{
+  "module_id": "3-basic-data-structures--module-10",
+  "title": "Reversing lists, cycle detection & the STL list",
+  "overview": "This module applies linked-list skills to classic tasks: reversing a singly list with recursion, reversing a doubly list with two pointers, spotting a cycle with slow and fast pointers, and checking a palindrome. It then introduces C++'s ready-made doubly linked list, `std::list`, with its constructors, modifiers, operations and iterators. Once you can write these by hand, you know what the STL is doing for you.",
+  "concepts": [
+    {"term": "Recursive reversal of a singly list", "explain": "Recurse to the last node and make it the new head. While returning, each node makes its next node point back at it (`temp->next->next = temp`) and clears its own `next`.", "snippet": "rev(temp->next);\ntemp->next->next = temp;\ntemp->next = NULL;"},
+    {"term": "Two-pointer reversal of a doubly list", "explain": "Put `i` at the head and `j` at the tail, swap their values, and move them towards each other. Stop when they meet (odd length) or cross (`i->prev == j`, even length).", "snippet": "for(i=head, j=tail; i!=j && i->prev!=j; i=i->next, j=j->prev) swap(i->val, j->val);"},
+    {"term": "Palindrome check", "explain": "Same two pointers as the reversal, but compare instead of swap. One mismatch means the list is not a palindrome.", "snippet": null},
+    {"term": "Floyd's cycle detection", "explain": "`slow` moves one step and `fast` moves two. If there is a loop, `fast` eventually lands on `slow`; if not, `fast` reaches `NULL`. Move first, then compare, because both start at the head.", "snippet": "while(fast && fast->next){ slow=slow->next; fast=fast->next->next; if(slow==fast) return true; }"},
+    {"term": "`std::list` basics", "explain": "`list<int>` is a doubly linked list. It has O(1) `push_front`, `push_back`, `pop_front`, `pop_back`, `front()`, `back()`, `size()` and `empty()`. There is no `[]`; use iterators.", "snippet": "list<int> l = {1, 2, 3};"},
+    {"term": "Iterators and `next`", "explain": "`l.begin()` points to the first element; `l.end()` points one past the last, so the last element is `*prev(l.end())` or `*(--l.end())`. `next(l.begin(), i)` walks i steps and takes O(i).", "snippet": "cout << *next(l.begin(), 2);"},
+    {"term": "Insert and erase by position", "explain": "`l.insert(it, value)` or `l.insert(it, first, last)` puts values before `it`. `l.erase(it)` removes one element; `l.erase(a, b)` removes the half-open range [a, b).", "snippet": null},
+    {"term": "List operations", "explain": "`remove(v)` deletes every `v`; `sort()` sorts (pass `greater<int>()` for descending); `unique()` removes adjacent duplicates, so sort first; `reverse()` flips the order. `find` and `replace` come from `<algorithm>`.", "snippet": "l.sort(); l.unique();"}
+  ],
+  "files": [
+    {
+      "file": "reverse_singly_linked_list.cpp",
+      "title": "Reverse a singly linked list (recursion)",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads a list, prints it, reverses the actual links with a recursive function, and prints it again.",
+      "steps": [
+        "`reverse_linked_list(head, tail, head)` recurses down with `temp->next`.",
+        "Base case: at the last node (`temp->next == NULL`), set `head = temp` — the old last node is the new head.",
+        "While returning, `temp->next->next = temp` turns the link around.",
+        "`temp->next = NULL` cuts the old forward link, and `tail = temp`; the final return leaves the old head as `tail`.",
+        "For 10 20 30 40: 40 becomes head, then 40→30, 30→20, 20→10, and 10→NULL."
+      ],
+      "complexity": "Time O(n) · Space O(n) for the recursion stack",
+      "input": "10 20 30 40 -1\n",
+      "input_note": "Values ended by -1.",
+      "output_note": "Under \"Before reversing\" you see 10 20 30 40; under \"After reversing\" you see 40 30 20 10 — the links really changed, not just the printing order.",
+      "watch_out": "An empty list crashes, because `temp->next` is read when `temp` is `NULL`. Check `head == NULL` before calling.",
+      "check": {"q": "Why is `temp->next = NULL` needed after flipping the link?", "a": "Otherwise the old head still points forward, making a two-node cycle at the end of the list."}
+    },
+    {
+      "file": "reverse_singly_linked_list_p.cpp",
+      "title": "Reverse a singly list (practice copy)",
+      "kind": "variant",
+      "same_as": "reverse_singly_linked_list.cpp",
+      "problem": null,
+      "what": "Same function, but `main` calls it with only two arguments, so it does not compile.",
+      "steps": ["Same recursive link reversal."],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "10 20 30 40 -1\n",
+      "input_note": "Values ended by -1.",
+      "output_note": "No output: compile error \"too few arguments to function reverse_linked_list\".",
+      "watch_out": "The function takes `(head, tail, temp)`. Call `reverse_linked_list(head, tail, head);` instead of `reverse_linked_list(head, temp);`.",
+      "check": {"q": "In the recursion, which node becomes the new head?", "a": "The old last node, set in the base case."}
+    },
+    {
+      "file": "reverse_doubly_linked_list.cpp",
+      "title": "Reverse a doubly linked list (buggy main)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "Reverses a doubly list by swapping values from both ends with `reverse_doubly`, but `main` never reads the list.",
+      "steps": [
+        "`i` starts at `head`, `j` at `tail`.",
+        "While `i != j` (odd length) and `i->prev != j` (even length), swap `i->val` and `j->val`.",
+        "Move `i` forward and `j` backward.",
+        "`main` loops `while(tail)`, but `tail` is `NULL`, so nothing is read; both prints show an empty line."
+      ],
+      "complexity": "Time O(n) · Space O(1)",
+      "input": "10 20 30 40 -1\n",
+      "input_note": "Values ended by -1.",
+      "output_note": "Only blank lines — the list stays empty. After the fix you would see `10 20 30 40` then `40 30 20 10`.",
+      "watch_out": "Write the input loop as `while(true)` with `break;` on -1 (not `return;`). Also, `reverse_doubly` would crash on an empty list because it reads `i->prev` when `i` is `NULL`.",
+      "check": {"q": "For 4 nodes, why is `i != j` alone not enough to stop?", "a": "With an even length the pointers never meet; they cross, so we also stop when `i->prev == j`."}
+    },
+    {
+      "file": "reverse_doubly_linked_list_p.cpp",
+      "title": "Reverse a doubly list (practice copy)",
+      "kind": "variant",
+      "same_as": "reverse_doubly_linked_list.cpp",
+      "problem": null,
+      "what": "Adds a second approach, `reverse_doubly_1`, that swaps each node's `next` and `prev`, and uses the value-swap version (`reverse_doubly_2`) in `main`. The same `while(tail)` bug remains.",
+      "steps": [
+        "`reverse_doubly_1`: for every node, `swap(tmp->next, tmp->prev)`, then move with `tmp = tmp->prev` (the old next).",
+        "At the end it swaps `head` and `tail`.",
+        "`reverse_doubly_2` is the two-pointer value swap."
+      ],
+      "complexity": "Time O(n) · Space O(1)",
+      "input": "10 20 30 40 -1\n",
+      "input_note": "Values ended by -1.",
+      "output_note": "Blank lines only, as in the original, because the input loop never runs.",
+      "watch_out": "`reverse_doubly_1` takes `head` and `tail` by value, so its final `swap(head, tail)` is lost; use `Node* &head, Node* &tail`. The input loop needs `while(true)` and `break;`.",
+      "check": {"q": "After swapping `next` and `prev` in a node, which pointer leads to the rest of the unprocessed list?", "a": "`prev`, because it now holds the old `next`."}
+    },
+    {
+      "file": "cycle_detection_linked_list.cpp",
+      "title": "Detect a cycle (slow and fast pointers)",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": {"name": "LeetCode 141 - Linked List Cycle", "url": "https://leetcode.com/problems/linked-list-cycle/"},
+      "what": "Builds 10→20→30→40→50 and links 50 back to 20, then uses Floyd's slow/fast pointers to report whether a cycle exists.",
+      "steps": [
+        "`slow` and `fast` both start at `head`.",
+        "While `fast` and `fast->next` exist, the loop checks `slow == fast`, then moves `slow` one step and `fast` two steps.",
+        "If they are equal, set `flag = true` and stop.",
+        "If `fast` runs off the end, there is no cycle.",
+        "Print \"Cycle Detected\" or \"No Cycle\"."
+      ],
+      "complexity": "Time O(n) · Space O(1)",
+      "input": null,
+      "input_note": null,
+      "output_note": "`Cycle Detected`. The answer is right here, but only by luck — see the pitfall.",
+      "watch_out": "The comparison happens before the first move, when `slow` and `fast` are both at `head`, so the program reports a cycle for every list with at least two nodes. Move both pointers first, then compare. Test it with `d->next = NULL`: it should say \"No Cycle\".",
+      "check": {"q": "Why does `fast` always catch `slow` inside a loop?", "a": "Each step the gap between them shrinks by one, so it must reach zero."}
+    },
+    {
+      "file": "cycle_detection_linked_list_p.cpp",
+      "title": "Detect a cycle (practice copy)",
+      "kind": "variant",
+      "same_as": "cycle_detection_linked_list.cpp",
+      "problem": {"name": "LeetCode 141 - Linked List Cycle", "url": "https://leetcode.com/problems/linked-list-cycle/"},
+      "what": "Identical re-typing, including the compare-before-move bug.",
+      "steps": ["Same slow/fast loop."],
+      "complexity": "Time O(n) · Space O(1)",
+      "input": null,
+      "input_note": null,
+      "output_note": "`Cycle Detected`.",
+      "watch_out": "Same bug as the original: compare after moving the pointers.",
+      "check": {"q": "What stops the loop when there is no cycle?", "a": "`fast == NULL` or `fast->next == NULL`."}
+    },
+    {
+      "file": "practice_problem_1_same_size_doubly.cpp",
+      "title": "Compare two doubly lists (buggy)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads two doubly lists and compares their sizes (YES/NO). The input loops are broken, so it prints nothing.",
+      "steps": [
+        "The first loop appends values to list 1 but runs `return;` on -1, ending the program.",
+        "The second loop uses `while(tail2)`, which would never run because `tail2` is `NULL`.",
+        "`get_size` counts nodes; equal sizes → YES."
+      ],
+      "complexity": "Time O(n + m) · Space O(n + m)",
+      "input": "10 20 30 -1\n10 20 30 -1\n",
+      "input_note": "Two lists, each ended by -1.",
+      "output_note": "Empty output: `main` returns as soon as the first -1 is read.",
+      "watch_out": "Use `while(true)` with `break;` in both loops. Also, the practice task asks whether the lists are the *same*, which needs a value-by-value comparison after the size check, not only the sizes.",
+      "check": {"q": "Lists `10 20 30` and `30 20 10`: what should a same-list check print?", "a": "NO — the sizes match but the values differ by position."}
+    },
+    {
+      "file": "practice_problem_3_is_palindrome_doubly_linked_list.cpp",
+      "title": "Is the doubly list a palindrome? (buggy main)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "Compares values from both ends with two pointers and prints YES if the list reads the same both ways. `main` exits on -1 before checking.",
+      "steps": [
+        "`i` from `head`, `j` from `tail`.",
+        "Loop while `i != j` and `i->prev != j`.",
+        "If `i->val != j->val`, set `flag = false` and stop.",
+        "Return `flag` and print YES/NO."
+      ],
+      "complexity": "Time O(n) · Space O(1)",
+      "input": "10 20 30 20 10 -1\n",
+      "input_note": "Values ended by -1.",
+      "output_note": "Empty output: `return;` on -1 ends `main` early. After the fix this input prints `YES`.",
+      "watch_out": "Replace `return;` with `break;` in the input loop.",
+      "check": {"q": "Is `10 20 30 30 20 10` a palindrome, and where do the pointers stop?", "a": "Yes; they stop when they cross between the two 30s (`i->prev == j`)."}
+    },
+    {
+      "file": "practice_problem_3_is_palindrome_doubly_linked_list_p.cpp",
+      "title": "Palindrome check (practice copy)",
+      "kind": "variant",
+      "same_as": "practice_problem_3_is_palindrome_doubly_linked_list.cpp",
+      "problem": null,
+      "what": "Same idea, but `is_palindrome` was changed to return `void` and always `return true`, so it does not compile.",
+      "steps": ["Same two-pointer comparison."],
+      "complexity": "Time O(n) · Space O(1)",
+      "input": "10 20 30 20 10 -1\n",
+      "input_note": "Values ended by -1.",
+      "output_note": "No output: compile error \"void value not ignored as it ought to be\".",
+      "watch_out": "Declare it `bool is_palindrome(...)` and `return flag;` (returning `true` would ignore the comparisons). Also change `return;` to `break;` in `main`.",
+      "check": {"q": "What would `return true;` at the end make the function report?", "a": "Always YES, even for lists that are not palindromes."}
+    },
+    {
+      "file": "practice_problem_4_insert.cpp",
+      "title": "Insert at index X with queries (does not compile)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "For each query `X V`, inserts V at index X of an initially empty doubly list (printing \"Invalid\" if X is outside 0..size) and prints the list.",
+      "steps": [
+        "Validate: `X < 0 || X > get_size(head)` → print Invalid and continue.",
+        "`insert_at_any_position` handles index 0 (head), the end (tail) and the middle (four links).",
+        "Print the list forward after each valid insert."
+      ],
+      "complexity": "Time O(n) per query · Space O(n)",
+      "input": "6\n0 10\n1 20\n4 30\n0 30\n1 40\n5 50\n",
+      "input_note": "Q, then Q lines of `X V`.",
+      "output_note": "No output: compile error \"redefinition of insert_at_tail\".",
+      "watch_out": "Three fixes: delete the second copy of `insert_at_tail`; add `cin >> Q;` (Q is used uninitialised); and call `print_backward(tail)` too, because the task asks for the list both left-to-right and right-to-left.",
+      "check": {"q": "For an empty list, which X values are valid?", "a": "Only 0."}
+    },
+    {
+      "file": "practice_problem_4_insert_p.cpp",
+      "title": "Insert with queries (practice copy)",
+      "kind": "variant",
+      "same_as": "practice_problem_4_insert.cpp",
+      "problem": null,
+      "what": "Renames the parameters to `X` and `V` and adds `print_backward(tail)`, but keeps the duplicate function and the missing `cin >> Q`.",
+      "steps": ["Same validation and insert, then print both directions."],
+      "complexity": "Time O(n) per query · Space O(n)",
+      "input": "6\n0 10\n1 20\n4 30\n0 30\n1 40\n5 50\n",
+      "input_note": "Q, then Q lines of `X V`.",
+      "output_note": "No output: the same redefinition compile error.",
+      "watch_out": "Remove the duplicate `insert_at_tail` and read `Q` with `cin >> Q;` before the loop.",
+      "check": {"q": "After the fix, what does the query `4 30` print when the list is `10 20`?", "a": "`Invalid`, because 4 is larger than the size 2."}
+    },
+    {
+      "file": "stl_list.cpp",
+      "title": "`std::list` constructors and capacity",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Tours the ways to create a `list<int>` (empty, N elements, N copies of V, initializer list, copy, from an array, from a vector) and the capacity functions `size`, `clear`, `empty` and `resize`.",
+      "steps": [
+        "`list<int> l;` → size 0. `list<int> l2(10);` → 10 zeros. `list<int> l3(10, 5);` → ten 5s.",
+        "`front()`, `back()` and `*l3.begin()` all give 5.",
+        "`*(--l3.end())` is the last element; `l.end()` itself is one past the end.",
+        "`l5(l4.begin(), l4.end())`, `l6(l5)`, `l7(arr, arr+5)` and `l8(v.begin(), v.end())` copy from other containers.",
+        "`clear()` empties `l8`; `empty()` then returns true.",
+        "`l7.resize(10)` grows it to 10, filling the new places with 0."
+      ],
+      "complexity": "Most calls O(1); constructing, copying, clear and resize are O(n)",
+      "input": null,
+      "input_note": null,
+      "output_note": "Read top to bottom: 0, 10, 10, 5, 5, 5, then `10` from `*l3.end()` (a meaningless value), 5, 5, 1, 5, 5, the two loops over l5, `The list l7 is:` 1 2 3 4 5, 10 20 30 40 50, 0, `List is empty`, 10, and the resized `1 2 3 4 5 0 0 0 0 0`. The line `1 2 3 4 5 5` is the range-for over l5 glued to `l6.size()`, because no `endl` was printed between them.",
+      "watch_out": "`*l3.end()` is undefined behaviour — `end()` is not an element. Never dereference it; use `*prev(l3.end())`.",
+      "check": {"q": "What does `list<int> a(3, 7);` contain?", "a": "Three elements, all 7."}
+    },
+    {
+      "file": "list_element_access_and_iterators.cpp",
+      "title": "`std::list` element access",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads elements from `{10, 20, 30, 40, 50}` using `front`, `back`, `next(begin, 2)`, `*begin()` and `*(--end())`.",
+      "steps": [
+        "`l.front()` → first value; `l.back()` → last value.",
+        "`*next(l.begin(), 2)` walks two steps → the value at index 2.",
+        "`*l.begin()` is the same as `front()`.",
+        "`*(--l.end())` steps back from one-past-the-end → the last value."
+      ],
+      "complexity": "`front`/`back`/`begin` O(1); `next(it, i)` O(i)",
+      "input": null,
+      "input_note": null,
+      "output_note": "`10`, `50`, `30`, `10`, `50` — one line per access.",
+      "watch_out": null,
+      "check": {"q": "Why can't you write `l[2]` for a `std::list`?", "a": "A linked list has no random access; reaching index 2 means walking, so the class does not offer `[]`."}
+    },
+    {
+      "file": "list_modifiers.cpp",
+      "title": "`std::list` modifiers",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Demonstrates copying, `assign`, push/pop at both ends, `insert` (one value or a range), `erase` (one element or a range), `replace`, `find` with `distance`, and `remove`, printing the list after each step.",
+      "steps": [
+        "`list<int> l2 = l;` makes an independent copy: pushing onto `l` does not change `l2`.",
+        "`push_back`, `push_front`, `pop_back`, `pop_front` work at the ends in O(1).",
+        "`l.insert(next(l.begin(), 2), 100)` puts 100 before index 2; the range versions insert a whole list or vector there.",
+        "`l.erase(it)` removes one element; `l.erase(first, last)` removes [first, last).",
+        "`replace(l.begin(), l.end(), 1000, 999)` changes every 1000 to 999.",
+        "`find` returns an iterator (or `l.end()` if missing); `distance(l.begin(), it)` turns it into an index.",
+        "`l.remove(999)` deletes every 999."
+      ],
+      "complexity": "End operations O(1); insert/erase/find/replace/remove O(n)",
+      "input": null,
+      "input_note": null,
+      "output_note": "Each message is followed by the list after that step. Useful checkpoints: after the inserts the list is `1 2 33 44 55 111 222 333 444 555 100 3 4 5`; 999 is found at index 8, 333 at index 2, and 45678 is not present; the final list is `2 44 333 444 555 100 3 4`.",
+      "watch_out": "The message for `l.erase(next(l.begin(), 2), next(l.begin(), 5))` says it removes the 3rd and 4th elements, but the range [2, 5) removes three elements (indexes 2, 3, 4): 55, 111 and 222.",
+      "check": {"q": "How many elements does `l.erase(next(l.begin(),1), next(l.begin(),4))` remove?", "a": "Three — indexes 1, 2 and 3."}
+    },
+    {
+      "file": "list_operation_functions.cpp",
+      "title": "`std::list` operations: remove, sort, unique, reverse",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Applies `remove`, `sort`, `sort(greater<int>())`, `unique`, `reverse` and `empty` to a list with repeated values.",
+      "steps": [
+        "`l.remove(3)` deletes every 3.",
+        "`l.sort()` sorts ascending; `l.sort(greater<int>())` sorts descending.",
+        "`l.unique()` only removes *adjacent* duplicates, so the code sorts first.",
+        "`l.reverse()` flips the order.",
+        "`l.empty()` returns a bool, printed as 0 (false) or 1 (true)."
+      ],
+      "complexity": "remove/unique/reverse O(n) · sort O(n log n)",
+      "input": null,
+      "input_note": null,
+      "output_note": "Lines: `1 2 40 30 40 30 4 5` (3s removed), `1 2 4 5 30 30 40 40` (ascending), `40 40 30 30 5 4 2 1` (descending), `1 2 4 5 30 40` (sorted then unique), `40 30 5 4 2 1` (reversed), and `Is the list l empty? 0`.",
+      "watch_out": "The line `l.empty();` on its own does nothing — it only asks a question. To empty a list use `l.clear()`.",
+      "check": {"q": "What does `unique()` leave for `{1, 2, 1, 1}` if you skip sorting?", "a": "`1 2 1` — only the neighbouring 1s are merged."}
+    }
+  ],
+  "practice_links": [
+    {"name": "Reverse Linked List", "url": "https://leetcode.com/problems/reverse-linked-list/", "site": "LeetCode"},
+    {"name": "Linked List Cycle", "url": "https://leetcode.com/problems/linked-list-cycle/", "site": "LeetCode"},
+    {"name": "Linked List Cycle II", "url": "https://leetcode.com/problems/linked-list-cycle-ii/", "site": "LeetCode"},
+    {"name": "Palindrome Linked List", "url": "https://leetcode.com/problems/palindrome-linked-list/", "site": "LeetCode"},
+    {"name": "Reverse Linked List II", "url": "https://leetcode.com/problems/reverse-linked-list-ii/", "site": "LeetCode"},
+    {"name": "Sort List", "url": "https://leetcode.com/problems/sort-list/", "site": "LeetCode"}
+  ],
+  "recap": [
+    "Recursive reversal: recurse first, then `temp->next->next = temp; temp->next = NULL;`.",
+    "Two pointers from both ends reverse or palindrome-check a doubly list; stop on meet or cross.",
+    "Floyd's cycle check: move slow by 1 and fast by 2, then compare.",
+    "`std::list` is a doubly linked list: O(1) at the ends, no `[]`, use `next(it, i)`.",
+    "`end()` is one past the last element — never dereference it.",
+    "`sort()` before `unique()`; `remove(v)` deletes every copy of `v`."
+  ],
+  "check_yourself": [
+    {"q": "What is the extra space cost of the recursive singly-list reversal, and how could you avoid it?", "a": "O(n) for the call stack; an iterative version with `prev`, `curr` and `next` pointers uses O(1)."},
+    {"q": "Why can't `std::sort` be used on a `std::list`?", "a": "`std::sort` needs random-access iterators; a list only has bidirectional ones, so it provides its own `l.sort()`."},
+    {"q": "In cycle detection, why must the pointers move before they are compared?", "a": "They both start at the head, so comparing first would always find them equal and wrongly report a cycle."},
+    {"q": "What does `l.insert(l.begin(), 5)` do?", "a": "It inserts 5 before the first element — the same as `push_front(5)`."}
+  ]
+}

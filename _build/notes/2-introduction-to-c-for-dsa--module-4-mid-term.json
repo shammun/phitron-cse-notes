@@ -1,0 +1,210 @@
+{
+  "module_id": "2-introduction-to-c-for-dsa--module-4-mid-term",
+  "title": "Mid-term: sorting, functions, objects and brute force",
+  "overview": "The mid-term mixes the first modules: return a sorted heap array from a function, sort characters inside lines read until end of input, pick the best student with a tie rule, and brute-force a three-sum check. Two solutions are logically fine but use too much stack memory and crash on Windows - a good lesson in where big arrays belong.",
+  "concepts": [
+    {
+      "term": "Returning a heap array",
+      "explain": "A function can `new` an array, fill it and return the pointer; the caller deletes it.",
+      "snippet": null
+    },
+    {
+      "term": "Descending order",
+      "explain": "Either `sort(..., greater<int>())` or print an ascending array backwards.",
+      "snippet": null
+    },
+    {
+      "term": "Sorting part of an array",
+      "explain": "`sort(p + l, p + r)` sorts only indices `l..r-1`.",
+      "snippet": null
+    },
+    {
+      "term": "Tie-breaking",
+      "explain": "Compare the main key first, and only when equal compare the second key.",
+      "snippet": "if (b.marks > a.marks || (b.marks == a.marks && b.id < a.id))"
+    },
+    {
+      "term": "Brute force",
+      "explain": "Try all combinations; fine when N is small (N=100 gives about 10^6 triples).",
+      "snippet": null
+    },
+    {
+      "term": "Stack size",
+      "explain": "Big local arrays can overflow the stack; make them global, `static`, or heap-allocated.",
+      "snippet": null
+    }
+  ],
+  "files": [
+    {
+      "file": "1_sort_it_0.cpp",
+      "title": "Sort It (simple version)",
+      "kind": "exam",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads an array, sorts it ascending and prints it, then sorts it descending and prints it again.",
+      "steps": [
+        "Read `n` and `a`.",
+        "`sort(a, a+n)` then print.",
+        "`sort(a, a+n, greater<int>())` then print."
+      ],
+      "complexity": "Time O(n log n)",
+      "input": "5\n2 4 6 1 3\n",
+      "input_note": "First line N, then N numbers.",
+      "output_note": "Matches the sample: `1 2 3 4 6` then `6 4 3 2 1`.",
+      "watch_out": null,
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Could you print the descending line without sorting again?",
+        "a": "Yes - print the ascending array from the last index to the first."
+      }
+    },
+    {
+      "file": "1_sort_it.cpp",
+      "title": "Sort It (function + heap array)",
+      "kind": "exam",
+      "same_as": null,
+      "problem": null,
+      "what": "Same task, but a function `sort_it(n)` reads the array into heap memory, sorts it and returns the pointer. Descending order is printed by walking backwards.",
+      "steps": [
+        "`sort_it` allocates `new int[n]`, reads values, and sorts ascending.",
+        "`main` prints the array forwards.",
+        "Then it prints it backwards for descending order.",
+        "`delete[] sorted_array` frees the memory."
+      ],
+      "complexity": "Time O(n log n) · Space O(n)",
+      "input": "6\n10 -3 7 0 7 2\n",
+      "input_note": "First line N, then N numbers.",
+      "output_note": "`-3 0 2 7 7 10` then `10 7 7 2 0 -3`.",
+      "watch_out": null,
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why must `sort_it` use `new` instead of a local array?",
+        "a": "A local array would be destroyed when the function returns."
+      }
+    },
+    {
+      "file": "2_sort_it2.cpp",
+      "title": "Sort It 2 (return a descending array)",
+      "kind": "exam",
+      "same_as": null,
+      "problem": null,
+      "what": "A function reads the array into heap memory, sorts it in descending order with `greater<int>()`, and returns it to `main`.",
+      "steps": [
+        "`main` reads `n` and calls `sort_it(n)`.",
+        "Inside: `new int[n]`, read, `sort(a, a+n, greater<int>())`, return `a`.",
+        "`main` prints and deletes it."
+      ],
+      "complexity": "Time O(n log n) · Space O(n)",
+      "input": "5\n1 4 2 3 5\n",
+      "input_note": "First line N, then N numbers.",
+      "output_note": "Matches the sample: `5 4 3 2 1`.",
+      "watch_out": null,
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "What is the return type of `sort_it`?",
+        "a": "`int*` - a pointer to the first element of the heap array."
+      }
+    },
+    {
+      "file": "3_monkey.cpp",
+      "title": "Monkey (sort letters of each line)",
+      "kind": "exam",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads lines until input ends, removes spaces, sorts each line's letters, and prints each line's sorted letters.",
+      "steps": [
+        "`while (cin.getline(current_line, 100000))` reads every line.",
+        "Non-space characters are appended to the big buffer `all_lines_content`, and the line's start and length are remembered.",
+        "`sort(start, end)` sorts only that line's part of the buffer.",
+        "Finally each line's slice is printed."
+      ],
+      "complexity": "Time O(L log L) per line · Space O(total length)",
+      "input": "monkey\ni love flower\n",
+      "input_note": "Several lines of lowercase letters and spaces.",
+      "output_note": "`ekmnoy` (the letters of `monkey`, sorted) and `eefilloorvw` (`i love flower` with the spaces removed, sorted).",
+      "watch_out": "The huge arrays (two `int[1000000]`, a `char[3000001]` and more) live inside `main`. That works here and on judges with a big stack, but on a default 1 MB stack it would crash; making them global (or `static`) is safer. A simpler solution: read each line into a `string`, drop spaces, `sort`, print. Also, `getline(current_line, 100000)` can't read a full 10^5-character line plus the null byte.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why does this program crash on Windows?",
+        "a": "Its local arrays need about 11 MB, but the default stack is about 1 MB (and 8 MB on Linux)."
+      }
+    },
+    {
+      "file": "4_who_is_it.cpp",
+      "title": "Who Is It? (best of three students)",
+      "kind": "exam",
+      "same_as": null,
+      "problem": null,
+      "what": "For each test, reads three students and keeps the one with the highest marks, breaking ties by the smaller ID.",
+      "steps": [
+        "Read three lines and build `s1`, `s2`, `s3` with the constructor.",
+        "Start with `best = s1`.",
+        "Replace `best` if another student has more marks, or equal marks and a smaller ID.",
+        "Save a heap copy of `best` in `students[i]`; print all at the end and delete them."
+      ],
+      "complexity": "Time O(T)",
+      "input": "2\n1 sakib A 50\n2 rakib D 96\n3 akib C 96\n1 tuli B 70\n2 moni C 85\n3 rina A 85\n",
+      "input_note": "T, then 3 lines per test: ID name section marks.",
+      "output_note": "Test 1: rakib and akib tie at 96, so the smaller ID `2 rakib D 96` wins. Test 2: moni and rina tie at 85, so `2 moni C 85`.",
+      "watch_out": "`students[100]` is too small: T can be 1000. Use a larger array, or simply print the answer inside the loop.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "What condition handles the tie rule?",
+        "a": "`s2.marks == best.marks && s2.id < best.id`."
+      }
+    },
+    {
+      "file": "5_choose_three.cpp",
+      "title": "Choose Three (brute force)",
+      "kind": "exam",
+      "same_as": null,
+      "problem": null,
+      "what": "Tries every triple of different indices and says YES if any sums to S.",
+      "steps": [
+        "Read `N`, `S` and the array.",
+        "Three nested loops `i`, `j`, `k` over all indices.",
+        "Skip triples where any two indices are equal.",
+        "If `A[i]+A[j]+A[k] == S`, the answer is YES.",
+        "Store answers and print them at the end."
+      ],
+      "complexity": "Time O(N^3) per test · Space O(N)",
+      "input": "3\n5 10\n1 2 3 4 5\n3 6\n2 2 2\n4 4\n2 8 1 5\n",
+      "input_note": "T; then for each test `N S` and the array.",
+      "output_note": "`YES` (for example 1 + 4 + 5 = 10), `YES` (2+2+2 = 6), `NO` (no three of 2, 8, 1, 5 add up to 4).",
+      "watch_out": "`string results[100000]` inside `main` uses a few MB of stack. It runs here (and on judges with a big stack), but on a default 1 MB stack it would crash. T is at most 100, so `string results[100]` (or printing inside the loop) is enough. The inner loops also reuse the name `i`, which is legal but confusing.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "How can you make the triple loop faster without changing the answer?",
+        "a": "Start `j` at `i+1` and `k` at `j+1`, so each triple is checked once and the `!=` checks disappear."
+      }
+    }
+  ],
+  "practice_links": [],
+  "recap": [
+    "Heap arrays can be returned from functions; stack arrays cannot.",
+    "Sorting descending = `greater<int>()` or reverse printing.",
+    "Tie rules: compare the first key, then the second.",
+    "Brute force is fine for small N - check the limits.",
+    "Keep huge arrays out of `main`'s stack."
+  ],
+  "check_yourself": [
+    {
+      "q": "Where should an array of a few million elements be declared?",
+      "a": "As a global/static array or on the heap, not as a local variable."
+    },
+    {
+      "q": "How many triples does the brute force check for N = 100 with the full triple loop?",
+      "a": "100^3 = 1,000,000 index combinations."
+    },
+    {
+      "q": "Name two ways to print an array in descending order after an ascending sort.",
+      "a": "Loop from the last index to the first, or sort again with `greater<int>()`."
+    }
+  ]
+}

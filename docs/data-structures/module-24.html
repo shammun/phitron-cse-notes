@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 24: Final exam: sets, maps &amp; priority queues · Basic Data Structures</title>
+<meta name="description" content="Shammunul&#x27;s solutions to the course final exam. Each question is a small data-handling task that becomes easy once you pick the right STL container: a `set` to sort and remove duplicates, a priority queue with a custom comparator to order pairs or students, a `map` to count words, and a min-heap to answer &#x27;current minimum&#x27; queries. Revise these to practise choosing a container quickly.">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+<link rel="stylesheet" href="../assets/site.css?v=3">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../index.html"><span aria-hidden="true">📘</span> <span>CSE Revision</span></a>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Basic Data Structures</a><span aria-hidden="true">›</span><span>Module 24</span></nav>
+  <div class="tools">
+    <button class="tbtn" id="searchBtn" type="button" aria-label="Search programs" title="Search (/)">🔍</button>
+    <button class="tbtn" id="recallBtn" type="button" aria-pressed="false" title="Recall mode: hide code so you can write it from memory">🧠<span class="lbl"> Recall</span></button>
+    <button class="tbtn" id="themeBtn" type="button" aria-label="Switch light/dark theme" title="Theme">🌓</button>
+  </div>
+</header>
+<div class="search" id="search" hidden>
+  <div class="search-box">
+    <input id="q" type="search" placeholder="Search programs, topics, problems…" autocomplete="off" aria-label="Search">
+    <button class="tbtn" id="searchClose" type="button" aria-label="Close search">✕</button>
+  </div>
+  <ol id="results" class="results"></ol>
+</div>
+<main class="wrap">
+
+<article class="module">
+  <header class="mhead">
+    <p class="eyebrow"><a href="index.html">Basic Data Structures</a> · Module 24</p>
+    <h1>Final exam: sets, maps &amp; priority queues</h1>
+    <p class="lead">Shammunul&#x27;s solutions to the course final exam. Each question is a small data-handling task that becomes easy once you pick the right STL container: a <code>set</code> to sort and remove duplicates, a priority queue with a custom comparator to order pairs or students, a <code>map</code> to count words, and a min-heap to answer &#x27;current minimum&#x27; queries. Revise these to practise choosing a container quickly.</p>
+    <p class="chips"><span>7 programs</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/3_Basic%20Data%20Structures/Module%2024" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
+  </header>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-final-exam-question-1-sorted"><span class="n">1</span>Q1: Sorted (sort and remove duplicates)</a></li><li><a href="#p-final-exam-question-2-pairs"><span class="n">2</span>Q2: Pairs (sort by name, then value descending)</a></li><li><a href="#p-final-exam-pairs"><span class="n">3</span>Pairs (copy of Q2) <em>(re-typed)</em></a></li><li><a href="#p-final-exam-question-3-count-me-unoptimized"><span class="n">4</span>Q3: Count Me (vector of pairs)</a></li><li><a href="#p-final-exam-question-3-count-me-optimized"><span class="n">5</span>Q3: Count Me (map)</a></li><li><a href="#p-final-exam-question-4-current-min"><span class="n">6</span>Q4: Give Current Min</a></li><li><a href="#p-final-exam-question-5-current-max"><span class="n">7</span>Q5: Give Current Max (students)</a></li></ol></details></nav>
+  <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Pick the container from the question</h4><p>&#x27;Sorted and unique&#x27; means <code>set</code>. &#x27;How many times&#x27; means <code>map</code>. &#x27;Current min/max while items come and go&#x27; means <code>priority_queue</code>.</p></div><div class="concept"><h4>Comparator with two keys</h4><p>Compare the main key first; only when it ties, compare the second key. In a priority queue, return true when the left item should come out later.</p><pre class="snip">if(l.name != r.name) return l.name &gt; r.name; return l.val &lt; r.val;</pre></div><div class="concept"><h4>Reading a number, then whole lines</h4><p>After <code>cin &gt;&gt; T</code>, the newline is still waiting in the input. <code>cin.ignore()</code> throws it away so the next <code>getline</code> reads the real sentence.</p><pre class="snip">cin &gt;&gt; T; cin.ignore(); getline(cin, S);</pre></div><div class="concept"><h4>First word to reach the maximum</h4><p>Update the answer only when a count becomes <strong>strictly</strong> greater than the best so far. A later word that only ties does not replace it.</p><pre class="snip">if(freq[w] &gt; best){ best = freq[w]; ans = w; }</pre></div><div class="concept"><h4>Guard every heap access</h4><p>Before <code>top()</code> or <code>pop()</code>, check <code>empty()</code> and print <code>Empty</code> instead. After a pop, check again before printing the new top.</p></div><div class="concept"><h4>map vs. vector of pairs for counting</h4><p>A <code>map</code> finds a word in O(log n). Searching a vector of pairs is O(n) per word, which can be too slow for long inputs.</p></div></div></section>
+  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
+<section class="prog" id="p-final-exam-question-1-sorted">
+  <div class="prog-h">
+    <span class="num">1</span>
+    <div class="prog-t">
+      <h3>Q1: Sorted (sort and remove duplicates)</h3>
+      <div class="meta"><code class="fname">final_exam_question_1_sorted.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(N log N) per case · Space O(N)</span></div>
+    </div>
+  </div>
+  <p class="what">For each test case, puts the numbers into a <code>set</code> and prints them, which gives sorted order with duplicates removed.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 75 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2024/final_exam_question_1_sorted.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">You will be given a list A of size N. You need to sort those values in ascending order </span>
+<span class="cm">and also you need to remove any duplicate values from the list and print the final </span>
+<span class="cm">outcome.</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">- First line will contain T, the number of test cases.</span>
+<span class="cm">- The first line of every test case will contain N.</span>
+<span class="cm">- The second line of every test case will contain the list A of size N.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">1. 1&lt;=T &lt;= 100</span>
+<span class="cm">2. 1&lt;=N &lt;= 10^4</span>
+<span class="cm">3. -10^9 &lt;-A_i &lt;= 10^9. Here i &lt;= 0 &lt; N</span>
+
+<span class="cm">Output Format</span>
+<span class="cm">- Output the final list.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">6</span>
+<span class="cm">8</span>
+<span class="cm">3 10 0 6 9 5 10 10 </span>
+<span class="cm">2</span>
+<span class="cm">7 3 </span>
+<span class="cm">6</span>
+<span class="cm">7 8 2 0 6 3 </span>
+<span class="cm">4</span>
+<span class="cm">6 2 0 1 </span>
+<span class="cm">10</span>
+<span class="cm">10 0 7 8 5 3 0 3 0 4 </span>
+<span class="cm">9</span>
+<span class="cm">9 3 7 10 6 9 0 6 3 </span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">0 3 5 6 9 10 </span>
+<span class="cm">3 7 </span>
+<span class="cm">0 2 3 6 7 8 </span>
+<span class="cm">0 1 2 6 </span>
+<span class="cm">0 3 4 5 7 8 10 </span>
+<span class="cm">0 3 6 7 9 10 </span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;set&gt;</span>
+
+
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">T</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="n">set</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">A</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">            </span><span class="n">A</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">it</span><span class="o">=</span><span class="n">A</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span><span class="w"> </span><span class="n">it</span><span class="o">!=</span><span class="n">A</span><span class="p">.</span><span class="n">end</span><span class="p">();</span><span class="w"> </span><span class="n">it</span><span class="o">++</span><span class="p">){</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="o">*</span><span class="n">it</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 75 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
+8
+3 10 0 6 9 5 10 10
+2
+7 3</pre><p class="io-note">T, then for each case N and a line of N numbers.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>final_exam_question_1_sorted.cpp: In function &#x27;int main()&#x27;:
+final_exam_question_1_sorted.cpp:56:5: error: &#x27;cin&#x27; was not declared in this scope
+     cin &gt;&gt; T;
+     ^~~
+final_exam_question_1_sorted.cpp:56:5: note: suggested alternative:
+In file included from final_exam_question_1_sorted.cpp:48:
+C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:60:18: note:   &#x27;std::cin&#x27;
+   extern istream cin;  /// Linked to standard input
+                  ^~~
+final_exam_question_1_sorted.cpp:59:9: error: &#x27;set&#x27; was not declared in this scope
+         set&lt;int&gt; A;
+         ^~~
+final_exam_question_1_sorted.cpp:59:9: note: suggested alternative:
+In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/set:61,
+                 from final_exam_question_1_sorted.cpp:49:
+C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_set.h:94:11: note:   &#x27;std::set&#x27;
+     class set
+           ^~~
+final_exam_question_1_sorted.cpp:59:13: error: expected primary-expression before &#x27;int&#x27;
+         set&lt;int&gt; A;
+             ^~~
+final_exam_question_1_sorted.cpp:65:13: error: &#x27;A&#x27; was not declared in this scope
+             A.insert(x);
+             ^
+final_exam_question_1_sorted.cpp:68:21: error: &#x27;A&#x27; was not declared in this scope
+         for(auto it=A.begin(); it!=A.end(); it++){
+                     ^
+final_exam_question_1_sorted.cpp:69:13: error: &#x27;cout&#x27; was not declared in this scope
+             cout &lt;&lt; *it &lt;&lt; &quot; &quot;;
+             ^~~~
+final_exam_question_1_sorted.cpp:69:13: note: suggested alternative:
+In file included from final_exam_question_1_sorted.cpp:48:
+C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:61:18: note:   &#x27;std::cout&#x27;
+   extern ostream cout;  /// Linked to standard output
+                  ^~~~
+final_exam_question_1_sorted.cpp:71:9: error: &#x27;cout&#x27; was not declared in this scope
+         cout &lt;&lt; endl;
+         ^~~~
+final_exam_question_1_sorted.cpp:71:9: note: suggested alternative:
+In file included from final_exam_question_1_sorted.cpp:48:
+C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:61:18: note:   &#x27;std::cout&#x27;
+   extern ostream cout;  /// Linked to standard output
+                  ^~~~
+final_exam_question_1_sorted.cpp:71:17: error: &#x27;endl&#x27; was not declared in this scope
+         cout &lt;&lt; endl;
+                 ^~~~
+final_exam_question_1_sorted.cpp:71:17: note: suggested alternative:
+In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
+                 from final_exam_question_1_sorted.cpp:48:
+C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:590:5: note:   &#x27;std::endl&#x27;
+     endl(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os)
+     ^~~~</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> The runner shows a compile error, so no output appears. Once fixed, it would print <code>0 3 5 6 9 10</code> and <code>3 7</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>T</code>, the number of test cases.</li><li>For each case, create a fresh <code>set&lt;int&gt; A</code> and insert the <code>N</code> numbers.</li><li>Walk the set from <code>begin()</code> to <code>end()</code> and print each value, then a newline.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Does not compile: the file includes <code>&lt;iostream&gt;</code> and <code>&lt;set&gt;</code> but never writes <code>using namespace std;</code>, so <code>cin</code>, <code>cout</code> and <code>set</code> are unknown. Fix: add <code>using namespace std;</code> after the includes.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why is a new <code>set</code> created inside the loop instead of once outside it?</summary><div>So each test case starts empty; otherwise numbers from earlier cases would be printed too.</div></details>
+</section>
+<section class="prog" id="p-final-exam-question-2-pairs">
+  <div class="prog-h">
+    <span class="num">2</span>
+    <div class="prog-t">
+      <h3>Q2: Pairs (sort by name, then value descending)</h3>
+      <div class="meta"><code class="fname">final_exam_question_2_Pairs.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(N log N) · Space O(N)</span></div>
+    </div>
+  </div>
+  <p class="what">Puts (name, value) pairs into a priority queue whose comparator gives names in ascending order and, for equal names, values in descending order.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 113 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2024/final_exam_question_2_Pairs.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Pairs</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">You will be given a list A of type pairs. Each pair will contain one string S and </span>
+<span class="cm">one unique integer I. The string will contain only English lowercase alphabets and </span>
+<span class="cm">no spaces.</span>
+
+<span class="cm">You need to sort the pairs according to the string values in ascending order. If </span>
+<span class="cm">there are multiple pairs with the same string, you need to sort them according to </span>
+<span class="cm">the integer value in descending order.</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">- First line will contain , the size of the list .</span>
+<span class="cm">- Next  lines will contain pairs of string  and integer .</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">1. 1 &lt;= N &lt;= 10^5</span>
+<span class="cm">2. 1 &lt;= |S| &lt;= 10^5</span>
+<span class="cm">3. _10^9 &lt;= I &lt;= 10^9</span>
+
+<span class="cm">Output Format</span>
+
+<span class="cm">Output the final list after sorting according to the question.</span>
+<span class="cm">Sample Input 0</span>
+
+<span class="cm">5</span>
+<span class="cm">sakib 1</span>
+<span class="cm">rakib 2</span>
+<span class="cm">tasfia 3</span>
+<span class="cm">asfia 4</span>
+<span class="cm">afia 5</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">afia 5</span>
+<span class="cm">asfia 4</span>
+<span class="cm">rakib 2</span>
+<span class="cm">sakib 1</span>
+<span class="cm">tasfia 3</span>
+
+<span class="cm">Sample Input 1</span>
+<span class="cm">6</span>
+<span class="cm">sakib 5</span>
+<span class="cm">rakib 3</span>
+<span class="cm">tasfia 2</span>
+<span class="cm">sakib 6</span>
+<span class="cm">afia 1</span>
+<span class="cm">sakib 4</span>
+
+<span class="cm">Sample Output 1</span>
+<span class="cm">afia 1</span>
+<span class="cm">rakib 3</span>
+<span class="cm">sakib 6</span>
+<span class="cm">sakib 5</span>
+<span class="cm">sakib 4</span>
+<span class="cm">tasfia 2</span>
+
+<span class="cm">*/</span>
+
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Pair</span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">Pair</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">};</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">cmp</span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="k">operator</span><span class="p">()(</span><span class="n">Pair</span><span class="w"> </span><span class="o">&amp;</span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">Pair</span><span class="w"> </span><span class="o">&amp;</span><span class="n">r</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">name</span><span class="p">){</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">name</span><span class="p">){</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">l</span><span class="p">.</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">val</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="n">Pair</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Pair</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">cmp</span><span class="o">&gt;</span><span class="w"> </span><span class="n">pq</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Pair</span><span class="w"> </span><span class="n">obj</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
+<span class="w">        </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">name</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="n">pq</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 113 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5
+sakib 1
+rakib 2
+tasfia 3
+asfia 4
+afia 5</pre><p class="io-note">N, then N lines of <code>name value</code>.</p></div><div class="io out"><div class="io-h">Output </div><pre>afia 5
+asfia 4
+rakib 2
+sakib 1
+tasfia 3
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Names come out alphabetically: <code>afia 5</code>, <code>asfia 4</code>, <code>rakib 2</code>, <code>sakib 1</code>, <code>tasfia 3</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>Pair</code> holds a <code>name</code> and a <code>val</code>.</li><li>In <code>cmp</code>, <code>l.name &gt; r.name</code> returns true, so later names sink and the alphabetically smallest name comes out first.</li><li>For equal names, <code>l.val &lt; r.val</code> returns true, so the larger value comes out first.</li><li>Push all N pairs, then print <code>top()</code> and <code>pop()</code> until empty.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> <code>main</code> has no <code>return 0;</code>. That is allowed in C++ (main returns 0 by default), but add it for consistency.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> With <code>sakib 5</code>, <code>sakib 6</code>, <code>sakib 4</code>, in what order are they printed?</summary><div><code>sakib 6</code>, <code>sakib 5</code>, <code>sakib 4</code>, because equal names are ordered by value, largest first.</div></details>
+</section>
+<section class="prog" id="p-final-exam-pairs">
+  <div class="prog-h">
+    <span class="num">3</span>
+    <div class="prog-t">
+      <h3>Pairs (copy of Q2)</h3>
+      <div class="meta"><code class="fname">final_exam_pairs.cpp</code><span class="badge k-variant">Re-typed practice</span><span class="badge cx">Time O(N log N) · Space O(N)</span></div>
+    </div>
+  </div>
+  <p class="what">The same solution as Q2 with <code>return 0;</code> added at the end. Here it is tried with the input that has repeated names.</p><p class="same">Re-typed version of <a href="#p-final-exam-question-2-pairs"><code>final_exam_question_2_Pairs.cpp</code></a>.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 111 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2024/final_exam_pairs.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Pairs</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">You will be given a list  of type pairs. Each pair will contain one string S and </span>
+<span class="cm">one unique integer I. The string will contain only English lowercase alphabets and </span>
+<span class="cm">no spaces.</span>
+
+<span class="cm">You need to sort the pairs according to the string values in ascending order. If </span>
+<span class="cm">there are multiple pairs with the same string, you need to sort them according to </span>
+<span class="cm">the integer value in descending order.</span>
+
+<span class="cm">Input Format</span>
+<span class="cm">- First line will contain N, the size of the list A.</span>
+<span class="cm">- Next N lines will contain pairs of string S and integer I.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">1. 1 &lt; N &lt;= 10^5</span>
+<span class="cm">2. 1 &lt;= |S| &lt;= 10^5</span>
+<span class="cm">3. -10^9 &lt;= I &lt;= 10^9</span>
+
+<span class="cm">Output Format</span>
+<span class="cm">- Output the final list after sorting according to the question.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">5</span>
+<span class="cm">sakib 1</span>
+<span class="cm">rakib 2</span>
+<span class="cm">tasfia 3</span>
+<span class="cm">asfia 4</span>
+<span class="cm">afia 5</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">afia 5</span>
+<span class="cm">asfia 4</span>
+<span class="cm">rakib 2</span>
+<span class="cm">sakib 1</span>
+<span class="cm">tasfia 3</span>
+
+<span class="cm">Sample Input 1</span>
+<span class="cm">6</span>
+<span class="cm">sakib 5</span>
+<span class="cm">rakib 3</span>
+<span class="cm">tasfia 2</span>
+<span class="cm">sakib 6</span>
+<span class="cm">afia 1</span>
+<span class="cm">sakib 4</span>
+
+<span class="cm">Sample Output 1</span>
+<span class="cm">afia 1</span>
+<span class="cm">rakib 3</span>
+<span class="cm">sakib 6</span>
+<span class="cm">sakib 5</span>
+<span class="cm">sakib 4</span>
+<span class="cm">tasfia 2</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Pair</span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">Pair</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">};</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">cmp</span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="k">operator</span><span class="p">()(</span><span class="n">Pair</span><span class="w"> </span><span class="o">&amp;</span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">Pair</span><span class="w"> </span><span class="o">&amp;</span><span class="n">r</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">name</span><span class="p">){</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">name</span><span class="p">){</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">l</span><span class="p">.</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">val</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="n">Pair</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Pair</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">cmp</span><span class="o">&gt;</span><span class="w"> </span><span class="n">pq</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Pair</span><span class="w"> </span><span class="n">obj</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
+<span class="w">        </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">name</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="n">pq</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 111 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
+sakib 5
+rakib 3
+tasfia 2
+sakib 6
+afia 1
+sakib 4</pre><p class="io-note">N, then N lines of <code>name value</code>.</p></div><div class="io out"><div class="io-h">Output </div><pre>afia 1
+rakib 3
+sakib 6
+sakib 5
+sakib 4
+tasfia 2
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>afia 1</code>, <code>rakib 3</code>, then the three <code>sakib</code> lines as 6, 5, 4, then <code>tasfia 2</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Same <code>Pair</code> class and <code>cmp</code> comparator as Q2.</li><li>The repeated name <code>sakib</code> shows the tie-break: bigger value first.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> Which line of <code>cmp</code> decides the order of the three <code>sakib</code> pairs?</summary><div>The last one, <code>return l.val &lt; r.val;</code>.</div></details>
+</section>
+<section class="prog" id="p-final-exam-question-3-count-me-unoptimized">
+  <div class="prog-h">
+    <span class="num">4</span>
+    <div class="prog-t">
+      <h3>Q3: Count Me (vector of pairs)</h3>
+      <div class="meta"><code class="fname">final_exam_question_3_count_me_unoptimized.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(w^2) per sentence for w words · Space O(w)</span></div>
+    </div>
+  </div>
+  <p class="what">Finds the most frequent word in each sentence by keeping (word, count) pairs in a vector and searching it for every word.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 100 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2024/final_exam_question_3_count_me_unoptimized.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span>
+<span class="normal">97</span>
+<span class="normal">98</span>
+<span class="normal">99</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Count Me</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">You will be given a sentence  that contains words with lowercase and uppercase English alphabets separated by spaces. You need to determine which word occurs the most times and also provide the count of that word.</span>
+
+<span class="cm">Note: If there are multiple words that occur the most, print the first word that reaches the maximum count before others.</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">First line will contain , the number of test cases.</span>
+<span class="cm">Each test case will contain the sentence .</span>
+<span class="cm">Constraints</span>
+
+<span class="cm">, Here  means the length of .</span>
+<span class="cm">Output Format</span>
+
+<span class="cm">Output the word and the count that occurs the most.</span>
+<span class="cm">Sample Input 0</span>
+
+<span class="cm">1</span>
+<span class="cm">Ratul loves to play football when he gets time but Ratul is not a good player so his teacher asked Ratul if he can play with him so that Ratul can progress</span>
+<span class="cm">Sample Output 0</span>
+
+<span class="cm">Ratul 4</span>
+<span class="cm">Sample Input 1</span>
+
+<span class="cm">2</span>
+<span class="cm">ratul piyush fohad shuvo rafi piyush fohad ratul </span>
+<span class="cm">jony jony yes papa eating sugar no papa telling lies no papa open your mouth ha ha ha </span>
+<span class="cm">Sample Output 1</span>
+
+<span class="cm">piyush 2</span>
+<span class="cm">papa 3</span>
+
+<span class="cm">*/</span>
+
+
+
+
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// Write your code here</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="p">.</span><span class="n">ignore</span><span class="p">();</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">T</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">S</span><span class="p">;</span>
+<span class="w">        </span><span class="n">getline</span><span class="p">(</span><span class="n">cin</span><span class="p">,</span><span class="w"> </span><span class="n">S</span><span class="p">);</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">word_freq</span><span class="p">;</span>
+<span class="w">        </span><span class="n">stringstream</span><span class="w"> </span><span class="n">ss</span><span class="p">(</span><span class="n">S</span><span class="p">);</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">word</span><span class="p">;</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">count_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="n">ss</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">word</span><span class="p">){</span>
+<span class="w">            </span><span class="kt">bool</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">it</span><span class="o">=</span><span class="n">word_freq</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span><span class="w"> </span><span class="n">it</span><span class="o">!=</span><span class="n">word_freq</span><span class="p">.</span><span class="n">end</span><span class="p">();</span><span class="w"> </span><span class="n">it</span><span class="o">++</span><span class="p">){</span>
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">first</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">word</span><span class="p">){</span>
+<span class="w">                    </span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">                    </span>
+<span class="w">                    </span><span class="k">if</span><span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">count_max</span><span class="p">){</span>
+<span class="w">                        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">it</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">;</span>
+<span class="w">                        </span><span class="n">count_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span>
+<span class="w">                    </span><span class="p">}</span>
+<span class="w">                    </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">                    </span><span class="k">break</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">flag</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">false</span><span class="p">){</span>
+<span class="w">                </span><span class="n">word_freq</span><span class="p">.</span><span class="n">push_back</span><span class="p">({</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">});</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">it</span><span class="o">=</span><span class="n">word_freq</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span><span class="w"> </span><span class="n">it</span><span class="o">!=</span><span class="n">word_freq</span><span class="p">.</span><span class="n">end</span><span class="p">();</span><span class="w"> </span><span class="n">it</span><span class="o">++</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">count_max</span><span class="p">){</span>
+<span class="w">                </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">it</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">;</span>
+<span class="w">                </span><span class="n">count_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">count_max</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 100 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
+ratul piyush fohad shuvo rafi piyush fohad ratul
+a b c</pre><p class="io-note">T, then T sentences, one per line.</p></div><div class="io out"><div class="io-h">Output </div><pre>piyush 2
+a 1
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>piyush 2</code>: piyush, fohad and ratul all reach 2, but piyush gets there first. <code>a 1</code>: all words appear once, so the final loop picks the first one.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>cin.ignore()</code> after reading <code>T</code> removes the leftover newline so <code>getline</code> reads the sentence.</li><li>For each word, a loop searches <code>word_freq</code>; if found, its count goes up, and the answer changes only when the count beats <code>count_max</code>.</li><li>A new word is pushed with count 1 without touching the answer.</li><li>After the sentence, a final loop picks the first word whose count beats <code>count_max</code>. This only matters when every word appears once (<code>count_max</code> is still 0), and then it picks the first word.</li><li>Print the word and its count.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The search through the vector is linear for every word, so long sentences get slow. The <code>map</code> version fixes this.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> In the first sentence, why is the answer not <code>ratul</code>, even though it appears first?</summary><div>The rule is the first word to <strong>reach</strong> the top count; ratul&#x27;s second copy is the last word, after piyush has already reached 2.</div></details>
+</section>
+<section class="prog" id="p-final-exam-question-3-count-me-optimized">
+  <div class="prog-h">
+    <span class="num">5</span>
+    <div class="prog-t">
+      <h3>Q3: Count Me (map)</h3>
+      <div class="meta"><code class="fname">final_exam_question_3_count_me_optimized.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(w log w) per sentence · Space O(w)</span></div>
+    </div>
+  </div>
+  <p class="what">The same task with a <code>map&lt;string,int&gt;</code>: count each word and update the answer the moment a count beats the best so far.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 79 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2024/final_exam_question_3_count_me_optimized.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">You will be given a sentence S that contains words with lowercase and uppercase </span>
+<span class="cm">English alphabets separated by spaces. You need to determine which word occurs the </span>
+<span class="cm">most times and also provide the count of that word.</span>
+
+<span class="cm">Note: If there are multiple words that occur the most, print the first word that </span>
+<span class="cm">reaches the maximum count before others.</span>
+
+<span class="cm">Input Format</span>
+<span class="cm">- First line will contain T, the number of test cases.</span>
+<span class="cm">- Each test case will contain the sentence .</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">1. 1 &lt;= T &lt;= 10^3</span>
+<span class="cm">2. 1 &lt;= |S| &lt;= 10^4, Here |S| means the length of S.</span>
+
+<span class="cm">Output Format</span>
+<span class="cm">- Output the word and the count that occurs the most.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">1</span>
+<span class="cm">Ratul loves to play football when he gets time but Ratul is not a good player so his teacher asked Ratul if he can play with him so that Ratul can progress</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">Ratul 4</span>
+
+<span class="cm">Sample Input 1</span>
+<span class="cm">2</span>
+<span class="cm">ratul piyush fohad shuvo rafi piyush fohad ratul </span>
+<span class="cm">jony jony yes papa eating sugar no papa telling lies no papa open your mouth ha ha ha </span>
+
+<span class="cm">Sample Output 1</span>
+<span class="cm">piyush 2</span>
+<span class="cm">papa 3</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// Write your code here</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="p">.</span><span class="n">ignore</span><span class="p">();</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">T</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">S</span><span class="p">;</span>
+<span class="w">        </span><span class="n">getline</span><span class="p">(</span><span class="n">cin</span><span class="p">,</span><span class="w"> </span><span class="n">S</span><span class="p">);</span>
+<span class="w">        </span><span class="n">stringstream</span><span class="w"> </span><span class="n">ss</span><span class="p">(</span><span class="n">S</span><span class="p">);</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="n">map</span><span class="o">&lt;</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">word_freq</span><span class="p">;</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">count_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">word</span><span class="p">;</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="n">ss</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">word</span><span class="p">){</span>
+<span class="w">            </span><span class="n">word_freq</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word_freq</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">word_freq</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">count_max</span><span class="p">){</span>
+<span class="w">                </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word</span><span class="p">;</span><span class="w"> </span>
+<span class="w">                </span><span class="n">count_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word_freq</span><span class="p">[</span><span class="n">word</span><span class="p">];</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">count_max</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 79 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
+ratul piyush fohad shuvo rafi piyush fohad ratul
+jony jony yes papa eating sugar no papa telling lies no papa</pre><p class="io-note">T, then T sentences, one per line.</p></div><div class="io out"><div class="io-h">Output </div><pre>piyush 2
+papa 3
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>piyush 2</code> for the first sentence and <code>papa 3</code> for the second (jony and no reach 2, but papa is the only word to reach 3).</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>T</code>, then <code>cin.ignore()</code>, then each sentence with <code>getline</code>.</li><li><code>word_freq[word] = word_freq[word] + 1</code> counts the word (a new word starts at 0).</li><li>If the new count is greater than <code>count_max</code>, save this word as <code>result</code>.</li><li>Because the check is strict (<code>&gt;</code>), a word that only ties never replaces the earlier one.</li><li>Print <code>result</code> and <code>count_max</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Without <code>cin.ignore()</code>, the first <code>getline</code> would read an empty line and print a blank answer.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why does this version not need the final loop that the vector version has?</summary><div>Every word, even a first appearance, is checked against <code>count_max</code> right after counting, so a count of 1 already sets the answer.</div></details>
+</section>
+<section class="prog" id="p-final-exam-question-4-current-min">
+  <div class="prog-h">
+    <span class="num">6</span>
+    <div class="prog-t">
+      <h3>Q4: Give Current Min</h3>
+      <div class="meta"><code class="fname">final_exam_question_4_Current_Min.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Each command O(log n) · Space O(N + Q)</span></div>
+    </div>
+  </div>
+  <p class="what">Keeps the numbers in a min-heap and answers three commands: insert and show the min, show the min, delete the min and show the new min.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 142 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2024/final_exam_question_4_Current_Min.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Give Current Min</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">You will be given a list A of size N. Then you will be given Q queries, for each </span>
+<span class="cm">query there will be some commands. Commands are given below -</span>
+
+<span class="cm">1. 0 X -&gt; Insert X into the list. Then print the current minimum value from the </span>
+<span class="cm">list.</span>
+<span class="cm">2. 1 -&gt; Print the current minimum value from the list.</span>
+<span class="cm">3. 2 -&gt; Delete the current minimum value from the list and print the minimum value </span>
+<span class="cm">from the list after deletion.</span>
+
+<span class="cm">Note: If the list is empty and you can&#39;t print anything then you should print </span>
+<span class="cm">&quot;Empty&quot;.</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">- First line will contain .</span>
+<span class="cm">- Second line will contain the list  of size .</span>
+<span class="cm">- Third line will contain .</span>
+<span class="cm">- Next Q lines will contain the commands.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">1. 1 &lt;= N + Q &lt;= 10^5</span>
+<span class="cm">2. -10^9 &lt;= A[i] &lt;= 10^9; Here A[i] means the values of the list.</span>
+<span class="cm">3. -10^9 &lt;= X &lt;= 10^9</span>
+
+<span class="cm">Output Format</span>
+<span class="cm">- For each command, print as asked from the list.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">4</span>
+<span class="cm">10 -10 -5 -20</span>
+<span class="cm">10</span>
+<span class="cm">1</span>
+<span class="cm">2</span>
+<span class="cm">2</span>
+<span class="cm">2</span>
+<span class="cm">2</span>
+<span class="cm">0 10</span>
+<span class="cm">1</span>
+<span class="cm">2</span>
+<span class="cm">0 20</span>
+<span class="cm">1</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">-20</span>
+<span class="cm">-10</span>
+<span class="cm">-5</span>
+<span class="cm">10</span>
+<span class="cm">Empty</span>
+<span class="cm">10</span>
+<span class="cm">10</span>
+<span class="cm">Empty</span>
+<span class="cm">20</span>
+<span class="cm">20</span>
+
+<span class="cm">Sample Input 1</span>
+<span class="cm">6</span>
+<span class="cm">45 -30 83 -99 19 75 </span>
+<span class="cm">9</span>
+<span class="cm">1</span>
+<span class="cm">2</span>
+<span class="cm">2</span>
+<span class="cm">0 32</span>
+<span class="cm">0 6</span>
+<span class="cm">2</span>
+<span class="cm">2</span>
+<span class="cm">0 -86</span>
+<span class="cm">1</span>
+
+<span class="cm">Sample Output 1</span>
+<span class="cm">-99</span>
+<span class="cm">-30</span>
+<span class="cm">19</span>
+<span class="cm">19</span>
+<span class="cm">6</span>
+<span class="cm">19</span>
+<span class="cm">32</span>
+<span class="cm">-86</span>
+<span class="cm">-86</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// Write your code here</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">greater</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">pq</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">Q</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">            </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Empty&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">                </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Empty&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">                </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">pq</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Empty&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">   </span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 142 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
+10 -10 -5 -20
+6
+1
+2
+0 -30
+2
+2
+2</pre><p class="io-note">N, the N numbers, Q, then Q commands.</p></div><div class="io out"><div class="io-h">Output </div><pre>-20
+-10
+-30
+-10
+-5
+10
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>-20</code> (min), <code>-10</code> (after deleting -20), <code>-30</code> (just inserted), then <code>-10</code>, <code>-5</code>, <code>10</code> as each minimum is deleted.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Push the first N numbers into <code>priority_queue&lt;int, vector&lt;int&gt;, greater&lt;int&gt;&gt; pq</code>.</li><li>Command <code>0 X</code>: push X, then print <code>pq.top()</code> (never empty here).</li><li>Command <code>1</code>: print <code>Empty</code> if the heap is empty, otherwise the top.</li><li>Command <code>2</code>: if empty, print <code>Empty</code>; otherwise pop, then print the new top or <code>Empty</code> if nothing is left.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> Heap holds only 7. Command <code>2</code> arrives. What is printed?</summary><div><code>Empty</code>, because 7 is removed and nothing is left to show.</div></details>
+</section>
+<section class="prog" id="p-final-exam-question-5-current-max">
+  <div class="prog-h">
+    <span class="num">7</span>
+    <div class="prog-t">
+      <h3>Q5: Give Current Max (students)</h3>
+      <div class="meta"><code class="fname">final_exam_question_5_Current_Max.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Each command O(log n) · Space O(N + Q)</span></div>
+    </div>
+  </div>
+  <p class="what">The same three commands as Q4, but for students in a max-heap ordered by marks (highest first) and then by roll (smallest first).</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 148 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2024/final_exam_question_5_Current_Max.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">You will be given a list  of size . The list will contain data of some students </span>
+<span class="cm">where each student have Name, Roll and Marks. Then you will be given Q queries, for </span>
+<span class="cm">each query there will be some commands. Commands are given below -</span>
+
+<span class="cm">1. 0 X -&gt; Insert X into the list where X is the data of a student which contain </span>
+<span class="cm"> Name, Roll, and Marks. Then print the current student&#39;s data who has the maximum </span>
+<span class="cm"> Marks from the list.</span>
+<span class="cm">2. 1 -&gt; Print the current student&#39;s data who has the maximum  from the list.</span>
+<span class="cm">3. 2 -&gt; Delete the student who has the maximum  from the list and print the current </span>
+<span class="cm">student who has the maximum  from the list.</span>
+
+<span class="cm">Note: If there are multiple students with same  then we will select whose  is smaller. If the list is empty and you can&#39;t print anything then you should print &quot;Empty&quot;.</span>
+
+<span class="cm">Input Format</span>
+<span class="cm">- First line will contain N.</span>
+<span class="cm">- Next  lines will contain Name, Roll and Marks of student A[i].</span>
+<span class="cm">- Third line will contain Q.</span>
+<span class="cm">- Next  lines will contain the commands.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">1. 1 &lt;= N + Q &lt;= 10^5</span>
+<span class="cm">2. 1 &lt;= |Name| &lt;= 1000, Name will contain only English lowercase letters and will </span>
+<span class="cm">not contain any spaces.</span>
+<span class="cm">3. 0 &lt;= Roll &lt;= 10^5</span>
+<span class="cm">4. 0 &lt;= Marks &lt;= 100</span>
+
+<span class="cm">Output Format</span>
+<span class="cm">- For each command, print as asked from the list.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">3</span>
+<span class="cm">akib 23 95</span>
+<span class="cm">jobbar 24 99</span>
+<span class="cm">ali 25 100</span>
+<span class="cm">8</span>
+<span class="cm">1</span>
+<span class="cm">2</span>
+<span class="cm">2</span>
+<span class="cm">2</span>
+<span class="cm">0 kabir 15 65</span>
+<span class="cm">0 asif 55 65</span>
+<span class="cm">2</span>
+<span class="cm">0 tamim 35 65</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">ali 25 100</span>
+<span class="cm">jobbar 24 99</span>
+<span class="cm">akib 23 95</span>
+<span class="cm">Empty</span>
+<span class="cm">kabir 15 65</span>
+<span class="cm">kabir 15 65</span>
+<span class="cm">asif 55 65</span>
+<span class="cm">tamim 35 65</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Student</span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">roll</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">marks</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">Student</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">roll</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">marks</span><span class="p">){</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">roll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">roll</span><span class="p">;</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">marks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">marks</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">};</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">cmp</span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="k">operator</span><span class="p">()(</span><span class="n">Student</span><span class="w"> </span><span class="o">&amp;</span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">Student</span><span class="w"> </span><span class="o">&amp;</span><span class="n">r</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="p">.</span><span class="n">marks</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">marks</span><span class="p">){</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="p">.</span><span class="n">marks</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">marks</span><span class="p">){</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">l</span><span class="p">.</span><span class="n">roll</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">roll</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="n">Student</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Student</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">cmp</span><span class="o">&gt;</span><span class="w"> </span><span class="n">pq</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">roll</span><span class="p">,</span><span class="w"> </span><span class="n">marks</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">roll</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">marks</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Student</span><span class="w"> </span><span class="n">obj</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">roll</span><span class="p">,</span><span class="w"> </span><span class="n">marks</span><span class="p">);</span>
+<span class="w">        </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">Q</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">            </span><span class="n">string</span><span class="w"> </span><span class="n">name2</span><span class="p">;</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">roll2</span><span class="p">,</span><span class="w"> </span><span class="n">marks2</span><span class="p">;</span>
+<span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">name2</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">roll2</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">marks2</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Student</span><span class="w"> </span><span class="n">obj2</span><span class="p">(</span><span class="n">name2</span><span class="p">,</span><span class="w"> </span><span class="n">roll2</span><span class="p">,</span><span class="w"> </span><span class="n">marks2</span><span class="p">);</span>
+<span class="w">            </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">obj2</span><span class="p">);</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">name</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">roll</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">marks</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">name</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">roll</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">marks</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Empty&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Empty&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">                </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span>
+<span class="w">            </span><span class="n">pq</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Empty&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">name</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">roll</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">marks</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w">       </span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 148 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3
+akib 23 95
+jobbar 24 99
+ali 25 100
+6
+1
+2
+0 kabir 15 99
+0 asif 10 99
+2
+2</pre><p class="io-note">N, N student lines, Q, then Q commands.</p></div><div class="io out"><div class="io-h">Output </div><pre>ali 25 100
+jobbar 24 99
+kabir 15 99
+asif 10 99
+kabir 15 99
+jobbar 24 99
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>ali 25 100</code> (top), <code>jobbar 24 99</code> (ali removed), <code>kabir 15 99</code> (ties jobbar on 99 but has the smaller roll), <code>asif 10 99</code> (smaller roll still), then <code>kabir 15 99</code> and <code>jobbar 24 99</code> as the tops are removed.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>cmp</code> returns true when <code>l.marks &lt; r.marks</code>, so the highest marks rise to the top.</li><li>On equal marks, <code>l.roll &gt; r.roll</code> returns true, so the smaller roll is on top.</li><li>Command <code>0 name roll marks</code>: push the student and print the top student.</li><li>Command <code>1</code>: print the top student or <code>Empty</code>.</li><li>Command <code>2</code>: pop (if possible), then print the new top or <code>Empty</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The three command checks use separate <code>if</code>s instead of <code>else if</code>. It still works because <code>x</code> has only one value, but <code>else if</code> shows the intent better.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Two students both have 80 marks, rolls 7 and 3. Who is printed as the max?</summary><div>The one with roll 3, because on equal marks the smaller roll wins.</div></details>
+</section></section>
+  
+  <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>Sorted and unique → <code>set</code>; counting → <code>map</code>; changing min/max → <code>priority_queue</code>.</li><li>Multi-key comparator: compare the main key, and use the second key only on a tie.</li><li><code>cin.ignore()</code> between <code>cin &gt;&gt;</code> and <code>getline</code>.</li><li>&#x27;First to reach the max&#x27; means updating only on a strictly greater count.</li><li>Check <code>empty()</code> before every <code>top()</code> and <code>pop()</code>, and again after popping.</li><li>Don&#x27;t forget <code>using namespace std;</code> when you don&#x27;t use <code>bits/stdc++.h</code>.</li></ul></section>
+  <section class="block" id="quiz"><h2>✅ Check yourself</h2><details class="check"><summary>Q4 asks for the current <strong>maximum</strong> instead. What is the smallest change to the code?</summary><div>Use <code>priority_queue&lt;int&gt;</code> (the default max-heap) instead of the <code>greater&lt;int&gt;</code> version.</div></details><details class="check"><summary>In the Pairs comparator, what happens if you change <code>l.name &gt; r.name</code> to <code>l.name &lt; r.name</code>?</summary><div>Names come out in reverse alphabetical order.</div></details><details class="check"><summary>In the sentence <code>x y y x</code>, which word does Count Me print, and why?</summary><div><code>y 2</code>, because y reaches 2 at the third word, before x reaches 2 at the fourth.</div></details><details class="check"><summary>Why is a sorted <code>vector</code> with <code>unique</code> also a valid answer to Q1, and why is <code>set</code> simpler?</summary><div>Sorting then <code>unique</code> + <code>erase</code> removes adjacent duplicates; a <code>set</code> does both jobs automatically as you insert.</div></details></section>
+  <nav class="pager"><a class="prev" href="../data-structures/module-23.html"><small>← Previous</small><b>Module 23</b><span>STL map, set, priority queue &amp; review problems</span></a><span class="next empty"></span></nav>
+</article>
+</main>
+<footer class="foot">
+  <p>Shammunul's revision notes from the Phitron CSE program. Code written while taking the course; outputs are real runs
+  (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
+</footer>
+<script>window.SITE_ROOT="../";</script>
+<script src="../assets/search-index.js?v=3" defer></script>
+<script src="../assets/site.js?v=3" defer></script>
+</body>
+</html>

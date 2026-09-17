@@ -1,0 +1,135 @@
+{
+  "module_id": "4-introduction-to-algorithms--module-17",
+  "title": "Subset sum family and unbounded knapsack",
+  "overview": "Subset sum asks whether some items add up to a target: the knapsack idea with 'reach exactly this sum' instead of 'maximise value'. Small changes to the same recursion count the subsets, test whether an array splits into two equal halves, or allow an item to be used many times (unbounded knapsack). The code files in this module carry a few classic bugs, which make them good for learning.",
+  "concepts": [
+    {"term": "Subset sum state", "explain": "`subset_sum(i, sum)` = can items 0..i pick a subset adding to exactly `sum`? When no items are left, the answer is yes only if `sum == 0`.", "snippet": "if (i < 0) return sum == 0;"},
+    {"term": "Take or skip, combined with OR", "explain": "If `val[i] <= sum`, the answer is 'take it and reach sum - val[i]' **or** 'skip it and reach sum'.", "snippet": "return subset_sum(i-1, sum - val[i]) || subset_sum(i-1, sum);"},
+    {"term": "Counting instead of yes/no", "explain": "Replace OR with `+` and return 1/0 at the base case: the result is the number of subsets with that sum.", "snippet": null},
+    {"term": "Equal partition", "explain": "An array splits into two equal-sum parts only if the total is even and some subset reaches total/2.", "snippet": null},
+    {"term": "Unbounded knapsack", "explain": "When items can be reused, taking item i keeps you at index `i` instead of moving to `i-1`.", "snippet": "op1 = knapsack(i, w - weight[i]) + val[i];"},
+    {"term": "Shadowing a global array", "explain": "A local `int val[n]` in `main` hides the global `val` that the recursive function reads. The input goes into the local copy and the function only sees zeros.", "snippet": null},
+    {"term": "Memo range must cover the call", "explain": "Initialise `dp` for every sum the recursion can ask about (0..target inclusive); otherwise the default 0 looks like a stored answer.", "snippet": null}
+  ],
+  "files": [
+    {
+      "file": "subset_sum.cpp",
+      "title": "Subset sum with plain recursion",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Tries every take/skip combination to decide whether some subset adds up to `sum`.",
+      "steps": [
+        "Read `n`, the values, and the target `sum`.",
+        "Base case `i < 0`: true only when `sum == 0`.",
+        "If `val[i] <= sum`, return take OR skip.",
+        "Otherwise only skip.",
+        "Print YES or NO."
+      ],
+      "complexity": "Time O(2^n) · Space O(n)",
+      "input": "4\n1 2 3 4\n5\n",
+      "input_note": "n, the n values, then the target. {1,4} and {2,3} both make 5, so YES is expected.",
+      "output_note": "Prints `NO` (plus a blank line), which is wrong: see Watch out.",
+      "watch_out": "`main` declares its own `int val[n]`, which shadows the global `val` used by `subset_sum`. The function sees only zeros, so it answers YES only for target 0. Fix: delete `int val[n];` in `main`. Also, `\"YES\\n\" << endl` prints an extra blank line; use one of them.",
+      "check": {"q": "After the fix, what does the program print for values 2 4 6 and target 5?", "a": "NO: all values are even, so no subset can sum to an odd number."}
+    },
+    {
+      "file": "subset_sum_using_dp.cpp",
+      "title": "Subset sum with memoization",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "The same recursion with a `dp[i][sum]` table, so each (i, sum) pair is solved once.",
+      "steps": [
+        "Fill `dp[i][j] = -1` for i up to n and j up to `sum` inclusive.",
+        "Return the stored value if `dp[i][sum] != -1`.",
+        "Otherwise compute take OR skip, store it, and return it.",
+        "Print YES or NO."
+      ],
+      "complexity": "Time O(n·sum) · Space O(n·sum)",
+      "input": "4\n1 2 3 4\n5\n",
+      "input_note": "Same input as the plain version (YES expected).",
+      "output_note": "Prints `NO` (and a blank line), which is wrong for the same shadowing reason.",
+      "watch_out": "Remove the local `int val[n];` in `main` so the input fills the global array. After that it prints YES.",
+      "check": {"q": "Why can a bool result be stored in an `int` table with -1 as 'unknown'?", "a": "true and false are stored as 1 and 0, so -1 is free to mean 'not computed yet'."}
+    },
+    {
+      "file": "count_of_subset_sum.cpp",
+      "title": "Count the subsets with a given sum",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Same shape as subset sum, but adds the take and skip counts, so the result is how many subsets reach the target.",
+      "steps": [
+        "Base case `i < 0`: return 1 if `sum == 0`, else 0.",
+        "Memo check on `dp[i][sum]`.",
+        "If the item fits: `dp[i][sum] = take count + skip count`.",
+        "Otherwise only the skip count.",
+        "Print `subset_sum(n-1, sum)`."
+      ],
+      "complexity": "Time O(n·sum) · Space O(n·sum)",
+      "input": "4\n1 2 3 4\n5\n",
+      "input_note": "The answer should be 2: {1,4} and {2,3}.",
+      "output_note": "Prints `0`, which is wrong: see Watch out.",
+      "watch_out": "Again a local `int val[n]` in `main` hides the global `val`, so the function counts subsets of zeros. Delete that line and the program prints 2.",
+      "check": {"q": "With values 1 1 1 and target 2, how many subsets are counted?", "a": "3, because the three 1s are different items (positions 0-1, 0-2 and 1-2)."}
+    },
+    {
+      "file": "equal_set_sum.cpp",
+      "title": "Equal sum partition",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "If the total is odd, the answer is NO. Otherwise the array can be split into two equal halves exactly when some subset reaches total / 2.",
+      "steps": [
+        "Read the values and add them into `sum`.",
+        "Odd `sum`: print NO.",
+        "Even: `half = sum / 2`, reset `dp` for sums 0..half.",
+        "Ask `subset_sum` whether the target can be reached and print YES or NO."
+      ],
+      "complexity": "Time O(n·sum/2) · Space O(n·sum/2)",
+      "input": "4\n1 5 11 5\n",
+      "input_note": "n, then the values. {1, 5, 5} and {11} both sum to 11, so YES is expected.",
+      "output_note": "Prints `NO`, which is wrong: see Watch out.",
+      "watch_out": "Two bugs. (1) `subset_sum(n-1, sum)` should be `subset_sum(n-1, half)`: the target is half the total, and `dp[i][sum]` was never set to -1, so the call returns 0 at once. (2) The local `int val[n]` shadows the global array the function reads, so the function only sees zeros. Fix both (delete the local array, pass `half`) and it prints YES.",
+      "check": {"q": "Values 3 1 1 2 2 1: can they be split into two equal halves?", "a": "Yes. The total is 10, and {3, 2} reaches 5, leaving {1, 1, 2, 1} = 5."}
+    },
+    {
+      "file": "unbounded_knapsack.cpp",
+      "title": "Unbounded knapsack",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Knapsack where each item can be taken any number of times. Taking an item calls `knapsack(i, ...)` again, so the same item stays available.",
+      "steps": [
+        "Read `n`, values, weights, capacity.",
+        "Reset `dp` to -1.",
+        "If item i fits: take it and **stay** at `i`, or skip it and move to `i-1`; keep the max.",
+        "If it does not fit, only skip.",
+        "Print `knapsack(n-1, max_weight)`."
+      ],
+      "complexity": "Time O(n·W) · Space O(n·W)",
+      "input": "2\n10 15\n2 3\n7\n",
+      "input_note": "n, values, weights, capacity. Best is 2 + 2 + 3 = 7 for 10 + 10 + 15 = 35.",
+      "output_note": "Prints `0`, which is wrong: see Watch out.",
+      "watch_out": "Same init bug as Module 15: `j < max_weight` leaves `dp[i][max_weight]` at 0, so the first call returns 0 immediately. Use `j <= max_weight`; then the program prints 35.",
+      "check": {"q": "Which one-token change turns 0-1 knapsack into unbounded knapsack?", "a": "In the take branch, call `knapsack(i, ...)` instead of `knapsack(i-1, ...)`."}
+    }
+  ],
+  "practice_links": [
+    {"name": "Coin Change II", "url": "https://leetcode.com/problems/coin-change-ii/description/", "site": "LeetCode"},
+    {"name": "Partition Equal Subset Sum", "url": "https://leetcode.com/problems/partition-equal-subset-sum/", "site": "LeetCode"}
+  ],
+  "recap": [
+    "Subset sum = knapsack with 'reach exactly' and OR instead of max.",
+    "Counting subsets: same recursion, add the two options, base case returns 1 or 0.",
+    "Equal partition = even total + subset sum to half.",
+    "Unbounded: stay on the same item after taking it.",
+    "Never re-declare a global array inside `main`, and initialise `dp` up to the target inclusive."
+  ],
+  "check_yourself": [
+    {"q": "Coin Change II counts ways to make an amount with unlimited coins. Which two ideas from this module does it combine?", "a": "Counting (add the options) and unbounded use (stay on the same coin after taking it)."},
+    {"q": "Total = 15. Can the array be split into two equal-sum parts?", "a": "No, an odd total can never be split into two equal integer sums."},
+    {"q": "Why must the base case check `sum == 0` rather than just return true?", "a": "Running out of items only means success if the chosen items added up exactly; any leftover sum means this path failed."}
+  ]
+}

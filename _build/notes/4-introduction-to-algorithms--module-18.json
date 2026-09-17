@@ -1,0 +1,202 @@
+{
+  "module_id": "4-introduction-to-algorithms--module-18",
+  "title": "Merge sort, LCS and Kruskal's MST",
+  "overview": "Three classic algorithms close the course. Merge sort shows divide and conquer: split the array in half, sort each half, merge them. Longest common subsequence is a two-string DP. Kruskal's algorithm builds a minimum spanning tree by taking the cheapest edges that do not form a cycle, using DSU. The module's quiz material also contrasts substrings with subsequences.",
+  "concepts": [
+    {
+      "term": "Divide and conquer",
+      "explain": "Break the problem into halves, solve each half recursively, then combine. For merge sort the combining step is the merge.",
+      "snippet": null
+    },
+    {
+      "term": "Merging two sorted arrays",
+      "explain": "Keep one pointer in each array, copy the smaller front element, advance that pointer, and finally copy whatever is left.",
+      "snippet": "while (i < n && j < m) c[k++] = (a[i] < b[j]) ? a[i++] : b[j++];"
+    },
+    {
+      "term": "Merge sort cost",
+      "explain": "log n levels of halving, and each level does O(n) merge work, so O(n log n) time with O(n) extra memory.",
+      "snippet": null
+    },
+    {
+      "term": "Substring vs subsequence",
+      "explain": "A substring is a contiguous block of characters. A subsequence keeps the order but may skip characters. `ace` is a subsequence of `abcde`, not a substring.",
+      "snippet": null
+    },
+    {
+      "term": "LCS recurrence",
+      "explain": "Compare the last characters: equal gives 1 + lcs of both shorter strings; different gives the better of dropping one character from either string.",
+      "snippet": "if (a[i] == b[j]) return 1 + lcs(i-1, j-1);\nreturn max(lcs(i-1, j), lcs(i, j-1));"
+    },
+    {
+      "term": "Minimum spanning tree",
+      "explain": "A set of n-1 edges that connects all nodes with the smallest total weight and no cycle.",
+      "snippet": null
+    },
+    {
+      "term": "Kruskal's algorithm",
+      "explain": "Sort edges by weight. Walk through them and keep an edge only if its ends are in different DSU groups; then union them.",
+      "snippet": null
+    }
+  ],
+  "files": [
+    {
+      "file": "conquer.cpp",
+      "title": "Merge two sorted arrays",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "The 'conquer' half of merge sort on its own: merges two sorted arrays into one sorted array with two pointers.",
+      "steps": [
+        "Read sizes `n`, `m` and the two sorted arrays `a`, `b`.",
+        "`i`, `j` point into `a`, `b`; `curr` points into the result `c`.",
+        "While both have elements, copy the smaller front element into `c` and advance.",
+        "Copy the rest of whichever array is not finished.",
+        "Print `c`."
+      ],
+      "complexity": "Time O(n + m) · Space O(n + m)",
+      "input": "4 3\n1 4 7 9\n2 3 8\n",
+      "input_note": "n m, then the two arrays, each already sorted.",
+      "output_note": "Prints `1 2 3 4 7 8 9`: every element of both arrays, in order.",
+      "watch_out": "The inputs must already be sorted; merging unsorted arrays gives an unsorted result.",
+      "check": {
+        "q": "How many comparisons can merging 4 and 3 elements need at most?",
+        "a": "6 (n + m - 1), because each comparison places one element and the last one needs no comparison."
+      }
+    },
+    {
+      "file": "divide.cpp",
+      "title": "The divide step (splitting only)",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Shows the recursive splitting of merge sort without the merge. It reads an array and halves the range until single elements remain, but prints nothing.",
+      "steps": [
+        "`divide(a, l, r)` stops when `l >= r` (one element or none).",
+        "Otherwise `mid = (l + r) / 2`.",
+        "Recurse on the left half `[l, mid]` and the right half `[mid+1, r]`.",
+        "`main` reads `n m` (m is not used) and the array, then calls `divide(a, 0, n-1)`."
+      ],
+      "complexity": "Time O(n) calls · Space O(log n) recursion depth",
+      "input": "5 0\n5 2 4 1 3\n",
+      "input_note": "n and an unused m, then n values.",
+      "output_note": "No output: this file only demonstrates the splitting. Add a `cout << l << \" \" << r << endl;` at the top of `divide` to watch the ranges.",
+      "watch_out": null,
+      "check": {
+        "q": "For n = 8, how many levels of splitting are there before ranges have size 1?",
+        "a": "3 (8 -> 4 -> 2 -> 1), which is log2 8."
+      }
+    },
+    {
+      "file": "merge_sort.cpp",
+      "title": "Merge sort",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Combines both halves: `divide` sorts the left and right halves recursively and `conquer` merges them back into the original array.",
+      "steps": [
+        "`divide(a, l, r)`: return if the range has one element.",
+        "Sort `[l, mid]` and `[mid+1, r]` recursively.",
+        "`conquer` copies the two halves into temporary arrays `a` and `b`.",
+        "It merges them back into `c[l..r]` with the two-pointer method.",
+        "`main` prints the sorted array."
+      ],
+      "complexity": "Time O(n log n) · Space O(n)",
+      "input": "6 0\n5 2 9 1 5 6\n",
+      "input_note": "n and an unused m, then n values (a duplicate 5 is included).",
+      "output_note": "Prints `1 2 5 5 6 9`. Duplicates are kept.",
+      "watch_out": "`main` still reads an unused `m`, left over from `conquer.cpp`; the input must contain it. Using `a[i] <= b[j]` in the merge would make the sort stable (equal values keep their order).",
+      "check": {
+        "q": "Why is merge sort always O(n log n), even on already-sorted input?",
+        "a": "It always splits in the middle and always merges, whatever the order of the values."
+      }
+    },
+    {
+      "file": "lcs.cpp",
+      "title": "Longest common subsequence (memoized)",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Finds the length of the longest subsequence shared by two strings, using `lcs(i, j)` on prefixes `a[0..i]` and `b[0..j]` with a memo table.",
+      "steps": [
+        "`memset(dp, -1, ...)` and read strings `a`, `b`.",
+        "Base case: an empty prefix (`i < 0` or `j < 0`) gives 0.",
+        "If `a[i] == b[j]`, the answer is `lcs(i-1, j-1) + 1`.",
+        "Otherwise the best of skipping `a[i]` or skipping `b[j]`.",
+        "Print `lcs(n-1, m-1)`."
+      ],
+      "complexity": "Time O(n·m) · Space O(n·m)",
+      "input": "abcde\nace\n",
+      "input_note": "Two strings.",
+      "output_note": "Prints `3` (the common subsequence `ace`).",
+      "watch_out": "The top comment says 'substring', but the code computes the longest common **subsequence**; a substring version would reset to 0 when characters differ. Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
+      "check": {
+        "q": "What is the LCS length of `abc` and `def`?",
+        "a": "0, they share no characters."
+      }
+    },
+    {
+      "file": "mst_using_Kruskal_algorithm.cpp",
+      "title": "Minimum spanning tree with Kruskal",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Sorts all edges by weight and greedily keeps each edge that joins two different DSU groups. The sum of kept weights is the MST cost.",
+      "steps": [
+        "Read the edges into `edge_list` as `Edge(a, b, c)`.",
+        "`sort` them with `cmp`, cheapest first.",
+        "For each edge, find the leaders of both ends.",
+        "Different leaders: `dsu_union` them and add the weight to `total_cost`.",
+        "Same leader: skip it, it would form a cycle.",
+        "Print `total_cost`."
+      ],
+      "complexity": "Time O(E log E) · Space O(n + E)",
+      "input": "4 5\n1 2 1\n2 3 4\n1 3 3\n3 4 2\n1 4 5\n",
+      "input_note": "n e, then e edges `a b weight`.",
+      "output_note": "The program crashes before printing anything (status `exit_0xc0000005`, an access violation), and the compiler warns `no return statement in function returning non-void`. That missing `return` is the cause (see Watch out). With the fix it prints `6`: edges 1-2 (1), 3-4 (2) and 1-3 (3).",
+      "watch_out": "`dsu_union` is declared to return `int` but never returns anything. In C++ that is undefined behaviour, and here it makes the program crash on the first union. Make it `void dsu_union(...)`. Also, `memset(group_size, 1, ...)` fills bytes, not ints; set sizes with a loop. If the graph may be disconnected, also count kept edges and check that there are n-1. Tip: on some compilers you need `#include <cstring>` for `memset`.",
+      "check": {
+        "q": "Why is it safe to skip an edge whose ends already share a leader?",
+        "a": "Its ends are already connected by cheaper (or equal) edges, so adding it would only create a cycle and raise the cost."
+      }
+    }
+  ],
+  "practice_links": [
+    {
+      "name": "Longest Common Subsequence",
+      "url": "https://leetcode.com/problems/longest-common-subsequence/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Sort an Array",
+      "url": "https://leetcode.com/problems/sort-an-array/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Road Reparation (MST)",
+      "url": "https://cses.fi/problemset/task/1675",
+      "site": "CSES"
+    }
+  ],
+  "recap": [
+    "Merge sort = split in half, sort both halves, merge with two pointers: O(n log n).",
+    "Substring is contiguous; subsequence keeps order but may skip characters.",
+    "LCS: equal last characters add 1; otherwise take the better of dropping one side.",
+    "Kruskal = sort edges + DSU; keep an edge only when it joins two groups.",
+    "An MST of n nodes has exactly n-1 edges."
+  ],
+  "check_yourself": [
+    {
+      "q": "What is the longest common subsequence of `ABCBDAB` and `BDCABA`, in length?",
+      "a": "4 (for example `BCBA`)."
+    },
+    {
+      "q": "How many substrings does a string of length 4 have (counting repeats)?",
+      "a": "10 = 4 + 3 + 2 + 1."
+    },
+    {
+      "q": "Why does Kruskal need the edges sorted?",
+      "a": "The greedy rule 'always take the cheapest safe edge' only gives the minimum total if edges are considered from cheapest to most expensive."
+    }
+  ]
+}

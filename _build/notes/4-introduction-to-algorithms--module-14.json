@@ -1,0 +1,375 @@
+{
+  "module_id": "4-introduction-to-algorithms--module-14",
+  "title": "Recursion and the first steps of dynamic programming",
+  "overview": "The module starts with recursion: a function that solves a problem by calling itself on a smaller version. Plain recursive Fibonacci repeats the same work many times. Memoization (top-down DP) and a bottom-up loop remove that repeated work. The practice problems apply the same ideas to digits, factorials, reachability and Tribonacci.",
+  "concepts": [
+    {
+      "term": "Base case + recursive case",
+      "explain": "Every recursive function needs a stopping condition (base case) and a call that moves toward it. Without the base case it never stops and the stack overflows.",
+      "snippet": "int fact(int n) { if (n == 1) return 1; return n * fact(n - 1); }"
+    },
+    {
+      "term": "Work before vs after the call",
+      "explain": "Printing before the recursive call prints in the order the calls are made (1..5). Printing after the call prints as the calls return (5..1).",
+      "snippet": null
+    },
+    {
+      "term": "Overlapping subproblems",
+      "explain": "`fib(n)` calls `fib(n-1)` and `fib(n-2)`, and both of them call `fib(n-3)` again. The plain version takes about 2^n steps.",
+      "snippet": null
+    },
+    {
+      "term": "Memoization (top-down DP)",
+      "explain": "Keep a `dp` array filled with -1. Before computing, check whether the answer is already stored; after computing, store it. Each state is computed once.",
+      "snippet": "if (dp[n] != -1) return dp[n];\ndp[n] = fib(n-1) + fib(n-2);"
+    },
+    {
+      "term": "Tabulation (bottom-up DP)",
+      "explain": "Fill the table from the smallest cases upward with a loop. No recursion and no stack depth issues.",
+      "snippet": "for (i = 2; i <= n; i++) f[i] = f[i-1] + f[i-2];"
+    },
+    {
+      "term": "Choose the right integer type",
+      "explain": "Factorials and Fibonacci numbers grow fast. 13! already overflows `int`; use `long long` (good up to 20!).",
+      "snippet": null
+    },
+    {
+      "term": "Recursion visualiser",
+      "explain": "Drawing the call tree helps you see repeated calls. The module links an online recursion visualiser for this.",
+      "snippet": null
+    }
+  ],
+  "files": [
+    {
+      "file": "recursion.cpp",
+      "title": "Recursion warm-up: print and sum",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Three small recursive functions: print 1 to 5, print numbers on the way back, and sum 1 to 5.",
+      "steps": [
+        "`print_one_to_five(n)`: stop when `n > 5`; otherwise print `n` and call with `n + 1`.",
+        "`print_five_to_one(n)`: call with `n + 1` first, print afterwards, so output appears while returning.",
+        "`sum_from_1_to_5(n)`: returns 0 past 5, otherwise `n + sum(n + 1)`.",
+        "`main` calls them as `print_one_to_five(1)`, `print_five_to_one(5)` and `sum_from_1_to_5(1)`."
+      ],
+      "complexity": "Time O(k) · Space O(k) call stack, k = number of calls",
+      "input": null,
+      "input_note": null,
+      "output_note": "`1 2 3 4 5` (one per line), then a single `5`, then `Sum from 1 to 5 is 15`. The lone 5 appears because `print_five_to_one` was started at 5, so only one call prints. Start it at 1 to see `5 4 3 2 1`.",
+      "watch_out": "The name `print_five_to_one(5)` suggests it prints 5..1, but starting at 5 prints only 5. Call `print_five_to_one(1)`.",
+      "check": {
+        "q": "What does `print_five_to_one(3)` print?",
+        "a": "5, 4, 3 on separate lines: calls go 3 -> 4 -> 5 -> 6 (stop), and printing happens while returning."
+      }
+    },
+    {
+      "file": "factorial_recursion.cpp",
+      "title": "Factorial with recursion",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Computes n! as `n * fact(n-1)`, stopping at 1.",
+      "steps": [
+        "Base case: `fact(1) = 1`.",
+        "Otherwise return `n * fact(n - 1)`.",
+        "For n = 5: 5 * 4 * 3 * 2 * 1."
+      ],
+      "complexity": "Time O(n) · Space O(n) call stack",
+      "input": "5\n",
+      "input_note": "A single n (at least 1).",
+      "output_note": "Prints `120` = 5!.",
+      "watch_out": "`fact(0)` never hits the base case and recurses until the stack overflows; use `if (n <= 1) return 1;`. `int` overflows from 13! on.",
+      "check": {
+        "q": "How many calls does `fact(5)` make in total?",
+        "a": "Five: fact(5), fact(4), fact(3), fact(2), fact(1)."
+      }
+    },
+    {
+      "file": "fibonacci_recursion.cpp",
+      "title": "Fibonacci with plain recursion",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "The textbook definition turned into code: `fib(n) = fib(n-1) + fib(n-2)`, with `fib(0) = 0`, `fib(1) = 1`.",
+      "steps": [
+        "If `n` is 0 or 1, return `n`.",
+        "Otherwise return `fib(n-1) + fib(n-2)`.",
+        "The same values are recomputed again and again, so the call tree doubles at each level."
+      ],
+      "complexity": "Time about O(2^n) · Space O(n)",
+      "input": "10\n",
+      "input_note": "A single n.",
+      "output_note": "Prints `55`, the 10th Fibonacci number. Try 45 and notice how slow it gets.",
+      "watch_out": null,
+      "check": {
+        "q": "Why is this version slow for n = 45?",
+        "a": "It solves the same subproblems many times; the number of calls grows roughly like 1.6^n (over a billion here)."
+      }
+    },
+    {
+      "file": "fibonacci_with_memoization.cpp",
+      "title": "Fibonacci with memoization (top-down DP)",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Same recursion, but each answer is saved in `dp[n]` the first time, so every n is computed only once.",
+      "steps": [
+        "`memset(dp, -1, sizeof(dp))` marks every state as 'not computed'.",
+        "Base case: `n < 2` returns `n`.",
+        "If `dp[n] != -1`, return the saved value at once.",
+        "Otherwise compute `fib(n-1) + fib(n-2)`, store it in `dp[n]`, and return it."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "40\n",
+      "input_note": "A single n (the answer fits in int up to n = 46).",
+      "output_note": "Prints `102334155` (fib(40)) instantly, while the plain recursive version takes noticeably long for n = 40.",
+      "watch_out": "Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
+      "check": {
+        "q": "Why is -1 a safe 'empty' marker here?",
+        "a": "Fibonacci values are never negative, so -1 can never be a real stored answer."
+      }
+    },
+    {
+      "file": "fibonacci_bottom_up_loop.cpp",
+      "title": "Fibonacci bottom-up (tabulation)",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Builds the table `fibo[0..n]` from the bottom with a loop.",
+      "steps": [
+        "Set `fibo[0] = 0`, `fibo[1] = 1`.",
+        "For `i` from 2 to `n`: `fibo[i] = fibo[i-1] + fibo[i-2]`.",
+        "Print `fibo[n]`."
+      ],
+      "complexity": "Time O(n) · Space O(n) (can be O(1) with two variables)",
+      "input": "10\n",
+      "input_note": "A single n (at least 1).",
+      "output_note": "Prints `55`, the same answer as the recursive versions.",
+      "watch_out": "For n = 0 the array has size 1 but the code writes `fibo[1]`, which is out of bounds. Handle n = 0 separately or size the array `n + 2`.",
+      "check": {
+        "q": "How could you compute fib(n) with O(1) extra memory?",
+        "a": "Keep only the last two values in two variables and update them in the loop."
+      }
+    },
+    {
+      "file": "leetcode_climbing_stairs.cpp",
+      "title": "LeetCode 70: Climbing Stairs",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 70 - Climbing Stairs",
+        "url": "https://leetcode.com/problems/climbing-stairs/"
+      },
+      "what": "To reach step n you arrive from step n-1 or n-2, so ways(n) = ways(n-1) + ways(n-2), with ways(1) = 1 and ways(2) = 2. Solved with memoized recursion.",
+      "steps": [
+        "`climbStairs` fills `dp` with -1 and calls `fibo(n)`.",
+        "Base case: for `n < 3` the answer is `n` (1 way for one step, 2 ways for two steps).",
+        "If `dp[n]` is known, return it.",
+        "Otherwise store `fibo(n-1) + fibo(n-2)`."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "3\n",
+      "input_note": "A single n. This is LeetCode's Example 2 (expected 3).",
+      "output_note": "Prints `climbStairs(3) = 3`, matching LeetCode: 1+1+1, 1+2, 2+1.",
+      "watch_out": "The file only holds the `Solution` class (no includes, no `main`); the page adds a test driver.",
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;",
+      "driver": "int main() {\n    int n;\n    cin >> n;\n    Solution s;\n    cout << \"climbStairs(\" << n << \") = \" << s.climbStairs(n) << endl;\n    return 0;\n}",
+      "check": {
+        "q": "How many ways are there to climb 5 steps?",
+        "a": "8 (the sequence goes 1, 2, 3, 5, 8)."
+      }
+    },
+    {
+      "file": "practice_problem_1_print_digits_using_recursion.cpp",
+      "title": "Print digits using recursion",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "Codeforces Group - Print Digits using Recursion",
+        "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/D"
+      },
+      "what": "Prints the digits of N left to right, separated by spaces. Recurse on `n/10` first, then print the last digit, so digits come out in the right order.",
+      "steps": [
+        "Base case: a one-digit `n` is printed directly.",
+        "Otherwise call `printDigits(n / 10)` to print all digits except the last.",
+        "Then print a space and `n % 10`.",
+        "`main` repeats this for T numbers, ending each with a newline."
+      ],
+      "complexity": "Time O(number of digits) · Space O(number of digits)",
+      "input": "3\n121\n0\n90210\n",
+      "input_note": "T, then T numbers.",
+      "output_note": "Lines `1 2 1`, `0`, `9 0 2 1 0`. Zero works because it hits the one-digit base case; inner zeros of 90210 are printed normally.",
+      "watch_out": null,
+      "check": {
+        "q": "What would be printed for 123 if the `cout` came before the recursive call?",
+        "a": "The digits in reverse: 3 then 2 then 1."
+      }
+    },
+    {
+      "file": "practice_problem_2_factorial.cpp",
+      "title": "Factorial (up to N = 20)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "Codeforces Group - Factorial",
+        "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/J"
+      },
+      "what": "Same recursive factorial as the lesson, but the judge allows N up to 20.",
+      "steps": [
+        "`factorial(1) = 1`, otherwise `n * factorial(n-1)`.",
+        "Read N and print the result."
+      ],
+      "complexity": "Time O(N) · Space O(N)",
+      "input": "20\n",
+      "input_note": "A single N (1 to 20). 20 is the largest allowed value.",
+      "output_note": "Prints `-2102132736`, a wrong negative number: 20! = 2432902008176640000 does not fit in `int`.",
+      "watch_out": "The function returns `int`, which overflows from 13! on. Change it to `long long factorial(long long n)`; 20! fits in `long long`.",
+      "check": {
+        "q": "What is the largest n whose factorial fits in a signed 32-bit int?",
+        "a": "12 (12! = 479001600)."
+      }
+    },
+    {
+      "file": "practice_problem_3_reach_value.cpp",
+      "title": "Reach Value (multiply by 10 or 20)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "Codeforces Group - Reach Value",
+        "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/W"
+      },
+      "what": "Works backwards from N: if N is divisible by 10 try N/10, if divisible by 20 try N/20. Reaching exactly 1 means YES.",
+      "steps": [
+        "`canReach(1)` is true; anything below 1 is false.",
+        "A `visited` set stops the search from checking the same number twice.",
+        "If `target % 10 == 0` and `canReach(target / 10)` succeeds, return true.",
+        "Same with 20.",
+        "Clear `visited` before each test case."
+      ],
+      "complexity": "Time O(log N) states per test · Space O(log N)",
+      "input": "5\n1\n2\n10\n25\n200\n",
+      "input_note": "T, then T values of N. This is the judge's example.",
+      "output_note": "`YES NO YES NO YES` on separate lines, matching the judge. 200 = 1 x 10 x 20, while 25 is not divisible by 10 or 20.",
+      "watch_out": null,
+      "check": {
+        "q": "Why go backwards (divide) instead of forwards (multiply)?",
+        "a": "Dividing only has an option when the number is divisible, so the search stays tiny and ends at 1 or a dead end. Multiplying forward has no natural stopping point except passing N."
+      }
+    },
+    {
+      "file": "practice_problem_4_fibonacci.cpp",
+      "title": "LeetCode 509: Fibonacci Number (bottom-up)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 509 - Fibonacci Number",
+        "url": "https://leetcode.com/problems/fibonacci-number/"
+      },
+      "what": "Bottom-up table: handle n = 0 and n = 1, then fill `dp[2..n]`.",
+      "steps": [
+        "Return early for `n == 0` and `n == 1`.",
+        "`dp[0] = 0`, `dp[1] = 1`.",
+        "Loop `i = 2..n`: `dp[i] = dp[i-1] + dp[i-2]`.",
+        "Return `dp[n]`."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "4\n",
+      "input_note": "A single n. This is LeetCode's Example 3 (expected 3).",
+      "output_note": "Prints `fib(4) = 3`, matching LeetCode (0, 1, 1, 2, 3).",
+      "watch_out": "The file only holds the `Solution` class; it uses `memset` without includes, so the page adds `<bits/stdc++.h>` and a test driver. The `memset` is not even needed because every used cell is written before it is read.",
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;",
+      "driver": "int main() {\n    int n;\n    cin >> n;\n    Solution s;\n    cout << \"fib(\" << n << \") = \" << s.fib(n) << endl;\n    return 0;\n}",
+      "check": {
+        "q": "Why does the fixed-size `dp[31]` work here?",
+        "a": "LeetCode limits n to 30, so indices 0..30 are enough."
+      }
+    },
+    {
+      "file": "practice_problem_5_N-th_Tribonacci_number.cpp",
+      "title": "LeetCode 1137: N-th Tribonacci Number",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 1137 - N-th Tribonacci Number",
+        "url": "https://leetcode.com/problems/n-th-tribonacci-number/"
+      },
+      "what": "Like Fibonacci but each term is the sum of the previous **three**. Bottom-up table starting from 0, 1, 1.",
+      "steps": [
+        "Return early for n = 0 (0) and n = 1 or 2 (1).",
+        "`dp[0] = 0`, `dp[1] = 1`, `dp[2] = 1`.",
+        "For `i = 3..n`: `dp[i] = dp[i-1] + dp[i-2] + dp[i-3]`.",
+        "Return `dp[n]`."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "25\n",
+      "input_note": "A single n. This is LeetCode's Example 2 (expected 1389537).",
+      "output_note": "Prints `tribonacci(25) = 1389537`, matching LeetCode.",
+      "watch_out": "The file only holds the `Solution` class; the page adds a test driver.",
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;",
+      "driver": "int main() {\n    int n;\n    cin >> n;\n    Solution s;\n    cout << \"tribonacci(\" << n << \") = \" << s.tribonacci(n) << endl;\n    return 0;\n}",
+      "check": {
+        "q": "What is T(5)?",
+        "a": "7: the sequence is 0, 1, 1, 2, 4, 7."
+      }
+    }
+  ],
+  "practice_links": [
+    {
+      "name": "Print Digits using Recursion",
+      "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/D",
+      "site": "Codeforces"
+    },
+    {
+      "name": "Factorial",
+      "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/J",
+      "site": "Codeforces"
+    },
+    {
+      "name": "Reach Value",
+      "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/W",
+      "site": "Codeforces"
+    },
+    {
+      "name": "Fibonacci Number",
+      "url": "https://leetcode.com/problems/fibonacci-number/description/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "N-th Tribonacci Number",
+      "url": "https://leetcode.com/problems/n-th-tribonacci-number/description/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Climbing Stairs",
+      "url": "https://leetcode.com/problems/climbing-stairs/description/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Recursion visualiser",
+      "url": "https://quanticdev.com/tools/recursion-visualization/",
+      "site": "quanticdev"
+    }
+  ],
+  "recap": [
+    "Recursion = base case + a call on a smaller problem.",
+    "Code before the call runs on the way down; code after it runs on the way back up.",
+    "Repeated subproblems make plain recursion exponential; memoize them with a `dp` array.",
+    "Bottom-up loops fill the same table without recursion.",
+    "Pick `long long` when values grow fast, and include `<cstring>` when you use `memset`."
+  ],
+  "check_yourself": [
+    {
+      "q": "What are the two ingredients a problem needs for DP to help?",
+      "a": "Overlapping subproblems (the same smaller question appears many times) and optimal substructure (the answer is built from answers to smaller questions)."
+    },
+    {
+      "q": "Top-down or bottom-up: which one can overflow the call stack for n = 10^6?",
+      "a": "Top-down, because it recurses about n levels deep. Bottom-up uses a loop."
+    },
+    {
+      "q": "How many distinct states does memoized fib(n) compute?",
+      "a": "n + 1 (the values 0..n), each once."
+    }
+  ]
+}

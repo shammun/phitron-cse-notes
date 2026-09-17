@@ -1,0 +1,195 @@
+{
+  "module_id": "4-introduction-to-algorithms--module-15",
+  "title": "0-1 Knapsack and choice-based DP",
+  "overview": "0-1 knapsack is the classic 'take it or leave it' DP: for each item you either put it in the bag or skip it, and you keep the better result. The state is (item index, remaining capacity), which you memoize in a 2D table. The practice day uses the same 'make a choice, keep the best' idea on grid paths, stairs, house robbing and Pascal's triangle.",
+  "concepts": [
+    {"term": "State", "explain": "`knapsack(i, w)` = the best value using items 0..i with capacity w left. The answer is `knapsack(n-1, W)`.", "snippet": null},
+    {"term": "Two choices per item", "explain": "If item i fits, compare taking it (`val[i] + knapsack(i-1, w - weight[i])`) with skipping it (`knapsack(i-1, w)`). If it does not fit, you can only skip.", "snippet": "op1 = knapsack(i-1, w - weight[i]) + val[i];\nop2 = knapsack(i-1, w);\nreturn max(op1, op2);"},
+    {"term": "Base case", "explain": "No items left (`i < 0`) or no capacity left: value 0.", "snippet": null},
+    {"term": "2D memo table", "explain": "There are n x (W+1) states. Fill `dp` with -1 for **every** capacity 0..W, including W itself, then store each result the first time.", "snippet": "for (i = 0; i < n; i++) for (j = 0; j <= W; j++) dp[i][j] = -1;"},
+    {"term": "Choice DP beyond knapsack", "explain": "Max path sum (go down or right), min cost stairs (come from one or two steps back), house robber (rob this house + best two back, or skip) all follow 'best of the choices'.", "snippet": null},
+    {"term": "Space-saving bottom-up", "explain": "When a state only needs the previous one or two states, two variables replace the whole table.", "snippet": null}
+  ],
+  "files": [
+    {
+      "file": "knapsack.cpp",
+      "title": "0-1 knapsack with plain recursion",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "The recursive take-or-skip solution without memoization. It computes the best value but never prints it.",
+      "steps": [
+        "Read `n`, the `val` array, the `weight` array, then `max_weight`.",
+        "`knapsack(i, w)` returns 0 when `i < 0` or `w <= 0`.",
+        "If `weight[i] <= w`, return the max of taking and skipping item `i`.",
+        "Otherwise return the skip option only.",
+        "`main` calls `knapsack(n-1, max_weight)`."
+      ],
+      "complexity": "Time O(2^n) · Space O(n)",
+      "input": "3\n30 50 60\n3 4 5\n8\n",
+      "input_note": "n, the n values, the n weights, then the capacity.",
+      "output_note": "Nothing is printed: the result of `knapsack(n-1, max_weight)` is thrown away. The correct answer for this input is 90 (items of weight 3 and 5).",
+      "watch_out": "Wrap the call in `cout << ... << endl;` to see the answer.",
+      "check": {"q": "Why is this version exponential?", "a": "Each item branches into two calls, so n items give up to 2^n calls, and the same (i, w) pairs are recomputed."}
+    },
+    {
+      "file": "knapsack_using_dp.cpp",
+      "title": "0-1 knapsack with memoization",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Adds a `dp[i][w]` table to the recursion so each state is solved once, and prints the result.",
+      "steps": [
+        "Read the input as in `knapsack.cpp`.",
+        "Fill `dp[i][j] = -1` to mark states as unsolved.",
+        "In `knapsack`, return `dp[i][w]` if it is already known.",
+        "Otherwise compute take/skip, store the result in `dp[i][w]`, and return it.",
+        "Print `knapsack(n-1, max_weight)`."
+      ],
+      "complexity": "Time O(n·W) · Space O(n·W)",
+      "input": "3\n30 50 60\n3 4 5\n8\n",
+      "input_note": "n, values, weights, capacity. The right answer is 90.",
+      "output_note": "Prints `0`, which is wrong: see Watch out.",
+      "watch_out": "The init loop is `j < max_weight`, so `dp[i][max_weight]` keeps its global value 0 instead of -1. The very first call `knapsack(n-1, max_weight)` sees 0, thinks it is already solved, and returns 0. Fix: `j <= max_weight`.",
+      "check": {"q": "How many different states can this function visit?", "a": "About n x (W+1): every item index combined with every capacity from 0 to W."}
+    },
+    {
+      "file": "codeforces_knapsack.cpp",
+      "title": "Knapsack in the judge's input format",
+      "kind": "variant",
+      "same_as": "knapsack_using_dp.cpp",
+      "problem": {"name": "Codeforces Group - U. Knapsack", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/U"},
+      "what": "Same memoized knapsack, but reads `N W` first and then one `weight value` pair per line, like the judge.",
+      "steps": [
+        "Read `n` and `max_weight`, then `weight[i]` and `val[i]` pairs.",
+        "Same init loop and memoized recursion as `knapsack_using_dp.cpp`."
+      ],
+      "complexity": "Time O(n·W) · Space O(n·W)",
+      "input": "3 8\n3 30\n4 50\n5 60\n",
+      "input_note": "The judge's first example (expected 90).",
+      "output_note": "Prints `0` instead of 90, because of the same init bug.",
+      "watch_out": "`j < max_weight` should be `j <= max_weight`; otherwise `dp[n-1][W]` looks solved with value 0.",
+      "check": {"q": "Which single character fixes this program?", "a": "Changing `<` to `<=` in the dp init loop."}
+    },
+    {
+      "file": "practice_day_2_1_knapsack.cpp",
+      "title": "Practice: Knapsack (judge version)",
+      "kind": "variant",
+      "same_as": "codeforces_knapsack.cpp",
+      "problem": {"name": "Codeforces Group - U. Knapsack", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/U"},
+      "what": "The same solution again with arrays sized to the judge's limits (N <= 20, W <= 100).",
+      "steps": [
+        "Read `n`, `max_weight`, then the `weight value` pairs.",
+        "Same init loop and take/skip recursion."
+      ],
+      "complexity": "Time O(n·W) · Space O(n·W)",
+      "input": "3 8\n3 30\n4 50\n5 60\n",
+      "input_note": "The judge's first example (expected 90).",
+      "output_note": "Prints `0` instead of 90 for the same reason as the other versions.",
+      "watch_out": "Init with `j <= max_weight`. After the fix it prints 90.",
+      "check": {"q": "Why is the table sized `dp[25][105]`?", "a": "N is at most 20 and W at most 100, so a little extra room covers every (i, w) pair."}
+    },
+    {
+      "file": "practice_day_2_2_max_path_sum.cpp",
+      "title": "The maximum path-sum (grid DP)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {"name": "Codeforces Group - X. The maximum path-sum", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/X"},
+      "what": "From the top-left cell you may only move down or right. `maxPathSum(i, j)` = this cell + the better of going down or right, memoized in `dp`.",
+      "steps": [
+        "Reaching the bottom-right cell returns its value (base case).",
+        "Return `dp[i][j]` if already computed.",
+        "On the last row you can only go right; on the last column only down.",
+        "Otherwise take `matrix[i][j] + max(down, right)` and store it.",
+        "Print `maxPathSum(0, 0)`."
+      ],
+      "complexity": "Time O(N·M) · Space O(N·M)",
+      "input": "3 3\n5 2 4\n1 3 5\n9 2 7\n",
+      "input_note": "N M, then the grid. This is the judge's example (expected 24).",
+      "output_note": "Prints `24`, matching the judge: 5 -> 1 -> 9 -> 2 -> 7.",
+      "watch_out": "Values can be negative, so -1 is not a perfectly safe 'unsolved' marker: a real answer of -1 would be recomputed (still correct, only slower). A separate `bool done[][]` avoids that.",
+      "check": {"q": "Why can't you just go greedily to the bigger neighbour each step?", "a": "A small step now can lead to large values later. Here 5 -> 2 looks better than 5 -> 1, but the 1 leads to the 9."}
+    },
+    {
+      "file": "practice_day_2_3_min_cost_climbing_stairs.cpp",
+      "title": "LeetCode 746: Min Cost Climbing Stairs",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {"name": "LeetCode 746 - Min Cost Climbing Stairs", "url": "https://leetcode.com/problems/min-cost-climbing-stairs/"},
+      "what": "Bottom-up with two variables: the cheapest way to stand on position i is the cheaper of coming from i-2 (paying `cost[i-2]`) or from i-1 (paying `cost[i-1]`).",
+      "steps": [
+        "`first` and `second` are the best costs to reach positions i-2 and i-1; both start at 0 because you may start on step 0 or 1 for free.",
+        "For `i = 2..n`: `current = min(first + cost[i-2], second + cost[i-1])`.",
+        "Shift: `first = second`, `second = current`.",
+        "After the loop, `second` is the cost to reach position n (the top)."
+      ],
+      "complexity": "Time O(n) · Space O(1)",
+      "input": "10\n1 100 1 1 1 100 1 1 100 1\n",
+      "input_note": "The length, then the costs. This is LeetCode's Example 2 (expected 6).",
+      "output_note": "Prints `minCostClimbingStairs = 6`, matching LeetCode.",
+      "watch_out": "The file only holds the `Solution` class (no includes, no `main`); the page adds a test driver.",
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;",
+      "driver": "int main() {\n    int n;\n    cin >> n;\n    vector<int> cost(n);\n    for (int &c : cost) cin >> c;\n    Solution s;\n    cout << \"minCostClimbingStairs = \" << s.minCostClimbingStairs(cost) << endl;\n    return 0;\n}",
+      "check": {"q": "For `cost = [10, 15, 20]`, what is the answer and why?", "a": "15: start on step 1, pay 15, and jump two steps to the top."}
+    },
+    {
+      "file": "practice_day_2_4_house_robber.cpp",
+      "title": "LeetCode 198: House Robber",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {"name": "LeetCode 198 - House Robber", "url": "https://leetcode.com/problems/house-robber/"},
+      "what": "`dp[i]` = the most money from houses 0..i. Either rob house i (then add `dp[i-2]`) or skip it (keep `dp[i-1]`). The file has its own `main` testing both LeetCode examples.",
+      "steps": [
+        "Handle 0 or 1 houses directly.",
+        "`dp[0] = nums[0]`, `dp[1] = max(nums[0], nums[1])`.",
+        "For `i >= 2`: `dp[i] = max(nums[i] + dp[i-2], dp[i-1])`.",
+        "Return `dp[n-1]`."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": null,
+      "input_note": "No input; the two examples are written inside `main`.",
+      "output_note": "`Example 1 output: 4` and `Example 2 output: 12`, matching LeetCode's expected answers.",
+      "watch_out": null,
+      "check": {"q": "What is the answer for `[2, 1, 1, 2]`?", "a": "4: rob the first and last houses (2 + 2)."}
+    },
+    {
+      "file": "practice_day_2_5_pascals_triangle.cpp",
+      "title": "LeetCode 118: Pascal's Triangle",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {"name": "LeetCode 118 - Pascal's Triangle", "url": "https://leetcode.com/problems/pascals-triangle/"},
+      "what": "Each row starts and ends with 1; every inner value is the sum of the two values above it in the previous row. The file's `main` prints 5 rows.",
+      "steps": [
+        "For row `i`, create `row(i+1, 1)` (all ones).",
+        "For inner positions `j = 1..i-1`: `row[j] = result[i-1][j-1] + result[i-1][j]`.",
+        "Append the row to `result`.",
+        "`main` prints each row on its own line."
+      ],
+      "complexity": "Time O(numRows^2) · Space O(numRows^2)",
+      "input": null,
+      "input_note": "No input; `numRows = 5` is fixed in `main`.",
+      "output_note": "Five lines from `1` to `1 4 6 4 1`, matching LeetCode's first example.",
+      "watch_out": null,
+      "check": {"q": "What is row 6 (the next row)?", "a": "`1 5 10 10 5 1`."}
+    }
+  ],
+  "practice_links": [
+    {"name": "U. Knapsack", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/U", "site": "Codeforces"},
+    {"name": "X. The maximum path-sum", "url": "https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/X", "site": "Codeforces"},
+    {"name": "Min Cost Climbing Stairs", "url": "https://leetcode.com/problems/min-cost-climbing-stairs/", "site": "LeetCode"},
+    {"name": "House Robber", "url": "https://leetcode.com/problems/house-robber/", "site": "LeetCode"},
+    {"name": "Pascal's Triangle", "url": "https://leetcode.com/problems/pascals-triangle/description/", "site": "LeetCode"}
+  ],
+  "recap": [
+    "0-1 knapsack: state (i, w), choices take or skip, keep the max.",
+    "Base case: no items or no capacity gives 0.",
+    "Memo table must be initialised for every capacity **0..W inclusive**.",
+    "Many DP problems are 'best of a few choices' from smaller states.",
+    "If a state needs only the last one or two states, two variables are enough."
+  ],
+  "check_yourself": [
+    {"q": "Items (weight, value): (1, 1), (3, 4), (4, 5), (5, 7), capacity 7. Best value?", "a": "9: take the items of weight 3 and 4 (4 + 5). Weight 5 + weight 1 gives only 8."},
+    {"q": "Why is it called 0-1 knapsack?", "a": "Each item is taken 0 times or 1 time; you cannot take a fraction or several copies."},
+    {"q": "What is the time complexity of memoized knapsack with n = 100 and W = 1000?", "a": "About n x W = 100,000 states, each O(1), so it is fast."}
+  ]
+}

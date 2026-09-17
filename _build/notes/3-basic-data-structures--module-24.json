@@ -1,0 +1,135 @@
+{
+  "module_id": "3-basic-data-structures--module-24",
+  "title": "Final exam: sets, maps & priority queues",
+  "overview": "Shammunul's solutions to the course final exam. Each question is a small data-handling task that becomes easy once you pick the right STL container: a `set` to sort and remove duplicates, a priority queue with a custom comparator to order pairs or students, a `map` to count words, and a min-heap to answer 'current minimum' queries. Revise these to practise choosing a container quickly.",
+  "concepts": [
+    {"term": "Pick the container from the question", "explain": "'Sorted and unique' means `set`. 'How many times' means `map`. 'Current min/max while items come and go' means `priority_queue`.", "snippet": null},
+    {"term": "Comparator with two keys", "explain": "Compare the main key first; only when it ties, compare the second key. In a priority queue, return true when the left item should come out later.", "snippet": "if(l.name != r.name) return l.name > r.name; return l.val < r.val;"},
+    {"term": "Reading a number, then whole lines", "explain": "After `cin >> T`, the newline is still waiting in the input. `cin.ignore()` throws it away so the next `getline` reads the real sentence.", "snippet": "cin >> T; cin.ignore(); getline(cin, S);"},
+    {"term": "First word to reach the maximum", "explain": "Update the answer only when a count becomes **strictly** greater than the best so far. A later word that only ties does not replace it.", "snippet": "if(freq[w] > best){ best = freq[w]; ans = w; }"},
+    {"term": "Guard every heap access", "explain": "Before `top()` or `pop()`, check `empty()` and print `Empty` instead. After a pop, check again before printing the new top.", "snippet": null},
+    {"term": "map vs. vector of pairs for counting", "explain": "A `map` finds a word in O(log n). Searching a vector of pairs is O(n) per word, which can be too slow for long inputs.", "snippet": null}
+  ],
+  "files": [
+    {
+      "file": "final_exam_question_1_sorted.cpp", "title": "Q1: Sorted (sort and remove duplicates)", "kind": "exam", "same_as": null, "problem": null,
+      "what": "For each test case, puts the numbers into a `set` and prints them, which gives sorted order with duplicates removed.",
+      "steps": [
+        "Read `T`, the number of test cases.",
+        "For each case, create a fresh `set<int> A` and insert the `N` numbers.",
+        "Walk the set from `begin()` to `end()` and print each value, then a newline."
+      ],
+      "complexity": "Time O(N log N) per case · Space O(N)",
+      "input": "2\n8\n3 10 0 6 9 5 10 10\n2\n7 3\n", "input_note": "T, then for each case N and a line of N numbers.",
+      "output_note": "The runner shows a compile error, so no output appears. Once fixed, it would print `0 3 5 6 9 10` and `3 7`.",
+      "watch_out": "Does not compile: the file includes `<iostream>` and `<set>` but never writes `using namespace std;`, so `cin`, `cout` and `set` are unknown. Fix: add `using namespace std;` after the includes.",
+      "check": {"q": "Why is a new `set` created inside the loop instead of once outside it?", "a": "So each test case starts empty; otherwise numbers from earlier cases would be printed too."}
+    },
+    {
+      "file": "final_exam_question_2_Pairs.cpp", "title": "Q2: Pairs (sort by name, then value descending)", "kind": "exam", "same_as": null, "problem": null,
+      "what": "Puts (name, value) pairs into a priority queue whose comparator gives names in ascending order and, for equal names, values in descending order.",
+      "steps": [
+        "`Pair` holds a `name` and a `val`.",
+        "In `cmp`, `l.name > r.name` returns true, so later names sink and the alphabetically smallest name comes out first.",
+        "For equal names, `l.val < r.val` returns true, so the larger value comes out first.",
+        "Push all N pairs, then print `top()` and `pop()` until empty."
+      ],
+      "complexity": "Time O(N log N) · Space O(N)",
+      "input": "5\nsakib 1\nrakib 2\ntasfia 3\nasfia 4\nafia 5\n", "input_note": "N, then N lines of `name value`.",
+      "output_note": "Names come out alphabetically: `afia 5`, `asfia 4`, `rakib 2`, `sakib 1`, `tasfia 3`.",
+      "watch_out": "`main` has no `return 0;`. That is allowed in C++ (main returns 0 by default), but add it for consistency.",
+      "check": {"q": "With `sakib 5`, `sakib 6`, `sakib 4`, in what order are they printed?", "a": "`sakib 6`, `sakib 5`, `sakib 4`, because equal names are ordered by value, largest first."}
+    },
+    {
+      "file": "final_exam_pairs.cpp", "title": "Pairs (copy of Q2)", "kind": "variant", "same_as": "final_exam_question_2_Pairs.cpp", "problem": null,
+      "what": "The same solution as Q2 with `return 0;` added at the end. Here it is tried with the input that has repeated names.",
+      "steps": [
+        "Same `Pair` class and `cmp` comparator as Q2.",
+        "The repeated name `sakib` shows the tie-break: bigger value first."
+      ],
+      "complexity": "Time O(N log N) · Space O(N)",
+      "input": "6\nsakib 5\nrakib 3\ntasfia 2\nsakib 6\nafia 1\nsakib 4\n", "input_note": "N, then N lines of `name value`.",
+      "output_note": "`afia 1`, `rakib 3`, then the three `sakib` lines as 6, 5, 4, then `tasfia 2`.",
+      "watch_out": null,
+      "check": {"q": "Which line of `cmp` decides the order of the three `sakib` pairs?", "a": "The last one, `return l.val < r.val;`."}
+    },
+    {
+      "file": "final_exam_question_3_count_me_unoptimized.cpp", "title": "Q3: Count Me (vector of pairs)", "kind": "exam", "same_as": null, "problem": null,
+      "what": "Finds the most frequent word in each sentence by keeping (word, count) pairs in a vector and searching it for every word.",
+      "steps": [
+        "`cin.ignore()` after reading `T` removes the leftover newline so `getline` reads the sentence.",
+        "For each word, a loop searches `word_freq`; if found, its count goes up, and the answer changes only when the count beats `count_max`.",
+        "A new word is pushed with count 1 without touching the answer.",
+        "After the sentence, a final loop picks the first word whose count beats `count_max`. This only matters when every word appears once (`count_max` is still 0), and then it picks the first word.",
+        "Print the word and its count."
+      ],
+      "complexity": "Time O(w^2) per sentence for w words · Space O(w)",
+      "input": "2\nratul piyush fohad shuvo rafi piyush fohad ratul\na b c\n", "input_note": "T, then T sentences, one per line.",
+      "output_note": "`piyush 2`: piyush, fohad and ratul all reach 2, but piyush gets there first. `a 1`: all words appear once, so the final loop picks the first one.",
+      "watch_out": "The search through the vector is linear for every word, so long sentences get slow. The `map` version fixes this.",
+      "check": {"q": "In the first sentence, why is the answer not `ratul`, even though it appears first?", "a": "The rule is the first word to **reach** the top count; ratul's second copy is the last word, after piyush has already reached 2."}
+    },
+    {
+      "file": "final_exam_question_3_count_me_optimized.cpp", "title": "Q3: Count Me (map)", "kind": "exam", "same_as": null, "problem": null,
+      "what": "The same task with a `map<string,int>`: count each word and update the answer the moment a count beats the best so far.",
+      "steps": [
+        "Read `T`, then `cin.ignore()`, then each sentence with `getline`.",
+        "`word_freq[word] = word_freq[word] + 1` counts the word (a new word starts at 0).",
+        "If the new count is greater than `count_max`, save this word as `result`.",
+        "Because the check is strict (`>`), a word that only ties never replaces the earlier one.",
+        "Print `result` and `count_max`."
+      ],
+      "complexity": "Time O(w log w) per sentence · Space O(w)",
+      "input": "2\nratul piyush fohad shuvo rafi piyush fohad ratul\njony jony yes papa eating sugar no papa telling lies no papa\n", "input_note": "T, then T sentences, one per line.",
+      "output_note": "`piyush 2` for the first sentence and `papa 3` for the second (jony and no reach 2, but papa is the only word to reach 3).",
+      "watch_out": "Without `cin.ignore()`, the first `getline` would read an empty line and print a blank answer.",
+      "check": {"q": "Why does this version not need the final loop that the vector version has?", "a": "Every word, even a first appearance, is checked against `count_max` right after counting, so a count of 1 already sets the answer."}
+    },
+    {
+      "file": "final_exam_question_4_Current_Min.cpp", "title": "Q4: Give Current Min", "kind": "exam", "same_as": null, "problem": null,
+      "what": "Keeps the numbers in a min-heap and answers three commands: insert and show the min, show the min, delete the min and show the new min.",
+      "steps": [
+        "Push the first N numbers into `priority_queue<int, vector<int>, greater<int>> pq`.",
+        "Command `0 X`: push X, then print `pq.top()` (never empty here).",
+        "Command `1`: print `Empty` if the heap is empty, otherwise the top.",
+        "Command `2`: if empty, print `Empty`; otherwise pop, then print the new top or `Empty` if nothing is left."
+      ],
+      "complexity": "Each command O(log n) · Space O(N + Q)",
+      "input": "4\n10 -10 -5 -20\n6\n1\n2\n0 -30\n2\n2\n2\n", "input_note": "N, the N numbers, Q, then Q commands.",
+      "output_note": "`-20` (min), `-10` (after deleting -20), `-30` (just inserted), then `-10`, `-5`, `10` as each minimum is deleted.",
+      "watch_out": null,
+      "check": {"q": "Heap holds only 7. Command `2` arrives. What is printed?", "a": "`Empty`, because 7 is removed and nothing is left to show."}
+    },
+    {
+      "file": "final_exam_question_5_Current_Max.cpp", "title": "Q5: Give Current Max (students)", "kind": "exam", "same_as": null, "problem": null,
+      "what": "The same three commands as Q4, but for students in a max-heap ordered by marks (highest first) and then by roll (smallest first).",
+      "steps": [
+        "`cmp` returns true when `l.marks < r.marks`, so the highest marks rise to the top.",
+        "On equal marks, `l.roll > r.roll` returns true, so the smaller roll is on top.",
+        "Command `0 name roll marks`: push the student and print the top student.",
+        "Command `1`: print the top student or `Empty`.",
+        "Command `2`: pop (if possible), then print the new top or `Empty`."
+      ],
+      "complexity": "Each command O(log n) · Space O(N + Q)",
+      "input": "3\nakib 23 95\njobbar 24 99\nali 25 100\n6\n1\n2\n0 kabir 15 99\n0 asif 10 99\n2\n2\n", "input_note": "N, N student lines, Q, then Q commands.",
+      "output_note": "`ali 25 100` (top), `jobbar 24 99` (ali removed), `kabir 15 99` (ties jobbar on 99 but has the smaller roll), `asif 10 99` (smaller roll still), then `kabir 15 99` and `jobbar 24 99` as the tops are removed.",
+      "watch_out": "The three command checks use separate `if`s instead of `else if`. It still works because `x` has only one value, but `else if` shows the intent better.",
+      "check": {"q": "Two students both have 80 marks, rolls 7 and 3. Who is printed as the max?", "a": "The one with roll 3, because on equal marks the smaller roll wins."}
+    }
+  ],
+  "practice_links": [],
+  "recap": [
+    "Sorted and unique → `set`; counting → `map`; changing min/max → `priority_queue`.",
+    "Multi-key comparator: compare the main key, and use the second key only on a tie.",
+    "`cin.ignore()` between `cin >>` and `getline`.",
+    "'First to reach the max' means updating only on a strictly greater count.",
+    "Check `empty()` before every `top()` and `pop()`, and again after popping.",
+    "Don't forget `using namespace std;` when you don't use `bits/stdc++.h`."
+  ],
+  "check_yourself": [
+    {"q": "Q4 asks for the current **maximum** instead. What is the smallest change to the code?", "a": "Use `priority_queue<int>` (the default max-heap) instead of the `greater<int>` version."},
+    {"q": "In the Pairs comparator, what happens if you change `l.name > r.name` to `l.name < r.name`?", "a": "Names come out in reverse alphabetical order."},
+    {"q": "In the sentence `x y y x`, which word does Count Me print, and why?", "a": "`y 2`, because y reaches 2 at the third word, before x reaches 2 at the fourth."},
+    {"q": "Why is a sorted `vector` with `unique` also a valid answer to Q1, and why is `set` simpler?", "a": "Sorting then `unique` + `erase` removes adjacent duplicates; a `set` does both jobs automatically as you insert."}
+  ]
+}

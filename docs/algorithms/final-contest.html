@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Final Contest: Final contest: prefix sums, decoding, counting subsequences · Introduction to Algorithms</title>
+<meta name="description" content="The course&#x27;s final contest. The problems reward quick pattern spotting: prefix sums for range queries, a two-step string walk for decoding, a counting argument for the missing pair, a closed formula for a repeating sequence, a frequency structure for &#x27;most common value&#x27; queries, and a small DP that counts subsequences. Two files hold only the statement, so their notes describe the approach.">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+<link rel="stylesheet" href="../assets/site.css?v=3">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../index.html"><span aria-hidden="true">📘</span> <span>CSE Revision</span></a>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Introduction to Algorithms</a><span aria-hidden="true">›</span><span>Final Contest</span></nav>
+  <div class="tools">
+    <button class="tbtn" id="searchBtn" type="button" aria-label="Search programs" title="Search (/)">🔍</button>
+    <button class="tbtn" id="recallBtn" type="button" aria-pressed="false" title="Recall mode: hide code so you can write it from memory">🧠<span class="lbl"> Recall</span></button>
+    <button class="tbtn" id="themeBtn" type="button" aria-label="Switch light/dark theme" title="Theme">🌓</button>
+  </div>
+</header>
+<div class="search" id="search" hidden>
+  <div class="search-box">
+    <input id="q" type="search" placeholder="Search programs, topics, problems…" autocomplete="off" aria-label="Search">
+    <button class="tbtn" id="searchClose" type="button" aria-label="Close search">✕</button>
+  </div>
+  <ol id="results" class="results"></ol>
+</div>
+<main class="wrap">
+
+<article class="module">
+  <header class="mhead">
+    <p class="eyebrow"><a href="index.html">Introduction to Algorithms</a> · Final Contest</p>
+    <h1>Final contest: prefix sums, decoding, counting subsequences</h1>
+    <p class="lead">The course&#x27;s final contest. The problems reward quick pattern spotting: prefix sums for range queries, a two-step string walk for decoding, a counting argument for the missing pair, a closed formula for a repeating sequence, a frequency structure for &#x27;most common value&#x27; queries, and a small DP that counts subsequences. Two files hold only the statement, so their notes describe the approach.</p>
+    <p class="chips"><span>6 programs</span><span>3 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Final%20Contest" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
+  </header>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-1-magical-forest-fruits"><span class="n">1</span>Magical Forest Fruits (prefix sums)</a></li><li><a href="#p-2-string-decoder"><span class="n">2</span>String Decoder</a></li><li><a href="#p-3-array-reconstruction"><span class="n">3</span>Array Reconstruction (counting pairs)</a></li><li><a href="#p-4-pain-sum"><span class="n">4</span>Pain Sum (statement only)</a></li><li><a href="#p-5-max"><span class="n">5</span>Max (statement only)</a></li><li><a href="#p-6-help-hablu"><span class="n">6</span>Help Hablu!!! (count subsequences)</a></li></ol></details></nav>
+  <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Prefix sums</h4><p><code>pre[i]</code> = sum of the first i values. The sum of positions L..R is <code>pre[R] - pre[L-1]</code>, so each query is O(1) after O(N) setup.</p><pre class="snip">pre[i] = pre[i-1] + a[i];
+ans = pre[R] - pre[L-1];</pre></div><div class="concept"><h4>Counting pairs with a fixed sum</h4><p>Two non-negative numbers adding up to S can be chosen in S + 1 ordered ways: (0, S), (1, S-1), ..., (S, 0).</p></div><div class="concept"><h4>Formula instead of an array</h4><p>When N is up to 10^9 you cannot build the sequence. Write a function for the sum of its first x elements and answer ranges with f(R) - f(L-1).</p></div><div class="concept"><h4>Frequency map + ordered set</h4><p>To repeatedly find the value with the highest count (ties: largest value), keep <code>map&lt;value, count&gt;</code> and a <code>set&lt;pair&lt;count, value&gt;&gt;</code>; the last element of the set is the answer.</p></div><div class="concept"><h4>Counting subsequences with DP</h4><p><code>dp[i][j]</code> = ways the first j letters of the pattern appear as a subsequence in the first i letters of the text. Either skip text letter i, or, if it matches, also use it.</p><pre class="snip">dp[i][j] = dp[i-1][j] + (s[i-1] == t[j-1] ? dp[i-1][j-1] : 0);</pre></div><div class="concept"><h4>Big local arrays overflow the stack</h4><p>A local array of a million <code>long long</code> needs 8 MB, more than the default stack. Make big arrays global or <code>static</code>.</p></div></div></section>
+  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
+<section class="prog" id="p-1-magical-forest-fruits">
+  <div class="prog-h">
+    <span class="num">1</span>
+    <div class="prog-t">
+      <h3>Magical Forest Fruits (prefix sums)</h3>
+      <div class="meta"><code class="fname">1_Magical_Forest_Fruits.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(N + Q) · Space O(N)</span></div>
+    </div>
+  </div>
+  <p class="what">Answers range-sum queries with a prefix-sum array.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 77 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Final%20Contest/1_Magical_Forest_Fruits.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Problem Statament</span>
+
+<span class="cm">In a magical forest, N trees stand in a straight line, each bearing a certain number of enchanted fruits with </span>
+<span class="cm">the power to grant wishes. The number of fruits on the i-th tree is given in an array A of size N.</span>
+
+<span class="cm">A group of adventurers is planning a journey to collect fruits and needs to determine the total number of </span>
+<span class="cm">fruits available within different tree ranges. To help them, you must answer Q queries. Each query consists of </span>
+<span class="cm">two integers L and R, representing the range of trees they want to collect fruits from. Your task is to compute </span>
+<span class="cm">the total number of fruits in the range [L, R].</span>
+
+<span class="cm">Input Format</span>
+<span class="cm">The first line contains two integers N and Q:</span>
+<span class="cm">1 &lt;= N &lt;= 10^6 (number of trees)</span>
+<span class="cm">1 &lt;= Q &lt;= 10^5 (number of queries)</span>
+
+<span class="cm">The second line contains N integers , where , representing the number of fruits on each tree.</span>
+<span class="cm">Each of the next Q lines contains two integers L and R (), representing a query.</span>
+<span class="cm">Constraints</span>
+
+<span class="cm">Output Format</span>
+
+<span class="cm">For each query, print a single integer—the total number of fruits in the range [L, R]. Each result should be </span>
+<span class="cm">printed on a new line.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">5 3</span>
+<span class="cm">2 4 1 5 3</span>
+<span class="cm">1 3</span>
+<span class="cm">2 5</span>
+<span class="cm">4 4</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">7</span>
+<span class="cm">13</span>
+<span class="cm">5</span>
+
+<span class="cm">Explanation 0</span>
+
+<span class="cm">Query (1,3): Trees 1 to 3 → 2 + 4 + 1 = 7</span>
+<span class="cm">Query (2,5): Trees 2 to 5 → 4 + 1 + 5 + 3 = 13</span>
+<span class="cm">Query (4,4): Tree 4 alone → 5</span>
+
+
+<span class="cm">*/</span>
+
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">fruits</span><span class="p">[</span><span class="mi">1000005</span><span class="p">];</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">N</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fruits</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="mi">1000005</span><span class="p">];</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">sum</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">fruits</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">Q</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">R</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">L</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">R</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="n">R</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="n">L</span><span class="mi">-1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 77 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 3
+2 4 1 5 3
+1 3
+2 5
+4 4</pre><p class="io-note">N Q, the N counts, then Q lines <code>L R</code> (1-based). This is the contest sample.</p></div><div class="io out"><div class="io-h">Output </div><pre>7
+13
+5
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>7</code>, <code>13</code> and <code>5</code>, matching the sample: each line is <code>sum[R] - sum[L-1]</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>N</code>, <code>Q</code> and the fruits into <code>fruits[1..N]</code> (global array).</li><li>Build <code>sum[i] = sum[i-1] + fruits[i]</code>.</li><li>For each query print <code>sum[R] - sum[L-1]</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> <code>long long sum[1000005]</code> is declared inside <code>main</code>: about 8 MB of stack (fine on judges with a big stack, a crash on a default 1 MB stack). It is also never zeroed, so <code>sum[0]</code> is garbage in principle; the output is right here only because that memory happened to be 0. Fix: make <code>sum</code> a global next to <code>fruits</code> (globals start at 0).</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Using the sample, what is the sum for query <code>3 5</code>?</summary><div>9 = 1 + 5 + 3, which is <code>sum[5] - sum[2]</code> = 15 - 6.</div></details>
+</section>
+<section class="prog" id="p-2-string-decoder">
+  <div class="prog-h">
+    <span class="num">2</span>
+    <div class="prog-t">
+      <h3>String Decoder</h3>
+      <div class="meta"><code class="fname">2_String Decoder.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(|S| + output length) · Space O(output length)</span></div>
+    </div>
+  </div>
+  <p class="what">Walks the encoded string two characters at a time: a letter, then a digit telling how many copies to append.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 79 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Final%20Contest/2_String%20Decoder.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">String Decoder</span>
+
+<span class="cm">Problem Statament</span>
+
+<span class="cm">A special String Decoder that can decode strings encoded with a unique pattern. The encoding rule is as </span>
+<span class="cm">follows:</span>
+
+<span class="cm">- The string consists of lowercase English letters (&#39;a&#39;–&#39;z&#39;).</span>
+<span class="cm">- Each letter is always followed by a single-digit number (0-9), which represents how many times that character </span>
+<span class="cm">should appear in the decoded string.</span>
+<span class="cm">- If a character is followed by 0, it is completely removed from the decoded string.</span>
+
+<span class="cm">For example:</span>
+
+<span class="cm">- &quot;a2b3c1&quot; is decoded as &quot;aabbbc&quot;.</span>
+<span class="cm">- &quot;x1y0z2&quot; is decoded as &quot;xzz&quot; (since &#39;y&#39; appears 0 times, it is removed).</span>
+
+<span class="cm">Your task is to implement the magical string decoder and decode a given encoded string.</span>
+
+<span class="cm">Note - It is guaranteed that the resultant string will not be empty.</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">- The first line contains an integer T (1&lt;=T&lt;=10^5), the number of test cases.</span>
+<span class="cm">- Each of the next T lines contains a single string S (2 &lt;= |S| &lt;= 10^6), representing an encoded string.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">1 &lt;= T &lt;= 10^5</span>
+<span class="cm">2 &lt;= |S| &lt;= 10^6</span>
+
+<span class="cm">- Summation of |S| over all test cases doesn&#39;t exceed 10^6</span>
+
+<span class="cm">Output Format</span>
+
+<span class="cm">For each test case, print the decoded string on a new line.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">2</span>
+<span class="cm">a2b3c1</span>
+<span class="cm">x1y0z2</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">aabbbc</span>
+<span class="cm">xzz</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="n">string</span><span class="w"> </span><span class="nf">decoder</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">){</span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">+=</span><span class="mi">2</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">&#39;0&#39;</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">freq</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+<span class="w">            </span><span class="n">ans</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">T</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">S</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">S</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">decoder</span><span class="p">(</span><span class="n">S</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 79 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
+a2b3c1
+x1y0z2</pre><p class="io-note">T, then T encoded strings. This is the contest sample.</p></div><div class="io out"><div class="io-h">Output </div><pre>aabbbc
+xzz
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>aabbbc</code> and <code>xzz</code>, matching the sample; <code>y0</code> disappears.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Loop <code>i = 0, 2, 4, ...</code>.</li><li><code>freq = s[i+1] - &#x27;0&#x27;</code> turns the digit character into a number.</li><li>Append <code>s[i]</code> to <code>ans</code> <code>freq</code> times (zero times for 0).</li><li>Print <code>ans</code> for each test case.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> Why does <code>&#x27;7&#x27; - &#x27;0&#x27;</code> give the number 7?</summary><div>Digit characters have consecutive character codes, so subtracting the code of &#x27;0&#x27; gives the digit&#x27;s value.</div></details>
+</section>
+<section class="prog" id="p-3-array-reconstruction">
+  <div class="prog-h">
+    <span class="num">3</span>
+    <div class="prog-t">
+      <h3>Array Reconstruction (counting pairs)</h3>
+      <div class="meta"><code class="fname">3_Array_Reconstruction.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(n) per test · Space O(n)</span></div>
+    </div>
+  </div>
+  <p class="what">The two missing values must add up to <code>original_sum - (sum of the remaining values)</code>. If that is S, there are S + 1 ordered pairs of non-negative numbers.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 91 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Final%20Contest/3_Array_Reconstruction.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Array Reconstruction</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">Dablu recently starts learning programming. Today he learns about array. While working with an array he </span>
+<span class="cm">accidently deleted two non-negative elements from that array. The array has n elements. But fortunately he has </span>
+<span class="cm">the sum of the main array (before deleting the two elements).</span>
+
+<span class="cm">Now he is wondering how many ways he can put two elements (0 &lt;= element &lt;= 10^18) to that array so that the sum </span>
+<span class="cm">of both versions of the array remain same. For example if the main array a = [5,3,1,4,2] and after losing two </span>
+<span class="cm">elements (3 and 1), a = [5,4,2]. The previous sum was 15 and the current sum is 11 (after losing two elements). </span>
+<span class="cm">He can put (0,4), (2,2), (3,1), (4,0) and (1,3) so that the sum doesn&#39;t get change. So here 5 ways are </span>
+<span class="cm">possible.</span>
+
+<span class="cm">Now you have to help Dablu to figure out the number of ways possible to reconstruct the array.</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">- First line of input contains an integer t, number of test cases.</span>
+<span class="cm">- First line of each test case contains an integer n the number of elements in the array before deleting.</span>
+<span class="cm">- Second line of each testcase consists n-2 integers, the remaining elements of the array.</span>
+<span class="cm">- Third line of each testcases consists an integer, the sum of the main array.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">1 &lt;= t&lt;= 100</span>
+<span class="cm">3 &lt;= n &lt;= 2 X 10^5</span>
+<span class="cm">0 &lt;= a[i] &lt;= 10^5 (But there is no guarantee that the missing two values will be from this range)</span>
+<span class="cm">1 &lt;= sum &lt;= 10^18</span>
+<span class="cm">Summation of n over all test cases doesn&#39;t exceed 2 X 10^5</span>
+
+<span class="cm">Output Format</span>
+<span class="cm">For each test case output an integer,the number of ways possible to reconstruct the array so that the sum </span>
+<span class="cm">remains same. Don&#39;t forget to print a newline after each test case.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">3</span>
+<span class="cm">5</span>
+<span class="cm">5 4 2</span>
+<span class="cm">15</span>
+<span class="cm">6</span>
+<span class="cm">0 4 3 1</span>
+<span class="cm">15</span>
+<span class="cm">3</span>
+<span class="cm">0</span>
+<span class="cm">100000000</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">5</span>
+<span class="cm">8</span>
+<span class="cm">100000001</span>
+
+<span class="cm">*/</span>
+
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">possible_ways</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">rest</span><span class="p">[</span><span class="n">n</span><span class="mi">-2</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">deleted_sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="mi">-2</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">rest</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="n">deleted_sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">rest</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">original_sum</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">original_sum</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">sum_of_deleted_elements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">original_sum</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">deleted_sum</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">sum_of_deleted_elements</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w">  </span>
+<span class="w">        </span>
+<span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">possible_ways</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 91 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
+5
+5 4 2
+15
+3
+0
+7</pre><p class="io-note">t; each test: n, the n-2 remaining values, the original sum. The first test is from the statement.</p></div><div class="io out"><div class="io-h">Output </div><pre>5
+8
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>5</code> (S = 4: pairs (0,4) through (4,0)) and <code>8</code> (S = 7).</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>possible_ways(n)</code> reads the n-2 remaining values and adds them up.</li><li>Read the original sum.</li><li><code>S = original_sum - remaining_sum</code>.</li><li>Return <code>S + 1</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Use <code>long long</code>: the sum can be 10^18. The array <code>rest</code> is not needed; a running total is enough.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Remaining values sum to 10 and the original sum is 10. How many ways?</summary><div>1: both missing values must be 0.</div></details>
+</section>
+<section class="prog" id="p-4-pain-sum">
+  <div class="prog-h">
+    <span class="num">4</span>
+    <div class="prog-t">
+      <h3>Pain Sum (statement only)</h3>
+      <div class="meta"><code class="fname">4_Pain_Sum.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(1) per query · Space O(1)</span></div>
+    </div>
+  </div>
+  <p class="what">The sequence is 1,1,1,2,2,2,3,3,3,... of length N (up to 10^9). Range sums must come from a formula. The file contains only the problem statement.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 53 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Final%20Contest/4_Pain_Sum.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Pain Sum</span>
+
+<span class="cm">Problem Statement</span>
+
+<span class="cm">There is a sequence of length N, the property of the sequence is -</span>
+
+<span class="cm">- N &gt;= 3 and N is a multiple of 3.</span>
+<span class="cm">- Sorted in non-decreasing order.</span>
+<span class="cm">- Each element appears exactly thrice from 1 to N/3.</span>
+
+<span class="cm">You are given the value N and you are also given Q queries, where each query consists of two integers L and R. </span>
+<span class="cm">For each query, you need to find the sum of the elements in the sequence from position L to R.</span>
+
+<span class="cm">Note: A multiple of 3 is any integer that can be expressed as 3k, where k is an integer. For example: </span>
+<span class="cm">3,6,9,12,15 etc. are all multiples of 3.</span>
+
+<span class="cm">Input Format</span>
+<span class="cm">- The first line will contain a single positive integer N and Q, the length of the sequence and the number of </span>
+<span class="cm">queries respectively.</span>
+<span class="cm">- Next Q lines will contain L and R.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">- 3 &lt;= N &lt;= 10^9</span>
+<span class="cm">- 1 &lt;= Q &lt;= 2 X 10^5</span>
+<span class="cm">- 1 &lt;= L &lt;= R &lt;= N</span>
+
+<span class="cm">Output Format</span>
+<span class="cm">For each query find the sum of the elements in the sequence from position L to R. Don&#39;t forget to print a </span>
+<span class="cm">newline after each query.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">9 3</span>
+<span class="cm">2 9</span>
+<span class="cm">2 6</span>
+<span class="cm">7 9</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">17</span>
+<span class="cm">8</span>
+<span class="cm">9</span>
+
+<span class="cm">Explanation 0</span>
+<span class="cm">In the given test case N = 9 . So the sequence will be [1,1,1,2,2,2,3,3,3]. Now for first query L = 2 and </span>
+<span class="cm">R = 9, it represents the values [1,1,2,2,2,3,3,3] which belongs from the position L = 2 to R = 9 </span>
+<span class="cm">(considering 1-base indexing) and hence the sum of 1+1+2+2+2+3+3+3 = 17 for the first query.</span>
+
+<span class="cm">*/</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 53 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>C:/Users/sislam27/Work/MinGW/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/../../../../x86_64-w64-mingw32/lib/../lib/libmingw32.a(lib64_libmingw32_a-crt0_c.o):crt0_c.c:(.text.startup+0x2e): undefined reference to `WinMain&#x27;
+collect2.exe: error: ld returned 1 exit status</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> No output. Check with the sample (N = 9): f(9) = 18, f(1) = 1, f(6) = 9, so the queries give 17, 8 and 9.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Define <code>f(x)</code> = sum of the first x elements.</li><li>Let <code>q = x / 3</code> (complete triples) and <code>r = x % 3</code> (leftover positions).</li><li>The complete triples give <code>3 * q * (q + 1) / 2</code>; the leftovers each equal <code>q + 1</code>, adding <code>r * (q + 1)</code>.</li><li>Answer each query with <code>f(R) - f(L-1)</code> in <code>long long</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Only the statement was saved; there is no solution in this file. q can reach about 3x10^8, so <code>q * (q + 1)</code> needs <code>long long</code>.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> What is f(5)?</summary><div>q = 1, r = 2: 3·1·2/2 + 2·2 = 3 + 4 = 7 (1+1+1+2+2).</div></details>
+</section>
+<section class="prog" id="p-5-max">
+  <div class="prog-h">
+    <span class="num">5</span>
+    <div class="prog-t">
+      <h3>Max (statement only)</h3>
+      <div class="meta"><code class="fname">5_max.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(log n) per query · Space O(n)</span></div>
+    </div>
+  </div>
+  <p class="what">Add values, and on query 2 print the most frequent value (largest on ties), then remove max(1, count/2) copies of it. The file contains only the problem statement.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 68 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Final%20Contest/5_max.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Max</span>
+
+<span class="cm">Problem Statament</span>
+
+<span class="cm">You are given an empty array initially. Then, you will be given Q queries to perform on this array. You will </span>
+<span class="cm">be given 2 types of queries to perform.</span>
+
+<span class="cm">- 1 X - add  to the array.</span>
+<span class="cm">- 2 - If the array is empty print empty otherwise print the element which occurrence is maximum , if there </span>
+<span class="cm">exist multiple element with maximum occurrence print the largest value which occurrence is maximum and erase </span>
+<span class="cm">max (1, ⌊total occurrences of that element / 2⌋) occurrences of that value.</span>
+
+<span class="cm">Here, ⌊x⌋ represents the largest integer less than or equal to a given number x. For example : ⌊5/2⌋ = ⌊2.5⌋ = 2</span>
+
+<span class="cm">It is guaranteed that at least one type 2 query will be present in all the test case.</span>
+
+<span class="cm">Note: The input file is too large. Must use fast I/O and don&#39;t use endl. Use &quot;\n&quot; instead of endl.</span>
+
+<span class="cm">Fast I/O: Add these 2 lines at the first of main function -</span>
+
+<span class="cm">ios::sync_with_stdio(false);</span>
+<span class="cm">cin.tie(nullptr);</span>
+
+<span class="cm">Input Format</span>
+
+<span class="cm">- The first line contains a single positive integer Q.</span>
+<span class="cm">- The next Q lines will contains the queries.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">- 1 &lt;= Q &lt;= 10^5</span>
+<span class="cm">- 1 &lt;= X &lt;= 10^9</span>
+
+
+<span class="cm">Output Format</span>
+<span class="cm">If the query type is 2 print the desired output as written in the problem statement. Dont&#39; forget to print a </span>
+<span class="cm">newline after each test case.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">12</span>
+<span class="cm">2</span>
+<span class="cm">1 12</span>
+<span class="cm">1 10</span>
+<span class="cm">1 12</span>
+<span class="cm">1 12</span>
+<span class="cm">1 10</span>
+<span class="cm">1 12</span>
+<span class="cm">1 10</span>
+<span class="cm">1 10</span>
+<span class="cm">2</span>
+<span class="cm">1 15</span>
+<span class="cm">2</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">empty</span>
+<span class="cm">12</span>
+<span class="cm">10</span>
+
+<span class="cm">Explanation 0</span>
+<span class="cm">During the first 2 type of query, the array is empty so you must print empty. For the next 2 type of query, </span>
+<span class="cm">10 appears 4 times and 12 also appears 4 times. Since their occurrences are the same you must print 12 because </span>
+<span class="cm">it is greater than 10. After printing 12, remove ⌊4/2⌋ = 2 means erase 2 occurrences of 12.</span>
+
+<span class="cm">*/</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 68 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>C:/Users/sislam27/Work/MinGW/bin/../lib/gcc/x86_64-w64-mingw32/8.1.0/../../../../x86_64-w64-mingw32/lib/../lib/libmingw32.a(lib64_libmingw32_a-crt0_c.o):crt0_c.c:(.text.startup+0x2e): undefined reference to `WinMain&#x27;
+collect2.exe: error: ld returned 1 exit status</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> No output. On the sample the plan prints <code>empty</code>, then <code>12</code> (12 and 10 both have 4 copies; 12 is larger, two copies removed), then <code>10</code> (now 10 has 4 copies and 12 has 2).</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Keep <code>map&lt;int, long long&gt; cnt</code> and <code>set&lt;pair&lt;long long, int&gt;&gt; best</code> holding (count, value).</li><li>Add X: erase the old pair <code>(cnt[X], X)</code> if present, increase <code>cnt[X]</code>, insert the new pair.</li><li>Query 2: if <code>best</code> is empty print <code>empty</code>; otherwise the last element <code>prev(best.end())</code> is (highest count, largest value).</li><li>Print the value, remove <code>max(1, count / 2)</code> copies, and re-insert the pair if the count is still above 0.</li><li>Use fast I/O and <code>&quot;\n&quot;</code>, as the statement asks.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Only the statement was saved; there is no solution in this file. A <code>priority_queue</code> alone cannot update counts; the set of pairs (or lazy deletion) is needed.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why do pairs <code>(count, value)</code> in a set give the right tie-break?</summary><div>Pairs are ordered by count first, then by value, so the last pair has the highest count and, among equal counts, the largest value.</div></details>
+</section>
+<section class="prog" id="p-6-help-hablu">
+  <div class="prog-h">
+    <span class="num">6</span>
+    <div class="prog-t">
+      <h3>Help Hablu!!! (count subsequences)</h3>
+      <div class="meta"><code class="fname">6_Help_Hablu.cpp</code><span class="badge k-exam">Exam</span><span class="badge cx">Time O(|s|) per test · Space O(|s|)</span></div>
+    </div>
+  </div>
+  <p class="what">Counts how many times the 3-letter pattern <code>t</code> occurs as a subsequence of <code>s</code>, with a DP table <code>arr[i][j]</code>.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 110 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Final%20Contest/6_Help_Hablu.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Help Hablu!!!</span>
+
+
+<span class="cm">Problem Statament</span>
+
+<span class="cm">In an enchanted forest, there lies a magical book filled with ancient symbols, represented by the string s. </span>
+<span class="cm">Hidden deep within its pages Hablu discovers a secret ancient spell, represented by the string t which consists </span>
+<span class="cm">of exactly 3 letters. To unlock the spell&#39;s power, Hablu needs to find out how many times the spell t appears </span>
+<span class="cm">as a subsequence in the magical book s. Can you help Hablu?</span>
+
+<span class="cm">A subsequence of a string is a string made from the original string by deleting some characters (can be none) </span>
+<span class="cm">without changing the relative order of the remaining characters. For example, the subsequences of &quot;abc&quot; include </span>
+<span class="cm">&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;ab&quot;, &quot;ac&quot;, &quot;bc&quot;, and &quot;abc&quot;.</span>
+
+<span class="cm">Input Format</span>
+<span class="cm">- First line contains a single integer T — the number of test cases.</span>
+<span class="cm">- First line of each test case contains the string  consisting of lowercase letters of the English alphabet.</span>
+<span class="cm">- The second line of each test case contains the string t consisting of lowercase letters of the English </span>
+<span class="cm">alphabet.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">- 1 &lt;= T &lt;= 10^4</span>
+<span class="cm">- 1 &lt;= |s| &lt;= 3 X 10^5</span>
+<span class="cm">- Summation of |s| over all test cases doesn&#39;t exceed </span>
+
+<span class="cm">Output Format</span>
+<span class="cm">For each test cases, output a single integer — the number of times t occurs as a subsequence of s.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">4</span>
+<span class="cm">ababcc</span>
+<span class="cm">abc</span>
+<span class="cm">effkbd</span>
+<span class="cm">bad</span>
+<span class="cm">phiphihhitron</span>
+<span class="cm">phi</span>
+<span class="cm">fykklopjplloopre</span>
+<span class="cm">kop</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">6</span>
+<span class="cm">0</span>
+<span class="cm">11</span>
+<span class="cm">10</span>
+
+<span class="cm">Explanation 0</span>
+<span class="cm">For the first test, we need to count how many times the string t=abc occurs as a subsequence in the string </span>
+<span class="cm">s = ababcc.</span>
+
+<span class="cm">Let&#39;s find all the subsequences of  that match :</span>
+
+<span class="cm">Subsequence: a (position 1), b (position 2), c (position 5).</span>
+<span class="cm">Subsequence: a (position 1), b (position 2), c (position 6).</span>
+<span class="cm">Subsequence: a (position 1), b (position 4), c (position 5).</span>
+<span class="cm">Subsequence: a (position 1), b (position 4), c (position 6).</span>
+<span class="cm">Subsequence: a (position 3), b (position 4), c (position 5).</span>
+<span class="cm">Subsequence: a (position 3), b (position 4), c (position 6).</span>
+
+<span class="cm">So, the string t = abc appears 6 times as a subsequence in the string s = ababcc. Therefore, the output is 6.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">subsequences</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span>
+
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">4</span><span class="p">];</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">t</span><span class="p">[</span><span class="n">j</span><span class="mi">-1</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">][</span><span class="n">j</span><span class="mi">-1</span><span class="p">];</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">3</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">T</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">subsequences</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 110 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
+ababcc
+abc
+phiphihhitron
+phi</pre><p class="io-note">T; each test: s, then t. Two cases from the contest sample (expected 6 and 11).</p></div><div class="io out"><div class="io-h">Output </div><pre>6
+11
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>6</code> and <code>11</code>, matching the sample.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>arr[i][0] = 1</code> for every i: the empty pattern appears once in any prefix.</li><li>For each text position <code>i</code> and pattern length <code>j</code> (1..3), start with <code>arr[i-1][j]</code> (skip <code>s[i-1]</code>).</li><li>If <code>s[i-1] == t[j-1]</code>, add <code>arr[i-1][j-1]</code> (use this letter as the j-th pattern letter).</li><li>The answer is <code>arr[n][3]</code>, stored in <code>long long</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> <code>long long arr[n+1][4]</code> is a local array; with |s| = 3x10^5 it takes about 9.6 MB of stack and may crash. Only the previous row is needed, so four <code>long long</code> counters are enough.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> How many times does <code>ab</code> occur as a subsequence of <code>aabb</code>?</summary><div>4: each of the two a&#x27;s pairs with each of the two b&#x27;s.</div></details>
+</section></section>
+  <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://cses.fi/problemset/task/1646" target="_blank" rel="noopener">Static Range Sum Queries</a><span class="site">CSES</span></li><li><a href="https://leetcode.com/problems/distinct-subsequences/" target="_blank" rel="noopener">Distinct Subsequences</a><span class="site">LeetCode</span></li><li><a href="https://leetcode.com/problems/decode-string/" target="_blank" rel="noopener">Decode String</a><span class="site">LeetCode</span></li></ul></section>
+  <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>Many range-sum queries: build prefix sums once.</li><li>Huge N: find a formula for the prefix sum instead of building the array.</li><li>Pairs of non-negative numbers with sum S: S + 1 ways.</li><li>Frequency questions with updates: map for counts + set of (count, value).</li><li>Counting subsequences: skip the letter, or use it if it matches, and add.</li><li>Keep big arrays global; the stack is small.</li></ul></section>
+  <section class="block" id="quiz"><h2>✅ Check yourself</h2><details class="check"><summary>Why is <code>pre[0]</code> set to 0?</summary><div>So that a query starting at L = 1 works: <code>pre[R] - pre[0]</code> must equal the sum of the first R values.</div></details><details class="check"><summary>In the subsequence DP, why add <code>dp[i-1][j-1]</code> only when the letters match?</summary><div>Only a matching letter can serve as the j-th letter of the pattern; the ways to form the first j-1 letters before it are exactly <code>dp[i-1][j-1]</code>.</div></details><details class="check"><summary>Would a 10^6-element <code>int</code> array inside <code>main</code> be safe?</summary><div>Usually not: it needs about 4 MB, while the default stack is often 1 MB (Windows) to 8 MB. Make it global.</div></details></section>
+  <nav class="pager"><a class="prev" href="../algorithms/mock-contest.html"><small>← Previous</small><b>Mock Contest</b><span>Mock contest: search, sets, number reasoning, greedy, partition DP</span></a><span class="next empty"></span></nav>
+</article>
+</main>
+<footer class="foot">
+  <p>Shammunul's revision notes from the Phitron CSE program. Code written while taking the course; outputs are real runs
+  (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
+</footer>
+<script>window.SITE_ROOT="../";</script>
+<script src="../assets/search-index.js?v=3" defer></script>
+<script src="../assets/site.js?v=3" defer></script>
+</body>
+</html>

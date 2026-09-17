@@ -1,0 +1,189 @@
+{
+  "module_id": "4-introduction-to-algorithms--module-13",
+  "title": "Graph problem solving: DSU, Dijkstra path, grid BFS",
+  "overview": "A problem-solving module that applies earlier graph tools to judge problems. DSU tracks components while roads are added, and helps rebuild a road network. Dijkstra is extended to print the actual path, and BFS on a grid finds the fewest moves. The main skill is spotting which tool a story is really asking for.",
+  "concepts": [
+    {
+      "term": "Live component count with DSU",
+      "explain": "Start with `cmp = n`. Each union of two different groups does `cmp--`, and the new group's size can update the largest size.",
+      "snippet": null
+    },
+    {
+      "term": "Redundant edge + missing link",
+      "explain": "An edge inside one component is useless; a pair of different components needs a link. Swap one for the other.",
+      "snippet": null
+    },
+    {
+      "term": "Path reconstruction",
+      "explain": "Whenever Dijkstra improves `dis[child]`, remember `par[child] = node`. At the end, walk `par` back from the target and reverse.",
+      "snippet": "for (v = n; v != -1; v = par[v]) path.push_back(v);\nreverse(path.begin(), path.end());"
+    },
+    {
+      "term": "BFS gives fewest moves",
+      "explain": "On a grid where every move costs 1, BFS reaches cells in order of distance, so `level[cell]` is the minimum number of moves.",
+      "snippet": null
+    },
+    {
+      "term": "Direction vectors",
+      "explain": "Store the 4 moves as pairs and loop over them, checking bounds with a `valid` helper.",
+      "snippet": "vector<pair<int,int>> d = {{0,1},{0,-1},{-1,0},{1,0}};"
+    },
+    {
+      "term": "Reading until EOF",
+      "explain": "`while (cin >> n)` keeps processing test cases until input runs out.",
+      "snippet": null
+    }
+  ],
+  "files": [
+    {
+      "file": "problem1_road_construction.cpp",
+      "title": "CSES 1676: Road Construction",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "CSES 1676 - Road Construction",
+        "url": "https://cses.fi/problemset/task/1676/"
+      },
+      "what": "After each new road, print the number of components and the size of the largest one. DSU with union by size keeps both numbers up to date.",
+      "steps": [
+        "Set `par[i] = -1`, `group_size[i] = 1`, `cmp = n`, `max_size = 1`.",
+        "For each road call `dsu_union(a, b)`.",
+        "If both ends already share a leader, nothing changes (early `return`).",
+        "Otherwise attach the smaller group, add the sizes, update `max_size` with the new size, and do `cmp--`.",
+        "Print `cmp` and `max_size` after every road."
+      ],
+      "complexity": "Time about O(n + m) · Space O(n)",
+      "input": "5 4\n1 2\n1 3\n4 5\n3 5\n",
+      "input_note": "n m, then m roads. The first three roads are the CSES example; the fourth joins everything.",
+      "output_note": "Lines `4 2`, `3 3`, `2 3`, `1 5`. After road 3-5 the groups {1,2,3} and {4,5} merge, so there is 1 component of size 5.",
+      "watch_out": null,
+      "check": {
+        "q": "Why can `max_size` only grow, never shrink?",
+        "a": "Roads are only added, so groups only merge. A merged group is at least as big as each part."
+      }
+    },
+    {
+      "file": "problem2_roads_not_only_in_Berland.cpp",
+      "title": "Codeforces 25D: Roads not only in Berland",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "Codeforces 25D - Roads not only in Berland",
+        "url": "https://codeforces.com/problemset/problem/25/D"
+      },
+      "what": "There are n-1 roads. Every road that closes a cycle is wasted, and each wasted road can be moved to connect two components. Close the wasted roads and link every component to city 1.",
+      "steps": [
+        "Read the n-1 roads. If a road's ends already share a leader, save it in `remove_roads`; otherwise union them.",
+        "Then for `i = 2..n`: if `find(i)` differs from `find(1)`, save `{1, i}` in `add_roads` and union them.",
+        "The number of wasted roads always equals the number of links needed, because n-1 roads and a tree needs n-1 edges.",
+        "Print the count, then pair the i-th removed road with the i-th new road on each line."
+      ],
+      "complexity": "Time about O(n) · Space O(n)",
+      "input": "7\n1 2\n2 3\n3 1\n4 5\n5 6\n6 7\n",
+      "input_note": "n, then n-1 roads. Road 3-1 closes the triangle 1-2-3, and {4,5,6,7} is cut off.",
+      "output_note": "Prints `1` and `3 1 1 4`: close road 3-1 and build road 1-4. After that the whole country is connected.",
+      "watch_out": null,
+      "check": {
+        "q": "Why is `remove_roads.size()` always equal to `add_roads.size()`?",
+        "a": "With k components the forest uses n-k roads, so (n-1)-(n-k) = k-1 roads are wasted, and exactly k-1 links are needed to join k components."
+      }
+    },
+    {
+      "file": "problem3_dijkstra.cpp",
+      "title": "Codeforces 20C: Dijkstra? (print the path)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "Codeforces 20C - Dijkstra?",
+        "url": "https://codeforces.com/problemset/problem/20/C"
+      },
+      "what": "Run Dijkstra from node 1 on an undirected weighted graph, remember each node's parent, and print the shortest path from 1 to n (or -1).",
+      "steps": [
+        "Store edges both ways in `adj_list`; set `dis[i] = LLONG_MAX` and `par[i] = -1`.",
+        "Push `{0, 1}` into a min-heap `priority_queue`.",
+        "Pop the closest node; for each neighbour, if the distance improves, update `dis`, push it, and set `par[child] = node`.",
+        "If `dis[n]` is still infinite print -1.",
+        "Otherwise follow `par` from n back to 1, reverse the list, and print it."
+      ],
+      "complexity": "Time O((n + m) log n) · Space O(n + m)",
+      "input": "5 6\n1 2 2\n2 5 5\n2 3 4\n1 4 1\n4 3 3\n3 5 1\n",
+      "input_note": "n m, then m edges `a b w`. This is the Codeforces example (expected `1 4 3 5`).",
+      "output_note": "The file does not compile, so no output appears. After the fix it prints `1 4 3 5` (cost 1+3+1 = 5, cheaper than 1-2-5 = 7).",
+      "watch_out": "Inside `dijkstra` the popped pair is named `par`, which hides the global array `par[]`, so `par[child_node] = par_node` fails to compile. Rename the local variable (for example `pair<ll,ll> cur = pq.top();`). Also add `#include <climits>` for `LLONG_MAX`, and skip stale heap entries with `if (cur.first > dis[node]) continue;` to stay fast.",
+      "check": {
+        "q": "Why does following `par` from n give the path backwards?",
+        "a": "Each node stores only who came right before it, so you walk from the end to the start and must reverse at the end."
+      }
+    },
+    {
+      "file": "problem4_sundorbon.cpp",
+      "title": "Outsbook: Sundorbon (grid BFS)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "Outsbook 10106 - Sundorbon",
+        "url": "https://school.outsbook.com/problems/problemdetails/10106"
+      },
+      "what": "Find the fewest moves from S to E on a square map where T cells are blocked. BFS from S fills `level` for every reachable cell; print `level` at E. Repeats until end of input.",
+      "steps": [
+        "Fill `direction` with the four moves.",
+        "`while (cin >> n)`: read the grid character by character, remembering the S and E positions.",
+        "Clear `vis` and set `level` to -1.",
+        "BFS from S (the function is named `dfs`, but it uses a queue, so it is BFS): push neighbours that are inside, not 'T', and unvisited, with `level = parent level + 1`.",
+        "Print `level[di][dj]`."
+      ],
+      "complexity": "Time O(n^2) per map · Space O(n^2)",
+      "input": "5\nS P P P P\nT P T P P\nT P P P P\nP T E T T\nP T P T T\n3\nS P T\nT P T\nE P P\n",
+      "input_note": "Maps one after another until EOF: n, then n rows of letters. The first map is the sample (expected 5).",
+      "output_note": "`5` for the first map and `4` for the second (S right, down, down, left).",
+      "watch_out": "The function name `dfs` is misleading: it is a BFS, and only BFS guarantees the fewest moves. Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
+      "check": {
+        "q": "Why would a DFS not give the minimum number of moves here?",
+        "a": "DFS follows one path deep first and may reach E by a long route; BFS explores cells in order of distance, so the first time it reaches a cell is the shortest."
+      }
+    }
+  ],
+  "practice_links": [
+    {
+      "name": "Road Construction",
+      "url": "https://cses.fi/problemset/task/1676/",
+      "site": "CSES"
+    },
+    {
+      "name": "Roads not only in Berland",
+      "url": "https://codeforces.com/problemset/problem/25/D",
+      "site": "Codeforces"
+    },
+    {
+      "name": "Dijkstra?",
+      "url": "https://codeforces.com/problemset/problem/20/C",
+      "site": "Codeforces"
+    },
+    {
+      "name": "Sundorbon",
+      "url": "https://school.outsbook.com/problems/problemdetails/10106",
+      "site": "Outsbook"
+    }
+  ],
+  "recap": [
+    "DSU can keep component count and largest size updated after each union.",
+    "An edge inside one component is redundant and can be traded for a link between components.",
+    "Store `par[child]` in Dijkstra/BFS to print the path; walk back and reverse.",
+    "Unit-cost grid = BFS; the level of a cell is its minimum distance.",
+    "Never give a local variable the same name as a global array you still need."
+  ],
+  "check_yourself": [
+    {
+      "q": "10 cities, no roads, then 4 roads that never create a cycle. How many components now?",
+      "a": "6. Each useful road reduces the count by one."
+    },
+    {
+      "q": "Which algorithm fits: 'fewest moves on a grid' vs 'cheapest route with different road costs'?",
+      "a": "Fewest moves: BFS. Different costs: Dijkstra."
+    },
+    {
+      "q": "What value marks 'no parent' in the Dijkstra path code, and why is it needed?",
+      "a": "-1. The walk back stops when it reaches -1, which happens just after the source node."
+    }
+  ]
+}

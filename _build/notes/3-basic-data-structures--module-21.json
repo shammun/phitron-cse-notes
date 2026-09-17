@@ -1,0 +1,198 @@
+{
+  "module_id": "3-basic-data-structures--module-21",
+  "title": "Binary search trees: search, insert, build from a sorted array",
+  "overview": "This module introduces the binary search tree (BST): a binary tree where everything on the left is smaller than the node and everything on the right is bigger. That one rule lets you throw away half the tree at every step, so search and insert take time proportional to the height, not the number of nodes. You also learn how to build a balanced BST from a sorted array by always picking the middle element as the root.",
+  "concepts": [
+    {
+      "term": "BST rule",
+      "explain": "For every node, all values in its left subtree are smaller and all values in its right subtree are bigger. The rule must hold for the whole subtree, not just the direct children.",
+      "snippet": null
+    },
+    {
+      "term": "Search by comparing",
+      "explain": "Compare the target with the current node. Equal means found; smaller means go left; bigger means go right. Reaching `NULL` means the value is not in the tree.",
+      "snippet": "if (val < root->val) return search(root->left, val);\nelse return search(root->right, val);"
+    },
+    {
+      "term": "Insert walks the same path as search",
+      "explain": "A new value always becomes a leaf. Follow the search path until the child you need is `NULL`, then hang the new node there.",
+      "snippet": null
+    },
+    {
+      "term": "Height decides speed",
+      "explain": "Search and insert cost O(h). A balanced tree has h about log2(n); a tree built from sorted inserts becomes a chain with h = n.",
+      "snippet": null
+    },
+    {
+      "term": "Sorted array to balanced BST",
+      "explain": "Take the middle element as root, build the left half into the left subtree and the right half into the right subtree. Both halves have about the same size, so the tree stays balanced.",
+      "snippet": "int mid = (start + end) / 2;\nroot->left = convert(a, start, mid - 1);\nroot->right = convert(a, mid + 1, end);"
+    },
+    {
+      "term": "In-order of a BST is sorted",
+      "explain": "Visiting left, node, right in a BST prints the values in increasing order. This is a quick way to check that a tree really is a BST.",
+      "snippet": null
+    }
+  ],
+  "files": [
+    {
+      "file": "BST_search.cpp",
+      "title": "Search for a value in a BST",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads a tree in level order (`-1` means no child), then a value, and prints `Found` or `Not Found` using the BST search rule.",
+      "steps": [
+        "`input_tree` reads the root, then uses a queue: for each node taken out it reads the left and right child values and creates nodes for the ones that are not `-1`.",
+        "`search(root, val)` returns `false` when it falls off the tree (`root == NULL`).",
+        "If `root->val == val` it returns `true`.",
+        "Otherwise it goes left when `val` is smaller and right when it is bigger, so only one branch is explored per level.",
+        "`main` prints `Found` or `Not Found` based on the result."
+      ],
+      "complexity": "Time O(h) for the search (h = height) · Space O(h) recursion",
+      "input": "20 10 30 5 15 25 40 -1 -1 -1 -1 -1 -1 -1 -1\n15\n",
+      "input_note": "The tree in level order: root 20, children 10 and 30, then 5 15 25 40, then eight `-1`s for the empty children of the leaves. Last line: the value to look for (15).",
+      "output_note": "You will see `Not Found` even though 15 is in the tree. That is the constructor bug described below, not a problem with the search logic.",
+      "watch_out": "The constructor writes `this->val;` instead of `this->val = val;`, so every node keeps a garbage value and the search almost never matches. Fix: change that line to `this->val = val;` and the sample prints `Found`.",
+      "check": {
+        "q": "Searching for 27 in this tree, which nodes are visited?",
+        "a": "20 (27 is bigger, go right), 30 (27 is smaller, go left), 25 (27 is bigger, go right), then `NULL`, so the answer is Not Found."
+      }
+    },
+    {
+      "file": "insert_in_BST.cpp",
+      "title": "Insert a value into a BST",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads a BST in level order and one new value, inserts the value in its correct leaf position, and prints the tree in level order.",
+      "steps": [
+        "`insert(Node* &root, int val)` takes the root by reference so it can create the root when the tree is empty.",
+        "If `val` is smaller than `root->val`: if the left child is empty, put a new node there; otherwise recurse into the left child.",
+        "If `val` is bigger: do the same on the right side.",
+        "Equal values fall through both checks, so duplicates are simply ignored.",
+        "`level_order` prints the tree with a queue so you can see where the new node landed."
+      ],
+      "complexity": "Time O(h) for the insert, O(n) to print · Space O(h)",
+      "input": "20 10 30 5 15 25 40 -1 -1 -1 -1 -1 -1 -1 -1\n13\n",
+      "input_note": "The same 7-node BST as the search program, then the value 13 to insert.",
+      "output_note": "`20 10 30 5 15 25 40 13`: the tree is printed level by level. 13 appears last because it went 20 -> left to 10 -> right to 15 -> left, making it a new node on the fourth level.",
+      "watch_out": "`level_order` pushes `root` without checking for `NULL`, so an empty tree (`-1` as the first number) would crash while printing.",
+      "check": {
+        "q": "Why is `root` passed as `Node* &`?",
+        "a": "So that when the tree is empty the function can make `root` point to the new node and the caller sees the change."
+      }
+    },
+    {
+      "file": "array_to_BST.cpp",
+      "title": "Build a balanced BST from a sorted array",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Reads a sorted array and turns it into a height-balanced BST by repeatedly choosing the middle element as the root, then prints it in level order.",
+      "steps": [
+        "`convert(a, size, start, end)` works on the part `a[start..end]`; if `start > end` the part is empty and it returns `NULL`.",
+        "It picks `mid = (start + end) / 2` and makes `a[mid]` the root of this part.",
+        "The left half `start..mid-1` becomes the left subtree and the right half `mid+1..end` becomes the right subtree, both built recursively.",
+        "Because the array is sorted, everything on the left is smaller and everything on the right is bigger, so the BST rule holds automatically.",
+        "`main` calls `convert(a, n, 0, n-1)` and prints the result with `level_order`."
+      ],
+      "complexity": "Time O(n) · Space O(log n) recursion (plus the n nodes)",
+      "input": "7\n1 2 3 4 5 6 7\n",
+      "input_note": "n, then n values in increasing order.",
+      "output_note": "`4 2 6 1 3 5 7`: 4 is the middle of the whole array, 2 and 6 are the middles of the two halves, and 1 3 5 7 are the leaves. A perfectly balanced tree of height 3.",
+      "watch_out": "The input must already be sorted; the code does not sort it. An unsorted array gives a tree that breaks the BST rule.",
+      "check": {
+        "q": "For the array `1 2 3 4`, which value becomes the root and why?",
+        "a": "2, because `mid = (0 + 3) / 2 = 1` and `a[1] = 2`."
+      }
+    },
+    {
+      "file": "leetcode_convert_sorted_array_to_BST.cpp",
+      "title": "LeetCode 108: sorted array to BST",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 108 - Convert Sorted Array to Binary Search Tree",
+        "url": "https://leetcode.com/problems/convert-sorted-array-to-binary-search-tree/"
+      },
+      "what": "The same middle-element idea as `array_to_BST.cpp`, written as the LeetCode `Solution` class working on a `vector<int>`.",
+      "steps": [
+        "`array_to_BST(nums, start, end)` returns `NULL` for an empty range.",
+        "It creates a `TreeNode` from `nums[mid]` and builds the left and right halves recursively.",
+        "`sortedArrayToBST` starts the recursion on the whole vector, `0` to `nums.size() - 1`."
+      ],
+      "complexity": "Time O(n) · Space O(log n) recursion",
+      "input": "5\n-10 -3 0 5 9\n",
+      "input_note": "n, then the sorted array (LeetCode example 1).",
+      "output_note": "Level 1 is `0`, level 2 is `-10 5`, level 3 is `-3 9`. That is the tree `[0,-10,5,null,-3,null,9]`, which LeetCode lists as an accepted answer. The middle index `(start+end)/2` rounds down, so on each side the left-middle value becomes the root.",
+      "watch_out": null,
+      "check": {
+        "q": "Why is the resulting tree guaranteed to be height-balanced?",
+        "a": "Each root splits its range into two halves whose sizes differ by at most one, so the two subtree heights differ by at most one."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n",
+      "driver": "void printLevels(TreeNode* root) {   // one line per level\n    if (!root) { cout << \"(empty tree)\" << endl; return; }\n    queue<TreeNode*> q; q.push(root);\n    while (!q.empty()) {\n        int k = q.size();\n        for (int i = 0; i < k; i++) {\n            TreeNode* t = q.front(); q.pop();\n            cout << t->val << \" \";\n            if (t->left) q.push(t->left);\n            if (t->right) q.push(t->right);\n        }\n        cout << endl;\n    }\n}\nint main() {\n    int n; cin >> n;\n    vector<int> nums(n);\n    for (int &x : nums) cin >> x;\n    TreeNode* root = Solution().sortedArrayToBST(nums);\n    cout << \"BST, level by level:\" << endl;\n    printLevels(root);\n}"
+    },
+    {
+      "file": "leetcode_search_in_a_BST_return_subtree.cpp",
+      "title": "LeetCode 700: search in a BST",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 700 - Search in a Binary Search Tree",
+        "url": "https://leetcode.com/problems/search-in-a-binary-search-tree/"
+      },
+      "what": "Finds the node whose value equals `val` and returns it; that node pointer is already the subtree LeetCode asks for.",
+      "steps": [
+        "`search` is the usual BST search, but it returns the node pointer instead of `true`/`false`, and `NULL` when not found.",
+        "`sub_tree` walks the whole subtree and re-assigns each child to itself; it changes nothing, it just returns `node`.",
+        "`searchBST` returns the found node, which LeetCode prints together with everything below it."
+      ],
+      "complexity": "Time O(h) for the search, plus O(size of subtree) for the extra `sub_tree` walk · Space O(h)",
+      "input": "4 2 7 1 3 -1 -1 -1 -1 -1 -1\n2\n2\n5\n",
+      "input_note": "Tree values in level order, -1 for a missing child (tree `[4,2,7,1,3]`), then the number of searches and the values to search (the two LeetCode examples).",
+      "output_note": "`searchBST(2)` prints the subtree `2` / `1 3`, matching LeetCode's `[2,1,3]`. `searchBST(5)` prints `(empty tree)` because 5 is not in the BST, matching `[]`.",
+      "watch_out": "`sub_tree` is unnecessary: a node pointer already carries its whole subtree. `return search(root, val);` is enough.",
+      "check": {
+        "q": "Why doesn't returning the node lose its children?",
+        "a": "The node still holds its `left` and `right` pointers, so whoever receives it can reach the whole subtree."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n",
+      "driver": "// read a tree in level order; -1 means \"no child\"\nTreeNode* readTree() {\n    int x; cin >> x;\n    if (x == -1) return nullptr;\n    TreeNode* root = new TreeNode(x);\n    queue<TreeNode*> q; q.push(root);\n    while (!q.empty()) {\n        TreeNode* cur = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { cur->left = new TreeNode(l); q.push(cur->left); }\n        if (r != -1) { cur->right = new TreeNode(r); q.push(cur->right); }\n    }\n    return root;\n}\nvoid printLevels(TreeNode* root) {   // one line per level\n    if (!root) { cout << \"(empty tree)\" << endl; return; }\n    queue<TreeNode*> q; q.push(root);\n    while (!q.empty()) {\n        int k = q.size();\n        for (int i = 0; i < k; i++) {\n            TreeNode* t = q.front(); q.pop();\n            cout << t->val << \" \";\n            if (t->left) q.push(t->left);\n            if (t->right) q.push(t->right);\n        }\n        cout << endl;\n    }\n}\nint main() {\n    TreeNode* root = readTree();\n    int t; cin >> t;\n    while (t--) {\n        int val; cin >> val;\n        cout << \"searchBST(\" << val << \"):\" << endl;\n        printLevels(Solution().searchBST(root, val));\n    }\n}"
+    }
+  ],
+  "practice_links": [
+    {
+      "name": "Convert Sorted Array to Binary Search Tree",
+      "url": "https://leetcode.com/problems/convert-sorted-array-to-binary-search-tree/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Search in a Binary Search Tree",
+      "url": "https://leetcode.com/problems/search-in-a-binary-search-tree/",
+      "site": "LeetCode"
+    }
+  ],
+  "recap": [
+    "BST: left subtree smaller, right subtree bigger, for every node.",
+    "Search and insert follow one path down, so they cost O(height).",
+    "A new value is always inserted as a leaf.",
+    "Middle element as root turns a sorted array into a balanced BST.",
+    "In-order traversal of a BST gives the values in sorted order."
+  ],
+  "check_yourself": [
+    {
+      "q": "You insert 1, 2, 3, 4, 5 in this order into an empty BST. What does the tree look like and what is the search cost?",
+      "a": "A chain going right (1 -> 2 -> 3 -> 4 -> 5). Height is 5, so search is O(n) instead of O(log n)."
+    },
+    {
+      "q": "Is a tree with root 10, left child 5, and 5's right child 12 a valid BST?",
+      "a": "No. 12 is in the left subtree of 10 but is bigger than 10."
+    },
+    {
+      "q": "How many comparisons at most does it take to search a balanced BST with 1023 nodes?",
+      "a": "About 10, because the height of a balanced tree with 1023 nodes is 10."
+    }
+  ]
+}

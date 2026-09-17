@@ -1,0 +1,578 @@
+{
+  "module_id": "3-basic-data-structures--module-19",
+  "title": "Binary tree problems: views, levels, diameter, same tree",
+  "overview": "This module is a problem-solving practice round on binary trees. Almost every solution is one of two tools: a **recursive DFS** that asks the left and right subtrees and combines their answers, or a **BFS with a queue of (node, level) pairs** that knows which level each node is on. Once you can pick the right tool, problems like left/right view, node level, diameter and same-tree become short.",
+  "concepts": [
+    {
+      "term": "Recursive combine",
+      "explain": "Solve the problem for `root->left` and `root->right`, then combine the two answers at the root. The base case is almost always `root == NULL`.",
+      "snippet": "bool l = f(root->left);\nbool r = f(root->right);\nreturn l && r;"
+    },
+    {
+      "term": "BFS with levels",
+      "explain": "Push `{node, level}` pairs into the queue. When you pop a node you know its level, and its children get `level + 1`.",
+      "snippet": "queue<pair<TreeNode*, int>> q;\nq.push({root, 1});"
+    },
+    {
+      "term": "First node seen on a level",
+      "explain": "In BFS, the first node you pop on each level is the leftmost one (if you push left before right). Mark levels you have already seen with a `bool` array to keep only that first node. Push right first and you get the right view instead.",
+      "snippet": null
+    },
+    {
+      "term": "Diameter = best left height + right height",
+      "explain": "The longest path through a node goes down its left side and down its right side. Compute heights recursively and, at every node, update a global maximum with `l + r`.",
+      "snippet": null
+    },
+    {
+      "term": "Comparing two trees",
+      "explain": "Two trees are the same if both are empty, or both roots have the same value and their left subtrees match and their right subtrees match. A shape difference (one is NULL, the other not) means different.",
+      "snippet": null
+    },
+    {
+      "term": "Leaf sequence",
+      "explain": "A DFS that visits left before right collects leaves from left to right. Two trees are leaf-similar when those lists are equal.",
+      "snippet": null
+    },
+    {
+      "term": "STL `pair`",
+      "explain": "`pair<A, B>` holds two values, read with `.first` and `.second`. It is what lets a queue store a node together with its level.",
+      "snippet": "pair<int,int> p = {2, 3};\ncout << p.first;"
+    }
+  ],
+  "files": [
+    {
+      "file": "stl_pair.cpp",
+      "title": "STL pair basics",
+      "kind": "lesson",
+      "same_as": null,
+      "problem": null,
+      "what": "Shows the ways to create a `pair` (`make_pair` and braces), a pair of `string` and `int`, and a `vector` of pairs, then tries to read `n` pairs from input.",
+      "steps": [
+        "`p1 = make_pair(2, 3)` builds a pair; `.first` is 2 and `.second` is 3.",
+        "`p2 = {2, 3}` does the same with brace syntax, which is shorter.",
+        "`p3` shows the two parts can have different types: `pair<string, int>`.",
+        "A `vector<pair<int,int>>` gets two pairs with `push_back` and is printed with a loop.",
+        "Finally it reads `n` and wants to fill a vector of `n` pairs with `cin >> v[i].first >> v[i].second`."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "2\n1 2\n3 4\n",
+      "input_note": "n, then n lines of two integers (the program never gets this far because it does not compile).",
+      "output_note": "You will see a compile error instead of output: the name `v` is declared twice in `main`.",
+      "watch_out": "`vector<pair<int, int>> v(n);` redeclares `v`, which already exists above, so the file does not compile. Fix: give the second vector another name, e.g. `vector<pair<int,int>> v2(n);`, and use `v2` in the input loop.",
+      "check": {
+        "q": "How do you read the second value of a pair `p`?",
+        "a": "`p.second`."
+      },
+      "prelude": null,
+      "driver": null
+    },
+    {
+      "file": "code360_is_node_present_version1.cpp",
+      "title": "Is node present? (early return)",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "Code360 - Is Node Present?",
+        "url": "https://www.naukri.com/code360/problems/code-find-a-node_5682"
+      },
+      "what": "Checks whether the value `x` exists anywhere in the tree using a recursive DFS that stops as soon as it finds it.",
+      "steps": [
+        "If `root` is NULL there is nothing here, so return `false`.",
+        "If `root->data == x`, we found it: return `true`.",
+        "Search the left subtree; if it says `true`, return `true` right away without touching the right side.",
+        "Otherwise search the right subtree and return `true` if found.",
+        "If neither side has it, return `false`."
+      ],
+      "complexity": "Time O(n) · Space O(h)",
+      "input": "1 2 3 4 5 -1 -1 -1 -1 -1 -1\n5\n7\n",
+      "input_note": "Tree in level order (-1 = no child): 1 with children 2, 3; 2 with children 4, 5. Then the values to look for, one per line: 5 and 7.",
+      "output_note": "One line per query: `isNodePresent(5) = true` because 5 is a child of 2, and `isNodePresent(7) = false` because no node holds 7.",
+      "watch_out": null,
+      "check": {
+        "q": "Why check the left result before calling the right side?",
+        "a": "If the value is already found on the left, there is no need to search the right subtree, which saves work."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <typename T> class BinaryTreeNode {\npublic:\n    T data;\n    BinaryTreeNode<T> *left, *right;\n    BinaryTreeNode(T data) { this->data = data; left = right = NULL; }\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    BinaryTreeNode<int>* root = readTree<BinaryTreeNode<int>>();\n    int x;\n    while (cin >> x)\n        cout << \"isNodePresent(\" << x << \") = \" << (isNodePresent(root, x) ? \"true\" : \"false\") << endl;\n    return 0;\n}"
+    },
+    {
+      "file": "code360_is_node_present_version2.cpp",
+      "title": "Is node present? (return left || right)",
+      "kind": "variant",
+      "same_as": "code360_is_node_present_version1.cpp",
+      "problem": {
+        "name": "Code360 - Is Node Present?",
+        "url": "https://www.naukri.com/code360/problems/code-find-a-node_5682"
+      },
+      "what": "Same search, but it always calls both sides and returns `left || right`. Shorter to write, but it searches the right subtree even when the left one already found `x`.",
+      "steps": [
+        "Same base cases: NULL gives `false`, a matching value gives `true`.",
+        "Call both `isNodePresent(root->left, x)` and `isNodePresent(root->right, x)`.",
+        "Return `left || right`."
+      ],
+      "complexity": "Time O(n) · Space O(h)",
+      "input": "1 2 3 4 5 -1 -1 -1 -1 -1 -1\n5\n7\n",
+      "input_note": "Tree in level order (-1 = no child): 1 with children 2, 3; 2 with children 4, 5. Then the values to look for, one per line: 5 and 7.",
+      "output_note": "Same answers as version 1: `isNodePresent(5) = true` and `isNodePresent(7) = false`. Only the amount of work differs, not the result.",
+      "watch_out": null,
+      "check": {
+        "q": "How could you make version 2 stop early and still stay one line?",
+        "a": "`return isNodePresent(root->left, x) || isNodePresent(root->right, x);` — `||` skips the right call when the left is true."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <typename T> class BinaryTreeNode {\npublic:\n    T data;\n    BinaryTreeNode<T> *left, *right;\n    BinaryTreeNode(T data) { this->data = data; left = right = NULL; }\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    BinaryTreeNode<int>* root = readTree<BinaryTreeNode<int>>();\n    int x;\n    while (cin >> x)\n        cout << \"isNodePresent(\" << x << \") = \" << (isNodePresent(root, x) ? \"true\" : \"false\") << endl;\n    return 0;\n}"
+    },
+    {
+      "file": "code360_node_level.cpp",
+      "title": "Node level with BFS",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "Code360 - Node Level",
+        "url": "https://www.naukri.com/code360/problems/node-level_920383"
+      },
+      "what": "Finds on which level (root = 1) a given value sits, using BFS where each queue item carries its level.",
+      "steps": [
+        "Empty tree: return 0.",
+        "Push `{root, 1}` into a queue of `pair<TreeNode<int>*, int>`.",
+        "Pop the front, split it into `node` and `level`.",
+        "If `node->val == value`, return `level` right away.",
+        "Otherwise push the existing children with `level + 1`.",
+        "If the queue empties without a match, return 0."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "1 2 3 4 5 -1 -1 -1 -1 -1 -1\n1\n5\n9\n",
+      "input_note": "Tree in level order (1; 2 3; 4 5 under 2), then the values to find, one per line: 1, 5 and 9.",
+      "output_note": "`nodeLevel(1) = 1` (the root), `nodeLevel(5) = 3` (5 is under 2, which is under 1), and `nodeLevel(9) = 0` because 9 is not in the tree.",
+      "watch_out": null,
+      "check": {
+        "q": "What level does a child get?",
+        "a": "Its parent's level plus one (`level + 1`)."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <typename T> class TreeNode {\npublic:\n    T val;\n    TreeNode<T> *left, *right;\n    TreeNode(T val) { this->val = val; left = right = NULL; }\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    TreeNode<int>* root = readTree<TreeNode<int>>();\n    int x;\n    while (cin >> x)\n        cout << \"nodeLevel(\" << x << \") = \" << nodeLevel(root, x) << endl;\n    return 0;\n}"
+    },
+    {
+      "file": "code360_left_view_of_a_binary_tree.cpp",
+      "title": "Left view of a binary tree",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "Code360 - Left View Of a Binary Tree",
+        "url": "https://www.naukri.com/code360/problems/left-view-of-a-binary-tree_920519"
+      },
+      "what": "Meant to print the first node of each level as seen from the left. The file actually contains the LeetCode **right** side view code (same as `leetcode_binary_tree_right_side_view.cpp`).",
+      "steps": [
+        "BFS with `{node, level}` pairs, starting at level 1.",
+        "A `bool freq[105]` array remembers which levels already gave an answer.",
+        "The first node popped on a new level is added to `ans` and the level is marked.",
+        "Children are pushed **right first, then left**, so the first node on each level is the rightmost one."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "1 2 3 -1 5 -1 4 -1 -1 -1 -1\n",
+      "input_note": "The tree [1,2,3,null,5,null,4] in level order: 1; 2 3; 2 has only a right child 5; 3 has only a right child 4. The file has only `rightSideView`, so the driver calls that.",
+      "output_note": "Prints `[1,3,4]`, which is the **right** view. The real left view of this tree is `[1,2,5]`, so this file gives the wrong answer for the left-view problem.",
+      "watch_out": "This is the right-view code pasted into the left-view file (LeetCode's `Solution`/`TreeNode` shape, not Code360's function). For the left view, push `node->left` before `node->right` and use Code360's function name and node type. Also `freq[105]` only works if the tree has at most 104 levels.",
+      "check": {
+        "q": "Which single change turns a right-view BFS into a left-view BFS?",
+        "a": "Push the left child before the right child, so the leftmost node on each level is popped first."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    TreeNode* root = readTree<TreeNode>();\n    Solution s;\n    vector<int> ans = s.rightSideView(root);\n    cout << \"view printed by this file = [\";\n    for (int i = 0; i < (int)ans.size(); i++) cout << (i ? \",\" : \"\") << ans[i];\n    cout << \"]\" << endl;\n    return 0;\n}"
+    },
+    {
+      "file": "leetcode_binary_tree_right_side_view.cpp",
+      "title": "Binary tree right side view",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 199 - Binary Tree Right Side View",
+        "url": "https://leetcode.com/problems/binary-tree-right-side-view/"
+      },
+      "what": "Returns the values you would see standing on the right of the tree: the rightmost node of each level. BFS pushes the right child first, so the first node met on a level is the rightmost.",
+      "steps": [
+        "If `root` exists, push `{root, 1}`.",
+        "Pop a pair; `node = parent.first`, `level = parent.second`.",
+        "If `freq[level]` is still false, this is the first node of that level: add `node->val` and set `freq[level] = true`.",
+        "Push `node->right` then `node->left`, each with `level + 1`.",
+        "Return `ans` when the queue is empty."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "1 2 3 -1 5 -1 4 -1 -1 -1 -1\n",
+      "input_note": "LeetCode example 1, [1,2,3,null,5,null,4], in level order with -1 for missing children.",
+      "output_note": "Prints `rightSideView = [1,3,4]`, the same as LeetCode's expected answer: 1 on level 1, 3 on level 2, 4 on level 3 (5 is hidden behind 4).",
+      "watch_out": "LeetCode allows up to 100 nodes, so `freq[105]` is enough there; for bigger trees use a `vector<bool>` or compare `level` with `ans.size()` instead.",
+      "check": {
+        "q": "Why is the `freq` array needed?",
+        "a": "Several nodes share a level; the array makes sure only the first one popped on each level is recorded."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    TreeNode* root = readTree<TreeNode>();\n    Solution s;\n    vector<int> ans = s.rightSideView(root);\n    cout << \"rightSideView = [\";\n    for (int i = 0; i < (int)ans.size(); i++) cout << (i ? \",\" : \"\") << ans[i];\n    cout << \"]\" << endl;\n    return 0;\n}"
+    },
+    {
+      "file": "code360_reverse_level_order_traversal.cpp",
+      "title": "Reverse level order traversal",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "Code360 - Reverse Level Order Traversal",
+        "url": "https://www.naukri.com/code360/problems/reverse-level-order-traversal_764339"
+      },
+      "what": "Does a normal level order traversal into a vector and then reverses the whole vector.",
+      "steps": [
+        "Push the root (if any) into a queue.",
+        "Pop a node, append its `val` to `v`, push its left then right child.",
+        "After the loop, `reverse(v.begin(), v.end())`.",
+        "Return `v`."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "1 2 3 4 5 -1 -1 -1 -1 -1 -1\n",
+      "input_note": "Tree in level order: 1; 2 3; 4 5 under 2; then -1 pairs for the leaves.",
+      "output_note": "Prints `[5,4,3,2,1]`: normal level order is 1 2 3 4 5, and the whole list is reversed.",
+      "watch_out": "Reversing the whole list also reverses the order inside each level (right to left). That is exactly what this Code360 problem expects; some other versions want each level left to right, which needs pushing right child first before reversing.",
+      "check": {
+        "q": "What does this function return for a tree with only the root 7?",
+        "a": "`[7]`."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <typename T> class TreeNode {\npublic:\n    T val;\n    TreeNode<T> *left, *right;\n    TreeNode(T val) { this->val = val; left = right = NULL; }\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    TreeNode<int>* root = readTree<TreeNode<int>>();\n    vector<int> ans = reverseLevelOrder(root);\n    cout << \"reverseLevelOrder = [\";\n    for (int i = 0; i < (int)ans.size(); i++) cout << (i ? \",\" : \"\") << ans[i];\n    cout << \"]\" << endl;\n    return 0;\n}"
+    },
+    {
+      "file": "code360_special_binary_tree.cpp",
+      "title": "Special (full) binary tree check",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "Code360 - Special Binary Tree",
+        "url": "https://www.naukri.com/code360/problems/special-binary-tree_920502"
+      },
+      "what": "A tree is special when every node has either 0 or 2 children. The function checks each node recursively.",
+      "steps": [
+        "An empty tree counts as special: return `true`.",
+        "If exactly one child is missing (left NULL but right present, or the other way), return `false`.",
+        "Otherwise check both subtrees recursively.",
+        "Return `l && r`: all nodes must pass."
+      ],
+      "complexity": "Time O(n) · Space O(h)",
+      "input": "2\n1 2 3 4 5 -1 -1 -1 -1 -1 -1\n1 2 3 4 -1 -1 -1 -1 -1\n",
+      "input_note": "First the number of trees (2), then each tree in level order. Tree 1: 1; 2 3; 4 5 under 2. Tree 2: 1; 2 3; only a left child 4 under 2.",
+      "output_note": "One line per tree: `true` for the first (every node has 0 or 2 children) and `false` for the second (node 2 has only one child).",
+      "watch_out": null,
+      "check": {
+        "q": "Is a single leaf node a special binary tree?",
+        "a": "Yes, it has 0 children."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <typename T> class BinaryTreeNode {\npublic:\n    T data;\n    BinaryTreeNode<T> *left, *right;\n    BinaryTreeNode(T data) { this->data = data; left = right = NULL; }\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    int t; cin >> t;\n    while (t--) {\n        BinaryTreeNode<int>* root = readTree<BinaryTreeNode<int>>();\n        cout << \"isSpecialBinaryTree = \" << (isSpecialBinaryTree(root) ? \"true\" : \"false\") << endl;\n    }\n    return 0;\n}"
+    },
+    {
+      "file": "code360_diameter_of_binary_tree.cpp",
+      "title": "Diameter of a binary tree (Code360)",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "Code360 - Diameter Of Binary Tree",
+        "url": "https://www.naukri.com/code360/problems/diameter-of-the-binary-tree_920552"
+      },
+      "what": "The diameter is the number of edges on the longest path between two nodes. While computing heights, each node checks the path that bends through it: left height + right height.",
+      "steps": [
+        "`mx` is a global that holds the best diameter so far; set it to 0 first.",
+        "`max_height` returns 0 for NULL and 1 for a leaf (height counted in nodes).",
+        "For other nodes it gets `l` and `r`, the heights of both subtrees.",
+        "`d = l + r` is the number of edges on the longest path through this node; update `mx`.",
+        "Return `max(l, r) + 1` so the parent gets this node's height.",
+        "`diameterOfBinaryTree` calls it once and returns `mx`."
+      ],
+      "complexity": "Time O(n) · Space O(h)",
+      "input": "1 2 3 4 5 -1 -1 -1 -1 -1 -1\n",
+      "input_note": "Tree [1,2,3,4,5] in level order: 1; 2 3; 4 5 under 2.",
+      "output_note": "Prints `diameter = 3`: the longest path is 4-2-1-3 (or 5-2-1-3), which has 3 edges.",
+      "watch_out": "The longest path does not have to pass through the root, which is why `mx` is updated at every node, not only at the root.",
+      "check": {
+        "q": "Why do we need a global (or reference) `mx` instead of just returning the height?",
+        "a": "The function returns height to its parent, but the best diameter might be found deep inside the tree, so it has to be stored somewhere separate."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <typename T> class TreeNode {\npublic:\n    T val;\n    TreeNode<T> *left, *right;\n    TreeNode(T val) { this->val = val; left = right = NULL; }\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    TreeNode<int>* root = readTree<TreeNode<int>>();\n    cout << \"diameter = \" << diameterOfBinaryTree(root) << endl;\n    return 0;\n}"
+    },
+    {
+      "file": "leetcode_diameter_of_binary_tree.cpp",
+      "title": "Diameter of a binary tree (LeetCode)",
+      "kind": "variant",
+      "same_as": "code360_diameter_of_binary_tree.cpp",
+      "problem": {
+        "name": "LeetCode 543 - Diameter of Binary Tree",
+        "url": "https://leetcode.com/problems/diameter-of-binary-tree/"
+      },
+      "what": "The same algorithm inside LeetCode's `Solution` class; `mx` becomes a member variable instead of a global.",
+      "steps": [
+        "Reset `mx = 0`, call `max_height(root)`.",
+        "At each node, update `mx` with `l + r` and return `max(l, r) + 1`.",
+        "Return `mx`."
+      ],
+      "complexity": "Time O(n) · Space O(h)",
+      "input": "1 2 3 4 5 -1 -1 -1 -1 -1 -1\n",
+      "input_note": "LeetCode example 1, [1,2,3,4,5], in level order with -1 for missing children.",
+      "output_note": "Prints `diameterOfBinaryTree = 3`, matching LeetCode's expected output for `[1,2,3,4,5]`.",
+      "watch_out": null,
+      "check": {
+        "q": "What is the diameter of a tree with only one node?",
+        "a": "0 — there are no edges."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    TreeNode* root = readTree<TreeNode>();\n    Solution s;\n    cout << \"diameterOfBinaryTree = \" << s.diameterOfBinaryTree(root) << endl;\n    return 0;\n}"
+    },
+    {
+      "file": "leetcode_root_equals_sum_of_children.cpp",
+      "title": "Root equals sum of children",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 2236 - Root Equals Sum of Children",
+        "url": "https://leetcode.com/problems/root-equals-sum-of-children/"
+      },
+      "what": "The tree always has exactly three nodes, so the answer is just one comparison.",
+      "steps": [
+        "Read `root->left->val` and `root->right->val`.",
+        "Return whether their sum equals `root->val`."
+      ],
+      "complexity": "Time O(1) · Space O(1)",
+      "input": "2\n10 4 6 -1 -1 -1 -1\n5 3 1 -1 -1 -1 -1\n",
+      "input_note": "Number of trees, then each three-node tree in level order: the LeetCode examples [10,4,6] and [5,3,1].",
+      "output_note": "`checkTree = true` for [10,4,6] (4 + 6 = 10) and `checkTree = false` for [5,3,1] (3 + 1 is 4, not 5), as in LeetCode's examples.",
+      "watch_out": "This only works because the problem guarantees both children exist; on a general tree `root->left` could be NULL and crash.",
+      "check": {
+        "q": "Why is no recursion needed here?",
+        "a": "The tree is guaranteed to be exactly a root with two children."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    int t; cin >> t;\n    Solution s;\n    while (t--) {\n        TreeNode* root = readTree<TreeNode>();\n        cout << \"checkTree = \" << (s.checkTree(root) ? \"true\" : \"false\") << endl;\n    }\n    return 0;\n}"
+    },
+    {
+      "file": "leetcode_univalued_binary_tree.cpp",
+      "title": "Univalued binary tree",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 965 - Univalued Binary Tree",
+        "url": "https://leetcode.com/problems/univalued-binary-tree/"
+      },
+      "what": "Checks that every node has the same value as the root by passing the root's value down a recursive helper.",
+      "steps": [
+        "`isUnivalTree` takes `root->val` as the target value.",
+        "`isUnivalHelper` returns true for NULL.",
+        "If a node's value differs from `value`, return false.",
+        "Otherwise both subtrees must also be univalued: `left && right`."
+      ],
+      "complexity": "Time O(n) · Space O(h)",
+      "input": "2\n1 1 1 1 1 -1 1 -1 -1 -1 -1 -1 -1\n2 2 2 5 2 -1 -1 -1 -1 -1 -1\n",
+      "input_note": "Number of trees, then the LeetCode examples [1,1,1,1,1,null,1] and [2,2,2,5,2] in level order.",
+      "output_note": "`true` for the all-ones tree and `false` for the second tree because of the 5, matching LeetCode's examples.",
+      "watch_out": null,
+      "check": {
+        "q": "Why pass `value` down instead of comparing each node with its parent?",
+        "a": "Either works; passing the root's value keeps one fixed target and makes the check a single comparison per node."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    int t; cin >> t;\n    Solution s;\n    while (t--) {\n        TreeNode* root = readTree<TreeNode>();\n        cout << \"isUnivalTree = \" << (s.isUnivalTree(root) ? \"true\" : \"false\") << endl;\n    }\n    return 0;\n}"
+    },
+    {
+      "file": "leetcode_leaf_similar_trees.cpp",
+      "title": "Leaf-similar trees",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 872 - Leaf-Similar Trees",
+        "url": "https://leetcode.com/problems/leaf-similar-trees/"
+      },
+      "what": "Collects the leaves of each tree from left to right into two vectors and compares the vectors.",
+      "steps": [
+        "`leafSequence` does a DFS: NULL returns, a leaf is pushed into `leaves`.",
+        "For inner nodes it visits left first, then right, so leaves come out left to right.",
+        "Build `leaves1` and `leaves2` for the two roots.",
+        "Return `leaves1 == leaves2` (vector `==` compares size and every element)."
+      ],
+      "complexity": "Time O(n1 + n2) · Space O(n1 + n2)",
+      "input": "3 5 1 6 2 9 8 -1 -1 7 4 -1 -1 -1 -1 -1 -1 -1 -1\n3 5 1 6 7 4 2 -1 -1 -1 -1 -1 -1 9 8 -1 -1 -1 -1\n",
+      "input_note": "LeetCode example 1: root1 = [3,5,1,6,2,9,8,null,null,7,4] and root2 = [3,5,1,6,7,4,2,null,null,null,null,null,null,9,8], one tree per line in level order.",
+      "output_note": "Prints `leafSimilar = true`, as LeetCode expects: both trees have the leaf sequence 6 7 4 9 8 even though their shapes differ.",
+      "watch_out": "The vector is passed by reference (`vector<int>&`); without the `&` each call would fill its own copy and the result would stay empty.",
+      "check": {
+        "q": "Why must the DFS visit the left child before the right?",
+        "a": "So the leaves are collected in left-to-right order, which is the order the problem compares."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    TreeNode* root1 = readTree<TreeNode>();\n    TreeNode* root2 = readTree<TreeNode>();\n    Solution s;\n    cout << \"leafSimilar = \" << (s.leafSimilar(root1, root2) ? \"true\" : \"false\") << endl;\n    return 0;\n}"
+    },
+    {
+      "file": "leetcode_same_tree.cpp",
+      "title": "Same tree (empty placeholder)",
+      "kind": "setup",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 100 - Same Tree",
+        "url": "https://leetcode.com/problems/same-tree/"
+      },
+      "what": "Only a comment with the problem link; the actual solutions are in the version1 and version2 files.",
+      "steps": [
+        "The file holds just the link to the problem.",
+        "See `leetcode_same_tree_version1.cpp` (compare traversals) and `leetcode_same_tree_version2.cpp` (compare recursively)."
+      ],
+      "complexity": null,
+      "input": null,
+      "input_note": null,
+      "output_note": "This file holds only the problem link, so there is nothing to test and no harness. Building it fails with a linker error about a missing `main` (`WinMain`). The real solutions are in version1 and version2.",
+      "watch_out": "This file only holds the problem link, not code, so it cannot be built on its own (the linker error above just means there is no `main`). Open the version1 and version2 files for the solutions.",
+      "check": {
+        "q": "What two things must match for two trees to be the same?",
+        "a": "Their shape and the value at every position."
+      },
+      "prelude": null,
+      "driver": null
+    },
+    {
+      "file": "leetcode_same_tree_version1.cpp",
+      "title": "Same tree by comparing traversals",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 100 - Same Tree",
+        "url": "https://leetcode.com/problems/same-tree/"
+      },
+      "what": "Writes each tree as a preorder list, recording a special marker `-1001` for every missing child, then compares the two lists.",
+      "steps": [
+        "The helper (named `inorder`, but it is really **preorder**) pushes `node->val`, then goes left, then right.",
+        "When it reaches NULL it pushes `-1001`, meant as a value that never appears in the tree (see Watch out).",
+        "Both trees are turned into `result1` and `result2`.",
+        "The trees are the same exactly when the lists are equal."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "3\n1 2 3 -1 -1 -1 -1\n1 2 3 -1 -1 -1 -1\n1 2 -1 -1 -1\n1 -1 2 -1 -1\n1 2 1 -1 -1 -1 -1\n1 1 2 -1 -1 -1 -1\n",
+      "input_note": "Number of test pairs (3), then two trees per pair in level order: the LeetCode examples [1,2,3] vs [1,2,3], [1,2] vs [1,null,2], and [1,2,1] vs [1,1,2].",
+      "output_note": "Three lines, matching LeetCode's examples: `true` (identical trees), `false` ([1,2] gives `1 2 X X X` but [1,null,2] gives `1 X 2 X X`), `false` (values in different places).",
+      "watch_out": "The NULL markers are what make this correct: without them `[1,2]` and `[1,null,2]` would both give `1 2`. The marker must be a value that can never be a node value; LeetCode 100 limits values to -10^4..10^4, so `-1001` could clash with a real node. A safer marker is something like `INT_MIN`.",
+      "check": {
+        "q": "Why does a plain preorder list (without NULL markers) fail to identify a tree?",
+        "a": "Different shapes can give the same order of values, e.g. a left child vs. a right child."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    int t; cin >> t;\n    Solution s;\n    while (t--) {\n        TreeNode* p = readTree<TreeNode>();\n        TreeNode* q = readTree<TreeNode>();\n        cout << \"isSameTree = \" << (s.isSameTree(p, q) ? \"true\" : \"false\") << endl;\n    }\n    return 0;\n}"
+    },
+    {
+      "file": "leetcode_same_tree_version2.cpp",
+      "title": "Same tree by direct recursion",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 100 - Same Tree",
+        "url": "https://leetcode.com/problems/same-tree/"
+      },
+      "what": "The cleaner solution: compare the two roots, then compare left with left and right with right.",
+      "steps": [
+        "Both NULL: same, return true.",
+        "Only one NULL: shapes differ, return false.",
+        "Otherwise return `p->val == q->val && isSameTree(p->left, q->left) && isSameTree(p->right, q->right)`.",
+        "`&&` stops at the first mismatch, so it does not waste work."
+      ],
+      "complexity": "Time O(n) · Space O(h)",
+      "input": "3\n1 2 3 -1 -1 -1 -1\n1 2 3 -1 -1 -1 -1\n1 2 -1 -1 -1\n1 -1 2 -1 -1\n1 2 1 -1 -1 -1 -1\n1 1 2 -1 -1 -1 -1\n",
+      "input_note": "Number of test pairs (3), then two trees per pair in level order: the LeetCode examples [1,2,3] vs [1,2,3], [1,2] vs [1,null,2], and [1,2,1] vs [1,1,2].",
+      "output_note": "Same three answers as version 1: `true`, `false`, `false`.",
+      "watch_out": "Keep the order of the base cases: check \"both NULL\" before \"one NULL\", otherwise two empty trees would be reported as different.",
+      "check": {
+        "q": "Which is better, version 1 or version 2, and why?",
+        "a": "Version 2: no extra lists (O(h) memory), no marker value to choose, and it stops at the first difference."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    int t; cin >> t;\n    Solution s;\n    while (t--) {\n        TreeNode* p = readTree<TreeNode>();\n        TreeNode* q = readTree<TreeNode>();\n        cout << \"isSameTree = \" << (s.isSameTree(p, q) ? \"true\" : \"false\") << endl;\n    }\n    return 0;\n}"
+    }
+  ],
+  "practice_links": [
+    {
+      "name": "Is Node Present?",
+      "url": "https://www.naukri.com/code360/problems/code-find-a-node_5682",
+      "site": "Code360"
+    },
+    {
+      "name": "Node Level",
+      "url": "https://www.naukri.com/code360/problems/node-level_920383",
+      "site": "Code360"
+    },
+    {
+      "name": "Left View Of a Binary Tree",
+      "url": "https://www.naukri.com/code360/problems/left-view-of-a-binary-tree_920519",
+      "site": "Code360"
+    },
+    {
+      "name": "Diameter Of Binary Tree",
+      "url": "https://www.naukri.com/code360/problems/diameter-of-the-binary-tree_920552",
+      "site": "Code360"
+    },
+    {
+      "name": "Special Binary Tree",
+      "url": "https://www.naukri.com/code360/problems/special-binary-tree_920502",
+      "site": "Code360"
+    },
+    {
+      "name": "Reverse Level Order Traversal",
+      "url": "https://www.naukri.com/code360/problems/reverse-level-order-traversal_764339",
+      "site": "Code360"
+    },
+    {
+      "name": "Root Equals Sum of Children",
+      "url": "https://leetcode.com/problems/root-equals-sum-of-children/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Univalued Binary Tree",
+      "url": "https://leetcode.com/problems/univalued-binary-tree/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Leaf-Similar Trees",
+      "url": "https://leetcode.com/problems/leaf-similar-trees/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Same Tree",
+      "url": "https://leetcode.com/problems/same-tree/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Diameter of Binary Tree",
+      "url": "https://leetcode.com/problems/diameter-of-binary-tree/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Binary Tree Right Side View",
+      "url": "https://leetcode.com/problems/binary-tree-right-side-view/",
+      "site": "LeetCode"
+    }
+  ],
+  "recap": [
+    "Most tree problems are either \"ask both subtrees and combine\" (DFS) or \"walk level by level\" (BFS).",
+    "Store `{node, level}` pairs in the queue whenever the answer depends on the level.",
+    "Left view = first node per level with left pushed first; right view = push right first.",
+    "Diameter: update a global best with `left height + right height` at every node.",
+    "Two trees are equal when both are NULL, or values match and both pairs of subtrees match.",
+    "Judge solutions have no `main`; to test locally, add a node class, a tree builder and a `main`."
+  ],
+  "check_yourself": [
+    {
+      "q": "For the tree 1 (2, 3) where 2 has a right child 4, what are the left view and the right view?",
+      "a": "Left view: 1 2 4. Right view: 1 3 4."
+    },
+    {
+      "q": "Why can't the diameter simply be height(left) + height(right) of the root?",
+      "a": "The longest path may lie entirely inside one subtree and never touch the root."
+    },
+    {
+      "q": "In a BFS, if a node is on level 3, which level are its children on?",
+      "a": "Level 4."
+    },
+    {
+      "q": "When does `p == NULL || q == NULL` mean the trees differ?",
+      "a": "When it is reached after ruling out both being NULL: exactly one tree has a node there, so the shapes differ."
+    }
+  ]
+}
