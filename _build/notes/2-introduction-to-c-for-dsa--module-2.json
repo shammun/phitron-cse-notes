@@ -389,5 +389,52 @@
       "q": "How do you free memory from `new int[10]`?",
       "a": "`delete[] ptr;`"
     }
+  ],
+  "intro": [
+    {
+      "heading": null,
+      "body": [
+        "Picture a sheet of paper on which you must write the marks of a class, and nobody has told you yet how many students there are. You can rule a thousand lines and waste the page, or rule thirty and run out halfway. What you want is to hear the number first and cut the paper to size after that.",
+        "You have met this in C. `int a[5];` fixes the size while you are still typing the program, so the size has to be a guess. `malloc` was the way out: read `n` first, then ask for room for exactly `n` numbers. Module 2 is that same idea in C++ clothes, and it also makes plain what C left vague: where the room comes from, and who takes it back."
+      ],
+      "snippet": null,
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "The memory your program uses is split in two. Ordinary variables live in the **stack**: `int x = 10;` and `int a[5];` are both there. The stack is automatic. Room is taken when the variable is created and handed back the moment the function it lives in ends. You never ask for it and you never get a say.",
+        "The other area is the **heap**. Nothing is taken there unless you ask, and nothing is given back unless you say so. `new` is how you ask, `delete` is how you give back:"
+      ],
+      "snippet": "int x = 10;          // a box on the stack, named x\nint *p = new int;    // a box on the heap, no name\n*p = 100;            // write 100 into that box\ncout << *p << endl;  // 100\ndelete p;            // hand the box back",
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "It is worth drawing, because the heap box has no name of its own. The only way back to it is the address kept in `p`, and `p` itself is an ordinary stack variable:"
+      ],
+      "snippet": null,
+      "trace": "stack                   heap\n------------            ----------------\nx = 10\np = 0x1a2b40 ---------> 0x1a2b40:  100\n                        this box has no name;\n                        p is the only way to it"
+    },
+    {
+      "heading": null,
+      "body": [
+        "So `p` is `0x1a2b40`, an address, and `*p` is 100, the thing at that address. That part you know already. **What is new is the pair `new` and `delete`.** No size in bytes to work out, no cast to write: `new int` means one int, `new int[n]` means `n` of them, `delete p` gives back one, `delete[] p` gives back an array.",
+        "If you never say `delete`, the box is never given back, not even after you have lost the address that led to it. That is a **memory leak**: memory your program still holds but can no longer reach or use. One leaked int costs 4 bytes and nobody notices; a leak inside a loop that runs a million times eats 4 megabytes and keeps going.",
+        "The second use of the heap is the one that makes it worth having. A stack variable dies with its function. If a function stores 10 in a local `x` and hands out `&x`, the address survives but the box does not, and reading through it afterwards means reading memory that is no longer yours. It often still prints 10, so the bug hides. Put the value on the heap and the box is simply still there:"
+      ],
+      "snippet": null,
+      "trace": "fun():  int x = 10;   p = &x;\nfun ends -> x's box is handed back\nmain:   *p  reads a box that is not ours\n\nfun():  int *x = new int;  *x = 10;  p = x;\nfun ends -> the heap box is untouched\nmain:   *p  is 10"
+    },
+    {
+      "heading": null,
+      "body": [
+        "The same rule decides how a function hands an array back to `main`. A local `int a[5]` cannot be returned, because it dies with the function; `int *p = new int[5]` can, because it does not. A third use: no array can be made bigger after it exists. What you can do is ask for a bigger one, copy the old values across and carry on with the new one — three values in a 3-box array become those three plus two more in a 5-box array. The copying costs as many steps as the array is long, which is why you grow in jumps and not one element at a time.",
+        "The first five programs below are ordinary practice written with `cin` and `cout`. After them come the memory programs: a dynamic variable, a static array beside a dynamic one, the dying-local trap and its fix, returning an array, and growing one by copying."
+      ],
+      "snippet": null,
+      "trace": null
+    }
   ]
 }
