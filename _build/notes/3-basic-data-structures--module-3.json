@@ -392,5 +392,93 @@
       "url": "https://cses.fi/book/book.pdf",
       "note": "Antti Laaksonen's book — the chapters on graphs and DP are short and excellent."
     }
+  ],
+  "walkthrough": [
+    {
+      "heading": "Watch it happen: building the running total",
+      "body": [
+        "Six days of takings: 6, 4, 2, 7, 2, 7. Watch the `pre` row fill one cell at a time, each cell the total of everything up to that day. Then watch a whole stretch of days get answered by one subtraction. The `^` marks the cell being written."
+      ],
+      "snippet": null,
+      "trace": null,
+      "frames_title": "Press the arrows to fill the book one day at a time",
+      "frames": [
+        {
+          "label": "The takings are on top and the running total goes underneath. `pre[0] = 0` means \"nothing yet\", and keeping that slot is what saves a special case later.",
+          "art": "day         1   2   3   4   5   6\ntakings     6   4   2   7   2   7\n\ni       0   1   2   3   4   5   6\npre     0   .   .   .   .   .   .\n        ^"
+        },
+        {
+          "label": "`pre[1] = pre[0] + 6 = 6`. After day 1 the shop has taken 6.",
+          "art": "day         1   2   3   4   5   6\ntakings     6   4   2   7   2   7\n\ni       0   1   2   3   4   5   6\npre     0   6   .   .   .   .   .\n            ^"
+        },
+        {
+          "label": "`pre[2] = pre[1] + 4 = 10`. You never re-add day 1; you add today to yesterday's total.",
+          "art": "day         1   2   3   4   5   6\ntakings     6   4   2   7   2   7\n\ni       0   1   2   3   4   5   6\npre     0   6   10  .   .   .   .\n                ^"
+        },
+        {
+          "label": "`pre[3] = pre[2] + 2 = 12`. That is already the answer to \"days 1 to 3\".",
+          "art": "day         1   2   3   4   5   6\ntakings     6   4   2   7   2   7\n\ni       0   1   2   3   4   5   6\npre     0   6   10  12  .   .   .\n                    ^"
+        },
+        {
+          "label": "`pre[4] = pre[3] + 7 = 19`.",
+          "art": "day         1   2   3   4   5   6\ntakings     6   4   2   7   2   7\n\ni       0   1   2   3   4   5   6\npre     0   6   10  12  19  .   .\n                        ^"
+        },
+        {
+          "label": "`pre[5] = pre[4] + 2 = 21`.",
+          "art": "day         1   2   3   4   5   6\ntakings     6   4   2   7   2   7\n\ni       0   1   2   3   4   5   6\npre     0   6   10  12  19  21  .\n                            ^"
+        },
+        {
+          "label": "`pre[6] = pre[5] + 7 = 28`. One walk down the list and the book is finished - O(n), paid once.",
+          "art": "day         1   2   3   4   5   6\ntakings     6   4   2   7   2   7\n\ni       0   1   2   3   4   5   6\npre     0   6   10  12  19  21  28\n                                ^"
+        },
+        {
+          "label": "Now the question: how much came in over days 3 to 6? Look at the two marked cells - everything up to day 6, minus everything before day 3.",
+          "art": "day         1   2   3   4   5   6\ntakings     6   4   2   7   2   7\n\ni       0   1   2   3   4   5   6\npre     0   6   10  12  19  21  28\n                ^               ^\n\ndays 3 to 6  =  pre[6] - pre[2]"
+        },
+        {
+          "label": "28 - 10 = 18, with no loop at all. Check it by hand: 2 + 7 + 2 + 7 = 18. Every later question costs the same single subtraction, O(1).",
+          "art": "day         1   2   3   4   5   6\ntakings     6   4   2   7   2   7\n\ni       0   1   2   3   4   5   6\npre     0   6   10  12  19  21  28\n                ^               ^\n\ndays 3 to 6  =  pre[6] - pre[2]\n             =  28 - 10  =  18"
+        }
+      ]
+    },
+    {
+      "heading": "Watch it happen: binary search halving the array",
+      "body": [
+        "The same eight sorted numbers as the trace above, looking for 31. `lo` and `hi` mark the part still worth looking at; the dots are the part already thrown away. One frame per halving."
+      ],
+      "snippet": null,
+      "trace": null,
+      "frames_title": "Press the arrows to halve the window",
+      "frames": [
+        {
+          "label": "Eight numbers in increasing order - that order is the only reason any of this works. The window starts as the whole array: `lo = 0`, `hi = 7`.",
+          "art": "find 31\n\na        3   8  12  15  19  23  31  40\nidx      0   1   2   3   4   5   6   7\n        lo                          hi"
+        },
+        {
+          "label": "Look at the middle: `mid = (0 + 7) / 2 = 3`, and `a[3]` is 15.",
+          "art": "find 31\n\na        3   8  12  15  19  23  31  40\nidx      0   1   2   3   4   5   6   7\n        lo                          hi\n                     ^ mid"
+        },
+        {
+          "label": "15 is smaller than 31, and the array is sorted, so nothing at index 3 or before it can be 31. Drop that half: `lo = mid + 1 = 4`. Four numbers gone from one comparison.",
+          "art": "find 31\n\na        .   .   .   .  19  23  31  40\nidx      0   1   2   3   4   5   6   7\n                        lo          hi"
+        },
+        {
+          "label": "New middle of what is left: `mid = (4 + 7) / 2 = 5`, and `a[5]` is 23.",
+          "art": "find 31\n\na        .   .   .   .  19  23  31  40\nidx      0   1   2   3   4   5   6   7\n                        lo          hi\n                             ^ mid"
+        },
+        {
+          "label": "23 is still smaller than 31, so drop it and everything left of it: `lo = 6`. Two numbers left.",
+          "art": "find 31\n\na        .   .   .   .   .   .  31  40\nidx      0   1   2   3   4   5   6   7\n                                lo  hi"
+        },
+        {
+          "label": "`mid = (6 + 7) / 2 = 6`, and `a[6]` is 31. Equal - found, at index 6.",
+          "art": "find 31\n\na        .   .   .   .   .   .  31  40\nidx      0   1   2   3   4   5   6   7\n                                lo  hi\n                                 ^ found"
+        },
+        {
+          "label": "Three looks. A linear scan would have compared seven numbers before reaching 31, and on a million numbers this would still finish in about twenty looks: O(log n).",
+          "art": "find 31\n\nlo  hi  mid  a[mid]  what happens\n 0   7    3      15  too small, lo = 4\n 4   7    5      23  too small, lo = 6\n 6   7    6      31  found at index 6"
+        }
+      ]
+    }
   ]
 }

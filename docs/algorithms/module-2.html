@@ -7,7 +7,7 @@
 <meta name="description" content="BFS explores a graph layer by layer from a source using a queue. Because it reaches nodes in order of distance, the same code also gives the shortest number of edges to every node (its level) and, with a parent array, the actual shortest path. These patterns come back in almost every later graph problem.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -63,7 +63,87 @@ while(!q.empty()){
   int par = q.front(); q.pop();
   for(int c : adj[par]) if(!vis[c]){ q.push(c); vis[c] = true; }
 }</pre></div><div class="concept"><h4>Level = shortest distance</h4><p>Set <code>level[src] = 0</code> and <code>level[child] = level[par] + 1</code>. In an unweighted graph this is the fewest edges from the source.</p></div><div class="concept"><h4>Parent array</h4><p>Store <code>parent[child] = par</code> when a child is discovered. Walking <code>parent</code> back from the destination gives the path in reverse.</p></div><div class="concept"><h4>Reachability</h4><p>After one BFS, <code>vis[x]</code> tells whether <code>x</code> can be reached from the source at all.</p></div><div class="concept"><h4>Resetting state</h4><p><code>memset(vis, false, ...)</code> and <code>memset(level, -1, ...)</code> before each BFS; <code>-1</code> means &quot;not reached&quot;. <code>memset</code> needs <code>&lt;cstring&gt;</code>.</p></div><div class="concept"><h4>BFS complexity</h4><p>Every node is pushed once and every edge is looked at once (twice when undirected): O(V + E).</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: one BFS from town 0</h3><p>This is the map from the top of the page, swept ring by ring. Watch two things only: which towns have turned into <code>[x]</code> (marked visited), and which cell of the <code>level</code> row gets filled in. Nothing is ever filled in twice.</p><div class="stepper" data-n="8"><p class="stitle">Press the arrows to step through the queue</p><div class="frames"><div class="frame" data-i="0"><pre>   (1)---(3)
+  /         \
+[0]         (5)
+  \         /
+   (2)---(4)
+[x] = visited, (x) = not yet
+
+queue:  0            just popped: -
+node    0  1  2  3  4  5
+level   0  -  -  -  -  -
+        ^ set to 0</pre><p class="flabel">Push the source into the queue, mark it visited at once, and write <code>level[0] = 0</code> because 0 is zero roads from itself.</p></div><div class="frame" data-i="1"><pre>   [1]---(3)
+  /         \
+[0]         (5)
+  \         /
+   [2]---(4)
+[x] = visited, (x) = not yet
+
+queue:  1 2          just popped: 0
+node    0  1  2  3  4  5
+level   0  1  1  -  -  -
+           ^  ^ set to level[0] + 1</pre><p class="flabel">Pop 0. Its neighbours 1 and 2 are both unmarked, so each one is pushed and marked in the same breath, at <code>level[0] + 1 = 1</code>.</p></div><div class="frame" data-i="2"><pre>   [1]---[3]
+  /         \
+[0]         (5)
+  \         /
+   [2]---(4)
+[x] = visited, (x) = not yet
+
+queue:  2 3          just popped: 1
+node    0  1  2  3  4  5
+level   0  1  1  2  -  -
+                 ^ set to level[1] + 1</pre><p class="flabel">Pop 1. One of its neighbours is 0, the town we came from, but 0 is already marked so it is skipped - that skip is what stops the queue going round for ever. Town 3 is new, so it joins the back at level 2.</p></div><div class="frame" data-i="3"><pre>   [1]---[3]
+  /         \
+[0]         (5)
+  \         /
+   [2]---[4]
+[x] = visited, (x) = not yet
+
+queue:  3 4          just popped: 2
+node    0  1  2  3  4  5
+level   0  1  1  2  2  -
+                    ^ set to level[2] + 1</pre><p class="flabel">Pop 2. Same story along the bottom road: 0 is skipped, 4 is new and lands at level 2. Both towns two roads away are now found, and neither was found early.</p></div><div class="frame" data-i="4"><pre>   [1]---[3]
+  /         \
+[0]         [5]
+  \         /
+   [2]---[4]
+[x] = visited, (x) = not yet
+
+queue:  4 5          just popped: 3
+node    0  1  2  3  4  5
+level   0  1  1  2  2  3
+                       ^ set to level[3] + 1</pre><p class="flabel">Pop 3. Town 5 is reached for the very first time, from 3, so <code>level[5] = 2 + 1 = 3</code>. This is the moment the answer is written down.</p></div><div class="frame" data-i="5"><pre>   [1]---[3]
+  /         \
+[0]         [5]
+  \         /
+   [2]---[4]
+[x] = visited, (x) = not yet
+
+queue:  5            just popped: 4
+node    0  1  2  3  4  5
+level   0  1  1  2  2  3
+        nothing new, level row unchanged</pre><p class="flabel">Pop 4. Its neighbours are 2 and 5, and both are already marked, so nothing is pushed. Had we marked on the pop instead of the push, 4 would have queued 5 a second time right here.</p></div><div class="frame" data-i="6"><pre>   [1]---[3]
+  /         \
+[0]         [5]
+  \         /
+   [2]---[4]
+[x] = visited, (x) = not yet
+
+queue:  (empty)      just popped: 5
+node    0  1  2  3  4  5
+level   0  1  1  2  2  3
+        nothing new, level row unchanged</pre><p class="flabel">Pop 5. Both of its neighbours are marked too, so nothing is pushed and the queue runs dry. The <code>while</code> loop ends here.</p></div><div class="frame" data-i="7"><pre>   [1]---[3]
+  /         \
+[0]         [5]
+  \         /
+   [2]---[4]
+[x] = visited, (x) = not yet
+
+queue:  (empty)      just popped: -
+node    0  1  2  3  4  5
+level   0  1  1  2  2  3
+                       ^ the answer: 3 roads</pre><p class="flabel">Every town was pushed once and popped once. Read the answer straight off the row: <code>level[5]</code> is 3, so town 5 is three roads away - and the same single run gave the distance to every other town at the same time.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/dfsbfs" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — BFS and DFS</b><span class="rnote">Run both on the same graph and compare the order the nodes are visited.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/BFS.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — breadth-first search</b><span class="rnote">The queue and the visited marks, drawn while the search runs.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/graph/breadth-first-search.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — BFS</b><span class="rnote">Short, exact, and states what BFS does and does not promise.</span></a></li><li class="r-article"><a href="https://usaco.guide/gold/unweighted-shortest-paths" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>USACO Guide — unweighted shortest paths</b><span class="rnote">When BFS is the shortest-path answer, and when it is not.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-bfs">
@@ -77,146 +157,10 @@ while(!q.empty()){
   <p class="what">Builds an undirected graph and prints the nodes in the order BFS visits them from node 0.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 51 lines</span>
+      <span>CPP · 79 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%202/bfs.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">visited</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
-<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
-<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
-<span class="w">    </span><span class="n">visited</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
-<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
-
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par</span><span class="p">]){</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
-<span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
-<span class="w">                </span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span><span class="w">   </span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">visited</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">visited</span><span class="p">));</span>
-
-<span class="w">    </span><span class="n">bfs</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-
-
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 51 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 6
-0 1
-0 2
-1 3
-2 4
-3 5
-4 5</pre><p class="io-note"><code>n e</code>, then <code>e</code> edges. BFS always starts from node 0.</p></div><div class="io out"><div class="io-h">Output </div><pre>0 1 2 3 4 5 </pre></div></div>
-  <p class="readout"><b>Reading the output.</b> <code>0 1 2 3 4 5</code>: first 0, then its neighbours 1 and 2, then their neighbours 3 and 4, then 5.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read the edges into <code>adj_list</code> (both directions).</li><li>Clear <code>visited</code> with <code>memset</code>, then call <code>bfs(0)</code>.</li><li>In <code>bfs</code>, push <code>src</code> and mark it visited.</li><li>Pop the front node <code>par</code>, print it, and push each unvisited <code>child</code>, marking it right away.</li><li>The loop ends when the queue is empty: every reachable node was printed once.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> Why mark a node visited when it is pushed instead of when it is popped?</summary><div>Otherwise the same node could be pushed several times by different parents before it is popped.</div></details>
-</section>
-<section class="prog" id="p-single-source-shortest-distance">
-  <div class="prog-h">
-    <span class="num">2</span>
-    <div class="prog-t">
-      <h3>Shortest distance with BFS levels</h3>
-      <div class="meta"><code class="fname">single_source_shortest_distance.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(V + E) · Space O(V)</span></div>
-    </div>
-  </div>
-  <p class="what">Adds a <code>level</code> array to BFS so that after one run it knows the distance (in edges) from the source to every node.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 66 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%202/single_source_shortest_distance.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -285,75 +229,101 @@ while(!q.empty()){
 <span class="normal">63</span>
 <span class="normal">64</span>
 <span class="normal">65</span>
-<span class="normal">66</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Breadth-first search (BFS): walk a graph layer by layer, out from one node.</span>
+<span class="c1">//</span>
+<span class="c1">// The whole idea is a waiting line. Put the starting node in the line. Take the</span>
+<span class="c1">// node at the front out, look at its neighbours, and put the new ones at the back.</span>
+<span class="c1">// Because newcomers always join at the back, every node one edge away leaves the</span>
+<span class="c1">// line before any node two edges away, so the graph is swept in rings around the</span>
+<span class="c1">// source. That ring order is what makes BFS useful later for shortest distances.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span><span class="c1">        // queue: push at the back, pop from the front (FIFO)</span>
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
-<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">visited</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="c1">// These two live outside main so bfs() can use them without being handed them,</span>
+<span class="c1">// and because a global array starts out all zero / all false on its own.</span>
+<span class="c1">// 1005 is a safe fixed size: the course problems keep n under about a thousand.</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span><span class="w">   </span><span class="c1">// adj_list[x] = the neighbours of x (Module 1)</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">visited</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span><span class="w">           </span><span class="c1">// visited[x] = has x already been put in the queue?</span>
 
+<span class="c1">// Visit every node reachable from src, printing each one as it leaves the queue.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
-<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
-<span class="w">    </span><span class="n">visited</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">    </span><span class="n">level</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">src</span><span class="p">);</span><span class="w">           </span><span class="c1">// the search begins with one node waiting</span>
+<span class="w">    </span><span class="n">visited</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">   </span><span class="c1">// mark it at once, so it can never be queued again</span>
 
+<span class="w">    </span><span class="c1">// Keep working while somebody is still waiting in the line.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
-<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">   </span><span class="c1">// the node explored in this round; call it the parent</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span><span class="w">               </span><span class="c1">// front() only looks at it, pop() removes it</span>
 
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w">    </span><span class="c1">// printing here gives the BFS visiting order</span>
 
+<span class="w">        </span><span class="c1">// Every neighbour of par is one edge further out; call it a child.</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par</span><span class="p">]){</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
 <span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
+<span class="w">                </span><span class="c1">// Marked here, when it is pushed, NOT when it is later popped.</span>
+<span class="w">                </span><span class="c1">// The same node is often a neighbour of several nodes in the</span>
+<span class="w">                </span><span class="c1">// layer we are standing on. If the mark waited until the node</span>
+<span class="w">                </span><span class="c1">// was popped, each of those neighbours would push it again, and</span>
+<span class="w">                </span><span class="c1">// it would be printed two or three times and explored as often.</span>
+<span class="w">                </span><span class="c1">// Marking at push time shuts that door the moment it opens.</span>
 <span class="w">                </span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">                </span><span class="n">level</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span><span class="w">   </span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// The loop ends when the queue runs dry: every node reachable from src has</span>
+<span class="w">    </span><span class="c1">// been printed exactly once. Nodes in a separate piece are never touched.</span>
 <span class="p">}</span>
-
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">   </span><span class="c1">// n = how many nodes, e = how many edges follow</span>
 
+<span class="w">    </span><span class="c1">// Read the e edges into the adjacency list, exactly as in Module 1.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span><span class="w">   </span><span class="c1">// undirected: the edge is walkable both ways</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Clear visited before the search. A global bool array is already all false,</span>
+<span class="w">    </span><span class="c1">// so this changes nothing today, but it is the habit that saves you as soon</span>
+<span class="w">    </span><span class="c1">// as a program runs a second BFS. (memset comes from &lt;cstring&gt;; here another</span>
+<span class="w">    </span><span class="c1">// header happens to pull it in, which is not true on every compiler.)</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">visited</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">visited</span><span class="p">));</span>
-<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">level</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">level</span><span class="p">));</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
+<span class="w">    </span><span class="n">bfs</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">   </span><span class="c1">// start the search at node 0</span>
 
-<span class="w">    </span><span class="n">bfs</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
-
-<span class="w">    </span><span class="cm">/*</span>
-<span class="cm">    for(int i=0; i&lt;n; i++){</span>
-<span class="cm">        cout &lt;&lt; &quot;level of &quot; &lt;&lt; i &lt;&lt; &quot; = &quot; &lt;&lt; level[i] &lt;&lt; endl;</span>
-<span class="cm">    }</span>
-<span class="cm">    */</span>
-<span class="w">    </span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;level of &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dest</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="n">dest</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-
+<span class="w">    </span><span class="c1">// Cost: each node is pushed once and each edge is looked at once from each</span>
+<span class="w">    </span><span class="c1">// end, so BFS is O(V + E) in time and O(V) in extra memory.</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 66 lines ▾</button>
+    <button type="button" class="expand">Show all 79 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 6
@@ -362,180 +332,27 @@ while(!q.empty()){
 1 3
 2 4
 3 5
-4 5
-0 5</pre><p class="io-note"><code>n e</code>, the edges, then one line <code>src dest</code>.</p></div><div class="io out"><div class="io-h">Output </div><pre>0 1 2 3 4 5 level of 5 = 3
-</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> <code>0 1 2 3 4 5 level of 5 = 3</code>: the BFS order, then the answer 3 (path 0-1-3-5).</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read the graph, then <code>src</code> and <code>dest</code>.</li><li>Set all <code>level</code> to <code>-1</code> (unreached) and <code>level[src] = 0</code>.</li><li>When a child is discovered: <code>level[child] = level[par] + 1</code>.</li><li>BFS still prints its visiting order, then the program prints <code>level of dest</code>.</li></ol></details>
+4 5</pre><p class="io-note"><code>n e</code>, then <code>e</code> edges. BFS always starts from node 0.</p></div><div class="io out"><div class="io-h">Output </div><pre>0 1 2 3 4 5 </pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>0 1 2 3 4 5</code>: first 0, then its neighbours 1 and 2, then their neighbours 3 and 4, then 5.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read the edges into <code>adj_list</code> (both directions).</li><li>Clear <code>visited</code> with <code>memset</code>, then call <code>bfs(0)</code>.</li><li>In <code>bfs</code>, push <code>src</code> and mark it visited.</li><li>Pop the front node <code>par</code>, print it, and push each unvisited <code>child</code>, marking it right away.</li><li>The loop ends when the queue is empty: every reachable node was printed once.</li></ol></details>
   <div class="callout warn"><b>Watch out.</b> Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> What does <code>level[x] == -1</code> mean after the BFS?</summary><div>Node <code>x</code> cannot be reached from the source.</div></details>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why mark a node visited when it is pushed instead of when it is popped?</summary><div>Otherwise the same node could be pushed several times by different parents before it is popped.</div></details>
 </section>
-<section class="prog" id="p-if-a-noce-can-be-visited-or-not">
+<section class="prog" id="p-single-source-shortest-distance">
   <div class="prog-h">
-    <span class="num">3</span>
+    <span class="num">2</span>
     <div class="prog-t">
-      <h3>Can we reach a node?</h3>
-      <div class="meta"><code class="fname">if_a_noce_can_be_visited_or_not.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(V + E) · Space O(V)</span></div>
+      <h3>Shortest distance with BFS levels</h3>
+      <div class="meta"><code class="fname">single_source_shortest_distance.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(V + E) · Space O(V)</span></div>
     </div>
   </div>
-  <p class="what">Runs BFS from <code>src</code> and answers YES if <code>dest</code> got visited.</p>
+  <p class="what">Adds a <code>level</code> array to BFS so that after one run it knows the distance (in edges) from the source to every node.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 59 lines</span>
+      <span>CPP · 86 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%202/if_a_noce_can_be_visited_or_not.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">visited</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
-<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
-<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
-<span class="w">    </span><span class="n">visited</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
-<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
-
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par</span><span class="p">]){</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
-<span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
-<span class="w">                </span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span><span class="w">   </span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">visited</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">visited</span><span class="p">));</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">bfs</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">visited</span><span class="p">[</span><span class="n">dest</span><span class="p">]){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES &lt;&lt; endl&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO &lt;&lt; endl&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 59 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 4
-0 1
-1 2
-0 3
-4 5
-0 2</pre><p class="io-note"><code>n e</code>, edges, then <code>src dest</code>. Here 0 and 2 are in the same piece; 4-5 is a separate piece.</p></div><div class="io out"><div class="io-h">Output </div><pre>0 1 3 2 YES &lt;&lt; endl</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> <code>0 1 3 2 YES &lt;&lt; endl</code>: the BFS order and then the answer (with a stray <code> &lt;&lt; endl</code> in the text, see Watch out).</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Build the graph, read <code>src</code> and <code>dest</code>.</li><li>Run <code>bfs(src)</code>; it marks every reachable node in <code>visited</code>.</li><li>If <code>visited[dest]</code> is true print YES, otherwise NO.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> The quotes are misplaced: <code>cout &lt;&lt; &quot;YES &lt;&lt; endl&quot;;</code> prints the text <code> &lt;&lt; endl</code> literally. Write <code>cout &lt;&lt; &quot;YES&quot; &lt;&lt; endl;</code>. Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> After a BFS from <code>s</code>, how do you test if <code>t</code> is reachable in O(1)?</summary><div>Check <code>visited[t]</code>.</div></details>
-</section>
-<section class="prog" id="p-path-printing">
-  <div class="prog-h">
-    <span class="num">4</span>
-    <div class="prog-t">
-      <h3>Print the shortest path</h3>
-      <div class="meta"><code class="fname">path_printing.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(V + E) · Space O(V)</span></div>
-    </div>
-  </div>
-  <p class="what">Records each node&#x27;s <code>parent</code> during BFS, then walks back from the destination to print the path, first reversed and then in the right order.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 87 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%202/path_printing.cpp" target="_blank" rel="noopener">GitHub</a>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%202/single_source_shortest_distance.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -624,8 +441,437 @@ while(!q.empty()){
 <span class="normal">83</span>
 <span class="normal">84</span>
 <span class="normal">85</span>
-<span class="normal">86</span>
-<span class="normal">87</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">86</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Shortest distance from one source, using BFS levels.</span>
+<span class="c1">//</span>
+<span class="c1">// Same BFS as bfs.cpp, with one array added: level[]. BFS leaves the queue in</span>
+<span class="c1">// rings, so the ring a node belongs to IS its distance from the source, counted</span>
+<span class="c1">// in edges. Writing that ring number down as each node is discovered turns the</span>
+<span class="c1">// traversal into a shortest-distance machine, for free.</span>
+<span class="c1">//</span>
+<span class="c1">// This only works because every edge costs the same (one step). Once edges carry</span>
+<span class="c1">// different weights the ring order breaks down, and Dijkstra takes over (Module 7).</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">visited</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span><span class="w">     </span><span class="c1">// level[x] = fewest edges from the source to x; -1 = not reached</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
+<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
+<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
+<span class="w">    </span><span class="n">visited</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="n">level</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">    </span><span class="c1">// the source is zero edges away from itself</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par</span><span class="p">]){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
+<span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
+<span class="w">                </span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">                </span><span class="c1">// par came out of the queue with its final, smallest level, and</span>
+<span class="w">                </span><span class="c1">// child sits one edge beyond it. Because of the ring order, the</span>
+<span class="w">                </span><span class="c1">// first time we ever reach child is along a shortest route, so</span>
+<span class="w">                </span><span class="c1">// this value is never improved later and never needs correcting.</span>
+<span class="w">                </span><span class="n">level</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w">   </span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">visited</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">visited</span><span class="p">));</span>
+<span class="w">    </span><span class="c1">// Fill level with -1, the &quot;never reached&quot; marker. -1 is chosen because a real</span>
+<span class="w">    </span><span class="c1">// distance is always 0 or more, so it can never be mistaken for an answer.</span>
+<span class="w">    </span><span class="c1">// (memset writes bytes; -1 works because all four bytes of -1 are 0xFF.)</span>
+<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">level</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">level</span><span class="p">));</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">bfs</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Handy while learning: print the distance to every node, not just dest.</span>
+<span class="w">    </span><span class="cm">/*</span>
+<span class="cm">    for(int i=0; i&lt;n; i++){</span>
+<span class="cm">        cout &lt;&lt; &quot;level of &quot; &lt;&lt; i &lt;&lt; &quot; = &quot; &lt;&lt; level[i] &lt;&lt; endl;</span>
+<span class="cm">    }</span>
+<span class="cm">    */</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="c1">// If dest sits in another piece of the graph it was never reached, and this</span>
+<span class="w">    </span><span class="c1">// prints -1, which is exactly the answer such problems usually want.</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;level of &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dest</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="n">dest</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 86 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 6
+0 1
+0 2
+1 3
+2 4
+3 5
+4 5
+0 5</pre><p class="io-note"><code>n e</code>, the edges, then one line <code>src dest</code>.</p></div><div class="io out"><div class="io-h">Output </div><pre>0 1 2 3 4 5 level of 5 = 3
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>0 1 2 3 4 5 level of 5 = 3</code>: the BFS order, then the answer 3 (path 0-1-3-5).</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read the graph, then <code>src</code> and <code>dest</code>.</li><li>Set all <code>level</code> to <code>-1</code> (unreached) and <code>level[src] = 0</code>.</li><li>When a child is discovered: <code>level[child] = level[par] + 1</code>.</li><li>BFS still prints its visiting order, then the program prints <code>level of dest</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> What does <code>level[x] == -1</code> mean after the BFS?</summary><div>Node <code>x</code> cannot be reached from the source.</div></details>
+</section>
+<section class="prog" id="p-if-a-noce-can-be-visited-or-not">
+  <div class="prog-h">
+    <span class="num">3</span>
+    <div class="prog-t">
+      <h3>Can we reach a node?</h3>
+      <div class="meta"><code class="fname">if_a_noce_can_be_visited_or_not.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(V + E) · Space O(V)</span></div>
+    </div>
+  </div>
+  <p class="what">Runs BFS from <code>src</code> and answers YES if <code>dest</code> got visited.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 75 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%202/if_a_noce_can_be_visited_or_not.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Can node dest be reached from node src?</span>
+<span class="c1">//</span>
+<span class="c1">// No new algorithm at all: it is the BFS of bfs.cpp, unchanged. The answer is</span>
+<span class="c1">// already sitting in the visited array when the search finishes. BFS marks every</span>
+<span class="c1">// node it can get to, so after one run visited[dest] means &quot;yes, there is a path&quot;,</span>
+<span class="c1">// and false means dest lies in a different piece of the graph.</span>
+<span class="c1">//</span>
+<span class="c1">// (The file name has a typo: it is meant to read &quot;if_a_node_can_be_visited_or_not&quot;.)</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">visited</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+
+<span class="c1">// Exactly the traversal from bfs.cpp: queue, mark on push, print on pop.</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
+<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
+<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
+<span class="w">    </span><span class="n">visited</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par</span><span class="p">]){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
+<span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
+<span class="w">                </span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w">   </span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">visited</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">visited</span><span class="p">));</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">bfs</span><span class="p">(</span><span class="n">src</span><span class="p">);</span><span class="w">   </span><span class="c1">// this fills visited[] for the whole piece that holds src</span>
+
+<span class="w">    </span><span class="c1">// Careful, this does not print what it looks like. The closing quote is in</span>
+<span class="w">    </span><span class="c1">// the wrong place: the string is &quot;YES &lt;&lt; endl&quot;, so the program prints the</span>
+<span class="w">    </span><span class="c1">// words YES &lt;&lt; endl and never ends the line. It should be:</span>
+<span class="w">    </span><span class="c1">//     cout &lt;&lt; &quot;YES&quot; &lt;&lt; endl;</span>
+<span class="w">    </span><span class="c1">// The same slip is in the else branch. The code is left as it is on purpose,</span>
+<span class="w">    </span><span class="c1">// so you can see how a misplaced quote turns code into text.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">visited</span><span class="p">[</span><span class="n">dest</span><span class="p">]){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES &lt;&lt; endl&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO &lt;&lt; endl&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 75 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 4
+0 1
+1 2
+0 3
+4 5
+0 2</pre><p class="io-note"><code>n e</code>, edges, then <code>src dest</code>. Here 0 and 2 are in the same piece; 4-5 is a separate piece.</p></div><div class="io out"><div class="io-h">Output </div><pre>0 1 3 2 YES &lt;&lt; endl</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>0 1 3 2 YES &lt;&lt; endl</code>: the BFS order and then the answer (with a stray <code> &lt;&lt; endl</code> in the text, see Watch out).</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Build the graph, read <code>src</code> and <code>dest</code>.</li><li>Run <code>bfs(src)</code>; it marks every reachable node in <code>visited</code>.</li><li>If <code>visited[dest]</code> is true print YES, otherwise NO.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The quotes are misplaced: <code>cout &lt;&lt; &quot;YES &lt;&lt; endl&quot;;</code> prints the text <code> &lt;&lt; endl</code> literally. Write <code>cout &lt;&lt; &quot;YES&quot; &lt;&lt; endl;</code>. Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> After a BFS from <code>s</code>, how do you test if <code>t</code> is reachable in O(1)?</summary><div>Check <code>visited[t]</code>.</div></details>
+</section>
+<section class="prog" id="p-path-printing">
+  <div class="prog-h">
+    <span class="num">4</span>
+    <div class="prog-t">
+      <h3>Print the shortest path</h3>
+      <div class="meta"><code class="fname">path_printing.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(V + E) · Space O(V)</span></div>
+    </div>
+  </div>
+  <p class="what">Records each node&#x27;s <code>parent</code> during BFS, then walks back from the destination to print the path, first reversed and then in the right order.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 115 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%202/path_printing.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Print the shortest path itself, not just its length.</span>
+<span class="c1">//</span>
+<span class="c1">// Same BFS again, now with a parent array as well as level. Every node except the</span>
+<span class="c1">// source is discovered by exactly one other node: the one that pushed it. Writing</span>
+<span class="c1">// that discoverer down gives a chain of single steps, and following the chain back</span>
+<span class="c1">// from the destination walks a shortest path in reverse.</span>
+<span class="c1">//</span>
+<span class="c1">// So the search never stores paths. It stores one number per node, and the path is</span>
+<span class="c1">// rebuilt afterwards from those numbers.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -637,7 +883,7 @@ while(!q.empty()){
 <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 <span class="kt">bool</span><span class="w"> </span><span class="n">visited</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">parent</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">parent</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span><span class="w">   </span><span class="c1">// parent[x] = the node that first reached x; -1 for the source</span>
 
 <span class="kt">void</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
@@ -645,6 +891,8 @@ while(!q.empty()){
 <span class="w">    </span><span class="n">visited</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">    </span><span class="n">level</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="c1">// parent[src] = -1;</span>
+<span class="w">    </span><span class="c1">// The line above is commented out because main already set the whole parent</span>
+<span class="w">    </span><span class="c1">// array to -1. The source keeps that -1, and that is what stops the walk back.</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
@@ -657,6 +905,9 @@ while(!q.empty()){
 <span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
 <span class="w">                </span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">                </span><span class="n">level</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">                </span><span class="c1">// Recorded at the same moment as the mark, so it records the</span>
+<span class="w">                </span><span class="c1">// first discovery. Any later edge into child is ignored, which</span>
+<span class="w">                </span><span class="c1">// is right: the first one came along a shortest route.</span>
 <span class="w">                </span><span class="n">parent</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span><span class="w">   </span>
 <span class="w">        </span><span class="p">}</span>
@@ -677,13 +928,14 @@ while(!q.empty()){
 
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">visited</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">visited</span><span class="p">));</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">level</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">level</span><span class="p">));</span>
-<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">parent</span><span class="p">));</span>
+<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">parent</span><span class="p">));</span><span class="w">   </span><span class="c1">// -1 means &quot;nobody discovered this node&quot;</span>
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
 
 <span class="w">    </span><span class="n">bfs</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// Useful while learning: see who discovered each node.</span>
 <span class="w">    </span><span class="cm">/*</span>
 <span class="cm">    for(int i=0; i&lt;n; i++){</span>
 <span class="cm">        cout &lt;&lt; i &lt;&lt; &quot; parent -&gt; &quot; &lt;&lt; parent[i] &lt;&lt; endl;</span>
@@ -691,6 +943,9 @@ while(!q.empty()){
 <span class="cm">    */</span>
 
 <span class="w">    </span><span class="c1">// First way to print path -- prints in reverse order</span>
+<span class="w">    </span><span class="c1">// Start at the destination and keep stepping to the parent. The source has</span>
+<span class="w">    </span><span class="c1">// parent -1, so that value is the signal to stop. What comes out is the path</span>
+<span class="w">    </span><span class="c1">// read backwards, from dest to src.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">node</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -699,6 +954,8 @@ while(!q.empty()){
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// Second way to print path -- prints in correct order</span>
+<span class="w">    </span><span class="c1">// Same walk, but collect the nodes into a vector instead of printing them,</span>
+<span class="w">    </span><span class="c1">// then turn the vector round. reverse() comes from &lt;algorithm&gt;.</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">path</span><span class="p">;</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">node2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">node2</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -710,11 +967,18 @@ while(!q.empty()){
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Both walks are printed one after the other, so the output shows the path</span>
+<span class="w">    </span><span class="c1">// backwards and then forwards. In a real solution you would keep only one.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// A trap worth knowing: if dest was never reached, parent[dest] is still -1</span>
+<span class="w">    </span><span class="c1">// and this prints just dest, which looks like a path but is not one. Check</span>
+<span class="w">    </span><span class="c1">// visited[dest] first before trusting the walk.</span>
+
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 87 lines ▾</button>
+    <button type="button" class="expand">Show all 115 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 6
@@ -1967,7 +2231,7 @@ canVisitAllRooms = false
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

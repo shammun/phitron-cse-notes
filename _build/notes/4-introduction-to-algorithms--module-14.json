@@ -446,5 +446,95 @@
       "url": "https://www.youtube.com/@AbdulBari",
       "note": "Algorithms explained on a whiteboard, very slowly and very clearly."
     }
+  ],
+  "walkthrough": [
+    {
+      "heading": "Watch it happen: where plain fib(5) wastes its time",
+      "body": [
+        "Every line below is one call of `fib` on the number shown. Press ahead and the call tree grows the way the program actually builds it: down the left first, then back up and out to the right.",
+        "Watch for lines that say the same number twice. Those are answers the program already had and threw away."
+      ],
+      "snippet": null,
+      "trace": null,
+      "frames_title": "Press the arrows to grow the call tree",
+      "frames": [
+        {
+          "label": "You ask for `fib(5)`. It is not 0 or 1, so it cannot answer; it has to ask two smaller questions.",
+          "art": "5\n\ncalls drawn: 1"
+        },
+        {
+          "label": "`fib(5)` calls `fib(4)` and `fib(3)`. Neither of them knows the other exists, and neither will leave a note behind.",
+          "art": "5\n+- 4\n+- 3\n\ncalls drawn: 3"
+        },
+        {
+          "label": "`fib(4)` splits the same way, into `fib(3)` and `fib(2)`. Stop and look: `fib(3)` is now in the picture twice.",
+          "art": "5\n+- 4\n|  +- 3\n|  +- 2\n+- 3\n\ncalls drawn: 5"
+        },
+        {
+          "label": "The left-hand `fib(3)` splits into `fib(2)` and `fib(1)`. That makes two copies of `fib(2)` in the tree already.",
+          "art": "5\n+- 4\n|  +- 3\n|  |  +- 2\n|  |  +- 1\n|  +- 2\n+- 3\n\ncalls drawn: 7"
+        },
+        {
+          "label": "That `fib(2)` asks `fib(1)` and `fib(0)`. Those are base cases: they answer 1 and 0 on the spot and stop. The leftmost branch is finished, and it cost 5 calls.",
+          "art": "5\n+- 4\n|  +- 3\n|  |  +- 2 = 1 + 0\n|  |  +- 1\n|  +- 2\n+- 3\n\ncalls drawn: 9"
+        },
+        {
+          "label": "Back up to `fib(4)`, whose other child is `fib(2)` - a question just answered on the left. Nothing was kept, so it is worked out from nothing again: 3 more calls for an answer the program already had.",
+          "art": "5\n+- 4\n|  +- 3\n|  |  +- 2 = 1 + 0\n|  |  +- 1\n|  +- 2 = 1 + 0        2nd time!\n+- 3\n\ncalls drawn: 12"
+        },
+        {
+          "label": "Now `fib(5)` turns to its right child `fib(3)`, also already answered on the left. Its whole subtree is rebuilt from scratch: 5 more calls, and `fib(2)` is computed for the third time.",
+          "art": "5\n+- 4\n|  +- 3\n|  |  +- 2 = 1 + 0\n|  |  +- 1\n|  +- 2 = 1 + 0        2nd time!\n+- 3                   2nd time!\n   +- 2 = 1 + 0        3rd time!\n   +- 1\n\ncalls drawn: 15"
+        },
+        {
+          "label": "15 calls for a sum a person does on their fingers. Every step of `n` roughly doubles the tree, which is about 2^n work - fine at 10, hopeless at 50.",
+          "art": "n         5    10     20       40       50\ncalls    15   177  21891   ~3.3e8   ~4.0e10"
+        }
+      ]
+    },
+    {
+      "heading": "Watch it happen: the same fib(5) with a notebook",
+      "body": [
+        "Same question, same recursion, one array added: `dp`, filled with -1 to mean \"not answered yet\". The top line says which call is running and how many calls have been made in total.",
+        "Watch the two moments where a call finds its answer already written down and returns without doing any work."
+      ],
+      "snippet": null,
+      "trace": null,
+      "frames_title": "Press the arrows to watch dp fill",
+      "frames": [
+        {
+          "label": "`fib(5)` is asked. The notebook has one slot per question and every slot says -1, which means nobody has answered that question yet.",
+          "art": "now: fib(5) starts\ncalls so far: 1\n\nindex    0   1   2   3   4   5\ndp      -1  -1  -1  -1  -1  -1"
+        },
+        {
+          "label": "The recursion dives down the left: 5 asks 4, 4 asks 3, 3 asks 2. Four calls made and the notebook is still empty - nothing can be written until a call actually finishes.",
+          "art": "now: fib(2) starts\ncalls so far: 4\n\nindex    0   1   2   3   4   5\ndp      -1  -1  -1  -1  -1  -1"
+        },
+        {
+          "label": "`fib(2)` asks `fib(1)` and `fib(0)`. Those two are base cases: the line `if(n < 2) return n;` answers them before the notebook is ever opened, which is why slots 0 and 1 stay -1 the whole time. `fib(2)` can now write its own answer: 1 + 0 = 1.",
+          "art": "now: fib(2) = 1 + 0\ncalls so far: 6\n\nindex    0   1   2   3   4   5\ndp      -1  -1   1  -1  -1  -1\n                 ^ written"
+        },
+        {
+          "label": "`fib(3)` still needs `fib(1)`, which is a base case and answers 1 at once. So `fib(3)` is 1 + 1 = 2, and that goes in slot 3.",
+          "art": "now: fib(3) = 1 + 1\ncalls so far: 7\n\nindex    0   1   2   3   4   5\ndp      -1  -1   1   2  -1  -1\n                     ^ written"
+        },
+        {
+          "label": "Here is the whole point. `fib(4)` now asks `fib(2)`, the second time that question has come up. The call opens the notebook, sees a 1 in slot 2 and returns immediately - no children, no subtree.",
+          "art": "now: fib(2) again -> reads dp[2]\ncalls so far: 8\n\nindex    0   1   2   3   4   5\ndp      -1  -1   1   2  -1  -1\n                 ^ read, not recomputed"
+        },
+        {
+          "label": "`fib(4)` has both halves: 2 from slot 3 and 1 from slot 2. It writes 3 into slot 4.",
+          "art": "now: fib(4) = 2 + 1\ncalls so far: 8\n\nindex    0   1   2   3   4   5\ndp      -1  -1   1   2   3  -1\n                         ^ written"
+        },
+        {
+          "label": "Back at the top, `fib(5)` asks for `fib(3)`. In the plain version that rebuilt a five-call subtree; here it is one look at slot 3, which says 2.",
+          "art": "now: fib(3) again -> reads dp[3]\ncalls so far: 9\n\nindex    0   1   2   3   4   5\ndp      -1  -1   1   2   3  -1\n                     ^ read, not recomputed"
+        },
+        {
+          "label": "`fib(5)` writes 3 + 2 = 5 and you have your answer. Nine calls instead of fifteen - and the gap is the whole game: at n = 50 it is about a hundred calls instead of forty billion.",
+          "art": "now: fib(5) = 3 + 2\ncalls so far: 9\n\nindex    0   1   2   3   4   5\ndp      -1  -1   1   2   3   5\n                             ^ the answer"
+        }
+      ]
+    }
   ]
 }

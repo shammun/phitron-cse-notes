@@ -7,7 +7,7 @@
 <meta name="description" content="A practice module with no new code: you use the stack and queue you already built to solve judge problems. The goal is to recognise when a problem is secretly a stack problem (matching, undo, most-recent-first) or a queue problem (first come, first served, rotating order). Solve the linked problems, then check the patterns below.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -58,7 +58,93 @@ rotate 5 - 3 = 2      queue: 5 3 2 1 4
 else st.push(c);</pre><p>Two habits save most of the wrong answers here. Always check <code>empty()</code> before <code>top()</code>, <code>front()</code> or <code>pop()</code>, because reading the top of an empty stack is not an error message, it is undefined behaviour. And remember the stack only lets you touch the top: to reach the bottom, or to keep a running minimum, you need a second stack or a recursive call to hold the rest while you work.</p><p>The concepts below name each pattern with its snippet, and the practice links are the problems to try. Decide plates or ticket line first, and the code usually follows in a few lines.</p></div></section>
   
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Stack = last in, first out</h4><p>A stack only lets you touch the top. Use it when the newest item must be handled first, like the last opened bracket or the last typed character.</p><pre class="snip">stack&lt;char&gt; st; st.push(&#x27;(&#x27;); st.top(); st.pop();</pre></div><div class="concept"><h4>Bracket matching</h4><p>Push every opening bracket. On a closing bracket, the top must be its partner; if the stack is empty or the top does not match, the string is invalid. At the end the stack must be empty.</p></div><div class="concept"><h4>Stack as an undo button</h4><p>For problems like &#x27;backspace&#x27; or &#x27;remove adjacent duplicates&#x27;, push characters and pop when the new character cancels the top. What is left in the stack is the final string (read it bottom to top).</p><pre class="snip">if(!st.empty() &amp;&amp; st.top()==c) st.pop(); else st.push(c);</pre></div><div class="concept"><h4>Reversing with a stack</h4><p>Pouring a queue into a stack and back reverses it, because the stack gives items back in the opposite order. To reverse only the first k items, pour k items through a stack, then rotate the remaining n-k items to the back.</p></div><div class="concept"><h4>Inserting at the bottom of a stack</h4><p>You cannot reach the bottom directly. Pop everything into a helper (another stack or recursion), push the new value, then push everything back.</p></div><div class="concept"><h4>Min stack</h4><p>Keep a second stack that stores the minimum so far at every level. Push <code>min(x, minStack.top())</code> together with each push, and pop both together, so <code>getMin</code> is O(1).</p><pre class="snip">mn.push(mn.empty() ? x : min(x, mn.top()));</pre></div><div class="concept"><h4>Queue = first in, first out</h4><p>A queue adds at the back and removes at the front. Use it when order of arrival matters, or to rotate items (pop from front, push to back).</p><pre class="snip">queue&lt;int&gt; q; q.push(x); q.front(); q.pop();</pre></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: reversing the first 3 of <code>1 2 3 4 5</code></h3><p>The second worked example above, step by step. The queue is drawn front-first, the stack bottom-first, so the end each structure is used at is marked with a <code>^</code>.</p><p>There are three separate phases and it helps to name them as they go past: pour the first three into a stack, pour the stack back, then rotate the untouched values round to the back.</p><div class="stepper" data-n="9"><p class="stitle">Press the arrows or Play to follow all three phases</p><div class="frames"><div class="frame" data-i="0"><pre>k = 3:  reverse the first three, leave the rest
+
+queue front -&gt; back:  1 2 3 4 5
+                      ^ front
+
+stack bottom -&gt; top:  (empty)
+</pre><p class="flabel">The queue holds <code>1 2 3 4 5</code>. Only the first three must be reversed; 4 and 5 have to end up behind them, still in their own order.</p></div><div class="frame" data-i="1"><pre>k = 3:  reverse the first three, leave the rest
+
+queue front -&gt; back:  2 3 4 5
+                      ^ front
+
+stack bottom -&gt; top:  1
+                      ^ top</pre><p class="flabel">Phase one. Take the front value off the queue and push it on the stack. 1 leaves the queue, 1 lands on the stack.</p></div><div class="frame" data-i="2"><pre>k = 3:  reverse the first three, leave the rest
+
+queue front -&gt; back:  3 4 5
+                      ^ front
+
+stack bottom -&gt; top:  1 2
+                        ^ top</pre><p class="flabel">Take 2 the same way. It goes <strong>on top of</strong> 1, which is the whole point - the stack is storing them upside down.</p></div><div class="frame" data-i="3"><pre>k = 3:  reverse the first three, leave the rest
+
+queue front -&gt; back:  4 5
+                      ^ front
+
+stack bottom -&gt; top:  1 2 3
+                          ^ top</pre><p class="flabel">And 3. The first three values are now all on the stack with 3 on top, and the queue holds only the part we must not disturb.</p></div><div class="frame" data-i="4"><pre>k = 3:  reverse the first three, leave the rest
+
+queue front -&gt; back:  4 5 3
+                      ^ front
+
+stack bottom -&gt; top:  1 2
+                        ^ top</pre><p class="flabel">Phase two: pour the stack back. <code>top()</code> is 3, so 3 is the first one to rejoin the queue - and it joins at the <strong>back</strong>, behind 4 and 5.</p></div><div class="frame" data-i="5"><pre>k = 3:  reverse the first three, leave the rest
+
+queue front -&gt; back:  4 5 3 2
+                      ^ front
+
+stack bottom -&gt; top:  1
+                      ^ top</pre><p class="flabel">Then 2, which is now the top.</p></div><div class="frame" data-i="6"><pre>k = 3:  reverse the first three, leave the rest
+
+queue front -&gt; back:  4 5 3 2 1
+                      ^ front
+
+stack bottom -&gt; top:  (empty)
+</pre><p class="flabel">Then 1 last of all. The first three are reversed - but they are sitting at the back of the line, which is not where they belong.</p></div><div class="frame" data-i="7"><pre>k = 3:  reverse the first three, leave the rest
+
+queue front -&gt; back:  5 3 2 1 4
+                      ^ front
+
+stack bottom -&gt; top:  (empty)
+</pre><p class="flabel">Phase three: rotate. Pop the front value 4 and push it straight back on. Nothing is lost; the line just turns round by one place.</p></div><div class="frame" data-i="8"><pre>k = 3:  reverse the first three, leave the rest
+
+queue front -&gt; back:  3 2 1 4 5
+                      ^ front
+
+stack bottom -&gt; top:  (empty)
+</pre><p class="flabel">Rotate the second untouched value, 5, the same way, and it is done: <code>3 2 1 4 5</code>. The number of rotations is <code>n - k</code>, here 5 - 3 = 2, which is exactly how many values were never meant to move.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 9</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div><div class="wstep"><h3>Watch it happen: cancelling the pairs in <code>abbaca</code></h3><p>The same stack, a different question: remove every pair of equal letters that stand next to each other, and keep going while removing one pair creates another.</p><p>The rule in the snippet above is the whole program: if the new letter equals the top of the stack, pop instead of pushing. Watch the stack hold the letters that have survived so far.</p><div class="stepper" data-n="8"><p class="stitle">Press the arrows to read the word one letter at a time</p><div class="frames"><div class="frame" data-i="0"><pre>string:   a b b a c a
+
+
+stack bottom -&gt; top:  (empty)
+</pre><p class="flabel">Reading <code>abbaca</code> left to right. The stack will hold every letter that has not been cancelled yet, in order, so its top is always the letter immediately to the left of where we are.</p></div><div class="frame" data-i="1"><pre>string:   a b b a c a
+          ^ push
+
+stack bottom -&gt; top:  a
+</pre><p class="flabel">Read <code>a</code>. The stack is empty, so there is nothing for it to cancel with. Push it.</p></div><div class="frame" data-i="2"><pre>string:   a b b a c a
+            ^ top is a - different, push
+
+stack bottom -&gt; top:  a b
+                        ^ top</pre><p class="flabel">Read <code>b</code>. The top is <code>a</code>, which is different, so this is not a pair. Push <code>b</code> on top.</p></div><div class="frame" data-i="3"><pre>string:   a b b a c a
+              ^ top was b - pop, both go
+
+stack bottom -&gt; top:  a
+</pre><p class="flabel">Read the second <code>b</code>. The top <strong>is</strong> <code>b</code>, so these two are a neighbouring pair: pop the top and do not push the new one. Both are gone at once.</p></div><div class="frame" data-i="4"><pre>string:   a b b a c a
+                ^ top was a - pop, both go
+
+stack bottom -&gt; top:  (empty)
+</pre><p class="flabel">Read <code>a</code>. Removing the two b&#x27;s has made this <code>a</code> a neighbour of the first <code>a</code>, and the stack already knew: its top is <code>a</code>. Pop, and that pair goes too.</p></div><div class="frame" data-i="5"><pre>string:   a b b a c a
+                  ^ push
+
+stack bottom -&gt; top:  c
+</pre><p class="flabel">Read <code>c</code>. The stack is empty again, so <code>c</code> has no neighbour on its left. Push it.</p></div><div class="frame" data-i="6"><pre>string:   a b b a c a
+                    ^ top is c - different, push
+
+stack bottom -&gt; top:  c a
+                        ^ top</pre><p class="flabel">Read the last <code>a</code>. The top is <code>c</code>, which is different, so push. Nothing left to cancel.</p></div><div class="frame" data-i="7"><pre>string:   a b b a c a
+
+
+stack bottom -&gt; top:  c a
+                        ^ top</pre><p class="flabel">The word is finished, so read the stack from the bottom up: <code>ca</code>. Every letter was pushed at most once and popped at most once, so one single pass does the whole job - and the stack found the chain reaction in the middle without ever looking backwards.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/StackLL.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — stack (linked list)</b><span class="rnote">Push and pop, one click each, with the top pointer drawn.</span></a></li><li class="r-article"><a href="https://www.geeksforgeeks.org/stack-data-structure/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>GeeksforGeeks — stack</b><span class="rnote">Short write-up plus a long list of stack problems.</span></a></li><li class="r-article"><a href="https://neetcode.io/roadmap" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>NeetCode roadmap</b><span class="rnote">A map of which problem to try next, grouped by the idea it uses.</span></a></li><li class="r-video"><a href="https://www.youtube.com/@NeetCode" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>NeetCode</b><span class="rnote">Each LeetCode problem explained with the picture first, then the code.</span></a></li></ul></section>
   
   <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://leetcode.com/problems/valid-parentheses/" target="_blank" rel="noopener">Valid Parentheses</a><span class="site">LeetCode</span></li><li><a href="https://leetcode.com/problems/backspace-string-compare/description/" target="_blank" rel="noopener">Backspace String Compare</a><span class="site">LeetCode</span></li><li><a href="https://www.codingninjas.com/studio/problems/insert-an-element-at-its-bottom-in-a-given-stack_1171166" target="_blank" rel="noopener">Insert An Element At Its Bottom In A Given Stack</a><span class="site">Coding Ninjas</span></li><li><a href="https://www.codingninjas.com/studio/problems/maximum-equal-stack-sum_1062571" target="_blank" rel="noopener">Maximum Equal Stack Sum</a><span class="site">Coding Ninjas</span></li><li><a href="https://www.codingninjas.com/studio/problems/reversing-a-queue_982934" target="_blank" rel="noopener">Reversing a Queue</a><span class="site">Coding Ninjas</span></li><li><a href="https://leetcode.com/problems/min-stack/description/" target="_blank" rel="noopener">Min Stack</a><span class="site">LeetCode</span></li><li><a href="https://leetcode.com/problems/remove-all-adjacent-duplicates-in-string/description/" target="_blank" rel="noopener">Remove All Adjacent Duplicates In String</a><span class="site">LeetCode</span></li><li><a href="https://www.codingninjas.com/studio/problems/implement-stack-with-linked-list_630475" target="_blank" rel="noopener">Implement Stack With Linked List</a><span class="site">Coding Ninjas</span></li><li><a href="https://www.codingninjas.com/studio/problems/queue-using-array-or-singly-linked-list_2099908" target="_blank" rel="noopener">Implement a Queue</a><span class="site">Coding Ninjas</span></li><li><a href="https://www.codingninjas.com/studio/problems/reverse-first-k-elements-of-queue_982771" target="_blank" rel="noopener">Reverse First K Elements of Queue</a><span class="site">Coding Ninjas</span></li><li><a href="https://www.codingninjas.com/studio/problems/min-stack_3843991" target="_blank" rel="noopener">Min Stack</a><span class="site">Coding Ninjas</span></li><li><a href="https://www.codingninjas.com/studio/problems/kevin-s-stack-problem_1169465" target="_blank" rel="noopener">Kevin&#x27;s Stack Problem</a><span class="site">Coding Ninjas</span></li></ul></section>
@@ -72,7 +158,7 @@ else st.push(c);</pre><p>Two habits save most of the wrong answers here. Always 
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

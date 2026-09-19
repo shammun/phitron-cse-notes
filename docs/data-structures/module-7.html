@@ -7,7 +7,7 @@
 <meta name="description" content="This module finishes the basic singly linked list toolkit: removing the head, the tail and a node at any index, then sorting the list with selection sort by swapping values. The practice day uses those pieces to compare list sizes, find the maximum and sort in either order. Once these moves are in your fingers, every later linked-list problem is a remix of them.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -59,7 +59,23 @@ delete tail   walk to 30, cut     n-1 steps</pre><p><strong>The mistake worth se
 tmp-&gt;next = tmp-&gt;next-&gt;next;
 delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a singly list you can only change the <code>next</code> of the node *before* the target. So the walk to delete index <code>idx</code> stops at index <code>idx-1</code> (the loop runs <code>i = 1 .. idx-1</code>).</p></div><div class="concept"><h4>Pass <code>head</code> by reference</h4><p>Deleting the head changes which node <code>head</code> points to. <code>Node* &amp;head</code> lets the function change the caller&#x27;s variable; with a plain <code>Node* head</code> the change is lost.</p><pre class="snip">void delete_head(Node* &amp;head)</pre></div><div class="concept"><h4>Deleting the tail costs O(n)</h4><p>Even if you keep a <code>tail</code> pointer, you must walk from the head to find the node just before the tail, because there is no backward link.</p></div><div class="concept"><h4>Selection sort</h4><p>For each position <code>i</code>, compare it with every later position <code>j</code> and swap whenever the later value is smaller. After pass <code>i</code>, position <code>i</code> holds the smallest remaining value. Two nested loops, so O(n²).</p><pre class="snip">for i in 0..n-2: for j in i+1..n-1: if a[j] &lt; a[i]: swap</pre></div><div class="concept"><h4>Sort a list by swapping values</h4><p>On a linked list, the two loop variables are node pointers (<code>i</code>, <code>j</code>) instead of indexes. We swap <code>i-&gt;val</code> and <code>j-&gt;val</code>; the nodes themselves never move, which keeps the code short.</p><pre class="snip">for(Node* i=head; i-&gt;next; i=i-&gt;next)
   for(Node* j=i-&gt;next; j; j=j-&gt;next)</pre></div><div class="concept"><h4>Cost table</h4><p>Insert at head O(1); insert at tail O(1) with a tail pointer (O(n) without); delete head O(1); delete tail or any index O(n); print O(n); selection sort O(n²).</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: deleting the 30 out of the middle</h3><p>This is <code>delete_at_any_position(head, 2)</code> on the list <code>10 20 30 40</code>. Three moves, always in the same order: hold the victim, bend the arrow past it, free the box.</p><div class="stepper" data-n="8"><p class="stitle">Press ▶ to step through it</p><div class="frames"><div class="frame" data-i="0"><pre>
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL</pre><p class="flabel">The list is 10 20 30 40, counted from 0 at the head, and index 2 — the 30 — has to go.</p></div><div class="frame" data-i="1"><pre>        tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL</pre><p class="flabel"><code>Node* tmp = head;</code>. As always, the walk begins at the only address you hold.</p></div><div class="frame" data-i="2"><pre>                tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL</pre><p class="flabel">One hop, and <code>tmp</code> stands on 20, one box <strong>before</strong> the victim. Standing on 30 itself would be useless: from there you can see 40, but you can never see back to 20, and 20&#x27;s arrow is the one that must change.</p></div><div class="frame" data-i="3"><pre>                tmp     del
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL</pre><p class="flabel"><code>Node* del = tmp-&gt;next;</code> writes down the victim&#x27;s address. Do this first: after the next line nothing in the list points at that box, and a box you cannot find is a box you cannot free.</p></div><div class="frame" data-i="4"><pre>                tmp
+head -&gt; [10] -&gt; [20] ---------&gt; [40] -&gt; NULL
+                        del
+                        [30]</pre><p class="flabel"><code>tmp-&gt;next = tmp-&gt;next-&gt;next;</code> bends 20&#x27;s arrow straight to 40. The 30 box is still in memory and still points at 40, but the list now steps over it, and only <code>del</code> knows where it is.</p></div><div class="frame" data-i="5"><pre>                tmp
+head -&gt; [10] -&gt; [20] ---------&gt; [40] -&gt; NULL
+
+        the 30 box has been freed</pre><p class="flabel"><code>delete del;</code> gives the box back to the heap. Hold, bend, free — in that order the list is correct at every moment in between.</p></div><div class="frame" data-i="6"><pre>
+head -&gt; [10] -&gt; [20] -&gt; [40] -&gt; NULL</pre><p class="flabel">Drawn straight: the list is 10 20 40. Nothing was shifted and no value was copied; one pointer changed and one box was freed.</p></div><div class="frame" data-i="7"><pre>wrong order: free first, then read
+
+head -&gt; [10] -&gt; [20] -&gt; [??] -&gt; [40] -&gt; NULL
+                         ^ this box is gone, so
+                           tmp-&gt;next-&gt;next is
+                           anybody&#x27;s guess</pre><p class="flabel">Do it in the other order and the very next line has to read <code>next</code> out of memory you have already given away. It will often seem to work, which is the worst kind of bug.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/list" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — linked list</b><span class="rnote">Press Insert or Remove and watch the arrows re-point, one step at a time.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PL2_aWCzGMAwI3W_JlcBbtYTwiQSsOTa6P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>mycodeschool — data structures</b><span class="rnote">The classic slow, patient explanation of lists, stacks and queues.</span></a></li><li class="r-tool"><a href="https://pythontutor.com/cpp.html" target="_blank" rel="noopener"><span class="rkind">🔧 Tool</span><b>Python Tutor — step through C++ code</b><span class="rnote">Paste your own program and step through it line by line, with the pointers drawn.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-delete-head">
@@ -411,90 +427,176 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
   <p class="what">Builds a list, then removes the node at index 2 (0-based) with <code>delete_at_any_position</code> by making its previous node skip it.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 77 lines</span>
+      <span>CPP · 138 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%207/delete_at_any_position.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Delete the node sitting at a given index of a singly linked list.</span>
+
+<span class="cm">Every delete in a singly linked list follows the same three steps, and it is</span>
+<span class="cm">worth saying them out loud once:</span>
+
+<span class="cm">    1. stand on the node *before* the one you want to remove,</span>
+<span class="cm">    2. bend that node&#39;s arrow past the victim,</span>
+<span class="cm">    3. only then `delete` the victim&#39;s box.</span>
+
+<span class="cm">The order is not a matter of taste. If you free the box first, its `next`</span>
+<span class="cm">field goes with it, so you no longer know which node came after the victim and</span>
+<span class="cm">the whole rest of the list is unreachable. That is why we always copy the</span>
+<span class="cm">victim&#39;s address into a separate pointer before touching any arrow.</span>
+
+<span class="cm">Why &quot;the node before&quot;? Because in a singly list a node knows only its `next`.</span>
+<span class="cm">Nothing points backwards, so the only way to make the list skip a node is to</span>
+<span class="cm">change the `next` of the node standing in front of it.</span>
+
+<span class="cm">Input: the values of the list, ended by -1. The index to delete (2) is fixed</span>
+<span class="cm">in the code.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -513,6 +615,9 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// The Module 6 helper, unchanged: add a value at the end of the list. It is</span>
+<span class="c1">// O(1) because `tail` is remembered, so there is no walk. `head` and `tail`</span>
+<span class="c1">// are taken by reference (`&amp;`), which is what lets `main` see the new ends.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -525,6 +630,8 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w"> </span><span class="c1">// or tail = tail-&gt;next</span>
 <span class="p">}</span>
 
+<span class="c1">// Walk from the head and print every value. `tmp` is a copy of the pointer,</span>
+<span class="c1">// so moving `tmp` never moves `head` itself.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -533,28 +640,58 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
+<span class="c1">// Deleting the first node is the easy case: there is no &quot;node before&quot;, so we</span>
+<span class="c1">// simply move `head` one step forward. Same three steps, though - save, move,</span>
+<span class="c1">// free. Freeing first would make `head = head-&gt;next` a read of memory we have</span>
+<span class="c1">// already given back. `head` has to be a reference: which node is first</span>
+<span class="c1">// really does change.</span>
+<span class="c1">// (Not called in this file; kept here so the two deletes sit side by side.)</span>
+<span class="c1">// Trap: an empty list crashes here. A safe version starts with</span>
+<span class="c1">// `if(head == NULL) return;`.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_head</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Remove the node at 0-based index `idx`.</span>
+<span class="c1">//</span>
+<span class="c1">// `head` is taken by value here, and that is only safe because this function</span>
+<span class="c1">// never removes the first node, so `head` itself never changes. For `idx = 0`</span>
+<span class="c1">// you must call `delete_head` instead, which takes `Node* &amp;head`.</span>
+<span class="c1">// Cost: O(idx) - one step per node walked - so O(n) in the worst case.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_at_any_position</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Counting starts at 1 and stops *before* `idx`, so `tmp` ends on index</span>
+<span class="w">    </span><span class="c1">// idx-1: the node just in front of the victim. With idx = 2 the body runs</span>
+<span class="w">    </span><span class="c1">// once and `tmp` stands on index 1, the node holding 20.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">idx</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Step 1: remember the box, before any arrow moves away from it.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Step 2: bend the arrow past it - 20 now points straight at 40. The</span>
+<span class="w">    </span><span class="c1">// victim is still whole, it is just nobody&#39;s neighbour any more.</span>
 <span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Step 3: nothing points at it now, so give the memory back. Had we</span>
+<span class="w">    </span><span class="c1">// deleted first, the line above would have read `tmp-&gt;next-&gt;next` out of</span>
+<span class="w">    </span><span class="c1">// a box that no longer belonged to us.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Trap: if `idx` is past the end of the list, the walk leaves `tmp` on the</span>
+<span class="w">    </span><span class="c1">// last node, `tmp-&gt;next` is NULL, and `tmp-&gt;next-&gt;next` crashes. There is</span>
+<span class="w">    </span><span class="c1">// no size check here.</span>
 <span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="c1">// Main function: Entry point of the program.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// An empty list: no first node and no last node yet.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Read values until the sentinel -1 arrives. -1 is only a stop sign; it</span>
+<span class="w">    </span><span class="c1">// is never stored in the list.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -563,17 +700,18 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="w">        </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
+<span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span><span class="w">   </span><span class="c1">// 10 20 30 40 50, one per line</span>
 
+<span class="w">    </span><span class="c1">// Remove index 2, counting from 0 - the third node, value 30.</span>
 <span class="w">    </span><span class="n">delete_at_any_position</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
 
-<span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
+<span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span><span class="w">   </span><span class="c1">// 10 20 40 50 - the 30 is gone</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 77 lines ▾</button>
+    <button type="button" class="expand">Show all 138 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 50 -1</pre><p class="io-note">List values ended by -1; the index 2 is fixed in the code.</p></div><div class="io out"><div class="io-h">Output </div><pre>10
@@ -602,7 +740,7 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
   <p class="what">Same program; the only change is that <code>delete_at_any_position</code> takes <code>head</code> by reference (<code>Node* &amp;head</code>).</p><p class="same">Re-typed version of <a href="#p-delete-at-any-position"><code>delete_at_any_position.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 75 lines</span>
+      <span>CPP · 96 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%207/delete_at_any_position_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -683,7 +821,43 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="normal">72</span>
 <span class="normal">73</span>
 <span class="normal">74</span>
-<span class="normal">75</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Practice copy of delete_at_any_position.cpp, re-typed from memory.</span>
+
+<span class="cm">The one difference from the original: here `delete_at_any_position` takes</span>
+<span class="cm">`Node* &amp;head` - a reference - instead of `Node* head`. Everything else, and</span>
+<span class="cm">the output, is the same. The reference costs nothing but is not needed either,</span>
+<span class="cm">because this function never moves the first node. It would start to matter the</span>
+<span class="cm">day the function also handled `idx = 0`, since then `head` itself changes.</span>
+
+<span class="cm">The rule being practised: stand on the node before the victim, bend the arrow</span>
+<span class="cm">past it, then delete the box - in that order.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -721,19 +895,24 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
+<span class="c1">// Kept from the previous lesson for comparison: removing the first node needs</span>
+<span class="c1">// no walk at all, only `head = head-&gt;next` - O(1) instead of O(n).</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_head</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Remove the node at 0-based index `idx`, by standing on index idx-1.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_at_any_position</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Stop one node early: after the loop `tmp` is on index idx-1.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">idx</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Save, then relink, then free. Never the other way round.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
-<span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+<span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w">   </span><span class="c1">// the victim&#39;s neighbours are joined together</span>
 <span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
 <span class="p">}</span>
 
@@ -743,6 +922,7 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="w">    </span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// -1 ends the input and is not stored.</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">            </span><span class="k">break</span><span class="p">;</span>
@@ -752,7 +932,7 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 
 <span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 
-<span class="w">    </span><span class="n">delete_at_any_position</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="w">    </span><span class="n">delete_at_any_position</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w">   </span><span class="c1">// delete the third node (index 2, value 30)</span>
 
 <span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 
@@ -760,7 +940,7 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 75 lines ▾</button>
+    <button type="button" class="expand">Show all 96 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 50 -1</pre><p class="io-note">Values ended by -1.</p></div><div class="io out"><div class="io-h">Output </div><pre>10
@@ -789,7 +969,7 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
   <p class="what">Shows two ways to remove the last node: <code>delete_tail</code> walks to the node before <code>tail</code>, and <code>delete_tail2</code> uses a known index. The program does not compile because of the call in <code>main</code>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 101 lines</span>
+      <span>CPP · 158 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%207/delete_at_tail.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -896,7 +1076,90 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="normal"> 98</span>
 <span class="normal"> 99</span>
 <span class="normal">100</span>
-<span class="normal">101</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Delete the last node of a singly linked list - shown two ways.</span>
+
+<span class="cm">Removing the tail is the expensive delete, and it is worth understanding why.</span>
+<span class="cm">We do keep a `tail` pointer, so we can reach the last node in a single step -</span>
+<span class="cm">but we cannot remove it from there. The node *before* the tail has to be told</span>
+<span class="cm">to stop pointing at it, and in a singly list nothing points backwards. The</span>
+<span class="cm">only way to reach that second-last node is to walk the whole list from the</span>
+<span class="cm">head. So deleting the tail costs O(n) while deleting the head costs O(1),</span>
+<span class="cm">even though both remove exactly one node.</span>
+
+<span class="cm">The three steps are the same as always: save the victim&#39;s address, bend the</span>
+<span class="cm">arrow (here: cut it, and move `tail` back one node), then `delete`. Freeing</span>
+<span class="cm">first would leave us walking through memory we had already given back.</span>
+
+<span class="cm">This file does not compile. `main` calls `delete_tail(head);` with one</span>
+<span class="cm">argument, but the function needs two: `delete_tail(head, tail);`. `tail` has</span>
+<span class="cm">to be passed as well, because the node it points at is the one about to</span>
+<span class="cm">disappear. The compiler says &quot;too few arguments to function delete_tail&quot;.</span>
+<span class="cm">Nothing else is wrong - fix the call and it runs.</span>
+
+<span class="cm">Input: the values of the list, ended by -1.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -915,6 +1178,7 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// The usual builder: append a value in O(1), because `tail` is remembered.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -927,6 +1191,7 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w"> </span><span class="c1">// or tail = tail-&gt;next</span>
 <span class="p">}</span>
 
+<span class="c1">// Walk from the head and print every value, one per line.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -935,12 +1200,16 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
+<span class="c1">// Case 1 - the head. No walk at all: there is no node in front of the first</span>
+<span class="c1">// one, so `head` itself is simply moved forward. O(1).</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_head</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Case 2 - the middle. Walk to index idx-1, bend its arrow past the victim,</span>
+<span class="c1">// then free the victim. O(idx).</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_at_any_position</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">idx</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
@@ -951,34 +1220,56 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Case 3 - the tail. The walk is the whole story here.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Save the box first; in a moment nothing will point at it any more.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="p">;</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Walk until the node we are standing on is the one pointing at the tail.</span>
+<span class="w">    </span><span class="c1">// The test compares *addresses*, not values, so it stops exactly at the</span>
+<span class="w">    </span><span class="c1">// second-last node even if two nodes happen to hold the same number.</span>
+<span class="w">    </span><span class="c1">// This walk is the O(n) cost of deleting the tail.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Trap: on a one-node list `head == tail`, so `tmp-&gt;next` is NULL on the</span>
+<span class="w">    </span><span class="c1">// very first test, `NULL != tail` is true, and the next round follows a</span>
+<span class="w">    </span><span class="c1">// NULL pointer and crashes. A safe version handles `head == tail` first.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">tail</span><span class="p">){</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span>
-<span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
+<span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">       </span><span class="c1">// the second-last node becomes the new end</span>
+<span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span><span class="w">             </span><span class="c1">// and `tail` must follow it - hence the reference</span>
+<span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span><span class="w">     </span><span class="c1">// only now is it safe to give the old last box back</span>
 <span class="p">}</span>
 
+<span class="c1">// The same delete written differently: if you already know the index of the</span>
+<span class="c1">// last node (that is size-1), you can reuse the &quot;delete at any index&quot; walk</span>
+<span class="c1">// instead of watching for `tmp-&gt;next == tail`. The cost is the same O(n)</span>
+<span class="c1">// walk; only the stopping rule changes. `head` may be taken by value here</span>
+<span class="c1">// because the first node never moves, but `tail` must be a reference.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_tail2</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Stop one node early, on index idx-1 - the node before the victim.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">idx</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// For the last node this line does the same as `tmp-&gt;next = NULL;`,</span>
+<span class="w">    </span><span class="c1">// because the node after the last one is NULL anyway. Written this way it</span>
+<span class="w">    </span><span class="c1">// is simply the general &quot;skip one node&quot; line reused.</span>
 <span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Keep `tail` in step: the node we stopped on is now the last one.</span>
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="c1">// Main function: Entry point of the program.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// An empty list to start with.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Read values until the -1 sentinel; -1 itself is never stored.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -987,10 +1278,13 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="w">        </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
+<span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span><span class="w">   </span><span class="c1">// 10 20 30 40</span>
 
 <span class="w">    </span><span class="c1">// delete_at_any_position(head, 2);</span>
 
+<span class="w">    </span><span class="c1">// This is the line that stops the compiler: `delete_tail` also needs</span>
+<span class="w">    </span><span class="c1">// `tail`, so write `delete_tail(head, tail);`. After that the list is</span>
+<span class="w">    </span><span class="c1">// 10 20 30 and `tail` points at the node holding 30.</span>
 <span class="w">    </span><span class="n">delete_tail</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 
 <span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
@@ -999,14 +1293,14 @@ delete del;</pre></div><div class="concept"><h4>Stop one node early</h4><p>In a 
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 101 lines ▾</button>
+    <button type="button" class="expand">Show all 158 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 -1</pre><p class="io-note">Values ended by -1.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>delete_at_tail.cpp: In function &#x27;int main()&#x27;:
-delete_at_tail.cpp:96:21: error: too few arguments to function &#x27;void delete_tail(Node*&amp;, Node*&amp;)&#x27;
+delete_at_tail.cpp:153:21: error: too few arguments to function &#x27;void delete_tail(Node*&amp;, Node*&amp;)&#x27;
      delete_tail(head);
                      ^
-delete_at_tail.cpp:56:6: note: declared here
+delete_at_tail.cpp:89:6: note: declared here
  void delete_tail(Node* &amp;head, Node* &amp;tail){
       ^~~~~~~~~~~</pre></div></div>
   <p class="readout"><b>Reading the output.</b> No output: the compiler stops with &quot;too few arguments to function delete_tail&quot;.</p>
@@ -1025,7 +1319,7 @@ delete_at_tail.cpp:56:6: note: declared here
   <p class="what">A re-typed version with the function renamed to <code>delete_at_tail</code>; it has typing mistakes and does not compile.</p><p class="same">Re-typed version of <a href="#p-delete-at-tail"><code>delete_at_tail.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 102 lines</span>
+      <span>CPP · 143 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%207/delete_at_tail_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1133,7 +1427,69 @@ delete_at_tail.cpp:56:6: note: declared here
 <span class="normal"> 99</span>
 <span class="normal">100</span>
 <span class="normal">101</span>
-<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Practice copy of delete_at_tail.cpp, re-typed from memory.</span>
+
+<span class="cm">What differs from the original:</span>
+<span class="cm">  * the walking version was re-typed under the name `delete_at_tail`, but</span>
+<span class="cm">    `main` still calls the old name `delete_tail` - &quot;&#39;delete_tail&#39; was not</span>
+<span class="cm">    declared in this scope&quot;, with the compiler suggesting `delete_tail2`.</span>
+<span class="cm">  * inside that walk, `tmp = tmp-&gt;next` lost its semicolon, so the file does</span>
+<span class="cm">    not even get as far as the call: &quot;expected &#39;;&#39; before &#39;}&#39; token&quot;.</span>
+<span class="cm">  * `delete_tail2` here forgets its `delete deleteNode;`. The node is unlinked</span>
+<span class="cm">    but its memory is never given back - a memory leak. The program would</span>
+<span class="cm">    still print the right answer, which is exactly what makes leaks easy to</span>
+<span class="cm">    miss.</span>
+
+<span class="cm">The idea being practised is unchanged: to remove the last node you must walk</span>
+<span class="cm">from the head to the second-last node, because nothing in a singly list points</span>
+<span class="cm">backwards. Cut its link, move `tail` back one, then free the old last box.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -1172,12 +1528,14 @@ delete_at_tail.cpp:56:6: note: declared here
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
+<span class="c1">// The head is the cheap case: no walk, just move `head` forward. O(1).</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_head</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// The middle case: walk to index idx-1, then skip the victim. O(idx).</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_at_any_position</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">idx</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
@@ -1188,26 +1546,41 @@ delete_at_tail.cpp:56:6: note: declared here
 <span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// The tail case. Renamed from `delete_tail` in the original - and `main` was</span>
+<span class="c1">// not renamed with it, which is one of the two compile errors in this file.</span>
+<span class="c1">// Save the victim, walk to the node before it, cut, move `tail`, then free.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="p">;</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Walk to the node that points at the tail; addresses are compared, not</span>
+<span class="w">    </span><span class="c1">// values. This walk is why deleting the tail costs O(n).</span>
+<span class="w">    </span><span class="c1">// The next line is the missing semicolon: the compiler stops with</span>
+<span class="w">    </span><span class="c1">// &quot;expected &#39;;&#39; before &#39;}&#39; token&quot;.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">tail</span><span class="p">){</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span>
-<span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
+<span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">        </span><span class="c1">// the second-last node is the new end</span>
+<span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span><span class="w">              </span><span class="c1">// keep `tail` in step with it</span>
+<span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span><span class="w">      </span><span class="c1">// and only now free the old last box</span>
 <span class="p">}</span>
 
+<span class="c1">// The index-based version of the same delete. Look at what is missing at the</span>
+<span class="c1">// end: there is no `delete deleteNode;`, so the unlinked node stays allocated</span>
+<span class="c1">// for the rest of the run - a leak that no output ever reveals.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_tail2</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Stop one node early, on index idx-1.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">idx</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w"> </span><span class="c1">// shouldn&#39;t this be tmp-&gt;next = NULL; ?</span>
+<span class="w">    </span><span class="c1">// Answer to the question on the line above: for the *last* node the two</span>
+<span class="w">    </span><span class="c1">// are the same, because `tmp-&gt;next-&gt;next` is NULL there anyway. Writing</span>
+<span class="w">    </span><span class="c1">// `tmp-&gt;next = NULL;` just states the intention more plainly.</span>
+<span class="w">    </span><span class="c1">// And here `tail` is moved back to the node we stopped on.</span>
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span>
 <span class="p">}</span>
 
@@ -1229,6 +1602,9 @@ delete_at_tail.cpp:56:6: note: declared here
 
 <span class="w">    </span><span class="c1">// delete_at_any_position(head, 2);</span>
 
+<span class="w">    </span><span class="c1">// The second compile error: in this file the function is called</span>
+<span class="w">    </span><span class="c1">// `delete_at_tail` and it takes two arguments - `delete_at_tail(head,</span>
+<span class="w">    </span><span class="c1">// tail);`.</span>
 <span class="w">    </span><span class="n">delete_tail</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 
 <span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
@@ -1237,21 +1613,21 @@ delete_at_tail.cpp:56:6: note: declared here
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 102 lines ▾</button>
+    <button type="button" class="expand">Show all 143 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 -1</pre><p class="io-note">Values ended by -1.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>delete_at_tail_p.cpp: In function &#x27;void delete_at_tail(Node*&amp;, Node*&amp;)&#x27;:
-delete_at_tail_p.cpp:61:24: error: expected &#x27;;&#x27; before &#x27;}&#x27; token
+delete_at_tail_p.cpp:91:24: error: expected &#x27;;&#x27; before &#x27;}&#x27; token
          tmp = tmp-&gt;next
                         ^
                         ;
      }
      ~                   
 delete_at_tail_p.cpp: In function &#x27;int main()&#x27;:
-delete_at_tail_p.cpp:97:5: error: &#x27;delete_tail&#x27; was not declared in this scope
+delete_at_tail_p.cpp:138:5: error: &#x27;delete_tail&#x27; was not declared in this scope
      delete_tail(head);
      ^~~~~~~~~~~
-delete_at_tail_p.cpp:97:5: note: suggested alternative: &#x27;delete_tail2&#x27;
+delete_at_tail_p.cpp:138:5: note: suggested alternative: &#x27;delete_tail2&#x27;
      delete_tail(head);
      ^~~~~~~~~~~
      delete_tail2</pre></div></div>
@@ -1374,9 +1750,9 @@ delete_at_tail_p.cpp:97:5: note: suggested alternative: &#x27;delete_tail2&#x27;
     </div>
   </div>
   <p class="what">Same program, but with a typo in the input loop, so it does not compile.</p><p class="same">Re-typed version of <a href="#p-selection-sort-array"><code>selection_sort_array.cpp</code></a>.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 32 lines</span>
+      <span>CPP · 71 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%207/selection_sort_array_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1414,12 +1790,79 @@ delete_at_tail_p.cpp:97:5: note: suggested alternative: &#x27;delete_tail2&#x27;
 <span class="normal">29</span>
 <span class="normal">30</span>
 <span class="normal">31</span>
-<span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Practice copy of selection_sort_array.cpp, re-typed from memory.</span>
+
+<span class="cm">It does not compile, because of a single missing character: the input loop</span>
+<span class="cm">says `cin &gt; arr[i];` with one `&gt;`. A single `&gt;` is the &quot;greater than&quot;</span>
+<span class="cm">comparison; reading from the keyboard needs the extraction operator `&gt;&gt;`. The</span>
+<span class="cm">compiler&#39;s message runs for pages, but the first line says it all:</span>
+
+<span class="cm">    no match for &#39;operator&gt;&#39; (operand types are &#39;std::istream&#39; and &#39;int&#39;)</span>
+
+<span class="cm">- there is no way to compare an input stream with an int, so it lists every</span>
+<span class="cm">`operator&gt;` it knows and none of them fits. Change the line to</span>
+<span class="cm">`cin &gt;&gt; arr[i];` and the program works. Apart from that one character the code</span>
+<span class="cm">is the same as the original.</span>
+
+<span class="cm">The method itself: for each position `i`, look at every later position `j` and</span>
+<span class="cm">swap whenever the later value is smaller. When the inner loop ends, position</span>
+<span class="cm">`i` holds the smallest of everything from `i` onwards, so it is finished and</span>
+<span class="cm">`i` can move on. Two nested loops over n values, so O(n^2) time and O(1) extra</span>
+<span class="cm">space.</span>
+
+<span class="cm">Input: first n, then n numbers.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// Swap two ints. The parameters are references, so this really exchanges the</span>
+<span class="c1">// caller&#39;s two values instead of two copies.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">swap</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">b</span><span class="p">){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 <span class="w">    </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
@@ -1429,46 +1872,57 @@ delete_at_tail_p.cpp:97:5: note: suggested alternative: &#x27;delete_tail2&#x27;
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// An array whose size is only known while the program runs. Standard C++</span>
+<span class="w">    </span><span class="c1">// asks for a constant size here; g++ allows this as an extension, which</span>
+<span class="w">    </span><span class="c1">// is why the course can use it.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="c1">// Read the n values. The next line is the typo: `&gt;` instead of `&gt;&gt;`.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// The outer loop settles one position at a time and stops at n-2: once</span>
+<span class="w">    </span><span class="c1">// every earlier position holds its final value, the last one has nothing</span>
+<span class="w">    </span><span class="c1">// left to be swapped with.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// Compare position i with every position after it.</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+<span class="w">            </span><span class="c1">// A smaller value later on? Bring it forward. After this inner</span>
+<span class="w">            </span><span class="c1">// loop, arr[i] is the smallest of arr[i..n-1].</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
 <span class="w">                </span><span class="n">swap</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Print the sorted values on one line, separated by spaces.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 32 lines ▾</button>
+    <button type="button" class="expand">Show all 71 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5
 5 2 9 1 7</pre><p class="io-note">First n, then n numbers.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>selection_sort_array_p.cpp: In function &#x27;int main()&#x27;:
-selection_sort_array_p.cpp:18:13: error: no match for &#x27;operator&gt;&#x27; (operand types are &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} and &#x27;int&#x27;)
+selection_sort_array_p.cpp:50:13: error: no match for &#x27;operator&gt;&#x27; (operand types are &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} and &#x27;int&#x27;)
          cin &gt; arr[i];
          ~~~~^~~~~~~~
-selection_sort_array_p.cpp:18:13: note: candidate: &#x27;operator&gt;(int, int)&#x27; &lt;built-in&gt;
-selection_sort_array_p.cpp:18:13: note:   no known conversion for argument 1 from &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} to &#x27;int&#x27;
+selection_sort_array_p.cpp:50:13: note: candidate: &#x27;operator&gt;(int, int)&#x27; &lt;built-in&gt;
+selection_sort_array_p.cpp:50:13: note:   no known conversion for argument 1 from &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} to &#x27;int&#x27;
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_algobase.h:64,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/char_traits.h:39,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:40,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
-                 from selection_sort_array_p.cpp:1:
+                 from selection_sort_array_p.cpp:27:
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_pair.h:462:5: note: candidate: &#x27;template&lt;class _T1, class _T2&gt; constexpr bool std::operator&gt;(const std::pair&lt;_T1, _T2&gt;&amp;, const std::pair&lt;_T1, _T2&gt;&amp;)&#x27;
      operator&gt;(const pair&lt;_T1, _T2&gt;&amp; __x, const pair&lt;_T1, _T2&gt;&amp; __y)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_pair.h:462:5: note:   template argument deduction/substitution failed:
-selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::pair&lt;_T1, _T2&gt;&#x27;
+selection_sort_array_p.cpp:50:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::pair&lt;_T1, _T2&gt;&#x27;
          cin &gt; arr[i];
                     ^
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_algobase.h:67,
@@ -1476,12 +1930,12 @@ In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:40,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
-                 from selection_sort_array_p.cpp:1:
+                 from selection_sort_array_p.cpp:27:
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_iterator.h:317:5: note: candidate: &#x27;template&lt;class _Iterator&gt; bool std::operator&gt;(const std::reverse_iterator&lt;_Iterator&gt;&amp;, const std::reverse_iterator&lt;_Iterator&gt;&amp;)&#x27;
      operator&gt;(const reverse_iterator&lt;_Iterator&gt;&amp; __x,
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_iterator.h:317:5: note:   template argument deduction/substitution failed:
-selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::reverse_iterator&lt;_Iterator&gt;&#x27;
+selection_sort_array_p.cpp:50:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::reverse_iterator&lt;_Iterator&gt;&#x27;
          cin &gt; arr[i];
                     ^
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_algobase.h:67,
@@ -1489,12 +1943,12 @@ In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:40,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
-                 from selection_sort_array_p.cpp:1:
+                 from selection_sort_array_p.cpp:27:
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_iterator.h:355:5: note: candidate: &#x27;template&lt;class _IteratorL, class _IteratorR&gt; bool std::operator&gt;(const std::reverse_iterator&lt;_Iterator&gt;&amp;, const std::reverse_iterator&lt;_IteratorR&gt;&amp;)&#x27;
      operator&gt;(const reverse_iterator&lt;_IteratorL&gt;&amp; __x,
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_iterator.h:355:5: note:   template argument deduction/substitution failed:
-selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::reverse_iterator&lt;_Iterator&gt;&#x27;
+selection_sort_array_p.cpp:50:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::reverse_iterator&lt;_Iterator&gt;&#x27;
          cin &gt; arr[i];
                     ^
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_algobase.h:67,
@@ -1502,12 +1956,12 @@ In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:40,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
-                 from selection_sort_array_p.cpp:1:
+                 from selection_sort_array_p.cpp:27:
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_iterator.h:1160:5: note: candidate: &#x27;template&lt;class _IteratorL, class _IteratorR&gt; bool std::operator&gt;(const std::move_iterator&lt;_IteratorL&gt;&amp;, const std::move_iterator&lt;_IteratorR&gt;&amp;)&#x27;
      operator&gt;(const move_iterator&lt;_IteratorL&gt;&amp; __x,
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_iterator.h:1160:5: note:   template argument deduction/substitution failed:
-selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::move_iterator&lt;_IteratorL&gt;&#x27;
+selection_sort_array_p.cpp:50:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::move_iterator&lt;_IteratorL&gt;&#x27;
          cin &gt; arr[i];
                     ^
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_algobase.h:67,
@@ -1515,12 +1969,12 @@ In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:40,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
-                 from selection_sort_array_p.cpp:1:
+                 from selection_sort_array_p.cpp:27:
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_iterator.h:1166:5: note: candidate: &#x27;template&lt;class _Iterator&gt; bool std::operator&gt;(const std::move_iterator&lt;_IteratorL&gt;&amp;, const std::move_iterator&lt;_IteratorL&gt;&amp;)&#x27;
      operator&gt;(const move_iterator&lt;_Iterator&gt;&amp; __x,
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_iterator.h:1166:5: note:   template argument deduction/substitution failed:
-selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::move_iterator&lt;_IteratorL&gt;&#x27;
+selection_sort_array_p.cpp:50:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::move_iterator&lt;_IteratorL&gt;&#x27;
          cin &gt; arr[i];
                     ^
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/string:52,
@@ -1529,12 +1983,12 @@ In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:42,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
-                 from selection_sort_array_p.cpp:1:
+                 from selection_sort_array_p.cpp:27:
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/basic_string.h:6132:5: note: candidate: &#x27;template&lt;class _CharT, class _Traits, class _Alloc&gt; bool std::operator&gt;(const std::__cxx11::basic_string&lt;_CharT, _Traits, _Alloc&gt;&amp;, const std::__cxx11::basic_string&lt;_CharT, _Traits, _Alloc&gt;&amp;)&#x27;
      operator&gt;(const basic_string&lt;_CharT, _Traits, _Alloc&gt;&amp; __lhs,
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/basic_string.h:6132:5: note:   template argument deduction/substitution failed:
-selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::__cxx11::basic_string&lt;_CharT, _Traits, _Alloc&gt;&#x27;
+selection_sort_array_p.cpp:50:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::__cxx11::basic_string&lt;_CharT, _Traits, _Alloc&gt;&#x27;
          cin &gt; arr[i];
                     ^
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/string:52,
@@ -1543,12 +1997,12 @@ In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:42,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
-                 from selection_sort_array_p.cpp:1:
+                 from selection_sort_array_p.cpp:27:
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/basic_string.h:6145:5: note: candidate: &#x27;template&lt;class _CharT, class _Traits, class _Alloc&gt; bool std::operator&gt;(const std::__cxx11::basic_string&lt;_CharT, _Traits, _Alloc&gt;&amp;, const _CharT*)&#x27;
      operator&gt;(const basic_string&lt;_CharT, _Traits, _Alloc&gt;&amp; __lhs,
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/basic_string.h:6145:5: note:   template argument deduction/substitution failed:
-selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::__cxx11::basic_string&lt;_CharT, _Traits, _Alloc&gt;&#x27;
+selection_sort_array_p.cpp:50:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::__cxx11::basic_string&lt;_CharT, _Traits, _Alloc&gt;&#x27;
          cin &gt; arr[i];
                     ^
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/string:52,
@@ -1557,21 +2011,21 @@ In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:42,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
                  from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
-                 from selection_sort_array_p.cpp:1:
+                 from selection_sort_array_p.cpp:27:
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/basic_string.h:6157:5: note: candidate: &#x27;template&lt;class _CharT, class _Traits, class _Alloc&gt; bool std::operator&gt;(const _CharT*, const std::__cxx11::basic_string&lt;_CharT, _Traits, _Alloc&gt;&amp;)&#x27;
      operator&gt;(const _CharT* __lhs,
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/basic_string.h:6157:5: note:   template argument deduction/substitution failed:
-selection_sort_array_p.cpp:18:20: note:   mismatched types &#x27;const _CharT*&#x27; and &#x27;std::basic_istream&lt;char&gt;&#x27;
+selection_sort_array_p.cpp:50:20: note:   mismatched types &#x27;const _CharT*&#x27; and &#x27;std::basic_istream&lt;char&gt;&#x27;
          cin &gt; arr[i];
                     ^
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/vector:64,
-                 from selection_sort_array_p.cpp:2:
+                 from selection_sort_array_p.cpp:28:
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_vector.h:1778:5: note: candidate: &#x27;template&lt;class _Tp, class _Alloc&gt; bool std::operator&gt;(const std::vector&lt;_Tp, _Alloc&gt;&amp;, const std::vector&lt;_Tp, _Alloc&gt;&amp;)&#x27;
      operator&gt;(const vector&lt;_Tp, _Alloc&gt;&amp; __x, const vector&lt;_Tp, _Alloc&gt;&amp; __y)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/stl_vector.h:1778:5: note:   template argument deduction/substitution failed:
-selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::vector&lt;_Tp, _Alloc&gt;&#x27;
+selection_sort_array_p.cpp:50:20: note:   &#x27;std::istream&#x27; {aka &#x27;std::basic_istream&lt;char&gt;&#x27;} is not derived from &#x27;const std::vector&lt;_Tp, _Alloc&gt;&#x27;
          cin &gt; arr[i];
                     ^</pre></div></div>
   <p class="readout"><b>Reading the output.</b> No output: compile error &quot;no match for operator&gt;&quot;.</p>
@@ -2418,85 +2872,161 @@ selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;st
   <p class="what">The task was to print the list in reverse, but the code actually sorts it in ascending order with selection sort.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 72 lines</span>
+      <span>CPP · 121 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%207/practice_problem_2_reverse_linked_list.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Practice problem 2: print the linked list in reverse order.</span>
+
+<span class="cm">Careful - this file does not do that. What it actually does is sort the list</span>
+<span class="cm">into ascending order with selection sort. For the input 5 4 8 6 2 1 it prints</span>
+<span class="cm">1 2 4 5 6 8, while a true reverse would print 1 2 6 8 4 5. Sorting and</span>
+<span class="cm">reversing only agree on input that happens to arrive in descending order.</span>
+
+<span class="cm">The code is left exactly as it was written; the comments below mark the spot.</span>
+<span class="cm">The real answer is three lines of recursion:</span>
+
+<span class="cm">    void print_reverse(Node* node){</span>
+<span class="cm">        if(node == NULL) return;      // walked past the end: turn back</span>
+<span class="cm">        print_reverse(node-&gt;next);    // print everything after me first</span>
+<span class="cm">        cout &lt;&lt; node-&gt;val &lt;&lt; endl;    // and only then print me</span>
+<span class="cm">    }</span>
+
+<span class="cm">Each call waits for the rest of the list to finish printing before it prints</span>
+<span class="cm">its own value, so the values come out last-first. Nothing is rewired and the</span>
+<span class="cm">list is left alone - which is the difference between *printing* in reverse and</span>
+<span class="cm">*reversing* the list. Module 10 does the second one.</span>
+
+<span class="cm">Input: the values of the list, ended by -1.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -2514,6 +3044,7 @@ selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;st
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Append a value in O(1), because the last node is remembered in `tail`.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -2526,6 +3057,7 @@ selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;st
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w"> </span><span class="c1">// or tail = tail-&gt;next</span>
 <span class="p">}</span>
 
+<span class="c1">// Print forward: start at the head and follow `next` until it is NULL.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -2534,14 +3066,32 @@ selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;st
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
+<span class="c1">// Swap two ints. Both parameters are references, so the change is made in the</span>
+<span class="c1">// caller&#39;s variables and not in two copies that vanish at the closing brace.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">swap</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">b</span><span class="p">){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 <span class="w">    </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Selection sort, written with node pointers where an array would use indexes.</span>
+<span class="c1">//</span>
+<span class="c1">// `i` is the position being settled and `j` walks over every node after `i`.</span>
+<span class="c1">// Whenever a later value is smaller, the two values change places, so when the</span>
+<span class="c1">// inner loop ends `i-&gt;val` holds the smallest value in the whole remaining</span>
+<span class="c1">// part of the list. Then `i` moves on and the next smallest settles behind it.</span>
+<span class="c1">//</span>
+<span class="c1">// Only the numbers move: the nodes and their arrows are never touched. That is</span>
+<span class="c1">// what keeps this short - swapping the nodes themselves would mean rewiring</span>
+<span class="c1">// several links each time.</span>
+<span class="c1">//</span>
+<span class="c1">// Two nested walks, so O(n^2) time and O(1) extra space.</span>
+<span class="c1">// Trap: `i-&gt;next` is read before the first test, so an empty list crashes.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">sort_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Stop at the last node: there is nothing after it left to compare with.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="n">head</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// `j` starts at `i-&gt;next`, never at the head - everything before `i`</span>
+<span class="w">        </span><span class="c1">// is already in its final place.</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">!=</span><span class="nb">NULL</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">j</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">){</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">j</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">){</span>
 <span class="w">                </span><span class="n">swap</span><span class="p">(</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span>
@@ -2555,6 +3105,7 @@ selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;st
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Read values until -1; the -1 is only a stop sign and is not stored.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -2562,15 +3113,16 @@ selection_sort_array_p.cpp:18:20: note:   &#x27;std::istream&#x27; {aka &#x27;st
 <span class="w">        </span><span class="p">}</span>
 <span class="w">        </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
+<span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span><span class="w">   </span><span class="c1">// the list as it was typed: 5 4 8 6 2 1</span>
+<span class="w">    </span><span class="c1">// This is where a reverse was wanted. What happens instead is a sort.</span>
 <span class="w">    </span><span class="n">sort_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
-<span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
+<span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span><span class="w">   </span><span class="c1">// 1 2 4 5 6 8 - sorted, not reversed</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 72 lines ▾</button>
+    <button type="button" class="expand">Show all 121 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 4 8 6 2 1 -1</pre><p class="io-note">Values ended by -1.</p></div><div class="io out"><div class="io-h">Output </div><pre>5
@@ -3894,7 +4446,7 @@ practice_problem_4_descending_order_p.cpp:60:13: error: &#x27;j&#x27; was not de
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

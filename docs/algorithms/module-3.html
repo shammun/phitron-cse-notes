@@ -7,7 +7,7 @@
 <meta name="description" content="This module adds depth-first search, which goes as deep as possible before backing up, written with recursion. It then moves both BFS and DFS onto 2D grids, where each cell is a node, and uses DFS to count connected components and their sizes.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -61,7 +61,163 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
   vis[u] = true;
   for(int v : adj[u]) if(!vis[v]) dfs(v);
 }</pre></div><div class="concept"><h4>Grid as a graph</h4><p>Cell <code>(i, j)</code> is a node. Its neighbours are the 4 cells up, down, left and right, taken from a <code>direction</code> list of <code>{di, dj}</code> pairs.</p></div><div class="concept"><h4>valid(i, j)</h4><p>Before touching a neighbour, check it is inside the grid: <code>0 &lt;= i &lt; n</code> and <code>0 &lt;= j &lt; m</code>. Then check it is not visited and not a wall.</p></div><div class="concept"><h4>Connected components</h4><p>Loop over every node; each time you find an unvisited one, start a DFS and add 1 to the count. Each DFS paints one whole piece.</p></div><div class="concept"><h4>Component size</h4><p>Reset a counter before each DFS and increment it inside <code>dfs</code>; after the call it holds that component&#x27;s size.</p></div><div class="concept"><h4>Flood fill</h4><p>DFS on a grid that changes cell values as it goes, e.g. recolour every connected pixel of the same colour.</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: dfs(0) going deep and coming back</h3><p>This is the graph of <code>dfs.cpp</code> - 0 joins 1 and 2, 1 joins 3 and 4, 2 joins 5. Watch the call stack grow downwards as each call steps into a neighbour, and shrink again when a call runs out of neighbours. The visit order at the bottom only ever grows.</p><div class="stepper" data-n="9"><p class="stitle">Press the arrows to follow the calls</p><div class="frames"><div class="frame" data-i="0"><pre>      [0]
+     /   \
+   (1)   (2)
+   / \     \
+ (3) (4)   (5)
+[x] = visited
+
+call stack, deepest at the bottom:
+  dfs(0)
+
+
+
+visit order:  0</pre><p class="flabel"><code>dfs(0)</code> is called from <code>main</code>. It prints 0 and marks it. One call is on the stack.</p></div><div class="frame" data-i="1"><pre>      [0]
+     /   \
+   [1]   (2)
+   / \     \
+ (3) (4)   (5)
+[x] = visited
+
+call stack, deepest at the bottom:
+  dfs(0)
+  dfs(1)
+
+
+visit order:  0 1</pre><p class="flabel">The first neighbour of 0 is 1, and it is unmarked, so <code>dfs(0)</code> calls <code>dfs(1)</code> and is paused mid-loop. It has not forgotten about 2; it simply cannot get back to it until the call below returns.</p></div><div class="frame" data-i="2"><pre>      [0]
+     /   \
+   [1]   (2)
+   / \     \
+ [3] (4)   (5)
+[x] = visited
+
+call stack, deepest at the bottom:
+  dfs(0)
+  dfs(1)
+  dfs(3)
+
+visit order:  0 1 3</pre><p class="flabel">The neighbours of 1 are 0, 3 and 4. 0 is already marked, so it is skipped, and <code>dfs(3)</code> goes one level deeper. DFS commits to the first door that opens.</p></div><div class="frame" data-i="3"><pre>      [0]
+     /   \
+   [1]   (2)
+   / \     \
+ [3] (4)   (5)
+[x] = visited
+
+call stack, deepest at the bottom:
+  dfs(0)
+  dfs(1)
+
+
+visit order:  0 1 3</pre><p class="flabel">3&#x27;s only neighbour is 1, which is marked, so the loop ends and <code>dfs(3)</code> returns. That return is the backtrack - the stack shrinks and we are standing on 1 again.</p></div><div class="frame" data-i="4"><pre>      [0]
+     /   \
+   [1]   (2)
+   / \     \
+ [3] [4]   (5)
+[x] = visited
+
+call stack, deepest at the bottom:
+  dfs(0)
+  dfs(1)
+  dfs(4)
+
+visit order:  0 1 3 4</pre><p class="flabel"><code>dfs(1)</code> picks up its loop where it left off, at 4, and calls <code>dfs(4)</code>. The call stack is what remembered that 4 was still to do.</p></div><div class="frame" data-i="5"><pre>      [0]
+     /   \
+   [1]   (2)
+   / \     \
+ [3] [4]   (5)
+[x] = visited
+
+call stack, deepest at the bottom:
+  dfs(0)
+
+
+
+visit order:  0 1 3 4</pre><p class="flabel">4 has nothing new either, so <code>dfs(4)</code> returns; then 1&#x27;s list is finished too, so <code>dfs(1)</code> returns as well. Two frames pop off at once and we are back on 0, with its whole left branch done.</p></div><div class="frame" data-i="6"><pre>      [0]
+     /   \
+   [1]   [2]
+   / \     \
+ [3] [4]   (5)
+[x] = visited
+
+call stack, deepest at the bottom:
+  dfs(0)
+  dfs(2)
+
+
+visit order:  0 1 3 4 2</pre><p class="flabel">Only now does 0 reach the second name on its list. <code>dfs(2)</code> is called, and 2 is printed fifth - long after 3 and 4, which are further from the source. BFS would have printed it second.</p></div><div class="frame" data-i="7"><pre>      [0]
+     /   \
+   [1]   [2]
+   / \     \
+ [3] [4]   [5]
+[x] = visited
+
+call stack, deepest at the bottom:
+  dfs(0)
+  dfs(2)
+  dfs(5)
+
+visit order:  0 1 3 4 2 5</pre><p class="flabel">2&#x27;s neighbours are 0 (marked) and 5 (new), so <code>dfs(5)</code> goes deeper one last time.</p></div><div class="frame" data-i="8"><pre>      [0]
+     /   \
+   [1]   [2]
+   / \     \
+ [3] [4]   [5]
+[x] = visited
+
+call stack, deepest at the bottom:
+  (empty)
+
+
+
+visit order:  0 1 3 4 2 5</pre><p class="flabel">5, then 2, then 0 all run out of unmarked neighbours and return in turn. The stack is empty, <code>main</code> carries on, and the printed order is <code>0 1 3 4 2 5</code>.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 9</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div><div class="wstep"><h3>Watch it happen: flood fill painting a 3 by 3 picture</h3><p>Same DFS, now on a grid, with the picture from the flood-fill program: start at <code>(1, 1)</code>, the colour there is 1, and the new colour is 2. Directions are tried in the program&#x27;s own order - right, left, up, down. The <code>chain</code> line is the call stack written sideways.</p><p>Watch the bottom-right 1 the whole way through. It is never painted, because no run of side-by-side 1s leads to it.</p><div class="stepper" data-n="8"><p class="stitle">Press the arrows to watch the paint spread</p><div class="frames"><div class="frame" data-i="0"><pre>    c0 c1 c2
+r0  1  1  1
+r1  1 &gt;1&lt; 0
+r2  1  0  1
+
+chain: (1,1)
+the cell in &gt; &lt; is where we are standing</pre><p class="flabel">The picture before anything happens. The starting cell holds a 1, so 1 is the colour we chase; every 2 you see from now on is a cell already painted.</p></div><div class="frame" data-i="1"><pre>    c0 c1 c2
+r0  1  1  1
+r1  1 &gt;2&lt; 0
+r2  1  0  1
+
+chain: (1,1)
+right is a 0 -&gt; skip</pre><p class="flabel">Paint <code>(1,1)</code> with 2. First direction is right: <code>(1,2)</code> holds a 0, not our colour, so it is skipped.</p></div><div class="frame" data-i="2"><pre>    c0 c1 c2
+r0  1  1  1
+r1 &gt;2&lt; 2  0
+r2  1  0  1
+
+chain: (1,1) -&gt; (1,0)
+left is a 1 -&gt; go in</pre><p class="flabel">Next direction is left. <code>(1,0)</code> is a 1, so <code>dfs</code> steps into it and paints it. The chain is now two calls deep.</p></div><div class="frame" data-i="3"><pre>    c0 c1 c2
+r0 &gt;2&lt; 1  1
+r1  2  2  0
+r2  1  0  1
+
+chain: (1,1) -&gt; (1,0) -&gt; (0,0)
+up is a 1 -&gt; go in</pre><p class="flabel">From <code>(1,0)</code>: right is the 2 we just came from, left is off the grid, and up is <code>(0,0)</code>, a 1. In we go.</p></div><div class="frame" data-i="4"><pre>    c0 c1 c2
+r0  2 &gt;2&lt; 1
+r1  2  2  0
+r2  1  0  1
+
+chain: (1,1) -&gt; (1,0) -&gt; (0,0) -&gt; (0,1)
+right is a 1 -&gt; go in</pre><p class="flabel">From <code>(0,0)</code> the first direction, right, lands on <code>(0,1)</code>, another 1. Paint it and go deeper still.</p></div><div class="frame" data-i="5"><pre>    c0 c1 c2
+r0  2  2 &gt;2&lt;
+r1  2  2  0
+r2  1  0  1
+
+chain: (1,1) -&gt; (1,0) -&gt; (0,0) -&gt; (0,1) -&gt; (0,2)
+top row is full</pre><p class="flabel">And once more to <code>(0,2)</code>. This is the deepest the recursion gets: five calls waiting.</p></div><div class="frame" data-i="6"><pre>    c0 c1 c2
+r0  2  2  2
+r1  2  2  0
+r2 &gt;2&lt; 0  1
+
+chain: (1,1) -&gt; (1,0) -&gt; (2,0)
+down is a 1 -&gt; go in</pre><p class="flabel"><code>(0,2)</code> has nothing new - right is off the grid, down is a 0 - so it returns, and so do <code>(0,1)</code> and <code>(0,0)</code>. Back in <code>(1,0)</code>, the last untried direction is down, and <code>(2,0)</code> is a 1.</p></div><div class="frame" data-i="7"><pre>    c0 c1 c2
+r0  2  2  2
+r1  2  2  0
+r2  2  0  1
+
+chain: (empty)
+done: [[2,2,2],[2,2,0],[2,0,1]]</pre><p class="flabel"><code>(2,0)</code> has only 0s and 2s around it, so every call returns and the fill is done. The bottom-right 1 survived: it touches only 0s, so no chain of 1s ever reached it.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/dfsbfs" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — BFS and DFS</b><span class="rnote">Run both on the same graph and compare the order the nodes are visited.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/DFS.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — depth-first search</b><span class="rnote">Watch it go deep and back up, which is the whole difference from BFS.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/ConnectedComponent.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — connected components</b><span class="rnote">The islands idea on a plain graph.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/graph/depth-first-search.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — DFS</b><span class="rnote">DFS with the edge classification that explains cycle detection.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-dfs">
@@ -73,121 +229,12 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
     </div>
   </div>
   <p class="what">Recursive DFS from node 0 that prints nodes in the order it enters them.</p>
-  <div class="codebox-wrap">
-    <div class="code-bar">
-      <span>CPP · 38 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%203/dfs.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">src</span><span class="p">]){</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
-<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
-<span class="w">    </span><span class="n">dfs</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 38 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 5
-0 1
-0 2
-1 3
-1 4
-2 5</pre><p class="io-note"><code>n e</code>, then edges. Tree: 0 has children 1 and 2; 1 has 3 and 4; 2 has 5.</p></div><div class="io out"><div class="io-h">Output </div><pre>0 1 3 4 2 5 </pre></div></div>
-  <p class="readout"><b>Reading the output.</b> <code>0 1 3 4 2 5</code>: the whole branch under 1 is finished before 2 is visited (BFS would print <code>0 1 2 3 4 5</code>).</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Build the undirected adjacency list.</li><li><code>dfs(src)</code> prints <code>src</code> and marks it visited.</li><li>For each unvisited <code>child</code>, call <code>dfs(child)</code> right away: go deep first.</li><li>When all children are done, the function returns to its caller (backtracking).</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> What plays the role of BFS&#x27;s queue in recursive DFS?</summary><div>The function call stack.</div></details>
-</section>
-<section class="prog" id="p-bfs-on-2d-grid">
-  <div class="prog-h">
-    <span class="num">2</span>
-    <div class="prog-t">
-      <h3>BFS on a 2D grid</h3>
-      <div class="meta"><code class="fname">bfs_on_2d_grid.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n·m) · Space O(n·m)</span></div>
-    </div>
-  </div>
-  <p class="what">Reads a grid, runs BFS from a source cell and prints the fewest steps to the destination cell.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
       <span>CPP · 63 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%203/bfs_on_2d_grid.cpp" target="_blank" rel="noopener">GitHub</a>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%203/dfs.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -253,7 +300,22 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="normal">60</span>
 <span class="normal">61</span>
 <span class="normal">62</span>
-<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Depth-first search (DFS): the other way to walk a graph.</span>
+<span class="c1">//</span>
+<span class="c1">// BFS spread out in rings, held back by a queue. DFS does the opposite: from the</span>
+<span class="c1">// node you are standing on, step into the first unvisited neighbour immediately,</span>
+<span class="c1">// and from there into its first unvisited neighbour, and so on until there is</span>
+<span class="c1">// nowhere new to go. Only then do you back up one step and try the next branch.</span>
+<span class="c1">//</span>
+<span class="c1">// There is no queue here, and no stack written by hand either. The recursion does</span>
+<span class="c1">// the remembering: each call to dfs() is paused while its child call runs, and the</span>
+<span class="c1">// call stack holds the list of nodes we still have to come back to. &quot;Back up one</span>
+<span class="c1">// step&quot; is simply a function returning to its caller.</span>
+<span class="c1">//</span>
+<span class="c1">// visited[] has the same job as in BFS: without it, two nodes joined in a cycle</span>
+<span class="c1">// would call each other for ever until the program runs out of stack.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -262,12 +324,219 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
-<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span>
-<span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}};</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 
+<span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w">   </span><span class="c1">// printed on the way IN, so this is the entry order</span>
+<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">      </span><span class="c1">// mark before recursing, or a cycle sends us round again</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">src</span><span class="p">]){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
+<span class="w">            </span><span class="c1">// Go deep straight away. This call will finish the whole branch under</span>
+<span class="w">            </span><span class="c1">// child before control ever comes back here and tries the next one.</span>
+<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Falling off the end of the loop is the backtrack: nothing new under src, so</span>
+<span class="w">    </span><span class="c1">// return to whoever called us and let them carry on with their own list.</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
+<span class="w">    </span><span class="n">dfs</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Cost is the same as BFS, O(V + E), because each node is entered once and</span>
+<span class="w">    </span><span class="c1">// each edge is looked at once from each end. The difference is only the order</span>
+<span class="w">    </span><span class="c1">// and where the memory goes: a queue for BFS, the recursion stack for DFS.</span>
+<span class="w">    </span><span class="c1">// That stack is worth watching, since a path of 100000 nodes means 100000</span>
+<span class="w">    </span><span class="c1">// nested calls.</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 63 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 5
+0 1
+0 2
+1 3
+1 4
+2 5</pre><p class="io-note"><code>n e</code>, then edges. Tree: 0 has children 1 and 2; 1 has 3 and 4; 2 has 5.</p></div><div class="io out"><div class="io-h">Output </div><pre>0 1 3 4 2 5 </pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>0 1 3 4 2 5</code>: the whole branch under 1 is finished before 2 is visited (BFS would print <code>0 1 2 3 4 5</code>).</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Build the undirected adjacency list.</li><li><code>dfs(src)</code> prints <code>src</code> and marks it visited.</li><li>For each unvisited <code>child</code>, call <code>dfs(child)</code> right away: go deep first.</li><li>When all children are done, the function returns to its caller (backtracking).</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> What plays the role of BFS&#x27;s queue in recursive DFS?</summary><div>The function call stack.</div></details>
+</section>
+<section class="prog" id="p-bfs-on-2d-grid">
+  <div class="prog-h">
+    <span class="num">2</span>
+    <div class="prog-t">
+      <h3>BFS on a 2D grid</h3>
+      <div class="meta"><code class="fname">bfs_on_2d_grid.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n·m) · Space O(n·m)</span></div>
+    </div>
+  </div>
+  <p class="what">Reads a grid, runs BFS from a source cell and prints the fewest steps to the destination cell.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 102 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%203/bfs_on_2d_grid.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// BFS on a 2D grid: the same search, on a graph nobody built.</span>
+<span class="c1">//</span>
+<span class="c1">// A grid of cells is already a graph in disguise. Cell (i, j) is a node, and its</span>
+<span class="c1">// neighbours are the four cells sharing a side with it. The only difference from</span>
+<span class="c1">// Module 2 is that there is no adj_list to look the neighbours up in: they are</span>
+<span class="c1">// worked out by arithmetic, by adding a small offset to the row and the column.</span>
+<span class="c1">// Nothing else about BFS changes. Queue, mark on push, level = parent&#39;s level + 1.</span>
+<span class="c1">//</span>
+<span class="c1">// A node is now two numbers instead of one, so the queue holds pair&lt;int,int&gt;, and</span>
+<span class="c1">// vis and level become 2D arrays indexed the same way as the grid.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span><span class="w">    </span><span class="c1">// the map as read; 105 leaves room for a 100x100 grid</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span><span class="w">     </span><span class="c1">// vis[i][j] = has cell (i, j) already been queued?</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span><span class="w">    </span><span class="c1">// level[i][j] = fewest steps from the source to (i, j)</span>
+
+<span class="c1">// The four moves, written as (row change, column change):</span>
+<span class="c1">//   {0, 1}  same row, one column right</span>
+<span class="c1">//   {0, -1} same row, one column left</span>
+<span class="c1">//   {-1, 0} one row up   (row numbers grow downwards, so up is -1)</span>
+<span class="c1">//   {1, 0}  one row down</span>
+<span class="c1">// Keeping them in a list means the code says &quot;for each of the four directions&quot;</span>
+<span class="c1">// once, instead of repeating almost the same four blocks. Add {1,1}, {1,-1},</span>
+<span class="c1">// {-1,1}, {-1,-1} to this list and the same code walks diagonally too.</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}};</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">   </span><span class="c1">// rows and columns; global so valid() can see them</span>
+
+<span class="c1">// The guard that makes the arithmetic safe. Adding an offset to a cell on the</span>
+<span class="c1">// edge of the map produces a row or column outside the grid, and reading such a</span>
+<span class="c1">// cell is undefined behaviour. So every computed neighbour is checked first:</span>
+<span class="c1">// the row must be in 0..n-1 and the column in 0..m-1.</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
@@ -278,18 +547,23 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="kt">void</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sj</span><span class="p">){</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="n">sj</span><span class="p">});</span>
-<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">    </span><span class="c1">// marked on push, for the same reason as in Module 2</span>
 <span class="w">    </span><span class="n">level</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span><span class="w">     </span><span class="c1">// unpacked into two plain ints, easier to read</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Instead of &quot;for each neighbour in adj_list[par]&quot;, here it is &quot;for each</span>
+<span class="w">        </span><span class="c1">// of the four directions&quot;, and the neighbour is computed on the spot.</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span><span class="w">    </span><span class="c1">// child row</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span><span class="w">   </span><span class="c1">// child column</span>
+
+<span class="w">            </span><span class="c1">// Order matters: valid() must be asked first, because the second test</span>
+<span class="w">            </span><span class="c1">// reads vis[ci][cj], and that read is only safe inside the grid.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">false</span><span class="p">){</span>
 <span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">});</span>
 <span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -301,6 +575,8 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// cin &gt;&gt; a char skips spaces and newlines, so a row typed as .... is read one</span>
+<span class="w">    </span><span class="c1">// character at a time and the line breaks look after themselves.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
@@ -311,14 +587,22 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="n">sj</span><span class="p">,</span><span class="w"> </span><span class="n">di</span><span class="p">,</span><span class="w"> </span><span class="n">dj</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">si</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">sj</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">di</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">dj</span><span class="p">;</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
-<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">level</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">level</span><span class="p">));</span>
+<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">level</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">level</span><span class="p">));</span><span class="w">   </span><span class="c1">// -1 = never reached</span>
 <span class="w">    </span><span class="n">bfs</span><span class="p">(</span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="n">sj</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// Every step costs one, so the BFS level is the fewest moves. A -1 here means</span>
+<span class="w">    </span><span class="c1">// the destination could not be reached at all.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="n">di</span><span class="p">][</span><span class="n">dj</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Note what this version does NOT do: it reads the grid characters but never</span>
+<span class="w">    </span><span class="c1">// looks at them, so a wall is walked straight through. The next file,</span>
+<span class="w">    </span><span class="c1">// bfs_on_grid_with_obstacles.cpp, adds the one test that fixes that.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Cost: n*m cells, four neighbours each, so O(n*m) time and memory.</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 63 lines ▾</button>
+    <button type="button" class="expand">Show all 102 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3 4
@@ -344,7 +628,7 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
   <p class="what">Same grid BFS, but a cell with <code>#</code> can never be entered.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 63 lines</span>
+      <span>CPP · 81 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%203/bfs_on_grid_with_obstacles.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -413,7 +697,32 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="normal">60</span>
 <span class="normal">61</span>
 <span class="normal">62</span>
-<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The same grid BFS as bfs_on_2d_grid.cpp, with walls that actually block.</span>
+<span class="c1">//</span>
+<span class="c1">// Everything below is unchanged apart from one extra test when a neighbour is</span>
+<span class="c1">// pushed: the cell must not be a &#39;#&#39;. That single condition is what finally makes</span>
+<span class="c1">// the grid characters mean something. Compare the two files side by side; the</span>
+<span class="c1">// difference is one line.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -422,12 +731,13 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
-<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span>
+<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span><span class="w">    </span><span class="c1">// &#39;.&#39; is open floor, &#39;#&#39; is a wall</span>
 <span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}};</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
 
+<span class="c1">// Same in-bounds guard as before: is (i, j) still on the map?</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
@@ -450,6 +760,13 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
+<span class="w">            </span><span class="c1">// Three tests, and the order is deliberate:</span>
+<span class="w">            </span><span class="c1">//   valid   - is the cell on the map? (must come first, the other</span>
+<span class="w">            </span><span class="c1">//             two read the arrays at that position)</span>
+<span class="w">            </span><span class="c1">//   !vis    - have we already queued it?</span>
+<span class="w">            </span><span class="c1">//   != &#39;#&#39;  - is it floor rather than wall?</span>
+<span class="w">            </span><span class="c1">// A wall is simply never pushed, so it is never part of any path.</span>
+<span class="w">            </span><span class="c1">// Nothing else about BFS needs to know that walls exist.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">&#39;#&#39;</span><span class="p">){</span>
 <span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">});</span>
 <span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -473,12 +790,15 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">level</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">level</span><span class="p">));</span>
 <span class="w">    </span><span class="n">bfs</span><span class="p">(</span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="n">sj</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// With walls in the way the answer can be larger than the straight-line</span>
+<span class="w">    </span><span class="c1">// distance, because the route has to go round. And if the walls seal the</span>
+<span class="w">    </span><span class="c1">// destination off completely, level stays -1, which is the right answer.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="n">di</span><span class="p">][</span><span class="n">dj</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 63 lines ▾</button>
+    <button type="button" class="expand">Show all 81 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3 4
@@ -504,7 +824,7 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
   <p class="what">Recursive DFS over grid cells that prints each cell as it is entered.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 49 lines</span>
+      <span>CPP · 72 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%203/dfs_on_2d_grid.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -559,7 +879,43 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="normal">46</span>
 <span class="normal">47</span>
 <span class="normal">48</span>
-<span class="normal">49</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// DFS on a 2D grid.</span>
+<span class="c1">//</span>
+<span class="c1">// Two ideas you already have, put together: the recursion of dfs.cpp and the</span>
+<span class="c1">// cell-is-a-node trick of bfs_on_2d_grid.cpp. A cell&#39;s neighbours are still the</span>
+<span class="c1">// four cells around it, computed with the direction list rather than looked up,</span>
+<span class="c1">// and valid() still keeps the arithmetic inside the map.</span>
+<span class="c1">//</span>
+<span class="c1">// Only the order of visiting differs. BFS spread out evenly in rings; DFS runs as</span>
+<span class="c1">// far as it can in the first direction of the list before it ever tries the</span>
+<span class="c1">// second. With the directions in the order right, left, up, down, that comes out</span>
+<span class="c1">// looking like a snake: along the top row to the wall, down one, back along the</span>
+<span class="c1">// second row, and so on.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -570,6 +926,7 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 
 <span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span>
 <span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span>
+<span class="c1">// right, left, up, down; the order here decides the shape of the walk</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}};</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
 
@@ -581,14 +938,16 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="p">}</span>
 
 <span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sj</span><span class="p">){</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">si</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sj</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">si</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sj</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">   </span><span class="c1">// printed on entry, like the graph DFS</span>
 <span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">si</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sj</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
+<span class="w">        </span><span class="c1">// valid() first, then the visited test, because vis[ci][cj] may only be</span>
+<span class="w">        </span><span class="c1">// read once we know (ci, cj) is really a cell of the grid.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]){</span>
-<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">);</span>
+<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">);</span><span class="w">   </span><span class="c1">// step into it now; the rest of this loop waits</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
@@ -606,11 +965,18 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
 <span class="w">    </span><span class="n">dfs</span><span class="p">(</span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="n">sj</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// Like the plain grid BFS, this version ignores the characters it read, so</span>
+<span class="w">    </span><span class="c1">// walls do not stop it. To make them stop it, add grid[ci][cj] != &#39;#&#39; to the</span>
+<span class="w">    </span><span class="c1">// if above, exactly as bfs_on_grid_with_obstacles.cpp does.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Worth knowing: the recursion can go as deep as the number of cells, so a</span>
+<span class="w">    </span><span class="c1">// full 1000x1000 grid means a million nested calls. That is a lot of stack.</span>
+
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 49 lines ▾</button>
+    <button type="button" class="expand">Show all 72 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2 3
@@ -639,7 +1005,7 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
   <p class="what">Starts a DFS from every node that is still unvisited; the number of starts is the number of components.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 47 lines</span>
+      <span>CPP · 75 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%203/number_of_components.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -692,7 +1058,50 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="normal">44</span>
 <span class="normal">45</span>
 <span class="normal">46</span>
-<span class="normal">47</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// How many separate pieces does the graph fall into?</span>
+<span class="c1">//</span>
+<span class="c1">// A graph need not be one connected whole. It can be several islands with no edge</span>
+<span class="c1">// between them, and each island is called a connected component.</span>
+<span class="c1">//</span>
+<span class="c1">// One DFS paints exactly one island: it reaches everything joined to its starting</span>
+<span class="c1">// node, and nothing else. So the counting is almost free. Walk through the nodes</span>
+<span class="c1">// 0, 1, 2, ... n-1; every time you meet a node that is still unvisited, you have</span>
+<span class="c1">// found an island nobody has painted yet, so start a DFS there and add one to the</span>
+<span class="c1">// count. Nodes of that island are then all marked, so the loop walks past them</span>
+<span class="c1">// without starting anything, and the next count only happens on a genuinely new</span>
+<span class="c1">// island. The number of times a search had to be started IS the number of pieces.</span>
+<span class="c1">//</span>
+<span class="c1">// The same trick works with BFS; nothing here depends on going deep.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -704,6 +1113,8 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 <span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 
+<span class="c1">// The DFS of dfs.cpp with the printing switched off: here we only care about the</span>
+<span class="c1">// marks it leaves behind in vis, not about the order it walked in.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
 <span class="w">    </span><span class="c1">// cout &lt;&lt; src &lt;&lt; &quot; &quot;;</span>
 <span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -727,21 +1138,32 @@ if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
 <span class="w">    </span>
+<span class="w">    </span><span class="c1">// This loop over every node is the point of the file. bfs(0) or dfs(0) alone</span>
+<span class="w">    </span><span class="c1">// would only ever see the piece that holds node 0 and would miss the rest.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
-<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
-<span class="w">            </span><span class="n">count</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">);</span><span class="w">      </span><span class="c1">// paints the whole island that i belongs to</span>
+<span class="w">            </span><span class="n">count</span><span class="o">++</span><span class="p">;</span><span class="w">     </span><span class="c1">// one more island found</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Two small things to carry away.</span>
+<span class="w">    </span><span class="c1">// First, naming a variable count while using namespace std is asking for</span>
+<span class="w">    </span><span class="c1">// trouble, because std::count is a real function from &lt;algorithm&gt;; here the</span>
+<span class="w">    </span><span class="c1">// local name wins, but in other code the clash bites. num_components reads</span>
+<span class="w">    </span><span class="c1">// better and is safe.</span>
+<span class="w">    </span><span class="c1">// Second, to get the SIZE of each island as well, set a counter to zero just</span>
+<span class="w">    </span><span class="c1">// before each dfs(i) and increase it inside dfs; after the call it holds how</span>
+<span class="w">    </span><span class="c1">// many nodes that island has.</span>
 <span class="w">    </span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 47 lines ▾</button>
+    <button type="button" class="expand">Show all 75 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>9 7
@@ -1708,7 +2130,7 @@ practice_problem_1.cpp:53:5: note:                 &#x27;int count&#x27;
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

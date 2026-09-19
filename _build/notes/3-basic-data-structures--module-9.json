@@ -118,7 +118,7 @@
       "input": null,
       "input_note": null,
       "output_note": "`10 20 30` followed by an endless run of garbage numbers, until the run times out: the tail's `next` is not `NULL`, so the walk wanders through random memory.",
-      "watch_out": "The constructor says `this->next = next; this->prev = prev;` — the members are assigned to themselves and stay garbage. Use `NULL` for both. The missing `cout << endl;` in `print_forward` would also glue the two lines together.",
+      "watch_out": "The constructor says `this->next = next; this->prev = prev;` — the members are assigned to themselves and stay garbage. Use `NULL` for both. `print_backward` is also missing its `cout << endl;`, which would glue its line to whatever is printed next.",
       "check": {
         "q": "Which node's link actually caused the endless print?",
         "a": "`tail->next`, which was never set to `NULL`."
@@ -645,6 +645,55 @@
       "name": "Python Tutor — step through C++ code",
       "url": "https://pythontutor.com/cpp.html",
       "note": "Paste your own program and step through it line by line, with the pointers drawn."
+    }
+  ],
+  "walkthrough": [
+    {
+      "heading": "Watch it happen: the four links of a doubly linked insert",
+      "body": [
+        "This is `insert_at_any_position(head, tail, 2, 200)` on the list `10 20 30`. In a singly linked list two arrows changed; here it is four, and the checklist below ticks them off one at a time."
+      ],
+      "snippet": null,
+      "trace": null,
+      "frames_title": "Press ▶ to step through it",
+      "frames": [
+        {
+          "label": "The list is 10 20 30 and every box knows both neighbours. `head->prev` is NULL because nothing comes before the first box, and `tail->next` is NULL because nothing comes after the last.",
+          "art": "        head              tail\nNULL <- [10] <-> [20] <-> [30] -> NULL"
+        },
+        {
+          "label": "`for(int i=1; i<pos; i++)` takes one hop, so `tmp` stands on position 1 — the box before the gap, exactly as in a singly linked list.",
+          "art": "        head     tmp      tail\nNULL <- [10] <-> [20] <-> [30] -> NULL"
+        },
+        {
+          "label": "The new box is made and sits in the gap holding nothing. Four links have to be written before it is really in the list, and every one of them is a way to get it wrong.",
+          "art": "        head     tmp      tail\nNULL <- [10] <-> [20] <-> [30] -> NULL\n                     [200]\n1 newNode->next = tmp->next  200 -> 30  [ ]\n2 tmp->next->prev = newNode  200 <- 30  [ ]\n3 tmp->next = newNode         20 -> 200 [ ]\n4 newNode->prev = tmp         20 <- 200 [ ]"
+        },
+        {
+          "label": "`newNode->next = tmp->next;` — the new box points forward at 30. One down.",
+          "art": "        head     tmp      tail\nNULL <- [10] <-> [20] <-> [30] -> NULL\n                     [200]\n1 newNode->next = tmp->next  200 -> 30  [x] <=\n2 tmp->next->prev = newNode  200 <- 30  [ ]\n3 tmp->next = newNode         20 -> 200 [ ]\n4 newNode->prev = tmp         20 <- 200 [ ]"
+        },
+        {
+          "label": "`tmp->next->prev = newNode;` — 30 points back at the new box. Notice this line still reads `tmp->next` to mean 30. The next line is about to change what `tmp->next` means, so these two have to come first.",
+          "art": "        head     tmp      tail\nNULL <- [10] <-> [20] <-> [30] -> NULL\n                     [200]\n1 newNode->next = tmp->next  200 -> 30  [x]\n2 tmp->next->prev = newNode  200 <- 30  [x] <=\n3 tmp->next = newNode         20 -> 200 [ ]\n4 newNode->prev = tmp         20 <- 200 [ ]"
+        },
+        {
+          "label": "`tmp->next = newNode;` — now 20 points forward at the new box, and the list reads 10 20 200 30 going forward.",
+          "art": "        head     tmp      tail\nNULL <- [10] <-> [20] <-> [30] -> NULL\n                     [200]\n1 newNode->next = tmp->next  200 -> 30  [x]\n2 tmp->next->prev = newNode  200 <- 30  [x]\n3 tmp->next = newNode         20 -> 200 [x] <=\n4 newNode->prev = tmp         20 <- 200 [ ]"
+        },
+        {
+          "label": "`newNode->prev = tmp;` — the new box points back at 20. All four are written, and the rule holds everywhere again: if `A->next` is `B`, then `B->prev` is `A`.",
+          "art": "        head     tmp      tail\nNULL <- [10] <-> [20] <-> [30] -> NULL\n                     [200]\n1 newNode->next = tmp->next  200 -> 30  [x]\n2 tmp->next->prev = newNode  200 <- 30  [x]\n3 tmp->next = newNode         20 -> 200 [x]\n4 newNode->prev = tmp         20 <- 200 [x] <="
+        },
+        {
+          "label": "Drawn straight. Note what did **not** happen: `head` and `tail` were never touched, because the new box went into the middle.",
+          "art": "        head                        tail\nNULL <- [10] <-> [20] <-> [200] <-> [30] -> NULL"
+        },
+        {
+          "label": "And the free test from the notes: print from `head` following `next`, then from `tail` following `prev`. The second line must be the exact reverse of the first. If it is not, one of those four links was left behind.",
+          "art": "forward  (head, follow next):  10 20 200 30\nbackward (tail, follow prev):  30 200 20 10"
+        }
+      ]
     }
   ]
 }

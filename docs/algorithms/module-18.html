@@ -7,7 +7,7 @@
 <meta name="description" content="Three classic algorithms close the course. Merge sort shows divide and conquer: split the array in half, sort each half, merge them. Longest common subsequence is a two-string DP. Kruskal&#x27;s algorithm builds a minimum spanning tree by taking the cheapest edges that do not form a cycle, using DSU. The module&#x27;s quiz material also contrasts substrings with subsequences.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -68,7 +68,127 @@ total cost = 1 + 2 + 4 = 7, using 3 edges</pre><p>Three edges for four nodes, an
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-conquer"><span class="n">1</span>Merge two sorted arrays</a></li><li><a href="#p-divide"><span class="n">2</span>The divide step (splitting only)</a></li><li><a href="#p-merge-sort"><span class="n">3</span>Merge sort</a></li><li><a href="#p-lcs"><span class="n">4</span>Longest common subsequence (memoized)</a></li><li><a href="#p-mst-using-kruskal-algorithm"><span class="n">5</span>Minimum spanning tree with Kruskal</a></li><li><a href="#p-sort-an-array"><span class="n">6</span>Sort an Array (practice)</a></li><li><a href="#p-road-reparation"><span class="n">7</span>Road Reparation (practice)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Divide and conquer</h4><p>Break the problem into halves, solve each half recursively, then combine. For merge sort the combining step is the merge.</p></div><div class="concept"><h4>Merging two sorted arrays</h4><p>Keep one pointer in each array, copy the smaller front element, advance that pointer, and finally copy whatever is left.</p><pre class="snip">while (i &lt; n &amp;&amp; j &lt; m) c[k++] = (a[i] &lt; b[j]) ? a[i++] : b[j++];</pre></div><div class="concept"><h4>Merge sort cost</h4><p>log n levels of halving, and each level does O(n) merge work, so O(n log n) time with O(n) extra memory.</p></div><div class="concept"><h4>Substring vs subsequence</h4><p>A substring is a contiguous block of characters. A subsequence keeps the order but may skip characters. <code>ace</code> is a subsequence of <code>abcde</code>, not a substring.</p></div><div class="concept"><h4>LCS recurrence</h4><p>Compare the last characters: equal gives 1 + lcs of both shorter strings; different gives the better of dropping one character from either string.</p><pre class="snip">if (a[i] == b[j]) return 1 + lcs(i-1, j-1);
 return max(lcs(i-1, j), lcs(i, j-1));</pre></div><div class="concept"><h4>Minimum spanning tree</h4><p>A set of n-1 edges that connects all nodes with the smallest total weight and no cycle.</p></div><div class="concept"><h4>Kruskal&#x27;s algorithm</h4><p>Sort edges by weight. Walk through them and keep an edge only if its ends are in different DSU groups; then union them.</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: merging two sorted halves</h3><p>The two arrays from <code>conquer.cpp</code>: <code>1 4 7 9</code> and <code>2 3 8</code>, each already sorted. A <code>^</code> marks the number each side is currently offering.</p><p>One comparison per press. Notice that you never look past the front of either pile - that is why merging n numbers costs about n steps.</p><div class="stepper" data-n="8"><p class="stitle">Press the arrows for one comparison at a time</p><div class="frames"><div class="frame" data-i="0"><pre>left      1  4  7  9
+          ^
+right     2  3  8
+          ^
+
+compare 1 vs 2
+
+result  (nothing yet)</pre><p class="flabel">Both pointers start at the front, and the result is empty. The smallest number overall has to be at the front of one pile or the other.</p></div><div class="frame" data-i="1"><pre>left      1  4  7  9
+             ^
+right     2  3  8
+          ^
+
+took 1 from the left
+
+result    1</pre><p class="flabel">1 is smaller, so it is copied out and the left pointer steps on. The right pile has not moved.</p></div><div class="frame" data-i="2"><pre>left      1  4  7  9
+             ^
+right     2  3  8
+             ^
+
+took 2 from the right
+
+result    1  2</pre><p class="flabel">Now 4 against 2. The right side is smaller this time, so 2 goes out and the right pointer steps on.</p></div><div class="frame" data-i="3"><pre>left      1  4  7  9
+             ^
+right     2  3  8
+                ^
+
+took 3 from the right
+
+result    1  2  3</pre><p class="flabel">4 against 3. Right again: 3 goes out. The left pointer has still not moved since the first step.</p></div><div class="frame" data-i="4"><pre>left      1  4  7  9
+                ^
+right     2  3  8
+                ^
+
+took 4 from the left
+
+result    1  2  3  4</pre><p class="flabel">4 against 8. Left this time, so 4 goes out and the left pointer moves to 7.</p></div><div class="frame" data-i="5"><pre>left      1  4  7  9
+                   ^
+right     2  3  8
+                ^
+
+took 7 from the left
+
+result    1  2  3  4  7</pre><p class="flabel">7 against 8. Left again: 7 goes out.</p></div><div class="frame" data-i="6"><pre>left      1  4  7  9
+                   ^
+right     2  3  8   (all used)
+
+
+took 8 - right pile is now empty
+
+result    1  2  3  4  7  8</pre><p class="flabel">9 against 8. The right side wins its last comparison, 8 goes out, and now the right pile is empty.</p></div><div class="frame" data-i="7"><pre>left      1  4  7  9   (all used)
+
+right     2  3  8   (all used)
+
+
+left over: copy 9 straight across
+
+result    1  2  3  4  7  8  9</pre><p class="flabel">One pile is empty, so there is nothing left to compare: the second <code>while</code> loop copies whatever the left pile still holds. Seven numbers out for seven steps in, and the result is <code>1 2 3 4 7 8 9</code> - exactly what the program prints.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div><div class="wstep"><h3>Watch it happen: Kruskal picking cables in price order</h3><p>The four villages and five cables from <code>mst_using_Kruskal_algorithm.cpp</code>. The rule has only two parts: look at the cheapest cable you have not looked at yet, and lay it <strong>unless</strong> its two villages are already in the same group.</p><p>The groups line is the disjoint set union from Module 11 doing its one job: answering <code>find(a) == find(b)</code>.</p><div class="stepper" data-n="8"><p class="stitle">Press the arrows to walk down the price list</p><div class="frames"><div class="frame" data-i="0"><pre>edge   cost  taken?
+1-2       1  .
+2-3       4  .
+1-3       3  .
+3-4       2  .
+1-4       5  .
+
+groups: {1} {2} {3} {4}
+total : 0   cables laid: 0</pre><p class="flabel">The five cables in the order the program reads them, and four villages each alone in its own group. Nothing has been laid yet.</p></div><div class="frame" data-i="1"><pre>edge   cost  taken?
+1-2       1  .
+3-4       2  .
+1-3       3  .
+2-3       4  .
+1-4       5  .
+
+groups: {1} {2} {3} {4}
+total : 0   cables laid: 0</pre><p class="flabel">First job: sort the cables cheapest first. The rows have moved, nothing else has. From here you simply walk down the list.</p></div><div class="frame" data-i="2"><pre>edge   cost  taken?
+1-2       1  yes              &lt;= now
+3-4       2  .
+1-3       3  .
+2-3       4  .
+1-4       5  .
+
+groups: {1,2} {3} {4}
+total : 1   cables laid: 1</pre><p class="flabel">Cable 1-2 at cost 1. Village 1 and village 2 are in different groups, so lay it - and the two groups become one.</p></div><div class="frame" data-i="3"><pre>edge   cost  taken?
+1-2       1  yes
+3-4       2  yes              &lt;= now
+1-3       3  .
+2-3       4  .
+1-4       5  .
+
+groups: {1,2} {3,4}
+total : 3   cables laid: 2</pre><p class="flabel">Cable 3-4 at cost 2. Different groups again, so lay it. There are now two separate clumps of villages, not yet joined to each other.</p></div><div class="frame" data-i="4"><pre>edge   cost  taken?
+1-2       1  yes
+3-4       2  yes
+1-3       3  yes              &lt;= now
+2-3       4  .
+1-4       5  .
+
+groups: {1,2,3,4}
+total : 6   cables laid: 3</pre><p class="flabel">Cable 1-3 at cost 3. Village 1 is in one clump and village 3 in the other, so this cable is the bridge between them. Everything is now connected.</p></div><div class="frame" data-i="5"><pre>edge   cost  taken?
+1-2       1  yes
+3-4       2  yes
+1-3       3  yes
+2-3       4  no, same group   &lt;= now
+1-4       5  .
+
+groups: {1,2,3,4}
+total : 6   cables laid: 3</pre><p class="flabel">Cable 2-3 at cost 4. <code>find(2)</code> and <code>find(3)</code> give the same answer, so these two are already connected - this cable would only close a loop. Skip it.</p></div><div class="frame" data-i="6"><pre>edge   cost  taken?
+1-2       1  yes
+3-4       2  yes
+1-3       3  yes
+2-3       4  no, same group
+1-4       5  no, same group   &lt;= now
+
+groups: {1,2,3,4}
+total : 6   cables laid: 3</pre><p class="flabel">Cable 1-4 at cost 5. Same group again, so skip it too. Being the most expensive cable is not the reason it is refused - being a loop is.</p></div><div class="frame" data-i="7"><pre>edge   cost  taken?
+1-2       1  yes
+3-4       2  yes
+1-3       3  yes
+2-3       4  no, same group
+1-4       5  no, same group
+
+groups: {1,2,3,4}
+total : 6   cables laid: 3</pre><p class="flabel">Three cables for four villages, and that is no accident: a tree spanning n villages always has exactly n-1 edges, so you can stop as soon as you have that many. The total is 1 + 2 + 3 = 6, which is what the program prints once its missing <code>return</code> is fixed.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/sorting" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — sorting</b><span class="rnote">Every sort side by side, with the comparison count shown as it runs.</span></a></li><li class="r-visual"><a href="https://visualgo.net/en/mst" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — minimum spanning tree</b><span class="rnote">Watch Kruskal pick edges and skip the ones that would close a loop.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/Kruskal.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — Kruskal</b><span class="rnote">Edges taken in price order, with the rejected ones shown.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/graph/mst_kruskal.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — Kruskal&#x27;s MST</b><span class="rnote">Kruskal with union-find, the same pairing this module uses.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-conquer">
@@ -82,551 +202,10 @@ return max(lcs(i-1, j), lcs(i, j-1));</pre></div><div class="concept"><h4>Minimu
   <p class="what">The &#x27;conquer&#x27; half of merge sort on its own: merges two sorted arrays into one sorted array with two pointers.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 59 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/conquer.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="c1">// First we will take the input for two arrays</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">m</span><span class="p">];</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// Now, declare an array to store the result for the merging of two arrays</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="n">m</span><span class="p">];</span>
-
-<span class="w">    </span><span class="c1">// Now, take the two pointers for the two arrays and pointer for the result array</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">curr</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">]){</span>
-<span class="w">            </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">            </span><span class="n">i</span><span class="o">++</span><span class="p">;</span>
-<span class="w">            </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
-<span class="w">            </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
-<span class="w">            </span><span class="n">j</span><span class="o">++</span><span class="p">;</span>
-<span class="w">            </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
-<span class="w">        </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">        </span><span class="n">i</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
-<span class="w">        </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
-<span class="w">        </span><span class="n">j</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="o">+</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 59 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 3
-1 4 7 9
-2 3 8</pre><p class="io-note">n m, then the two arrays, each already sorted.</p></div><div class="io out"><div class="io-h">Output </div><pre>1 2 3 4 7 8 9 </pre></div></div>
-  <p class="readout"><b>Reading the output.</b> Prints <code>1 2 3 4 7 8 9</code>: every element of both arrays, in order.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read sizes <code>n</code>, <code>m</code> and the two sorted arrays <code>a</code>, <code>b</code>.</li><li><code>i</code>, <code>j</code> point into <code>a</code>, <code>b</code>; <code>curr</code> points into the result <code>c</code>.</li><li>While both have elements, copy the smaller front element into <code>c</code> and advance.</li><li>Copy the rest of whichever array is not finished.</li><li>Print <code>c</code>.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> The inputs must already be sorted; merging unsorted arrays gives an unsorted result.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> How many comparisons can merging 4 and 3 elements need at most?</summary><div>6 (n + m - 1), because each comparison places one element and the last one needs no comparison.</div></details>
-</section>
-<section class="prog" id="p-divide">
-  <div class="prog-h">
-    <span class="num">2</span>
-    <div class="prog-t">
-      <h3>The divide step (splitting only)</h3>
-      <div class="meta"><code class="fname">divide.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n) calls · Space O(log n) recursion depth</span></div>
-    </div>
-  </div>
-  <p class="what">Shows the recursive splitting of merge sort without the merge. It reads an array and halves the range until single elements remain, but prints nothing.</p>
-  <div class="codebox-wrap">
-    <div class="code-bar">
-      <span>CPP · 32 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/divide.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">divide</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">r</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="n">r</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
-<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="p">);</span>
-<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">);</span>
-
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="c1">// First we will take the input for two arrays</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="mi">-1</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 32 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 0
-5 2 4 1 3</pre><p class="io-note">n and an unused m, then n values.</p></div><div class="io out"><div class="io-h">Output </div><pre><span class="muted">(prints nothing)</span></pre></div></div>
-  <p class="readout"><b>Reading the output.</b> No output: this file only demonstrates the splitting. Add a <code>cout &lt;&lt; l &lt;&lt; &quot; &quot; &lt;&lt; r &lt;&lt; endl;</code> at the top of <code>divide</code> to watch the ranges.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>divide(a, l, r)</code> stops when <code>l &gt;= r</code> (one element or none).</li><li>Otherwise <code>mid = (l + r) / 2</code>.</li><li>Recurse on the left half <code>[l, mid]</code> and the right half <code>[mid+1, r]</code>.</li><li><code>main</code> reads <code>n m</code> (m is not used) and the array, then calls <code>divide(a, 0, n-1)</code>.</li></ol></details>
-  
-  <details class="check"><summary><span>✅ Check yourself:</span> For n = 8, how many levels of splitting are there before ranges have size 1?</summary><div>3 (8 -&gt; 4 -&gt; 2 -&gt; 1), which is log2 8.</div></details>
-</section>
-<section class="prog" id="p-merge-sort">
-  <div class="prog-h">
-    <span class="num">3</span>
-    <div class="prog-t">
-      <h3>Merge sort</h3>
-      <div class="meta"><code class="fname">merge_sort.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n log n) · Space O(n)</span></div>
-    </div>
-  </div>
-  <p class="what">Combines both halves: <code>divide</code> sorts the left and right halves recursively and <code>conquer</code> merges them back into the original array.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 77 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/merge_sort.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">conquer</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">mid</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">[</span><span class="n">l</span><span class="o">+</span><span class="n">i</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mid</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">m</span><span class="p">];</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">[</span><span class="n">mid</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// Now, take the two pointers for the two arrays and pointer for the result array</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">curr</span><span class="o">=</span><span class="n">l</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">]){</span>
-<span class="w">            </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">            </span><span class="n">i</span><span class="o">++</span><span class="p">;</span>
-<span class="w">            </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
-<span class="w">            </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
-<span class="w">            </span><span class="n">j</span><span class="o">++</span><span class="p">;</span>
-<span class="w">            </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
-<span class="w">        </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">        </span><span class="n">i</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
-<span class="w">        </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
-<span class="w">        </span><span class="n">j</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">divide</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(nlogn) -- this does the merge sort</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">r</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="n">r</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
-<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="p">);</span><span class="w"> </span><span class="c1">// merge sort the left half</span>
-<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">);</span><span class="w"> </span><span class="c1">// merge sort the right half</span>
-<span class="w">    </span><span class="n">conquer</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">);</span><span class="w"> </span><span class="c1">// merge the two sorted arrays</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="c1">// First we will take the input for two arrays</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="mi">-1</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 77 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 0
-5 2 9 1 5 6</pre><p class="io-note">n and an unused m, then n values (a duplicate 5 is included).</p></div><div class="io out"><div class="io-h">Output </div><pre>1 2 5 5 6 9 </pre></div></div>
-  <p class="readout"><b>Reading the output.</b> Prints <code>1 2 5 5 6 9</code>. Duplicates are kept.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>divide(a, l, r)</code>: return if the range has one element.</li><li>Sort <code>[l, mid]</code> and <code>[mid+1, r]</code> recursively.</li><li><code>conquer</code> copies the two halves into temporary arrays <code>a</code> and <code>b</code>.</li><li>It merges them back into <code>c[l..r]</code> with the two-pointer method.</li><li><code>main</code> prints the sorted array.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> <code>main</code> still reads an unused <code>m</code>, left over from <code>conquer.cpp</code>; the input must contain it. Using <code>a[i] &lt;= b[j]</code> in the merge would make the sort stable (equal values keep their order).</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> Why is merge sort always O(n log n), even on already-sorted input?</summary><div>It always splits in the middle and always merges, whatever the order of the values.</div></details>
-</section>
-<section class="prog" id="p-lcs">
-  <div class="prog-h">
-    <span class="num">4</span>
-    <div class="prog-t">
-      <h3>Longest common subsequence (memoized)</h3>
-      <div class="meta"><code class="fname">lcs.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n·m) · Space O(n·m)</span></div>
-    </div>
-  </div>
-  <p class="what">Finds the length of the longest subsequence shared by two strings, using <code>lcs(i, j)</code> on prefixes <code>a[0..i]</code> and <code>b[0..j]</code> with a memo table.</p>
-  <div class="codebox-wrap">
-    <div class="code-bar">
-      <span>CPP · 45 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/lcs.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Longest common substring using recursion</span>
-<span class="c1">// We will be given two strings a and b. We have to find the length of the </span>
-<span class="c1">// longest common substring of the two strings.</span>
-<span class="c1">// We will use memoization to optimize the solution.</span>
-
-
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-<span class="n">string</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">lcs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">]){</span>
-<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lcs</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lcs</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lcs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="mi">-1</span><span class="p">);</span>
-<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span><span class="w"> </span><span class="n">op2</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">dp</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">dp</span><span class="p">));</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lcs</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="mi">-1</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 45 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>abcde
-ace</pre><p class="io-note">Two strings.</p></div><div class="io out"><div class="io-h">Output </div><pre>3</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> Prints <code>3</code> (the common subsequence <code>ace</code>).</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>memset(dp, -1, ...)</code> and read strings <code>a</code>, <code>b</code>.</li><li>Base case: an empty prefix (<code>i &lt; 0</code> or <code>j &lt; 0</code>) gives 0.</li><li>If <code>a[i] == b[j]</code>, the answer is <code>lcs(i-1, j-1) + 1</code>.</li><li>Otherwise the best of skipping <code>a[i]</code> or skipping <code>b[j]</code>.</li><li>Print <code>lcs(n-1, m-1)</code>.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> The top comment says &#x27;substring&#x27;, but the code computes the longest common <strong>subsequence</strong>; a substring version would reset to 0 when characters differ. Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> What is the LCS length of <code>abc</code> and <code>def</code>?</summary><div>0, they share no characters.</div></details>
-</section>
-<section class="prog" id="p-mst-using-kruskal-algorithm">
-  <div class="prog-h">
-    <span class="num">5</span>
-    <div class="prog-t">
-      <h3>Minimum spanning tree with Kruskal</h3>
-      <div class="meta"><code class="fname">mst_using_Kruskal_algorithm.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(E log E) · Space O(n + E)</span></div>
-    </div>
-  </div>
-  <p class="what">Sorts all edges by weight and greedily keeps each edge that joins two different DSU groups. The sum of kept weights is the MST cost.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
       <span>CPP · 85 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/mst_using_Kruskal_algorithm.cpp" target="_blank" rel="noopener">GitHub</a>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/conquer.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -713,16 +292,889 @@ ace</pre><p class="io-note">Two strings.</p></div><div class="io out"><div class
 <span class="normal">81</span>
 <span class="normal">82</span>
 <span class="normal">83</span>
-<span class="normal">84</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">84</span>
+<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The CONQUER half of merge sort, on its own: given two arrays that are each</span>
+<span class="c1">// already sorted, build one sorted array holding everything from both.</span>
+<span class="c1">//</span>
+<span class="c1">// Merge sort is the module&#39;s example of DIVIDE AND CONQUER - split the work in</span>
+<span class="c1">// half, solve each half, then stitch the two answers together. This file is the</span>
+<span class="c1">// stitching; divide.cpp is the splitting; merge_sort.cpp puts them together.</span>
+<span class="c1">//</span>
+<span class="c1">// The one idea to take away: because both inputs are sorted, the smallest value</span>
+<span class="c1">// not yet used must be at the FRONT of one of them - there is nowhere else it</span>
+<span class="c1">// could be hiding. So the whole merge is a single walk forwards through both</span>
+<span class="c1">// arrays, comparing just the two front elements, never looking back and never</span>
+<span class="c1">// searching. That is why it costs O(n + m) and not O(n log n) all over again.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// First we will take the input for two arrays</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">      </span><span class="c1">// how many values in the first array, and in the second</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Both arrays must ALREADY be sorted - the merge below assumes it and does</span>
+<span class="w">    </span><span class="c1">// not check. Feed it unsorted input and the result is simply unsorted.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">m</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Now, declare an array to store the result for the merging of two arrays</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="n">m</span><span class="p">];</span>
+
+<span class="w">    </span><span class="c1">// Now, take the two pointers for the two arrays and pointer for the result array</span>
+<span class="w">    </span><span class="c1">// i = the next unused position in a, j = the next unused in b,</span>
+<span class="w">    </span><span class="c1">// curr = the next free slot in c. All three only ever move forwards.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">curr</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// While both arrays still have something left, compare the two fronts and</span>
+<span class="w">    </span><span class="c1">// move the smaller one across. One value is placed per turn, so this loop</span>
+<span class="w">    </span><span class="c1">// runs at most n + m times.</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">            </span><span class="n">i</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+<span class="w">            </span><span class="n">j</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// The loop above stops the moment ONE array runs out, so the other may still</span>
+<span class="w">    </span><span class="c1">// have a tail left. That tail is already sorted and every value in it is at</span>
+<span class="w">    </span><span class="c1">// least as big as everything placed so far, so it can be copied straight</span>
+<span class="w">    </span><span class="c1">// across with no comparisons. Exactly one of these two loops does any work.</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">        </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="n">i</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
+<span class="w">        </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+<span class="w">        </span><span class="n">j</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// n + m values came in and n + m go out: nothing is lost or invented, and</span>
+<span class="w">    </span><span class="c1">// duplicates are kept.</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="o">+</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 85 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 3
+1 4 7 9
+2 3 8</pre><p class="io-note">n m, then the two arrays, each already sorted.</p></div><div class="io out"><div class="io-h">Output </div><pre>1 2 3 4 7 8 9 </pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>1 2 3 4 7 8 9</code>: every element of both arrays, in order.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read sizes <code>n</code>, <code>m</code> and the two sorted arrays <code>a</code>, <code>b</code>.</li><li><code>i</code>, <code>j</code> point into <code>a</code>, <code>b</code>; <code>curr</code> points into the result <code>c</code>.</li><li>While both have elements, copy the smaller front element into <code>c</code> and advance.</li><li>Copy the rest of whichever array is not finished.</li><li>Print <code>c</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The inputs must already be sorted; merging unsorted arrays gives an unsorted result.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> How many comparisons can merging 4 and 3 elements need at most?</summary><div>6 (n + m - 1), because each comparison places one element and the last one needs no comparison.</div></details>
+</section>
+<section class="prog" id="p-divide">
+  <div class="prog-h">
+    <span class="num">2</span>
+    <div class="prog-t">
+      <h3>The divide step (splitting only)</h3>
+      <div class="meta"><code class="fname">divide.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n) calls · Space O(log n) recursion depth</span></div>
+    </div>
+  </div>
+  <p class="what">Shows the recursive splitting of merge sort without the merge. It reads an array and halves the range until single elements remain, but prints nothing.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 58 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/divide.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The DIVIDE half of merge sort, on its own: the splitting, with no merging.</span>
+<span class="c1">//</span>
+<span class="c1">// Nothing is printed and nothing is sorted - this file exists only to show the</span>
+<span class="c1">// shape of the recursion that merge_sort.cpp will hang the work on. Put a</span>
+<span class="c1">// cout &lt;&lt; l &lt;&lt; &quot; &quot; &lt;&lt; r &lt;&lt; endl; at the top of divide() to watch the ranges</span>
+<span class="c1">// being cut in half.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="c1">// divide(a, l, r) is responsible for the slice a[l..r], BOTH ends included.</span>
+<span class="c1">// It never touches anything outside that range - which is what makes it safe for</span>
+<span class="c1">// the two halves to work on the same array at the same time.</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">divide</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// One element (l == r) or none (l &gt; r). A slice that short is already in</span>
+<span class="w">    </span><span class="c1">// order, so there is nothing to do. This is the stopping point of the</span>
+<span class="w">    </span><span class="c1">// recursion.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">r</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// The cut. Integer division rounds down, so for l = 0, r = 1 the mid is 0 and</span>
+<span class="w">    </span><span class="c1">// the halves are [0,0] and [1,1] - both strictly smaller than [0,1], which is</span>
+<span class="w">    </span><span class="c1">// what guarantees the recursion gets there in the end.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="n">r</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Left half:  a[l .. mid]</span>
+<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// Right half: a[mid+1 .. r]</span>
+<span class="w">    </span><span class="c1">// The two ranges touch at mid/mid+1 and together cover l..r exactly once -</span>
+<span class="w">    </span><span class="c1">// no gap, no overlap.</span>
+<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// merge_sort.cpp adds one line here: the call that merges the two halves</span>
+<span class="w">    </span><span class="c1">// back together. Everything else stays as it is.</span>
+<span class="p">}</span>
+
+<span class="c1">// Each level of calls halves the size of the ranges, so there are about log2(n)</span>
+<span class="c1">// levels, and the calls at one level cover the array between them.</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// First we will take the input for two arrays</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">      </span><span class="c1">// m is read but never used - a leftover from conquer.cpp,</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="c1">// which needed two array sizes. The input must still supply it.</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Start with the whole array: positions 0 to n-1 inclusive.</span>
+<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="mi">-1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 58 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 0
+5 2 4 1 3</pre><p class="io-note">n and an unused m, then n values.</p></div><div class="io out"><div class="io-h">Output </div><pre><span class="muted">(prints nothing)</span></pre></div></div>
+  <p class="readout"><b>Reading the output.</b> No output: this file only demonstrates the splitting. Add a <code>cout &lt;&lt; l &lt;&lt; &quot; &quot; &lt;&lt; r &lt;&lt; endl;</code> at the top of <code>divide</code> to watch the ranges.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>divide(a, l, r)</code> stops when <code>l &gt;= r</code> (one element or none).</li><li>Otherwise <code>mid = (l + r) / 2</code>.</li><li>Recurse on the left half <code>[l, mid]</code> and the right half <code>[mid+1, r]</code>.</li><li><code>main</code> reads <code>n m</code> (m is not used) and the array, then calls <code>divide(a, 0, n-1)</code>.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> For n = 8, how many levels of splitting are there before ranges have size 1?</summary><div>3 (8 -&gt; 4 -&gt; 2 -&gt; 1), which is log2 8.</div></details>
+</section>
+<section class="prog" id="p-merge-sort">
+  <div class="prog-h">
+    <span class="num">3</span>
+    <div class="prog-t">
+      <h3>Merge sort</h3>
+      <div class="meta"><code class="fname">merge_sort.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n log n) · Space O(n)</span></div>
+    </div>
+  </div>
+  <p class="what">Combines both halves: <code>divide</code> sorts the left and right halves recursively and <code>conquer</code> merges them back into the original array.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 118 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/merge_sort.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// MERGE SORT - divide.cpp and conquer.cpp joined into one working sort.</span>
+<span class="c1">//</span>
+<span class="c1">// The plan in three lines:</span>
+<span class="c1">//     sort the left half, sort the right half, merge the two sorted halves.</span>
+<span class="c1">// The first two steps are the same problem on a smaller slice, so the function</span>
+<span class="c1">// calls itself; the third step is the two-pointer walk from conquer.cpp.</span>
+<span class="c1">//</span>
+<span class="c1">// Time O(n log n): about log2(n) levels of splitting, and each level moves every</span>
+<span class="c1">// element exactly once during its merges. That holds whatever the input looks</span>
+<span class="c1">// like - already sorted, reversed or shuffled - because the array is always cut</span>
+<span class="c1">// down the middle and always merged.</span>
+<span class="c1">// Space O(n) for the temporary halves, plus O(log n) of call stack.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="c1">// conquer(c, l, mid, r) merges two neighbouring slices of ONE array:</span>
+<span class="c1">//     the left half  c[l .. mid]</span>
+<span class="c1">//     the right half c[mid+1 .. r]</span>
+<span class="c1">// Both are already sorted when this is called. The result is written back over</span>
+<span class="c1">// c[l .. r], and nothing outside that range is touched.</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">conquer</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">mid</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Copy the left half out into a. Positions l..mid inclusive, so mid - l + 1</span>
+<span class="w">    </span><span class="c1">// of them - the &quot;+ 1&quot; is the usual off-by-one trap with inclusive ranges.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">[</span><span class="n">l</span><span class="o">+</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Copy the right half out into b. Positions mid+1..r, so r - mid of them.</span>
+<span class="w">    </span><span class="c1">// The copies are not optional: the merge writes into c from position l</span>
+<span class="w">    </span><span class="c1">// onwards, and without them it would overwrite left-half values that have</span>
+<span class="w">    </span><span class="c1">// not been read yet.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mid</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">m</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">[</span><span class="n">mid</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Now, take the two pointers for the two arrays and pointer for the result array</span>
+<span class="w">    </span><span class="c1">// Exactly the walk from conquer.cpp, with one difference: curr starts at l,</span>
+<span class="w">    </span><span class="c1">// not 0, because the merged values go back into the middle of c rather than</span>
+<span class="w">    </span><span class="c1">// into a fresh array. i and j are fresh, since a and b are fresh copies.</span>
+<span class="w">    </span><span class="c1">// Both halves are sorted, so the smallest value still unplaced is always at</span>
+<span class="w">    </span><span class="c1">// a[i] or b[j] - one comparison per value placed, one walk forwards, done.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">curr</span><span class="o">=</span><span class="n">l</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// `&lt;` and not `&lt;=`, so on a tie the value from the RIGHT half is copied</span>
+<span class="w">        </span><span class="c1">// first. That makes this sort unstable: equal values can swap places.</span>
+<span class="w">        </span><span class="c1">// Changing it to a[i] &lt;= b[j] would make it stable.</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">            </span><span class="n">i</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+<span class="w">            </span><span class="n">j</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Whichever half still has a tail is copied across as it stands.</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">        </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="n">i</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
+<span class="w">        </span><span class="n">c</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+<span class="w">        </span><span class="n">j</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// divide(a, l, r) sorts the slice a[l..r], both ends included.</span>
+<span class="c1">// Same splitting as divide.cpp, with the merge added at the end.</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">divide</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(nlogn) -- this does the merge sort</span>
+<span class="w">    </span><span class="c1">// A slice of one element (or none) is already sorted.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">r</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Left half is [l, mid], right half is [mid+1, r]: together exactly l..r.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="n">r</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
+<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="p">);</span><span class="w"> </span><span class="c1">// merge sort the left half</span>
+<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">);</span><span class="w"> </span><span class="c1">// merge sort the right half</span>
+<span class="w">    </span><span class="c1">// By the time this line runs, both halves are sorted in place, so the merge</span>
+<span class="w">    </span><span class="c1">// can assume what it needs. Order matters: merge first and there would be</span>
+<span class="w">    </span><span class="c1">// nothing sorted to merge.</span>
+<span class="w">    </span><span class="n">conquer</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">);</span><span class="w"> </span><span class="c1">// merge the two sorted arrays</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// First we will take the input for two arrays</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">      </span><span class="c1">// m is read but never used, a leftover from conquer.cpp -</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="c1">// the input must still contain it or n would be misread.</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Sort the whole array: positions 0 to n-1 inclusive.</span>
+<span class="w">    </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="mi">-1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 118 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 0
+5 2 9 1 5 6</pre><p class="io-note">n and an unused m, then n values (a duplicate 5 is included).</p></div><div class="io out"><div class="io-h">Output </div><pre>1 2 5 5 6 9 </pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>1 2 5 5 6 9</code>. Duplicates are kept.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>divide(a, l, r)</code>: return if the range has one element.</li><li>Sort <code>[l, mid]</code> and <code>[mid+1, r]</code> recursively.</li><li><code>conquer</code> copies the two halves into temporary arrays <code>a</code> and <code>b</code>.</li><li>It merges them back into <code>c[l..r]</code> with the two-pointer method.</li><li><code>main</code> prints the sorted array.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> <code>main</code> still reads an unused <code>m</code>, left over from <code>conquer.cpp</code>; the input must contain it. Using <code>a[i] &lt;= b[j]</code> in the merge would make the sort stable (equal values keep their order).</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why is merge sort always O(n log n), even on already-sorted input?</summary><div>It always splits in the middle and always merges, whatever the order of the values.</div></details>
+</section>
+<section class="prog" id="p-lcs">
+  <div class="prog-h">
+    <span class="num">4</span>
+    <div class="prog-t">
+      <h3>Longest common subsequence (memoized)</h3>
+      <div class="meta"><code class="fname">lcs.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n·m) · Space O(n·m)</span></div>
+    </div>
+  </div>
+  <p class="what">Finds the length of the longest subsequence shared by two strings, using <code>lcs(i, j)</code> on prefixes <code>a[0..i]</code> and <code>b[0..j]</code> with a memo table.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 84 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/lcs.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Longest common substring using recursion</span>
+<span class="c1">// We will be given two strings a and b. We have to find the length of the </span>
+<span class="c1">// longest common substring of the two strings.</span>
+<span class="c1">// We will use memoization to optimize the solution.</span>
+<span class="c1">//</span>
+<span class="c1">// CORRECTION to the three lines above: the code finds the longest common</span>
+<span class="c1">// SUBSEQUENCE, not the longest common substring. The difference matters and the</span>
+<span class="c1">// module&#39;s quiz asks about it:</span>
+<span class="c1">//   * a substring is a run of neighbouring characters - &quot;bcd&quot; in &quot;abcde&quot;;</span>
+<span class="c1">//   * a subsequence keeps the order but may skip characters - &quot;ace&quot; in &quot;abcde&quot;.</span>
+<span class="c1">// For &quot;abcde&quot; and &quot;ace&quot; this program prints 3 (the subsequence a-c-e); the</span>
+<span class="c1">// longest common substring is only &quot;a&quot;, &quot;c&quot; or &quot;e&quot;, length 1. A substring</span>
+<span class="c1">// version would have to throw the count away whenever two characters differ,</span>
+<span class="c1">// where the code below keeps the better of two partial answers instead.</span>
+<span class="c1">//</span>
+<span class="c1">// This is the same take-it-or-leave-it DP as Module 15 and Module 17, with two</span>
+<span class="c1">// strings to walk through instead of one list of items.</span>
+
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="n">string</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="c1">// dp[i][j] is the answer to one question: &quot;what is the LCS length of the first</span>
+<span class="c1">// i+1 characters of a and the first j+1 characters of b?&quot; - that is, of the</span>
+<span class="c1">// PREFIXES a[0..i] and b[0..j]. The two indexes are just the two arguments of</span>
+<span class="c1">// lcs(). -1 marks a cell as not worked out yet; a length is never negative, so</span>
+<span class="c1">// -1 can never be mistaken for a real answer.</span>
+<span class="c1">// 1005 x 1005 ints is about 4 MB, far too much for the stack, hence global.</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
+
+<span class="c1">// lcs(i, j) = length of the longest common subsequence of a[0..i] and b[0..j].</span>
+<span class="c1">// Both strings are walked from the BACK; i and j shrink towards -1.</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">lcs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// One of the prefixes is empty, so there is nothing in common: 0.</span>
+<span class="w">    </span><span class="c1">// This also covers an empty input string, where the first call is lcs(-1, ..).</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Already answered for this pair of prefixes? Reuse it. Without this line the</span>
+<span class="w">    </span><span class="c1">// two calls below would branch endlessly; with it, only n x m distinct pairs</span>
+<span class="w">    </span><span class="c1">// exist, so that is the most work that can be done.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">]){</span>
+<span class="w">        </span><span class="c1">// The two last characters match, so they can be the last character of the</span>
+<span class="w">        </span><span class="c1">// common subsequence. Take it - it never costs anything to do so - and</span>
+<span class="w">        </span><span class="c1">// step BOTH strings back one place.</span>
+<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lcs</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// They differ, so at most one of them can belong to the answer. Two</span>
+<span class="w">        </span><span class="c1">// choices, and the better one wins:</span>
+<span class="w">        </span><span class="c1">//   op1 = drop a[i], keep all of b   (step only i back)</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lcs</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
+<span class="w">        </span><span class="c1">//   op2 = drop b[j], keep all of a   (step only j back)</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lcs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="mi">-1</span><span class="p">);</span>
+<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span><span class="w"> </span><span class="n">op2</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// Mark every cell unknown. memset fills BYTES, and the byte 11111111 makes</span>
+<span class="w">    </span><span class="c1">// the int -1 too, so this really does store -1 in all of them. (memset comes</span>
+<span class="w">    </span><span class="c1">// from &lt;cstring&gt;, which this file does not include - it compiles only because</span>
+<span class="w">    </span><span class="c1">// another header brings it in.)</span>
+<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">dp</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">dp</span><span class="p">));</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+<span class="w">    </span><span class="c1">// Start from the last character of each string. Note there is no endl, so the</span>
+<span class="w">    </span><span class="c1">// number is printed with no newline after it.</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lcs</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="mi">-1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 84 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>abcde
+ace</pre><p class="io-note">Two strings.</p></div><div class="io out"><div class="io-h">Output </div><pre>3</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>3</code> (the common subsequence <code>ace</code>).</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>memset(dp, -1, ...)</code> and read strings <code>a</code>, <code>b</code>.</li><li>Base case: an empty prefix (<code>i &lt; 0</code> or <code>j &lt; 0</code>) gives 0.</li><li>If <code>a[i] == b[j]</code>, the answer is <code>lcs(i-1, j-1) + 1</code>.</li><li>Otherwise the best of skipping <code>a[i]</code> or skipping <code>b[j]</code>.</li><li>Print <code>lcs(n-1, m-1)</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The top comment says &#x27;substring&#x27;, but the code computes the longest common <strong>subsequence</strong>; a substring version would reset to 0 when characters differ. Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> What is the LCS length of <code>abc</code> and <code>def</code>?</summary><div>0, they share no characters.</div></details>
+</section>
+<section class="prog" id="p-mst-using-kruskal-algorithm">
+  <div class="prog-h">
+    <span class="num">5</span>
+    <div class="prog-t">
+      <h3>Minimum spanning tree with Kruskal</h3>
+      <div class="meta"><code class="fname">mst_using_Kruskal_algorithm.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(E log E) · Space O(n + E)</span></div>
+    </div>
+  </div>
+  <p class="what">Sorts all edges by weight and greedily keeps each edge that joins two different DSU groups. The sum of kept weights is the MST cost.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 136 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/mst_using_Kruskal_algorithm.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// KRUSKAL&#39;S ALGORITHM: the cheapest set of roads that still connects every city.</span>
+<span class="c1">//</span>
+<span class="c1">// A minimum spanning tree of a connected graph with n nodes is a set of n-1</span>
+<span class="c1">// edges that joins everything together for the least total weight. Kruskal finds</span>
+<span class="c1">// one by being greedy in the simplest possible way:</span>
+<span class="c1">//     sort every edge by weight, then walk through them cheapest first and keep</span>
+<span class="c1">//     an edge whenever its two ends are not already connected.</span>
+<span class="c1">//</span>
+<span class="c1">// &quot;Not already connected&quot; is exactly the question DSU answers (Module 11), so</span>
+<span class="c1">// find() and dsu_union() are copied in from there. If the two ends already share</span>
+<span class="c1">// a leader, they are already joined by edges no dearer than this one, and adding</span>
+<span class="c1">// it would only close a cycle - so it is skipped.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="c1">// The DSU arrays from Module 11: par[x] == -1 means x is a leader.</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 
+<span class="c1">// One edge: it joins a and b and costs c. Kruskal works on the list of edges</span>
+<span class="c1">// rather than on an adjacency list, because the edges have to be sorted as a</span>
+<span class="c1">// single pile, regardless of which node they hang off.</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Edge</span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
@@ -733,6 +1185,8 @@ ace</pre><p class="io-note">Two strings.</p></div><div class="io out"><div class
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// The rule sort() is given: an edge comes first if it is cheaper. Without this</span>
+<span class="c1">// comparator sort() would not know how to order two Edge objects.</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">cmp</span><span class="p">(</span><span class="n">Edge</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">Edge</span><span class="w"> </span><span class="n">r</span><span class="p">){</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">l</span><span class="p">.</span><span class="n">c</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">c</span><span class="p">;</span>
 <span class="p">}</span>
@@ -746,6 +1200,13 @@ ace</pre><p class="io-note">Two strings.</p></div><div class="io out"><div class
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// BUG, left in place - and the reason this program crashes without printing</span>
+<span class="c1">// anything. The function is declared to return int, but no branch ever returns a</span>
+<span class="c1">// value. In C++ falling off the end of a non-void function is undefined</span>
+<span class="c1">// behaviour; the compiler only warns (&quot;no return statement in function returning</span>
+<span class="c1">// non-void&quot;) and the program dies with an access violation on the first union.</span>
+<span class="c1">// The fix is one word: void dsu_union(int node1, int node2).</span>
+<span class="c1">// The body itself is the correct union-by-size from Module 11.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">dsu_union</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node1</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">node2</span><span class="p">){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">node1</span><span class="p">);</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">node2</span><span class="p">);</span>
@@ -760,19 +1221,30 @@ ace</pre><p class="io-note">Two strings.</p></div><div class="io out"><div class
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// Every node starts alone and is its own leader.</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">par</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">par</span><span class="p">));</span>
+<span class="w">    </span><span class="c1">// BUG, left in place, the same one as Module 11&#39;s union.cpp: memset fills</span>
+<span class="w">    </span><span class="c1">// BYTES, so setting each byte to 1 makes every int 0x01010101 = 16843009, not</span>
+<span class="w">    </span><span class="c1">// 1. Only the &gt;= comparison is ever read here, and all the sizes are wrong by</span>
+<span class="w">    </span><span class="c1">// the same amount, so the answer survives - but the recorded group sizes are</span>
+<span class="w">    </span><span class="c1">// nonsense. Use a loop, or fill(group_size, group_size + 1005, 1).</span>
+<span class="w">    </span><span class="c1">// (memset lives in &lt;cstring&gt;, which this file does not include.)</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">group_size</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">group_size</span><span class="p">));</span>
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Edge</span><span class="o">&gt;</span><span class="w"> </span><span class="n">edge_list</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Read all e edges into one flat list. Direction does not matter: an MST is</span>
+<span class="w">    </span><span class="c1">// defined on an undirected graph.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="n">edge_list</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Edge</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">));</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Cheapest first. This sort is the expensive part, O(E log E), and it is what</span>
+<span class="w">    </span><span class="c1">// makes the greedy rule below correct.</span>
 <span class="w">    </span><span class="n">sort</span><span class="p">(</span><span class="n">edge_list</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">edge_list</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="n">cmp</span><span class="p">);</span>
 
 <span class="w">    </span><span class="cm">/*</span>
@@ -781,17 +1253,31 @@ ace</pre><p class="io-note">Two strings.</p></div><div class="io out"><div class
 <span class="cm">    }</span>
 <span class="cm">    */</span>
 <span class="w">    </span>
+<span class="w">    </span><span class="c1">// BUG in waiting: an int. With up to n-1 edges of weight a billion each, an</span>
+<span class="w">    </span><span class="c1">// MST cost can run past the int limit of about 2.1 billion and wrap round to</span>
+<span class="w">    </span><span class="c1">// a negative number, silently. long long is the safe type for a total like</span>
+<span class="w">    </span><span class="c1">// this - the small sample input here never gets near the limit.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">total_cost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 
 <span class="w">    </span><span class="c1">// Check if the edges are connected or not</span>
+<span class="w">    </span><span class="c1">// Walk the edges cheapest first and keep the ones that join two separate</span>
+<span class="w">    </span><span class="c1">// groups. Each kept edge merges two groups into one, so a connected graph</span>
+<span class="w">    </span><span class="c1">// with n nodes ends up keeping exactly n-1 edges.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">edge</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">edge_list</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">parA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">edge</span><span class="p">.</span><span class="n">a</span><span class="p">);</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">parB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">edge</span><span class="p">.</span><span class="n">b</span><span class="p">);</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">parA</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">parB</span><span class="p">){</span>
+<span class="w">            </span><span class="c1">// Different groups: this edge connects something new, so keep it.</span>
 <span class="w">            </span><span class="n">dsu_union</span><span class="p">(</span><span class="n">edge</span><span class="p">.</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">edge</span><span class="p">.</span><span class="n">b</span><span class="p">);</span>
 <span class="w">            </span><span class="n">total_cost</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">edge</span><span class="p">.</span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">// Same group: skip it. Its two ends are already linked by edges that came</span>
+<span class="w">        </span><span class="c1">// earlier and so cost no more, and adding it would just make a cycle.</span>
 <span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Note this prints a total even when the graph is not connected - it would</span>
+<span class="w">    </span><span class="c1">// then be the cost of a forest, not a spanning tree. Counting the kept edges</span>
+<span class="w">    </span><span class="c1">// and checking for n-1 would catch that case.</span>
 
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">total_cost</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 
@@ -799,7 +1285,7 @@ ace</pre><p class="io-note">Two strings.</p></div><div class="io out"><div class
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 85 lines ▾</button>
+    <button type="button" class="expand">Show all 136 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 5
@@ -1429,7 +1915,7 @@ ace</pre><p class="io-note">Two strings.</p></div><div class="io out"><div class
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

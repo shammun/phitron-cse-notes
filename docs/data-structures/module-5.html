@@ -7,7 +7,7 @@
 <meta name="description" content="A linked list stores each value in its own node, and each node points to the next one. This module builds nodes by hand (on the stack and with `new`), adds a constructor, links them with `next` pointers, and walks the list with a temporary pointer. It explains why linked lists exist when arrays are fixed-size and costly to insert into.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -69,7 +69,44 @@ public:
     int val;
     Node* next;
 };</pre></div><div class="concept"><h4>Why linked lists</h4><p>Arrays have a fixed size and need shifting to insert in the middle. A linked list grows one node at a time and inserts by changing a couple of pointers. The cost: extra memory for each pointer and no O(1) access by index.</p></div><div class="concept"><h4>Constructor</h4><p>A constructor sets <code>val</code> and makes <code>next = NULL</code> as soon as the node is created, so you never forget to end the chain.</p><pre class="snip">Node(int val) { this-&gt;val = val; this-&gt;next = NULL; }</pre></div><div class="concept"><h4>Arrow operator</h4><p><code>p-&gt;val</code> is short for <code>(*p).val</code>: follow the pointer, then take the member. Chaining <code>head-&gt;next-&gt;next-&gt;val</code> walks two links.</p></div><div class="concept"><h4>Static vs dynamic nodes</h4><p><code>Node a(10);</code> lives on the stack and dies when the function ends. <code>new Node(10)</code> lives on the heap until deleted, so it can outlive the function that made it. Real lists use dynamic nodes.</p><pre class="snip">Node* head = new Node(10);</pre></div><div class="concept"><h4>Head pointer</h4><p>The list is known only through <code>head</code>, the address of the first node. Lose it and you lose the whole list.</p></div><div class="concept"><h4>Traversal</h4><p>Copy <code>head</code> into <code>tmp</code> and move <code>tmp = tmp-&gt;next</code> until <code>tmp</code> is <code>NULL</code>. Stopping at <code>tmp-&gt;next == NULL</code> instead would skip the last node.</p><pre class="snip">for(Node* tmp = head; tmp != NULL; tmp = tmp-&gt;next)</pre></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: walking the list with <code>tmp</code></h3><p>This is the walk that <code>printing_singly_linked_list.cpp</code> does. Watch two things: <code>tmp</code> moving one box at a time, and <code>head</code> never moving at all.</p><div class="stepper" data-n="7"><p class="stitle">Press ▶ to step through it</p><div class="frames"><div class="frame" data-i="0"><pre>        tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL
+printed:</pre><p class="flabel"><code>Node* tmp = head;</code> copies the address of the first box into a second pointer. Two names now stand on the same box, and nothing has been printed yet.</p></div><div class="frame" data-i="1"><pre>                tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL
+printed: 10</pre><p class="flabel">The loop prints <code>tmp-&gt;val</code>, then <code>tmp = tmp-&gt;next</code> reads the address written inside the 10 box and steps on to 20. <code>head</code> has not moved.</p></div><div class="frame" data-i="2"><pre>                        tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL
+printed: 10 20</pre><p class="flabel">Same two lines again. There is no <code>a[2]</code> here: the only way to the third box was to ask the second one.</p></div><div class="frame" data-i="3"><pre>                                tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL
+printed: 10 20 30</pre><p class="flabel">Another hop, and 30 is printed. Four boxes means four hops, which is the price of a list.</p></div><div class="frame" data-i="4"><pre>                                        tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL
+printed: 10 20 30 40</pre><p class="flabel">40 is printed, then <code>tmp = tmp-&gt;next</code> reads the NULL sitting in the last box. <code>tmp</code> now points at nothing, <code>tmp != NULL</code> is false, and the loop stops.</p></div><div class="frame" data-i="5"><pre>                                tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL
+printed: 10 20 30
+stopped early: tmp-&gt;next is NULL while on 40</pre><p class="flabel">The other loop on the page is <code>while(tmp-&gt;next != NULL)</code>. Standing on 40 it sees NULL ahead and stops <strong>before</strong> printing, so the last value never appears. That is the missing line in the program&#x27;s output.</p></div><div class="frame" data-i="6"><pre>
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL
+head still points at 10, so nothing was lost</pre><p class="flabel">And this is the point of <code>tmp</code>: when the walk is over, <code>head</code> is still on the first box, so the list can be walked again, printed again, or changed. Nothing was spent.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 7</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div><div class="wstep"><h3>Watch it happen: why moving <code>head</code> loses the list</h3><p>The tempting shortcut is to walk with <code>head</code> itself and save a variable. Here is what it costs.</p><div class="stepper" data-n="6"><p class="stitle">Press ▶ to see the list disappear</p><div class="frames"><div class="frame" data-i="0"><pre>head
+ |
+ v
+[10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL</pre><p class="flabel">The same four boxes, with <code>head</code> holding the address of the first one. Now suppose the loop body is <code>head = head-&gt;next;</code>.</p></div><div class="frame" data-i="1"><pre>        head
+         |
+         v
+[10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL
+ ^ no name holds this box now</pre><p class="flabel"><code>head</code> has stepped on to 20. The 10 box is still there and still points forward, but no name in the program holds its address any more, and the arrows only go one way. There is no way back.</p></div><div class="frame" data-i="2"><pre>                head
+                 |
+                 v
+[10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL
+^^^^^^^^^^^^  both of these are lost</pre><p class="flabel">Another step. Two boxes are now out of reach for good, and the program cannot even tell: everything it can see still looks like a perfectly good list.</p></div><div class="frame" data-i="3"><pre>                        head
+                         |
+                         v
+[10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL
+^^^^^^^^^^^^^^^^^^^^  three are lost</pre><p class="flabel">One more. What started as a list of four is, as far as the program is concerned, a list of one.</p></div><div class="frame" data-i="4"><pre>                                head
+                                 |
+                                 v
+[10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^  all gone</pre><p class="flabel">The last step puts NULL in <code>head</code>. The boxes are still sitting in memory, but nothing reaches them, so they can never be printed and never be freed. The whole list has leaked.</p></div><div class="frame" data-i="5"><pre>head            tmp
+ |               |
+ v               v
+[10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; NULL</pre><p class="flabel">So you copy the address into a second pointer and move that one. <code>tmp</code> does the walking, <code>head</code> keeps the front. One extra variable buys back the whole list.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 6</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/list" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — linked list</b><span class="rnote">Press Insert or Remove and watch the arrows re-point, one step at a time.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PL2_aWCzGMAwI3W_JlcBbtYTwiQSsOTa6P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>mycodeschool — data structures</b><span class="rnote">The classic slow, patient explanation of lists, stacks and queues.</span></a></li><li class="r-tool"><a href="https://pythontutor.com/cpp.html" target="_blank" rel="noopener"><span class="rkind">🔧 Tool</span><b>Python Tutor — step through C++ code</b><span class="rnote">Paste your own program and step through it line by line, with the pointers drawn.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0rAuz8tVcM0AymmhTRsfaLU" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — linked list playlist</b><span class="rnote">From the basics to the interview problems on lists.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-creating-a-node">
@@ -631,7 +668,7 @@ The value of b is: 30
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

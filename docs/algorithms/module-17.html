@@ -7,7 +7,7 @@
 <meta name="description" content="Subset sum asks whether some items add up to a target: the knapsack idea with &#x27;reach exactly this sum&#x27; instead of &#x27;maximise value&#x27;. Small changes to the same recursion count the subsets, test whether an array splits into two equal halves, or allow an item to be used many times (unbounded knapsack). The code files in this module carry a few classic bugs, which make them good for learning.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -55,7 +55,62 @@ take = knapsack(i,   cap - weight[i]) + val[i];
 //              ^ stay on item i</pre><p>That single <code>i-1</code> becoming <code>i</code> is the whole difference. The recursion still ends, because <code>cap</code> falls by at least one weight every time you take something. With weights 2 and 5, values 3 and 8 and a bag of 9, the 0-1 version can hold 2 and 5 for a value of 11; the unbounded version takes 5, 2 and 2 for 14.</p><p>One warning before you read the code: two of these files carry classic bugs, and they are worth spotting yourself. A local <code>int val[n]</code> declared inside <code>main</code> hides the global <code>val</code> that the recursion reads, so the function sees only zeros. And a memo table cleared only up to half the total, while the call asks about the full total, leaves stale cells that look like real answers. The notes under each program below point at the exact line.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-subset-sum"><span class="n">1</span>Subset sum with plain recursion</a></li><li><a href="#p-subset-sum-using-dp"><span class="n">2</span>Subset sum with memoization</a></li><li><a href="#p-count-of-subset-sum"><span class="n">3</span>Count the subsets with a given sum</a></li><li><a href="#p-equal-set-sum"><span class="n">4</span>Equal sum partition</a></li><li><a href="#p-unbounded-knapsack"><span class="n">5</span>Unbounded knapsack</a></li><li><a href="#p-partition-equal-subset-sum"><span class="n">6</span>Partition Equal Subset Sum (practice)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Subset sum state</h4><p><code>subset_sum(i, sum)</code> = can items 0..i pick a subset adding to exactly <code>sum</code>? When no items are left, the answer is yes only if <code>sum == 0</code>.</p><pre class="snip">if (i &lt; 0) return sum == 0;</pre></div><div class="concept"><h4>Take or skip, combined with OR</h4><p>If <code>val[i] &lt;= sum</code>, the answer is &#x27;take it and reach sum - val[i]&#x27; <strong>or</strong> &#x27;skip it and reach sum&#x27;.</p><pre class="snip">return subset_sum(i-1, sum - val[i]) || subset_sum(i-1, sum);</pre></div><div class="concept"><h4>Counting instead of yes/no</h4><p>Replace OR with <code>+</code> and return 1/0 at the base case: the result is the number of subsets with that sum.</p></div><div class="concept"><h4>Equal partition</h4><p>An array splits into two equal-sum parts only if the total is even and some subset reaches total/2.</p></div><div class="concept"><h4>Unbounded knapsack</h4><p>When items can be reused, taking item i keeps you at index <code>i</code> instead of moving to <code>i-1</code>.</p><pre class="snip">op1 = knapsack(i, w - weight[i]) + val[i];</pre></div><div class="concept"><h4>Shadowing a global array</h4><p>A local <code>int val[n]</code> in <code>main</code> hides the global <code>val</code> that the recursive function reads. The input goes into the local copy and the function only sees zeros.</p></div><div class="concept"><h4>Memo range must cover the call</h4><p>Initialise <code>dp</code> for every sum the recursion can ask about (0..target inclusive); otherwise the default 0 looks like a stored answer.</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: which totals are reachable</h3><p>Coins of 3, 4 and 5 on the table, and the question is whether some pile makes exactly 9. <code>T</code> means that total is reachable with the coins named so far; a dot means it is not.</p><p>Each row is built from the row above in two moves: copy it (that is skipping the coin), then copy it again shifted right by the coin&#x27;s own value (that is taking the coin).</p><div class="stepper" data-n="8"><p class="stitle">Press the arrows to add one coin at a time</p><div class="frames"><div class="frame" data-i="0"><pre>coins 3, 4, 5      target 9
+
+sum        0 1 2 3 4 5 6 7 8 9
+no items   . . . . . . . . . .
+with 3     . . . . . . . . . .
+with 4     . . . . . . . . . .
+with 5     . . . . . . . . . .</pre><p class="flabel">Ten columns, one per total from 0 to 9, and one row per coin added. The bottom-right cell will hold the answer.</p></div><div class="frame" data-i="1"><pre>coins 3, 4, 5      target 9
+
+sum        0 1 2 3 4 5 6 7 8 9
+no items   T . . . . . . . . .
+with 3     . . . . . . . . . .
+with 4     . . . . . . . . . .
+with 5     . . . . . . . . . .
+           ^ the empty pile</pre><p class="flabel">With no coins at all, the only total you can stand on is 0 - the empty pile. That single <code>T</code> is the base case <code>sum == 0</code> in the code, and every other row grows out of it.</p></div><div class="frame" data-i="2"><pre>coins 3, 4, 5      target 9
+
+sum        0 1 2 3 4 5 6 7 8 9
+no items   T . . . . . . . . .
+with 3     T . . T . . . . . .
+with 4     . . . . . . . . . .
+with 5     . . . . . . . . . .
+                 ^ 0 + 3</pre><p class="flabel">Add the 3. Copy the row above (skipping the coin keeps 0 reachable), then copy it shifted right by 3, which turns 0 into 3. Two totals are now reachable.</p></div><div class="frame" data-i="3"><pre>coins 3, 4, 5      target 9
+
+sum        0 1 2 3 4 5 6 7 8 9
+no items   T . . . . . . . . .
+with 3     T . . T . . . . . .
+with 4     T . . T . . . . . .
+with 5     . . . . . . . . . .
+           ^     ^ copied from above</pre><p class="flabel">Add the 4, first move: skip it. That is just the row above copied straight down, unchanged.</p></div><div class="frame" data-i="4"><pre>coins 3, 4, 5      target 9
+
+sum        0 1 2 3 4 5 6 7 8 9
+no items   T . . . . . . . . .
+with 3     T . . T . . . . . .
+with 4     T . . T T . . T . .
+with 5     . . . . . . . . . .
+                   ^     ^ 0 + 4 and 3 + 4</pre><p class="flabel">Second move: take the 4. Shift the row above right by 4, so the T at 0 lights up 4 and the T at 3 lights up 7. Both are new.</p></div><div class="frame" data-i="5"><pre>coins 3, 4, 5      target 9
+
+sum        0 1 2 3 4 5 6 7 8 9
+no items   T . . . . . . . . .
+with 3     T . . T . . . . . .
+with 4     T . . T T . . T . .
+with 5     T . . T T . . T . .
+           ^     ^ ^     ^ copied from above</pre><p class="flabel">Add the 5, first move: skip it. The row above is copied down again - four totals so far.</p></div><div class="frame" data-i="6"><pre>coins 3, 4, 5      target 9
+
+sum        0 1 2 3 4 5 6 7 8 9
+no items   T . . . . . . . . .
+with 3     T . . T . . . . . .
+with 4     T . . T T . . T . .
+with 5     T . . T T T . T T T
+                     ^     ^ ^ 0+5, 3+5, 4+5</pre><p class="flabel">Second move: take the 5. Shift right by 5, so 0 lights 5, 3 lights 8 and 4 lights 9. That last one is what you were asked about.</p></div><div class="frame" data-i="7"><pre>coins 3, 4, 5      target 9
+
+sum        0 1 2 3 4 5 6 7 8 9
+no items   T . . . . . . . . .
+with 3     T . . T . . . . . .
+with 4     T . . T T . . T . .
+with 5     T . . T T T . T T T
+                             ^ YES: 4 + 5</pre><p class="flabel">Bottom row, column 9 is <code>T</code>, so the program prints YES. It got there from the <code>T</code> at 4 one row up, and the 4 came from the empty pile - so the pile is 4 and 5, exactly the one you found in your head. 40 cells instead of 8 piles, and with 40 coins it is 40 times the target instead of a million million piles.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-article"><a href="https://cp-algorithms.com/dynamic_programming/knapsack.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — knapsack</b><span class="rnote">The 0-1 and unbounded versions next to each other.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0qUlt5H_kiKYaNSqJ81PMMY" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — dynamic programming playlist</b><span class="rnote">Builds every DP from the plain recursion first, which is how this module does it.</span></a></li><li class="r-article"><a href="https://cses.fi/book/book.pdf" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>Competitive Programmer&#x27;s Handbook (free PDF)</b><span class="rnote">Antti Laaksonen&#x27;s book — the chapters on graphs and DP are short and excellent.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-subset-sum">
@@ -67,423 +122,12 @@ take = knapsack(i,   cap - weight[i]) + val[i];
     </div>
   </div>
   <p class="what">Tries every take/skip combination to decide whether some subset adds up to <code>sum</code>.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 45 lines</span>
+      <span>CPP · 87 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2017/subset_sum.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-
-<span class="kt">bool</span><span class="w"> </span><span class="nf">subset_sum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(2^n)</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">){</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="o">-</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">op2</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">else</span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">subset_sum</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">)){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 45 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
-1 2 3 4
-5</pre><p class="io-note">n, the n values, then the target. {1,4} and {2,3} both make 5, so YES is expected.</p></div><div class="io out"><div class="io-h">Output </div><pre>NO
-
-</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> Prints <code>NO</code> (plus a blank line), which is wrong: see Watch out.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>n</code>, the values, and the target <code>sum</code>.</li><li>Base case <code>i &lt; 0</code>: true only when <code>sum == 0</code>.</li><li>If <code>val[i] &lt;= sum</code>, return take OR skip.</li><li>Otherwise only skip.</li><li>Print YES or NO.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> <code>main</code> declares its own <code>int val[n]</code>, which shadows the global <code>val</code> used by <code>subset_sum</code>. The function sees only zeros, so it answers YES only for target 0. Fix: delete <code>int val[n];</code> in <code>main</code>. Also, <code>&quot;YES\n&quot; &lt;&lt; endl</code> prints an extra blank line; use one of them.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> After the fix, what does the program print for values 2 4 6 and target 5?</summary><div>NO: all values are even, so no subset can sum to an odd number.</div></details>
-</section>
-<section class="prog" id="p-subset-sum-using-dp">
-  <div class="prog-h">
-    <span class="num">2</span>
-    <div class="prog-t">
-      <h3>Subset sum with memoization</h3>
-      <div class="meta"><code class="fname">subset_sum_using_dp.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n·sum) · Space O(n·sum)</span></div>
-    </div>
-  </div>
-  <p class="what">The same recursion with a <code>dp[i][sum]</code> table, so each (i, sum) pair is solved once.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 58 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2017/subset_sum_using_dp.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w"> </span>
-
-<span class="kt">bool</span><span class="w"> </span><span class="nf">subset_sum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(N * sum)</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">){</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="o">-</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
-<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">op2</span><span class="p">;</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">else</span><span class="p">{</span>
-<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;=</span><span class="n">sum</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">subset_sum</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">)){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 58 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
-1 2 3 4
-5</pre><p class="io-note">Same input as the plain version (YES expected).</p></div><div class="io out"><div class="io-h">Output </div><pre>NO
-
-</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> Prints <code>NO</code> (and a blank line), which is wrong for the same shadowing reason.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Fill <code>dp[i][j] = -1</code> for i up to n and j up to <code>sum</code> inclusive.</li><li>Return the stored value if <code>dp[i][sum] != -1</code>.</li><li>Otherwise compute take OR skip, store it, and return it.</li><li>Print YES or NO.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Remove the local <code>int val[n];</code> in <code>main</code> so the input fills the global array. After that it prints YES.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> Why can a bool result be stored in an <code>int</code> table with -1 as &#x27;unknown&#x27;?</summary><div>true and false are stored as 1 and 0, so -1 is free to mean &#x27;not computed yet&#x27;.</div></details>
-</section>
-<section class="prog" id="p-count-of-subset-sum">
-  <div class="prog-h">
-    <span class="num">3</span>
-    <div class="prog-t">
-      <h3>Count the subsets with a given sum</h3>
-      <div class="meta"><code class="fname">count_of_subset_sum.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n·sum) · Space O(n·sum)</span></div>
-    </div>
-  </div>
-  <p class="what">Same shape as subset sum, but adds the take and skip counts, so the result is how many subsets reach the target.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 55 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2017/count_of_subset_sum.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w"> </span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">subset_sum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(N * sum)</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">){</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="o">-</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
-<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">op2</span><span class="p">;</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">else</span><span class="p">{</span>
-<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;=</span><span class="n">sum</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"> </span><span class="c1">// n-1 as we are starting from the last index and</span>
-<span class="w">    </span><span class="c1">// n is the size of the array</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 55 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
-1 2 3 4
-5</pre><p class="io-note">The answer should be 2: {1,4} and {2,3}.</p></div><div class="io out"><div class="io-h">Output </div><pre>0
-</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> Prints <code>0</code>, which is wrong: see Watch out.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Base case <code>i &lt; 0</code>: return 1 if <code>sum == 0</code>, else 0.</li><li>Memo check on <code>dp[i][sum]</code>.</li><li>If the item fits: <code>dp[i][sum] = take count + skip count</code>.</li><li>Otherwise only the skip count.</li><li>Print <code>subset_sum(n-1, sum)</code>.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Again a local <code>int val[n]</code> in <code>main</code> hides the global <code>val</code>, so the function counts subsets of zeros. Delete that line and the program prints 2.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> With values 1 1 1 and target 2, how many subsets are counted?</summary><div>3, because the three 1s are different items (positions 0-1, 0-2 and 1-2).</div></details>
-</section>
-<section class="prog" id="p-equal-set-sum">
-  <div class="prog-h">
-    <span class="num">4</span>
-    <div class="prog-t">
-      <h3>Equal sum partition</h3>
-      <div class="meta"><code class="fname">equal_set_sum.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n·sum/2) · Space O(n·sum/2)</span></div>
-    </div>
-  </div>
-  <p class="what">If the total is odd, the answer is NO. Otherwise the array can be split into two equal halves exactly when some subset reaches total / 2.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 67 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2017/equal_set_sum.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -553,7 +197,687 @@ take = knapsack(i,   cap - weight[i]) + val[i];
 <span class="normal">64</span>
 <span class="normal">65</span>
 <span class="normal">66</span>
-<span class="normal">67</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// SUBSET SUM: given n numbers, is there some group of them that adds up exactly</span>
+<span class="c1">// to a given target?</span>
+<span class="c1">//</span>
+<span class="c1">// This is knapsack (Module 15) with the question changed. The shape is identical</span>
+<span class="c1">// - walk through the items, and for each one decide TAKE IT or LEAVE IT - but</span>
+<span class="c1">// instead of &quot;how much value can I pile up?&quot; the question is now &quot;can I land on</span>
+<span class="c1">// this number exactly?&quot;, so the answer is a yes/no rather than a total.</span>
+<span class="c1">//</span>
+<span class="c1">// As in Module 15, this first file is the plain recursion with nothing</span>
+<span class="c1">// remembered; subset_sum_using_dp.cpp adds the table.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="c1">// The numbers, global so every recursive call can read them.</span>
+<span class="c1">// Note carefully: main declares its own val as well, which is the bug this file</span>
+<span class="c1">// is known for - see the comment down there.</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+
+<span class="c1">// The two arguments are the whole state:</span>
+<span class="c1">//   i   = the highest item still on offer (items 0..i may still be used)</span>
+<span class="c1">//   sum = how much of the target is STILL TO BE MADE, not how much is made so</span>
+<span class="c1">//         far. Taking an item lowers it; reaching 0 means the target is met.</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">subset_sum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(2^n)</span>
+<span class="w">    </span><span class="c1">// Ran out of items. This is a success only if nothing is left to make.</span>
+<span class="w">    </span><span class="c1">// If sum is still positive the chosen group falls short, so: false.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Item i can only be taken if it does not overshoot what is left. (This</span>
+<span class="w">    </span><span class="c1">// assumes the numbers are not negative, which subset sum normally does.)</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// op1 = TAKE item i: the remaining target shrinks by val[i], and the item</span>
+<span class="w">        </span><span class="c1">// is used up, so only 0..i-1 are left to choose from.</span>
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="o">-</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="c1">// op2 = LEAVE item i: the target is untouched, items 0..i-1 remain.</span>
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+<span class="w">        </span><span class="c1">// Either route reaching the target is enough, hence OR - where knapsack</span>
+<span class="w">        </span><span class="c1">// used max() because it wanted the better of two totals.</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">op2</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Too big to take, so leaving it is the only move.</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Cost: two branches per item, so up to 2^n calls, and the same (i, sum)</span>
+<span class="w">    </span><span class="c1">// pairs come up again and again on different branches. The next file fixes</span>
+<span class="w">    </span><span class="c1">// that with a table.</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// BUG, left in place. This declares a SECOND array called val, local to main.</span>
+<span class="w">    </span><span class="c1">// Inside main the name val now means this local one, so the loop below fills</span>
+<span class="w">    </span><span class="c1">// it - while subset_sum() above still reads the global val[1005], which stays</span>
+<span class="w">    </span><span class="c1">// all zeros. The function therefore answers a question about n zeros, and the</span>
+<span class="w">    </span><span class="c1">// only target it can reach is 0. That is why the program prints NO for input</span>
+<span class="w">    </span><span class="c1">// that plainly has an answer.</span>
+<span class="w">    </span><span class="c1">// The fix is to delete this one line, so that the input lands in the global</span>
+<span class="w">    </span><span class="c1">// array the function actually reads.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Small blemish: &quot;YES\n&quot; already ends the line and endl ends it again, so the</span>
+<span class="w">    </span><span class="c1">// output carries a stray blank line. One or the other is enough.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">subset_sum</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">)){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 87 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
+1 2 3 4
+5</pre><p class="io-note">n, the n values, then the target. {1,4} and {2,3} both make 5, so YES is expected.</p></div><div class="io out"><div class="io-h">Output </div><pre>NO
+
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>NO</code> (plus a blank line), which is wrong: see Watch out.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>n</code>, the values, and the target <code>sum</code>.</li><li>Base case <code>i &lt; 0</code>: true only when <code>sum == 0</code>.</li><li>If <code>val[i] &lt;= sum</code>, return take OR skip.</li><li>Otherwise only skip.</li><li>Print YES or NO.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> <code>main</code> declares its own <code>int val[n]</code>, which shadows the global <code>val</code> used by <code>subset_sum</code>. The function sees only zeros, so it answers YES only for target 0. Fix: delete <code>int val[n];</code> in <code>main</code>. Also, <code>&quot;YES\n&quot; &lt;&lt; endl</code> prints an extra blank line; use one of them.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> After the fix, what does the program print for values 2 4 6 and target 5?</summary><div>NO: all values are even, so no subset can sum to an odd number.</div></details>
+</section>
+<section class="prog" id="p-subset-sum-using-dp">
+  <div class="prog-h">
+    <span class="num">2</span>
+    <div class="prog-t">
+      <h3>Subset sum with memoization</h3>
+      <div class="meta"><code class="fname">subset_sum_using_dp.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n·sum) · Space O(n·sum)</span></div>
+    </div>
+  </div>
+  <p class="what">The same recursion with a <code>dp[i][sum]</code> table, so each (i, sum) pair is solved once.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 91 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2017/subset_sum_using_dp.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Subset sum with MEMOIZATION. Identical recursion to subset_sum.cpp, with the</span>
+<span class="c1">// state (i, sum) used as the address of a table cell, so each distinct question</span>
+<span class="c1">// is answered once. Cost drops from O(2^n) to O(n x sum).</span>
+<span class="c1">//</span>
+<span class="c1">// Read subset_sum.cpp first; only the table is new here.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="c1">// dp[i][s] answers exactly one question: &quot;using only items 0..i, can I still make</span>
+<span class="c1">// s?&quot; The two indexes are the two arguments of subset_sum(), nothing else.</span>
+<span class="c1">// A bool fits in this int table because true and false are stored as 1 and 0,</span>
+<span class="c1">// which leaves -1 free to mean &quot;not worked out yet&quot;.</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w"> </span>
+
+<span class="c1">//   i   = highest item still on offer</span>
+<span class="c1">//   sum = how much of the target is still to be made</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">subset_sum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(N * sum)</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Answered before? Hand the saved answer back and make no calls. This is the</span>
+<span class="w">    </span><span class="c1">// line that collapses the branching tree: there are only n x (sum+1) distinct</span>
+<span class="w">    </span><span class="c1">// states, so that is the most work that can ever be done.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// op1 = TAKE item i (target shrinks by val[i], items 0..i-1 remain).</span>
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="o">-</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="c1">// op2 = LEAVE item i (target unchanged, items 0..i-1 remain).</span>
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+<span class="w">        </span><span class="c1">// Write the answer down before returning, so this state is never redone.</span>
+<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">op2</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Too big to take; only the leave branch is legal. Still worth storing.</span>
+<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// BUG, left in place. This declares a SECOND array called val, local to main.</span>
+<span class="w">    </span><span class="c1">// Inside main the name val now means this local one, so the loop below fills</span>
+<span class="w">    </span><span class="c1">// it - while subset_sum() above still reads the global val[1005], which stays</span>
+<span class="w">    </span><span class="c1">// all zeros. The function therefore answers a question about n zeros, and the</span>
+<span class="w">    </span><span class="c1">// only target it can reach is 0. That is why the program prints NO for input</span>
+<span class="w">    </span><span class="c1">// that plainly has an answer.</span>
+<span class="w">    </span><span class="c1">// The fix is to delete this one line, so that the input lands in the global</span>
+<span class="w">    </span><span class="c1">// array the function actually reads.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Mark every state &quot;not worked out yet&quot;. Both loops use &lt;=, so the column</span>
+<span class="w">    </span><span class="c1">// j == sum is included - and that matters, because the very first call asks</span>
+<span class="w">    </span><span class="c1">// about exactly that column. (Module 15&#39;s knapsack_using_dp.cpp used &lt; here</span>
+<span class="w">    </span><span class="c1">// and got 0 for its trouble.)</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;=</span><span class="n">sum</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Small blemish: &quot;YES\n&quot; already ends the line and endl ends it again, so the</span>
+<span class="w">    </span><span class="c1">// output carries a stray blank line. One or the other is enough.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">subset_sum</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">)){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 91 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
+1 2 3 4
+5</pre><p class="io-note">Same input as the plain version (YES expected).</p></div><div class="io out"><div class="io-h">Output </div><pre>NO
+
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>NO</code> (and a blank line), which is wrong for the same shadowing reason.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Fill <code>dp[i][j] = -1</code> for i up to n and j up to <code>sum</code> inclusive.</li><li>Return the stored value if <code>dp[i][sum] != -1</code>.</li><li>Otherwise compute take OR skip, store it, and return it.</li><li>Print YES or NO.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Remove the local <code>int val[n];</code> in <code>main</code> so the input fills the global array. After that it prints YES.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why can a bool result be stored in an <code>int</code> table with -1 as &#x27;unknown&#x27;?</summary><div>true and false are stored as 1 and 0, so -1 is free to mean &#x27;not computed yet&#x27;.</div></details>
+</section>
+<section class="prog" id="p-count-of-subset-sum">
+  <div class="prog-h">
+    <span class="num">3</span>
+    <div class="prog-t">
+      <h3>Count the subsets with a given sum</h3>
+      <div class="meta"><code class="fname">count_of_subset_sum.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n·sum) · Space O(n·sum)</span></div>
+    </div>
+  </div>
+  <p class="what">Same shape as subset sum, but adds the take and skip counts, so the result is how many subsets reach the target.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 92 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2017/count_of_subset_sum.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Counting instead of deciding: HOW MANY subsets add up to the target?</span>
+<span class="c1">//</span>
+<span class="c1">// The recursion is exactly subset_sum_using_dp.cpp with three small changes, and</span>
+<span class="c1">// they are worth noticing because the same trick turns many yes/no DPs into</span>
+<span class="c1">// counting DPs:</span>
+<span class="c1">//   * the return type is int - a count, not a bool;</span>
+<span class="c1">//   * the base case returns 1 for a success (one valid subset found) and 0 for a</span>
+<span class="c1">//     failure, instead of true and false;</span>
+<span class="c1">//   * the two branches are ADDED instead of OR-ed. Take-it and leave-it can never</span>
+<span class="c1">//     produce the same subset, so no subset is counted twice.</span>
+<span class="c1">//</span>
+<span class="c1">// Note the count is of subsets by POSITION, not by content: values 1 1 1 with</span>
+<span class="c1">// target 2 give 3, because the three 1s sit at three different indexes.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="c1">// dp[i][s] = how many subsets of items 0..i add up to exactly s.</span>
+<span class="c1">// The two indexes are the two arguments of subset_sum(); -1 marks &quot;not counted</span>
+<span class="c1">// yet&quot;, and is safe because a count is never negative.</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w"> </span>
+
+<span class="c1">//   i   = highest item still on offer</span>
+<span class="c1">//   sum = how much of the target is still to be made</span>
+<span class="c1">// Returns the number of ways to finish from here.</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">subset_sum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(N * sum)</span>
+<span class="w">    </span><span class="c1">// Out of items: exactly one way (the empty choice) if nothing is left to</span>
+<span class="w">    </span><span class="c1">// make, and no way at all otherwise.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Counted this state before? Reuse it.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// op1 = ways that TAKE item i (target shrinks, items 0..i-1 remain).</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="o">-</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="c1">// op2 = ways that LEAVE item i (target unchanged, items 0..i-1 remain).</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+<span class="w">        </span><span class="c1">// Every subset either contains item i or does not, so the two piles do</span>
+<span class="w">        </span><span class="c1">// not overlap and may simply be added.</span>
+<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">op2</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// BUG, left in place. This declares a SECOND array called val, local to main.</span>
+<span class="w">    </span><span class="c1">// Inside main the name val now means this local one, so the loop below fills</span>
+<span class="w">    </span><span class="c1">// it - while subset_sum() above still reads the global val[1005], which stays</span>
+<span class="w">    </span><span class="c1">// all zeros. The function therefore answers a question about n zeros, and the</span>
+<span class="w">    </span><span class="c1">// only target it can reach is 0. That is why the program prints NO for input</span>
+<span class="w">    </span><span class="c1">// that plainly has an answer.</span>
+<span class="w">    </span><span class="c1">// The fix is to delete this one line, so that the input lands in the global</span>
+<span class="w">    </span><span class="c1">// array the function actually reads.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Mark every state as uncounted. Both bounds are &lt;=, so the column j == sum</span>
+<span class="w">    </span><span class="c1">// that the first call needs really is set to -1.</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;=</span><span class="n">sum</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"> </span><span class="c1">// n-1 as we are starting from the last index and</span>
+<span class="w">    </span><span class="c1">// n is the size of the array</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 92 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
+1 2 3 4
+5</pre><p class="io-note">The answer should be 2: {1,4} and {2,3}.</p></div><div class="io out"><div class="io-h">Output </div><pre>0
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>0</code>, which is wrong: see Watch out.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Base case <code>i &lt; 0</code>: return 1 if <code>sum == 0</code>, else 0.</li><li>Memo check on <code>dp[i][sum]</code>.</li><li>If the item fits: <code>dp[i][sum] = take count + skip count</code>.</li><li>Otherwise only the skip count.</li><li>Print <code>subset_sum(n-1, sum)</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Again a local <code>int val[n]</code> in <code>main</code> hides the global <code>val</code>, so the function counts subsets of zeros. Delete that line and the program prints 2.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> With values 1 1 1 and target 2, how many subsets are counted?</summary><div>3, because the three 1s are different items (positions 0-1, 0-2 and 1-2).</div></details>
+</section>
+<section class="prog" id="p-equal-set-sum">
+  <div class="prog-h">
+    <span class="num">4</span>
+    <div class="prog-t">
+      <h3>Equal sum partition</h3>
+      <div class="meta"><code class="fname">equal_set_sum.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(n·sum/2) · Space O(n·sum/2)</span></div>
+    </div>
+  </div>
+  <p class="what">If the total is odd, the answer is NO. Otherwise the array can be split into two equal halves exactly when some subset reaches total / 2.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 100 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2017/equal_set_sum.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// EQUAL SUM PARTITION: can the n numbers be split into two groups with the same</span>
+<span class="c1">// total?</span>
+<span class="c1">//</span>
+<span class="c1">// The insight that makes this easy: the two groups together are the whole array,</span>
+<span class="c1">// so each must add up to total / 2. Which means:</span>
+<span class="c1">//   * an odd total is hopeless - halves of it are not whole numbers, so NO;</span>
+<span class="c1">//   * an even total is a subset-sum question in disguise. If some subset reaches</span>
+<span class="c1">//     total / 2 then whatever is left over reaches total / 2 as well, and the</span>
+<span class="c1">//     split exists.</span>
+<span class="c1">// So the only new code is in main; subset_sum() below is exactly the memoized</span>
+<span class="c1">// version from subset_sum_using_dp.cpp.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -561,8 +885,11 @@ take = knapsack(i,   cap - weight[i]) + val[i];
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="c1">// dp[i][s] = &quot;using only items 0..i, can s still be made?&quot; -1 means unknown.</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
 
+<span class="c1">//   i   = highest item still on offer</span>
+<span class="c1">//   sum = how much of the target is still to be made</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">subset_sum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
@@ -577,6 +904,7 @@ take = knapsack(i,   cap - weight[i]) + val[i];
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">sum</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// op1 = TAKE item i; op2 = LEAVE it. Either route is good enough.</span>
 <span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="o">-</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
 <span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
 <span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">op2</span><span class="p">;</span>
@@ -592,27 +920,44 @@ take = knapsack(i,   cap - weight[i]) + val[i];
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// BUG 1, left in place. A second array named val, local to main. Inside main</span>
+<span class="w">    </span><span class="c1">// the name now refers to this one, so the loop below fills it - while</span>
+<span class="w">    </span><span class="c1">// subset_sum() above goes on reading the global val[1005], which stays all</span>
+<span class="w">    </span><span class="c1">// zeros. Deleting this single line makes the function see the real numbers.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
 
+<span class="w">    </span><span class="c1">// Read the numbers and add up the total in the same pass.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 <span class="w">        </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span>
 
 
+<span class="w">    </span><span class="c1">// An odd total can never be cut into two equal whole halves.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">%</span><span class="mi">2</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
 
+<span class="w">        </span><span class="c1">// The real target: reach exactly half the total.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">half</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Only the columns 0..half are ever needed, so only those are marked</span>
+<span class="w">        </span><span class="c1">// unknown. That is correct - as long as nothing asks about a bigger</span>
+<span class="w">        </span><span class="c1">// target, which is exactly what goes wrong on the next line.</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">half</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">                </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// BUG 2, left in place: this passes the FULL total, not half of it. Two</span>
+<span class="w">        </span><span class="c1">// things then go wrong at once. The question asked is &quot;can some subset</span>
+<span class="w">        </span><span class="c1">// add up to the whole total?&quot;, which is not the question at all; and</span>
+<span class="w">        </span><span class="c1">// dp[n-1][sum] was never set to -1 by the loop above, so it still holds</span>
+<span class="w">        </span><span class="c1">// the global 0, the memo check reads it as a stored &quot;false&quot;, and the</span>
+<span class="w">        </span><span class="c1">// function returns straight away without looking at a single item.</span>
+<span class="w">        </span><span class="c1">// The line should read subset_sum(n-1, half).</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">subset_sum</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">)){</span>
 <span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
@@ -622,7 +967,7 @@ take = knapsack(i,   cap - weight[i]) + val[i];
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 67 lines ▾</button>
+    <button type="button" class="expand">Show all 100 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
@@ -644,7 +989,7 @@ take = knapsack(i,   cap - weight[i]) + val[i];
   <p class="what">Knapsack where each item can be taken any number of times. Taking an item calls <code>knapsack(i, ...)</code> again, so the same item stays available.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 54 lines</span>
+      <span>CPP · 84 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2017/unbounded_knapsack.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -704,7 +1049,50 @@ take = knapsack(i,   cap - weight[i]) + val[i];
 <span class="normal">51</span>
 <span class="normal">52</span>
 <span class="normal">53</span>
-<span class="normal">54</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// UNBOUNDED KNAPSACK: the same bag and the same items as Module 15, except that</span>
+<span class="c1">// each item may now be taken as many times as you like - think of coins, or of a</span>
+<span class="c1">// shop with unlimited stock, rather than n one-off objects.</span>
+<span class="c1">//</span>
+<span class="c1">// Astonishingly, one token changes 0-1 knapsack into this. In the take branch,</span>
+<span class="c1">// 0-1 knapsack moved on with knapsack(i-1, ...) because the item was used up;</span>
+<span class="c1">// here it stays at knapsack(i, ...), so item i is still on offer and can be</span>
+<span class="c1">// taken again. The leave branch still moves to i-1 - otherwise the recursion</span>
+<span class="c1">// would never work its way down to the base case.</span>
+<span class="c1">//</span>
+<span class="c1">// The state is still (i, room left) and the table is still n x (W+1), so the cost</span>
+<span class="c1">// stays O(n x W) even though far more combinations are now allowed.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -712,9 +1100,14 @@ take = knapsack(i,   cap - weight[i]) + val[i];
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">1005</span><span class="p">],</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="c1">// dp[i][w] = &quot;with items 0..i available (each unlimited) and w kilos of room,</span>
+<span class="c1">// what is the best value?&quot; -1 means not worked out yet.</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
 
+<span class="c1">//   i          = the highest item still on offer (0..i, each available freely)</span>
+<span class="c1">//   max_weight = how many kilos of room are left</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">knapsack</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// No items left, or no room left: nothing more can be gained.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -725,7 +1118,13 @@ take = knapsack(i,   cap - weight[i]) + val[i];
 
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span><span class="w"> </span><span class="c1">// when we still have space in the bag, we can either take </span>
 <span class="w">        </span><span class="c1">// the current item or not</span>
+<span class="w">        </span><span class="c1">// op1 = TAKE one copy of item i. Bank val[i], lose weight[i] of room -</span>
+<span class="w">        </span><span class="c1">// and note the i, not i-1: item i is still available, so the very next</span>
+<span class="w">        </span><span class="c1">// call may take it again. This single character is the whole difference</span>
+<span class="w">        </span><span class="c1">// from 0-1 knapsack.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"> </span><span class="c1">// taking the current item</span>
+<span class="w">        </span><span class="c1">// op2 = have no more of item i at all, and move on to items 0..i-1. This</span>
+<span class="w">        </span><span class="c1">// is the branch that makes the recursion shrink and eventually stop.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span><span class="w"> </span><span class="c1">// not taking the current item</span>
 <span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span><span class="w"> </span><span class="n">op2</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
@@ -748,6 +1147,12 @@ take = knapsack(i,   cap - weight[i]) + val[i];
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">max_weight</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// BUG, left in place - the same one as Module 15&#39;s knapsack_using_dp.cpp.</span>
+<span class="w">    </span><span class="c1">// The inner loop stops at j &lt; max_weight, so the column j == max_weight keeps</span>
+<span class="w">    </span><span class="c1">// the global starting value 0 instead of -1. The first call made below is</span>
+<span class="w">    </span><span class="c1">// knapsack(n-1, max_weight), whose memo check reads that 0, takes it for a</span>
+<span class="w">    </span><span class="c1">// finished answer and returns 0 without doing anything. That is why this</span>
+<span class="w">    </span><span class="c1">// program prints 0 rather than 35. Fix: j &lt;= max_weight.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">max_weight</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
@@ -760,7 +1165,7 @@ take = knapsack(i,   cap - weight[i]) + val[i];
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 54 lines ▾</button>
+    <button type="button" class="expand">Show all 84 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
@@ -1054,7 +1459,7 @@ take = knapsack(i,   cap - weight[i]) + val[i];
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

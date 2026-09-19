@@ -7,7 +7,7 @@
 <meta name="description" content="Module 14 introduces the queue (First-In-First-Out) — built on a singly linked list, a doubly linked list and the STL `list`, then the STL `queue` itself. The rest of the folder is practice: stack/queue exercises from the practice day, classic LeetCode and Code360 problems (valid parentheses, min stack, queue from stacks and the reverse), and a review of Module 11&#x27;s linked list problems. Files that are only a judge solution run here with a small test harness.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -58,7 +58,104 @@ q.push(1); q.push(2);
 cout &lt;&lt; q.front();  // 1
 q.pop();
 cout &lt;&lt; q.front();  // 2</pre></div><div class="concept"><h4>Which end is which</h4><p>With a singly linked list, remove at the <strong>head</strong> (O(1)) and add at the <strong>tail</strong> (O(1) with a <code>tail</code> pointer). Removing at the tail would need the previous node.</p></div><div class="concept"><h4>Stack reverses, queue keeps order</h4><p>Pouring values through a stack reverses them; through a queue they stay in order. Many problems (reverse a queue, reverse first K) are just this idea.</p></div><div class="concept"><h4>Stack for matching</h4><p>When the latest unmatched item must be handled first — brackets, backspaces, adjacent duplicates — a stack is the natural tool.</p></div><div class="concept"><h4>Auxiliary min stack</h4><p>A second stack that only stores &#x27;new minimum so far&#x27; values gives <code>getMin</code> in O(1). Push on <code>&lt;=</code> so duplicates of the minimum are counted.</p></div><div class="concept"><h4>Building one structure from another</h4><p>A stack can be made from a queue and a queue from a stack by moving elements between helper containers. One operation becomes O(n), the rest stay O(1).</p></div><div class="concept"><h4>Judge-only files</h4><p>LeetCode and Code360 files contain only a class or function; the judge supplies <code>main</code>, includes and <code>ListNode</code>/<code>Node</code>. The page shows a small test driver that does that job so the code can run.</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: the line at the ticket counter</h3><p>The trace above, one step at a time. New values join on the right and everyone shuffles left as the front of the line is served, exactly like people at a counter.</p><p>Watch <code>front</code> and <code>back</code> move on their own. A push moves only the back marker, a pop moves only the front one, and neither ever has to walk past the values in between.</p><div class="stepper" data-n="8"><p class="stitle">Press the arrows or Play: push 10, push 20, push 30, pop, push 40, pop</p><div class="frames"><div class="frame" data-i="0"><pre>leaves from the front        joins at the back
+
+   (nobody in the line)
+
+
+   front: none   back: none   size: 0</pre><p class="flabel">An empty queue. Unlike the stack, this structure has two ends that matter: one where values join, one where they leave.</p></div><div class="frame" data-i="1"><pre>leaves from the front        joins at the back
+
+   &lt;-- [ 10 ] &lt;--
+         ^ front and back
+
+   front: 10   back: 10   size: 1</pre><p class="flabel"><code>push(10)</code> joins the back of the line. With one value in, it is the front and the back at once.</p></div><div class="frame" data-i="2"><pre>leaves from the front        joins at the back
+
+   &lt;-- [ 10 ][ 20 ] &lt;--
+         ^front^back
+
+   front: 10   back: 20   size: 2</pre><p class="flabel"><code>push(20)</code> joins behind 10. Only the back marker moved; 10 is still the one being served next.</p></div><div class="frame" data-i="3"><pre>leaves from the front        joins at the back
+
+   &lt;-- [ 10 ][ 20 ][ 30 ] &lt;--
+         ^front      ^back
+
+   front: 10   back: 30   size: 3</pre><p class="flabel"><code>push(30)</code> joins at the back again. Three waiting, and the order they arrived in is the order they will be served in.</p></div><div class="frame" data-i="4"><pre>leaves from the front        joins at the back
+
+   &lt;-- [ 20 ][ 30 ] &lt;--
+         ^front^back
+
+   10 has gone   front: 20   back: 30   size: 2</pre><p class="flabel"><code>pop()</code> serves the front, so 10 leaves. It arrived first and it left first - that is FIFO, and it is the opposite habit to the pile of plates in Module 13.</p></div><div class="frame" data-i="5"><pre>leaves from the front        joins at the back
+
+   &lt;-- [ 20 ][ 30 ][ 40 ] &lt;--
+         ^front      ^back
+
+   front: 20   back: 40   size: 3</pre><p class="flabel"><code>push(40)</code> joins at the back. Values that were already waiting keep their places; a new arrival never jumps the line.</p></div><div class="frame" data-i="6"><pre>leaves from the front        joins at the back
+
+   &lt;-- [ 30 ][ 40 ] &lt;--
+         ^front^back
+
+   20 has gone   front: 30   back: 40   size: 2</pre><p class="flabel"><code>pop()</code> again, so 20 leaves - the oldest value still in. 40 is newest, so it will wait the longest.</p></div><div class="frame" data-i="7"><pre>leaves from the front        joins at the back
+
+   &lt;-- [ 30 ][ 40 ] &lt;--
+         ^head ^tail
+
+   pop uses head only, push uses tail only</pre><p class="flabel">On a singly linked list those two markers are the <code>head</code> and <code>tail</code> pointers, and neither of them ever walked through the line to find its value. That is why <code>push</code> and <code>pop</code> are both O(1) - but only this way round. Remove at the tail instead and <code>pop</code> would have to walk the whole list to find the node before it.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div><div class="wstep"><h3>Watch it happen: the same five values leaving a stack and a queue</h3><p>Give a stack and a queue the same values in the same order, <code>10 20 30 40 50</code>, then empty them both. The <code>--</code> marks a value that has already left, so you can see which end each structure eats from.</p><p>This one difference is what most of the practice problems on this page are really about.</p><div class="stepper" data-n="7"><p class="stitle">Press the arrows to take one value out of each</p><div class="frames"><div class="frame" data-i="0"><pre>  both were given:  10 20 30 40 50
+
+  stack:  10 20 30 40 50
+                      ^ next out
+
+  queue:  10 20 30 40 50
+          ^ next out
+
+  stack gave:  (nothing yet)
+  queue gave:  (nothing yet)</pre><p class="flabel">Both structures hold the same five values in the same order. The stack takes from the right-hand end, the queue from the left-hand end - and that is the whole difference between them.</p></div><div class="frame" data-i="1"><pre>  both were given:  10 20 30 40 50
+
+  stack:  10 20 30 40 --
+                   ^ next out
+
+  queue:  -- 20 30 40 50
+             ^ next out
+
+  stack gave:  50
+  queue gave:  10</pre><p class="flabel">First removal. The stack gives 50, the value pushed last. The queue gives 10, the value pushed first.</p></div><div class="frame" data-i="2"><pre>  both were given:  10 20 30 40 50
+
+  stack:  10 20 30 -- --
+                ^ next out
+
+  queue:  -- -- 30 40 50
+                ^ next out
+
+  stack gave:  50 40
+  queue gave:  10 20</pre><p class="flabel">Second. The stack is eating backwards through the list, the queue forwards.</p></div><div class="frame" data-i="3"><pre>  both were given:  10 20 30 40 50
+
+  stack:  10 20 -- -- --
+             ^ next out
+
+  queue:  -- -- -- 40 50
+                   ^ next out
+
+  stack gave:  50 40 30
+  queue gave:  10 20 30</pre><p class="flabel">Third. Halfway, and the two output lines have nothing in common yet.</p></div><div class="frame" data-i="4"><pre>  both were given:  10 20 30 40 50
+
+  stack:  10 -- -- -- --
+          ^ next out
+
+  queue:  -- -- -- -- 50
+                      ^ next out
+
+  stack gave:  50 40 30 20
+  queue gave:  10 20 30 40</pre><p class="flabel">Fourth. Only one value is left in each, and it is a different one: 10 in the stack, 50 in the queue.</p></div><div class="frame" data-i="5"><pre>  both were given:  10 20 30 40 50
+
+  stack:  -- -- -- -- --
+          (all gone)
+
+  queue:  -- -- -- -- --
+          (all gone)
+
+  stack gave:  50 40 30 20 10
+  queue gave:  10 20 30 40 50</pre><p class="flabel">Fifth, and both are empty. Read the two output lines: the stack handed everything back backwards, the queue handed it back in the order it came.</p></div><div class="frame" data-i="6"><pre>  put in:      10 20 30 40 50
+
+  stack gave:  50 40 30 20 10   (reversed)
+  queue gave:  10 20 30 40 50   (same order)</pre><p class="flabel">So a stack in the middle of a pipeline <strong>reverses</strong>, and a queue <strong>keeps the order</strong>. Pour a queue into a stack and back and you have reversed it; that is the trick behind reverse a queue and reverse the first K.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 7</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/QueueArray.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — queue (array)</b><span class="rnote">Shows front and back moving, and why the array is treated as a circle.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/QueueLL.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — queue (linked list)</b><span class="rnote">Add at the tail, remove at the head — exactly what the module builds.</span></a></li><li class="r-article"><a href="https://www.geeksforgeeks.org/queue-data-structure/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>GeeksforGeeks — queue</b><span class="rnote">The queue explained, with its standard problems.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PL2_aWCzGMAwI3W_JlcBbtYTwiQSsOTa6P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>mycodeschool — data structures</b><span class="rnote">The classic slow, patient explanation of lists, stacks and queues.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-stl-queue">
@@ -70,9 +167,9 @@ cout &lt;&lt; q.front();  // 2</pre></div><div class="concept"><h4>Which end is 
     </div>
   </div>
   <p class="what">Uses the built-in <code>queue&lt;int&gt;</code>: push <code>n</code> values, show front, back and size, then pop everything in arrival order.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 27 lines</span>
+      <span>CPP · 60 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2014/stl_queue.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -105,28 +202,92 @@ cout &lt;&lt; q.front();  // 2</pre></div><div class="concept"><h4>Which end is 
 <span class="normal">24</span>
 <span class="normal">25</span>
 <span class="normal">26</span>
-<span class="normal">27</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">The ready-made queue: `queue&lt;int&gt;` from the STL</span>
+
+<span class="cm">A queue is First-In-First-Out (FIFO): a line at a counter. New values join at</span>
+<span class="cm">the back, and the value that leaves is always the one at the front, so nothing</span>
+<span class="cm">overtakes and the order is preserved. That is the whole difference from a</span>
+<span class="cm">stack, which is Last-In-First-Out and therefore reverses the order.</span>
+
+<span class="cm">Module 13 built a queue by hand out of linked-list nodes. This file uses the</span>
+<span class="cm">one the standard library already provides. The six operations:</span>
+
+<span class="cm">    push(x)   join the back</span>
+<span class="cm">    pop()     the front leaves (returns nothing)</span>
+<span class="cm">    front()   read the value at the front -- the next to leave</span>
+<span class="cm">    back()    read the value at the back  -- the newest one</span>
+<span class="cm">    size()    how many are in the line</span>
+<span class="cm">    empty()   is the line empty?</span>
+
+<span class="cm">All of them are O(1).</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span><span class="c1">        // gives us queue&lt;int&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Read n values. Each push() puts the value at the back of the line, so</span>
+<span class="w">    </span><span class="c1">// the queue ends up holding them in the order they were typed.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// front = the first value typed, back = the last one, size = how many.</span>
+<span class="w">    </span><span class="c1">// For input 4 / 1 2 3 4 this line is `1 4 4`.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">back</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w">  </span><span class="n">endl</span><span class="p">;</span>
 
-<span class="w">    </span><span class="c1">// Always check if the queue is empty or not before using pop() or </span>
+<span class="w">    </span><span class="c1">// Always check if the queue is empty or not before using pop() or</span>
 <span class="w">    </span><span class="c1">// using front() or back()</span>
+<span class="w">    </span><span class="c1">// (Those three read or remove a value that must exist. On an empty queue</span>
+<span class="w">    </span><span class="c1">// the behaviour is undefined -- a junk number or a crash.)</span>
 
+<span class="w">    </span><span class="c1">// Drain the queue: print the front, remove it, repeat. Because removal</span>
+<span class="w">    </span><span class="c1">// happens at the front, the values come out in arrival order: 1 2 3 4.</span>
+<span class="w">    </span><span class="c1">// Run the same input through a stack and you would get 4 3 2 1.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
@@ -134,7 +295,7 @@ cout &lt;&lt; q.front();  // 2</pre></div><div class="concept"><h4>Which end is 
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 27 lines ▾</button>
+    <button type="button" class="expand">Show all 60 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
@@ -160,132 +321,195 @@ cout &lt;&lt; q.front();  // 2</pre></div><div class="concept"><h4>Which end is 
   <p class="what">The Module 13 queue finished: push at <code>tail</code>, pop at <code>head</code>, plus a <code>main</code> that prints front, back, size and then empties the queue.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 80 lines</span>
+      <span>CPP · 116 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2014/implement_queue_using_singly_linked_list.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">The hand-made queue, finished: singly linked list, push at tail, pop at head</span>
+
+<span class="cm">Module 13 started this class; here it has a `main` that actually prints. The</span>
+<span class="cm">rule to keep in mind is which end does what, and why:</span>
+
+<span class="cm">    head = the front. pop() deletes the head, and `head-&gt;next` is instantly</span>
+<span class="cm">           the new front, so removing is O(1).</span>
+<span class="cm">    tail = the back.  push() links a node after the tail. Keeping a `tail`</span>
+<span class="cm">           pointer is what makes adding O(1) instead of a walk.</span>
+
+<span class="cm">It has to be this way round for a *singly* linked list. Deleting the tail</span>
+<span class="cm">would need the node before it, and the only way to find that is to walk from</span>
+<span class="cm">the head -- O(n). Removing at the head costs nothing, so the head is the front</span>
+<span class="cm">and First-In-First-Out falls out naturally.</span>
+
+<span class="cm">WARNING: this file does not compile. `int size = 0;` and `int size()` are the</span>
+<span class="cm">same name inside one class. `queue_input_output_singly_list.cpp` is this exact</span>
+<span class="cm">program with the counter renamed to `sz`, so look there to see it run.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w"> </span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">next</span><span class="p">;</span><span class="w">  </span><span class="c1">// the next value in the line, behind this one</span>
 
 <span class="w">    </span><span class="n">Node</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w"> </span>
-<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">  </span><span class="c1">// a fresh node ends the chain until it is linked</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">myQueue</span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">  </span><span class="c1">// front: the oldest value, the next to leave</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">  </span><span class="c1">// back: the newest value</span>
+<span class="w">        </span><span class="c1">// The counter that clashes with the size() method below.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 
 <span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(1)</span>
 <span class="w">            </span><span class="n">size</span><span class="o">++</span><span class="p">;</span>
 <span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">            </span><span class="c1">// An empty queue: the first value is both front and back.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">                </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">                </span><span class="k">return</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="c1">// Otherwise join the back of the line and become the new back.</span>
 <span class="w">            </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">pop</span><span class="p">(){</span><span class="w"> </span><span class="c1">// O(1)</span>
 <span class="w">            </span><span class="n">size</span><span class="o">--</span><span class="p">;</span>
-<span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
-<span class="w">            </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span><span class="w">   </span><span class="c1">// the front leaves first -- FIFO</span>
+<span class="w">            </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w">         </span><span class="c1">// the one behind becomes the front</span>
 <span class="w">            </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
+<span class="w">            </span><span class="c1">// The queue just became empty, so tail points at freed memory.</span>
+<span class="w">            </span><span class="c1">// Clear it, or the next push() would write through it.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
@@ -303,9 +527,12 @@ cout &lt;&lt; q.front();  // 2</pre></div><div class="concept"><h4>Which end is 
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">size</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// The guard for front(), back() and pop(): all three follow head or</span>
+<span class="w">        </span><span class="c1">// tail, so they must not be called when there is nothing there.</span>
 <span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="nf">empty</span><span class="p">(){</span><span class="w"> </span><span class="c1">// O(1)</span>
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">            </span><span class="c1">// return size == 0;</span>
+<span class="w">            </span><span class="c1">// Both tests agree; this one needs no counter at all.</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
 
@@ -319,8 +546,12 @@ cout &lt;&lt; q.front();  // 2</pre></div><div class="concept"><h4>Which end is 
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// front, back and size on one line. For 4 / 10 20 30 40 that is</span>
+<span class="w">    </span><span class="c1">// `10 40 4`: the oldest value, the newest value, and the count.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">back</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w">  </span><span class="n">endl</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Drain the queue. Removal happens at the front, so the values come out</span>
+<span class="w">    </span><span class="c1">// in the order they arrived: 10 20 30 40.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
@@ -328,18 +559,18 @@ cout &lt;&lt; q.front();  // 2</pre></div><div class="concept"><h4>Which end is 
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 80 lines ▾</button>
+    <button type="button" class="expand">Show all 116 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
-10 20 30 40</pre><p class="io-note"><code>n</code>, then <code>n</code> values.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>implement_queue_using_singly_linked_list.cpp:56:9: error: &#x27;int myQueue::size()&#x27; conflicts with a previous declaration
+10 20 30 40</pre><p class="io-note"><code>n</code>, then <code>n</code> values.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>implement_queue_using_singly_linked_list.cpp:84:9: error: &#x27;int myQueue::size()&#x27; conflicts with a previous declaration
          }
          ^
-implement_queue_using_singly_linked_list.cpp:22:20: note: previous declaration &#x27;int myQueue::size&#x27;
+implement_queue_using_singly_linked_list.cpp:46:20: note: previous declaration &#x27;int myQueue::size&#x27;
          int size = 0;
                     ^
 implement_queue_using_singly_linked_list.cpp: In function &#x27;int main()&#x27;:
-implement_queue_using_singly_linked_list.cpp:74:59: error: expression cannot be used as a function
+implement_queue_using_singly_linked_list.cpp:107:59: error: expression cannot be used as a function
      cout &lt;&lt; q.front() &lt;&lt; &quot; &quot; &lt;&lt; q.back() &lt;&lt; &quot; &quot; &lt;&lt; q.size() &lt;&lt;  endl;
                                                            ^</pre></div></div>
   <p class="readout"><b>Reading the output.</b> No output: the file fails to compile. The working copy <code>queue_input_output_singly_list.cpp</code> shows what it would print.</p>
@@ -358,134 +589,169 @@ implement_queue_using_singly_linked_list.cpp:74:59: error: expression cannot be 
   <p class="what">Same singly linked queue, with the counter renamed to <code>sz</code>, so it compiles and runs.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 80 lines</span>
+      <span>CPP · 102 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2014/queue_input_output_singly_list.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">The same singly linked queue, but this one compiles</span>
+
+<span class="cm">Everything here is explained in `implement_queue_using_singly_linked_list.cpp`.</span>
+<span class="cm">The one change is the counter: it is called `sz` instead of `size`, so it no</span>
+<span class="cm">longer collides with the `size()` method. That single rename is the whole</span>
+<span class="cm">difference between a file that fails to build and one that runs.</span>
+
+<span class="cm">The shape is unchanged: head is the front (pop deletes here), tail is the back</span>
+<span class="cm">(push adds here), both O(1), so values leave in the order they arrived.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w"> </span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
 
 <span class="w">    </span><span class="n">Node</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w"> </span>
+<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">myQueue</span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">sz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">  </span><span class="c1">// front -- the next value to leave</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">  </span><span class="c1">// back  -- where new values join</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">sz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">         </span><span class="c1">// renamed from `size`, so size() below is legal</span>
 
 <span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">            </span><span class="n">sz</span><span class="o">++</span><span class="p">;</span>
 <span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span><span class="w">       </span><span class="c1">// empty queue: first value is both ends</span>
 <span class="w">                </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">                </span><span class="k">return</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
-<span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">            </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">   </span><span class="c1">// link it behind the current back</span>
+<span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">         </span><span class="c1">// and it becomes the new back</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">pop</span><span class="p">(){</span>
 <span class="w">            </span><span class="n">sz</span><span class="o">--</span><span class="p">;</span>
-<span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
-<span class="w">            </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span><span class="w">  </span><span class="c1">// the front is the oldest value (FIFO)</span>
+<span class="w">            </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w">        </span><span class="c1">// the next in line takes its place</span>
 <span class="w">            </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
-<span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span><span class="w">           </span><span class="c1">// queue emptied: don&#39;t leave tail</span>
+<span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">          </span><span class="c1">// pointing at deleted memory</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 
@@ -497,10 +763,14 @@ implement_queue_using_singly_linked_list.cpp:74:59: error: expression cannot be 
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// O(1) because pushes and pops keep the counter up to date; counting</span>
+<span class="w">        </span><span class="c1">// the nodes by walking the list would be O(n).</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">size</span><span class="p">(){</span>
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">sz</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// Check this before front(), back() or pop() -- they all step through</span>
+<span class="w">        </span><span class="c1">// a pointer that would be NULL on an empty queue.</span>
 <span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="nf">empty</span><span class="p">(){</span>
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">            </span><span class="c1">// return size == 0;</span>
@@ -517,8 +787,11 @@ implement_queue_using_singly_linked_list.cpp:74:59: error: expression cannot be 
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// For input 3 / 5 6 7 this prints `5 7 3`: front, back, size.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">back</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w">  </span><span class="n">endl</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Then the queue is emptied from the front, so the output is 5 6 7 --</span>
+<span class="w">    </span><span class="c1">// the same order as the input. (A stack would print 7 6 5.)</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
@@ -526,7 +799,7 @@ implement_queue_using_singly_linked_list.cpp:74:59: error: expression cannot be 
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 80 lines ▾</button>
+    <button type="button" class="expand">Show all 102 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3
@@ -551,111 +824,158 @@ implement_queue_using_singly_linked_list.cpp:74:59: error: expression cannot be 
   <p class="what">A queue on <code>Node</code>s with <code>next</code> and <code>prev</code>: push after <code>tail</code>, pop at <code>head</code> and clear the new head&#x27;s <code>prev</code>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 85 lines</span>
+      <span>CPP · 113 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2014/implement_queue_using_doubly_linked_list.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">The same queue on a doubly linked list</span>
+
+<span class="cm">Every node now also keeps a `prev` pointer. For a queue that is extra memory</span>
+<span class="cm">and nothing else: pushing at the tail and popping at the head are already O(1)</span>
+<span class="cm">with a singly linked list, so `prev` buys no speed here. (It was worth it for</span>
+<span class="cm">the *stack* in Module 13, where pop removes the tail and needs the node before</span>
+<span class="cm">it.) What `prev` does add is tidiness -- when the head leaves, the new head&#39;s</span>
+<span class="cm">`prev` must be cleared so no pointer refers to the node that was deleted.</span>
+
+<span class="cm">The ends still mean the same thing: head is the front, values leave there;</span>
+<span class="cm">tail is the back, values join there. First in, first out.</span>
+
+<span class="cm">WARNING: same compile error as the singly linked version -- `int size = 0;`</span>
+<span class="cm">and `int size()` cannot share a name. Rename the counter to `sz`, as</span>
+<span class="cm">`queue_input_output_singly_list.cpp` does, and it runs.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w"> </span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">prev</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">next</span><span class="p">;</span><span class="w">  </span><span class="c1">// towards the back of the line</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">prev</span><span class="p">;</span><span class="w">  </span><span class="c1">// towards the front of the line</span>
 
 <span class="w">    </span><span class="n">Node</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w"> </span>
+<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -663,32 +983,35 @@ implement_queue_using_singly_linked_list.cpp:74:59: error: expression cannot be 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">myQueue</span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">  </span><span class="c1">// front: pop() removes here</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">  </span><span class="c1">// back: push() adds here</span>
+<span class="w">        </span><span class="c1">// The counter that clashes with the size() method below.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 
 <span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">            </span><span class="n">size</span><span class="o">++</span><span class="p">;</span>
 <span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span><span class="w">          </span><span class="c1">// first value: front and back at once</span>
 <span class="w">                </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">                </span><span class="k">return</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
-<span class="w">            </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="p">;</span>
-<span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">            </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">      </span><span class="c1">// link forward</span>
+<span class="w">            </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="p">;</span><span class="w">      </span><span class="c1">// and backward -- the only extra work</span>
+<span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">            </span><span class="c1">// the new arrival is now the back</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">pop</span><span class="p">(){</span>
 <span class="w">            </span><span class="n">size</span><span class="o">--</span><span class="p">;</span>
-<span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span><span class="w">   </span><span class="c1">// the oldest value leaves first</span>
 <span class="w">            </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">            </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
-<span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span><span class="w">            </span><span class="c1">// the line is now empty, so the back</span>
+<span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">           </span><span class="c1">// pointer must not survive either</span>
 <span class="w">                </span><span class="k">return</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="c1">// Someone is still in the line: the new front has nobody in</span>
+<span class="w">            </span><span class="c1">// front of it, and the node its prev used to name is gone.</span>
 <span class="w">            </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
@@ -704,6 +1027,8 @@ implement_queue_using_singly_linked_list.cpp:74:59: error: expression cannot be 
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">size</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// front(), back() and pop() all dereference head or tail, so this</span>
+<span class="w">        </span><span class="c1">// check has to come first.</span>
 <span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="nf">empty</span><span class="p">(){</span>
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">            </span><span class="c1">// return size == 0;</span>
@@ -720,8 +1045,10 @@ implement_queue_using_singly_linked_list.cpp:74:59: error: expression cannot be 
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// With the rename applied, input 4 / 10 20 30 40 prints `10 40 4` here,</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">back</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w">  </span><span class="n">endl</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// and then 10 20 30 40, one per line -- arrival order, as a queue should.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
@@ -729,18 +1056,18 @@ implement_queue_using_singly_linked_list.cpp:74:59: error: expression cannot be 
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 85 lines ▾</button>
+    <button type="button" class="expand">Show all 113 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
-10 20 30 40</pre><p class="io-note"><code>n</code>, then <code>n</code> values.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>implement_queue_using_doubly_linked_list.cpp:61:9: error: &#x27;int myQueue::size()&#x27; conflicts with a previous declaration
+10 20 30 40</pre><p class="io-note"><code>n</code>, then <code>n</code> values.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>implement_queue_using_doubly_linked_list.cpp:84:9: error: &#x27;int myQueue::size()&#x27; conflicts with a previous declaration
          }
          ^
-implement_queue_using_doubly_linked_list.cpp:24:20: note: previous declaration &#x27;int myQueue::size&#x27;
+implement_queue_using_doubly_linked_list.cpp:45:20: note: previous declaration &#x27;int myQueue::size&#x27;
          int size = 0;
                     ^
 implement_queue_using_doubly_linked_list.cpp: In function &#x27;int main()&#x27;:
-implement_queue_using_doubly_linked_list.cpp:79:59: error: expression cannot be used as a function
+implement_queue_using_doubly_linked_list.cpp:105:59: error: expression cannot be used as a function
      cout &lt;&lt; q.front() &lt;&lt; &quot; &quot; &lt;&lt; q.back() &lt;&lt; &quot; &quot; &lt;&lt; q.size() &lt;&lt;  endl;
                                                            ^</pre></div></div>
   <p class="readout"><b>Reading the output.</b> No output: compile error. When fixed it prints <code>10 40 4</code> and then <code>10 20 30 40</code>.</p>
@@ -901,7 +1228,7 @@ implement_queue_using_doubly_linked_list.cpp:79:59: error: expression cannot be 
   <p class="what">Builds two stacks with the hand-made doubly linked <code>myStack</code> and compares them top to top.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 112 lines</span>
+      <span>CPP · 141 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2014/practice_problem_1_same_stacks.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1019,9 +1346,56 @@ implement_queue_using_doubly_linked_list.cpp:79:59: error: expression cannot be 
 <span class="normal">109</span>
 <span class="normal">110</span>
 <span class="normal">111</span>
-<span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
-<span class="cm">Take two stacks of size N and M as input and check if both of them are the same or not. </span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm">Take two stacks of size N and M as input and check if both of them are the same or not.</span>
 <span class="cm">Don’t use STL stack to solve this problem.</span>
+<span class="cm">*/</span>
+
+<span class="cm">/*</span>
+
+<span class="cm">Idea</span>
+
+<span class="cm">&quot;Don&#39;t use STL stack&quot; means the `myStack` class from Module 13 has to come</span>
+<span class="cm">along -- the doubly linked list version, with the counter renamed to `sz` so</span>
+<span class="cm">it compiles.</span>
+
+<span class="cm">Two stacks are the same when they hold the same values in the same order. A</span>
+<span class="cm">stack only lets you see the top, so the comparison has to happen from the top</span>
+<span class="cm">downwards: compare the two tops, pop both, compare the new tops, and so on.</span>
+<span class="cm">If the sizes differ there is nothing to compare, so that case is answered</span>
+<span class="cm">straight away.</span>
+
+<span class="cm">Both stacks are destroyed by the comparison. That is fine here, since nothing</span>
+<span class="cm">uses them afterwards; a function that must keep them would take copies.</span>
+
 <span class="cm">*/</span>
 
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
@@ -1029,54 +1403,56 @@ implement_queue_using_doubly_linked_list.cpp:79:59: error: expression cannot be 
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;list&gt;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w"> </span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">prev</span><span class="p">;</span>
 
 <span class="w">    </span><span class="n">Node</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w"> </span>
+<span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// The Module 13 stack, with `sz` instead of `size` so the counter and the</span>
+<span class="c1">// size() method no longer share a name. tail = top of the pile.</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">myStack</span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">  </span><span class="c1">// bottom</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">  </span><span class="c1">// top -- push and pop both work here</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">sz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 
 <span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(1)</span>
 <span class="w">            </span><span class="n">sz</span><span class="o">++</span><span class="p">;</span>
 <span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span><span class="w">       </span><span class="c1">// first node is both ends at once</span>
 <span class="w">                </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">                </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">                </span><span class="k">return</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">            </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">            </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="p">;</span>
-<span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">         </span><span class="c1">// the newest value is the new top</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">pop</span><span class="p">(){</span><span class="w"> </span><span class="c1">// O(1)</span>
 <span class="w">            </span><span class="n">sz</span><span class="o">--</span><span class="p">;</span>
 <span class="w">            </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">deleteNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="p">;</span>
-<span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span>
-<span class="w">            </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span><span class="w"> </span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">tail</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">            </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span><span class="w">      </span><span class="c1">// prev is why this is O(1) and not a walk</span>
+<span class="w">            </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">tail</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span><span class="w">         </span><span class="c1">// the stack is empty now</span>
 <span class="w">                </span><span class="n">head</span><span class="o">=</span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">                </span><span class="k">return</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">            </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w">      </span><span class="c1">// nothing above the new top</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">top</span><span class="p">(){</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">;</span><span class="w"> </span><span class="c1">// O(1)</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">;</span><span class="w"> </span><span class="c1">// O(1) -- the last value pushed (LIFO)</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">size</span><span class="p">(){</span>
@@ -1094,6 +1470,7 @@ implement_queue_using_doubly_linked_list.cpp:79:59: error: expression cannot be 
 <span class="w">    </span><span class="n">myStack</span><span class="w"> </span><span class="n">s1</span><span class="p">;</span>
 
 <span class="w">    </span><span class="c1">// get the input for stack</span>
+<span class="w">    </span><span class="c1">// n values into the first stack; the last one typed ends up on top.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
@@ -1111,11 +1488,17 @@ implement_queue_using_doubly_linked_list.cpp:79:59: error: expression cannot be 
 <span class="w">        </span><span class="n">s2</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Different heights can never be the same pile, and checking it first</span>
+<span class="w">    </span><span class="c1">// also makes the loop below safe: from here on the two stacks empty out</span>
+<span class="w">    </span><span class="c1">// together, so s2 is never popped while it is already empty.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">s1</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">s2</span><span class="p">.</span><span class="n">size</span><span class="p">()){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Compare top against top, then pop both. `flag` remembers the verdict;</span>
+<span class="w">    </span><span class="c1">// `break` leaves as soon as one pair disagrees, since no later pair can</span>
+<span class="w">    </span><span class="c1">// rescue it.</span>
 <span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">s1</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">s1</span><span class="p">.</span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">s2</span><span class="p">.</span><span class="n">top</span><span class="p">()){</span>
@@ -1133,7 +1516,7 @@ implement_queue_using_doubly_linked_list.cpp:79:59: error: expression cannot be 
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 112 lines ▾</button>
+    <button type="button" class="expand">Show all 141 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5
@@ -1978,79 +2361,132 @@ empty -&gt; false
   <p class="what">Identical logic to the original, only re-indented.</p><p class="same">Re-typed version of <a href="#p-leetcode-implement-queue-using-stacks"><code>leetcode_implement_queue_using_stacks.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 64 lines</span>
+      <span>CPP · 101 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2014/leetcode_implement_queue_using_stacks_p.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://leetcode.com/problems/implement-queue-using-stacks/description/</span>
+
+<span class="cm">Implement Queue using Stacks (LeetCode 232)</span>
+
+<span class="cm">Build a First-In-First-Out queue using only stacks. A stack hands back the</span>
+<span class="cm">newest value; a queue must hand back the oldest one. The two rules are exact</span>
+<span class="cm">opposites, and that is the whole puzzle.</span>
+
+<span class="cm">The trick is that pouring one stack into another reverses it, so the value</span>
+<span class="cm">that was at the bottom ends up on top. This file uses one stack `st` to hold</span>
+<span class="cm">the values and a temporary stack inside pop() and peek() to reach the bottom.</span>
+
+<span class="cm">Cost: push and empty are O(1); pop and peek are O(n), because they touch every</span>
+<span class="cm">value twice (out and back). When you build one structure out of another, one</span>
+<span class="cm">operation always pays for the mismatch.</span>
+
+<span class="cm">This is a re-typed practice copy of leetcode_implement_queue_using_stacks.cpp;</span>
+<span class="cm">only the indentation differs.</span>
 
 <span class="cm">*/</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
@@ -2063,27 +2499,39 @@ empty -&gt; false
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MyQueue</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="c1">// One stack holds everything. Its TOP is the newest value, so its</span>
+<span class="w">        </span><span class="c1">// BOTTOM is the oldest -- and the bottom is what a queue wants.</span>
 <span class="w">        </span><span class="n">stack</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
 <span class="w">        </span><span class="n">MyQueue</span><span class="p">(){</span>
 
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// Newest value goes on top of the stack. Nothing else to do: O(1).</span>
 <span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="n">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">){</span>
 <span class="w">            </span><span class="n">st</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// Remove and return the oldest value, i.e. the bottom of `st`.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">pop</span><span class="p">(){</span>
 <span class="w">            </span><span class="n">stack</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">st2</span><span class="p">;</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">            </span><span class="c1">// Take values off the top one at a time. `val` always holds the</span>
+<span class="w">            </span><span class="c1">// one just taken, so when `st` runs empty, `val` is the bottom</span>
+<span class="w">            </span><span class="c1">// value -- the oldest, the one the queue must return.</span>
 <span class="w">            </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">st</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">                </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">st</span><span class="p">.</span><span class="n">top</span><span class="p">();</span>
 <span class="w">                </span><span class="n">st</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">                </span><span class="c1">// The break happens AFTER st.pop() and BEFORE st2.push(val),</span>
+<span class="w">                </span><span class="c1">// so the oldest value is removed and never put aside. That</span>
+<span class="w">                </span><span class="c1">// is exactly what &quot;pop from the front&quot; means here.</span>
 <span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">                    </span><span class="k">break</span><span class="p">;</span>
 <span class="w">                </span><span class="p">}</span>
 <span class="w">                </span><span class="n">st2</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">            </span><span class="p">}</span>
 
+<span class="w">            </span><span class="c1">// Pour st2 back. That is a second reversal, so the remaining</span>
+<span class="w">            </span><span class="c1">// values return to the order they were in before.</span>
 <span class="w">            </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">st2</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">                </span><span class="n">st</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">st2</span><span class="p">.</span><span class="n">top</span><span class="p">());</span>
 <span class="w">                </span><span class="n">st2</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
@@ -2092,15 +2540,19 @@ empty -&gt; false
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// Same walk, but the oldest value is only read, not removed.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">peek</span><span class="p">(){</span>
 <span class="w">            </span><span class="n">stack</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">st3</span><span class="p">;</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">            </span><span class="c1">// No break this time: everything, including the bottom value,</span>
+<span class="w">            </span><span class="c1">// is moved into st3. `val` ends up as the last one taken.</span>
 <span class="w">            </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">st</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">                </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">st</span><span class="p">.</span><span class="n">top</span><span class="p">();</span>
 <span class="w">                </span><span class="n">st</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
 <span class="w">                </span><span class="n">st3</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">            </span><span class="p">}</span>
 
+<span class="w">            </span><span class="c1">// Pour it all back so the queue is unchanged.</span>
 <span class="w">            </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">st3</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">                </span><span class="n">st</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">st3</span><span class="p">.</span><span class="n">top</span><span class="p">());</span>
 <span class="w">                </span><span class="n">st3</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
@@ -2108,13 +2560,16 @@ empty -&gt; false
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// The queue is empty exactly when the stack is. This is also the</span>
+<span class="w">        </span><span class="c1">// guard the caller needs: pop() and peek() read `val` without ever</span>
+<span class="w">        </span><span class="c1">// assigning it when `st` starts out empty.</span>
 <span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">empty</span><span class="p">(){</span>
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">st</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 64 lines ▾</button>
+    <button type="button" class="expand">Show all 101 lines ▾</button>
   </div>
   <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">MyQueue</span><span class="w"> </span><span class="n">obj</span><span class="p">;</span>
@@ -5360,7 +5815,7 @@ Out: 1 -&gt; 3 -&gt; 4
   <p class="what">Module 11&#x27;s approach: copy the list, reverse the copy recursively, compare the two.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 53 lines</span>
+      <span>CPP · 95 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2014/leetcode_palindrome_linked_list.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -5419,24 +5874,97 @@ Out: 1 -&gt; 3 -&gt; 4
 <span class="normal">50</span>
 <span class="normal">51</span>
 <span class="normal">52</span>
-<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://leetcode.com/problems/palindrome-linked-list/description/</span>
+
+<span class="cm">Palindrome Linked List (LeetCode 234)</span>
+
+<span class="cm">A list is a palindrome if it reads the same forwards and backwards. A linked</span>
+<span class="cm">list can only be walked forwards, so the plan is: make a second list with the</span>
+<span class="cm">same values, reverse that copy, then walk the original and the reversed copy</span>
+<span class="cm">side by side. They match at every step exactly when the list is a palindrome.</span>
+
+<span class="cm">This is Module 11&#39;s toolkit reused -- insert at tail, and reverse a list</span>
+<span class="cm">recursively -- which is why the problem sits in this practice folder.</span>
+
+<span class="cm">Cost: O(n) time, O(n) extra memory for the copy plus O(n) recursion depth for</span>
+<span class="cm">the reverse. (A stack-free version exists: find the middle, reverse only the</span>
+<span class="cm">second half. This one favours reusing what was already built.)</span>
+
+<span class="cm">The file holds only the Solution class, as LeetCode expects; `ListNode` comes</span>
+<span class="cm">from the judge (and from the test harness the site uses to run it here).</span>
 
 <span class="cm">*/</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="cm">/* Reverse the list that starts at `tmp`, recursively.</span>
+
+<span class="cm">       `head` is passed by reference (`ListNode* &amp;`) because the caller&#39;s head</span>
+<span class="cm">       pointer has to be changed: after reversing, the old LAST node is the</span>
+<span class="cm">       new first node. */</span>
 <span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">reverse</span><span class="p">(</span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// Deepest call: `tmp` is the last node, so it becomes the new head.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">            </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span>
 <span class="w">            </span><span class="k">return</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">// Reverse everything after `tmp` first. When this returns, the part</span>
+<span class="w">        </span><span class="c1">// behind `tmp` already points backwards.</span>
 <span class="w">        </span><span class="n">reverse</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span>
+<span class="w">        </span><span class="c1">// Now turn the one link this call owns: the node after `tmp` should</span>
+<span class="w">        </span><span class="c1">// point back at `tmp`...</span>
 <span class="w">        </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span>
+<span class="w">        </span><span class="c1">// ...and `tmp` must stop pointing forwards, or the two nodes would</span>
+<span class="w">        </span><span class="c1">// point at each other and the list would loop forever.</span>
 <span class="w">        </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Add a value at the end of a list. `tail` is kept so this is O(1) and</span>
+<span class="w">    </span><span class="c1">// the copy comes out in the same order as the original. Both pointers are</span>
+<span class="w">    </span><span class="c1">// by reference because an empty list has to set them both.</span>
 <span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">        </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ListNode</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
@@ -5452,29 +5980,38 @@ Out: 1 -&gt; 3 -&gt; 4
 <span class="w">        </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">newHead</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">        </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">newTail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Step 1: copy the list. New nodes are built, so reversing the copy</span>
+<span class="w">        </span><span class="c1">// in step 2 leaves the original list untouched -- the judge (and the</span>
+<span class="w">        </span><span class="c1">// comparison below) still needs it in its original order.</span>
 <span class="w">        </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">            </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">newHead</span><span class="p">,</span><span class="w"> </span><span class="n">newTail</span><span class="p">,</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span>
 <span class="w">            </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">// Step 2: reverse the copy. Both arguments start at newHead: one is</span>
+<span class="w">        </span><span class="c1">// the head pointer to update, the other is where the walk begins.</span>
 <span class="w">        </span><span class="n">reverse</span><span class="p">(</span><span class="n">newHead</span><span class="p">,</span><span class="w"> </span><span class="n">newHead</span><span class="p">);</span>
 
+<span class="w">        </span><span class="c1">// Step 3: walk both lists together. The lists have the same length,</span>
+<span class="w">        </span><span class="c1">// so one counter is enough.</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">        </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">tmp2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newHead</span><span class="p">;</span>
 
 <span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">            </span><span class="c1">// One mismatch is enough to answer: leave immediately.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">tmp2</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">){</span>
 <span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">            </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">            </span><span class="n">tmp2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp2</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">// Every pair matched, so the list reads the same in both directions.</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 53 lines ▾</button>
+    <button type="button" class="expand">Show all 95 lines ▾</button>
   </div>
   <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
@@ -6111,7 +6648,7 @@ k = 5: 7 -&gt; 9 -&gt; 6 -&gt; 6 -&gt; 8 -&gt; 7 -&gt; 3 -&gt; 0 -&gt; 9 -&gt; 5
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

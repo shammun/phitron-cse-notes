@@ -7,7 +7,7 @@
 <meta name="description" content="This module moves from single-source shortest paths (Dijkstra, Bellman-Ford) to **all-pairs** shortest paths with Floyd-Warshall. You keep one n x n matrix and let every node, one by one, act as a stop-over. The same matrix also tells you whether a negative cycle exists. The practice day repeats Bellman-Ford and Floyd-Warshall on judge problems.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -58,7 +58,44 @@ from 1     0   5   8*  14*
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-floyd-warshall"><span class="n">1</span>Floyd-Warshall on a directed graph</a></li><li><a href="#p-detect-negative-weighted-cycle-floyd-warshall"><span class="n">2</span>Detect a negative cycle with Floyd-Warshall</a></li><li><a href="#p-practice-day-1-problem1-bellman-ford"><span class="n">3</span>GfG: Distance from the source (Bellman-Ford)</a></li><li><a href="#p-practice-day-1-problem2-floyd-warshall"><span class="n">4</span>GfG: Implementing Floyd-Warshall</a></li><li><a href="#p-shortest-route-2"><span class="n">5</span>CSES Shortest Routes II (Floyd-Warshall with queries)</a></li><li><a href="#p-cses-shortest-routes-2"><span class="n">6</span>CSES Shortest Routes II (the version that runs)</a></li><li><a href="#p-gfg-distance-from-the-source-bellman-ford"><span class="n">7</span>GfG: Distance from the source, with a main to run it</a></li><li><a href="#p-codeforces-20c-dijkstra"><span class="n">8</span>Codeforces 20C - Dijkstra? (print the route, in long long)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Adjacency matrix as a distance table</h4><p><code>adj_mat[i][j]</code> holds the best known cost from <code>i</code> to <code>j</code>. Start with 0 on the diagonal, the edge weight where an edge exists, and infinity everywhere else.</p><pre class="snip">adj_mat[i][j] = (i == j) ? 0 : INT_MAX;</pre></div><div class="concept"><h4>Relax through a middle node k</h4><p>For each pair (i, j) ask: is going i -&gt; k -&gt; j cheaper than what I have? If yes, overwrite. The outer loop <strong>must</strong> be <code>k</code>, so that after round k every path may use nodes 0..k as stop-overs.</p><pre class="snip">for k: for i: for j:
   if (d[i][k] + d[k][j] &lt; d[i][j]) d[i][j] = d[i][k] + d[k][j];</pre></div><div class="concept"><h4>Guard against infinity</h4><p><code>INT_MAX + something</code> overflows and becomes a huge negative number. Always check that both halves are not infinity before adding.</p><pre class="snip">if (d[i][k] != INT_MAX &amp;&amp; d[k][j] != INT_MAX &amp;&amp; ...)</pre></div><div class="concept"><h4>Negative cycle check</h4><p>After the three loops, if any <code>d[i][i]</code> is below 0, node <code>i</code> sits on a cycle whose total weight is negative, so shortest paths are not defined.</p></div><div class="concept"><h4>Bellman-Ford recap</h4><p>Relax every edge V-1 times. One extra pass that still improves something means a negative cycle is reachable from the source.</p></div><div class="concept"><h4>Choosing the algorithm</h4><p>Dijkstra: one source, no negative edges, O(E log V). Bellman-Ford: one source, negative edges allowed, O(V·E). Floyd-Warshall: every pair, small n (about n &lt;= 500), O(n^3).</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: the table after every stop-over city</h3><p>This is the graph the module&#x27;s own <code>floyd-warshall.cpp</code> reads: four cities, five one-way roads. Each press lets one more city act as a stop-over, and the whole table is re-asked at once. A <code>*</code> marks the squares that got cheaper this round.</p><p>Watch the dashes disappear. No city is ever visited and no queue is used: the table is the algorithm.</p><div class="stepper" data-n="7"><p class="stitle">Press the arrows to let one more city be a stop-over</p><div class="frames"><div class="frame" data-i="0"><pre>0 --3--&gt; 1     1 --1--&gt; 2     2 --2--&gt; 3
+0 --7--&gt; 2     3 --6--&gt; 0</pre><p class="flabel">The five one-way roads, exactly as the program reads them. Cities are numbered from 0.</p></div><div class="frame" data-i="1"><pre>start: no stop-overs allowed
+
+        to  0   1   2   3
+from 0      0   3   7   -
+     1      -   0   1   -
+     2      -   -   0   2
+     3      6   -   -   0</pre><p class="flabel">Write the map down as a table. 0 on the diagonal (a city is free to reach from itself), the road cost where a road exists, and a dash where no route is known yet.</p></div><div class="frame" data-i="2"><pre>k = 0: stopping in city 0 is allowed
+
+        to  0   1   2   3
+from 0      0   3   7   -
+     1      -   0   1   -
+     2      -   -   0   2
+     3      6   9* 13*  0</pre><p class="flabel">City 0 may now be a stop-over. Only city 3 has a road into city 0, so only row 3 can improve: 3 -&gt; 0 -&gt; 1 costs 6 + 3 = 9 and 3 -&gt; 0 -&gt; 2 costs 6 + 7 = 13. Two dashes become numbers.</p></div><div class="frame" data-i="3"><pre>k = 1: cities 0 and 1 may be stop-overs
+
+        to  0   1   2   3
+from 0      0   3   4*  -
+     1      -   0   1   -
+     2      -   -   0   2
+     3      6   9  10*  0</pre><p class="flabel">City 1 joins in. 0 -&gt; 1 -&gt; 2 costs 3 + 1 = 4, cheaper than the direct road of 7, so the 7 is overwritten. And 3 -&gt; 1 -&gt; 2 costs 9 + 1 = 10, better than the 13 written a moment ago.</p></div><div class="frame" data-i="4"><pre>k = 2: cities 0, 1 and 2 may be stop-overs
+
+        to  0   1   2   3
+from 0      0   3   4   6*
+     1      -   0   1   3*
+     2      -   -   0   2
+     3      6   9  10   0</pre><p class="flabel">City 2 joins in, and this is where several stops stack up: 0 -&gt; 2 already means 0 -&gt; 1 -&gt; 2, so 0 -&gt; 2 -&gt; 3 = 4 + 2 = 6 is really a three-road route. Each round builds on the last one.</p></div><div class="frame" data-i="5"><pre>k = 3: every city may be a stop-over
+
+        to  0   1   2   3
+from 0      0   3   4   6
+     1      9*  0   1   3
+     2      8* 11*  0   2
+     3      6   9  10   0</pre><p class="flabel">City 3 is the last stop-over, and it is the only way back to city 0 (road 3 -&gt; 0 costs 6). Three more dashes fill in: 1 -&gt; 3 -&gt; 0 = 9, 2 -&gt; 3 -&gt; 0 = 8, 2 -&gt; 3 -&gt; 0 -&gt; 1 = 11.</p></div><div class="frame" data-i="6"><pre>done: every pair answered
+
+        to  0   1   2   3
+from 0      0   3   4   6
+     1      9   0   1   3
+     2      8  11   0   2
+     3      6   9  10   0</pre><p class="flabel">No dashes left, and this is exactly what the program prints. Row 0 reads <code>0 3 4 6</code>, and row 1 starts at 9 because 1 -&gt; 2 -&gt; 3 -&gt; 0 costs 1 + 2 + 6. Any &quot;cheapest cost from X to Y?&quot; is now one look at one square. The diagonal is all 0, so there is no negative cycle.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 7</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-article"><a href="https://cp-algorithms.com/graph/all-pair-shortest-path-floyd-warshall.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — Floyd-Warshall</b><span class="rnote">Three loops, and why the middle city must be the outer one.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>William Fiset — graph theory playlist</b><span class="rnote">Every graph algorithm of this course, drawn before it is coded.</span></a></li><li class="r-visual"><a href="https://visualgo.net/en/sssp" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — shortest paths</b><span class="rnote">Dijkstra and Bellman-Ford animated, with the distance table updating.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-floyd-warshall">
@@ -72,7 +109,7 @@ from 1     0   5   8*  14*
   <p class="what">Reads a weighted directed graph into a matrix, runs the triple loop, and prints the shortest distance between every pair (INF when unreachable).</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 53 lines</span>
+      <span>CPP · 97 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2010/floyd-warshall.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -131,18 +168,85 @@ from 1     0   5   8*  14*
 <span class="normal">50</span>
 <span class="normal">51</span>
 <span class="normal">52</span>
-<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span>
+<span class="normal">97</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Floyd-Warshall: the cheapest route between EVERY pair of nodes, all at once.</span>
+<span class="c1">//</span>
+<span class="c1">// Dijkstra (Module 7) and Bellman-Ford (Module 9) each fill in one ROW of the</span>
+<span class="c1">// distance chart: you pick a starting node and learn the cost to all the others.</span>
+<span class="c1">// Here we want the whole chart, so we keep the chart itself as an n x n matrix</span>
+<span class="c1">// and keep improving it in place.</span>
+<span class="c1">//</span>
+<span class="c1">// adj_mat[i][j] always means &quot;the cheapest cost from i to j that I know of so</span>
+<span class="c1">// far&quot;. It starts out as the direct road only. Each round of the outer loop lets</span>
+<span class="c1">// one more node be used as a stop-over in the middle, so after the last round</span>
+<span class="c1">// every pair has been allowed to go through every node and the chart is final.</span>
+<span class="c1">//</span>
+<span class="c1">// Time O(n^3) - three nested loops, each n long. Space O(n^2) for the matrix.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span><span class="c1">    // not used here; carried over from the earlier graph files</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span><span class="c1">  // same - Dijkstra/BFS needed these, Floyd-Warshall does not</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">        </span><span class="c1">// n = number of nodes, e = number of directed edges</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// The chart: one row and one column per node. Note this is a variable length</span>
+<span class="w">    </span><span class="c1">// array - its size is only known while the program runs. g++ allows that,</span>
+<span class="w">    </span><span class="c1">// standard C++ does not, so for a big n a fixed-size global array is safer.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">n</span><span class="p">];</span>
 
+<span class="w">    </span><span class="c1">// The starting chart. Staying where you are costs nothing, so the diagonal is</span>
+<span class="w">    </span><span class="c1">// 0. Every other pair is &quot;no route known yet&quot;, written as INT_MAX, the biggest</span>
+<span class="w">    </span><span class="c1">// int there is. INT_MAX really lives in &lt;climits&gt;, which this file never</span>
+<span class="w">    </span><span class="c1">// includes; it only compiles because one of the headers above drags &lt;climits&gt;</span>
+<span class="w">    </span><span class="c1">// in. Adding #include &lt;climits&gt; would make that safe instead of lucky.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
@@ -153,6 +257,11 @@ from 1     0   5   8*  14*
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// e lines of &quot;a b c&quot;: a road from a to b costing c. Only [a][b] is written,</span>
+<span class="w">    </span><span class="c1">// because the graph is directed. The commented line below is what an</span>
+<span class="w">    </span><span class="c1">// undirected graph would need. Plain assignment means a second road between</span>
+<span class="w">    </span><span class="c1">// the same pair overwrites the first, even if the first was cheaper; when</span>
+<span class="w">    </span><span class="c1">// that can happen, use min() instead (see shortest_route_2.cpp).</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
@@ -160,9 +269,22 @@ from 1     0   5   8*  14*
 <span class="w">        </span><span class="c1">// adj_mat[b][a] = c; // for undirected graph</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// The heart of the algorithm.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// k is the stop-over node and it MUST be the outermost loop. After round k</span>
+<span class="w">    </span><span class="c1">// has finished, every pair i,j holds the best route that uses only nodes</span>
+<span class="w">    </span><span class="c1">// 0..k in the middle. If k sat inside, a pair could be settled before the</span>
+<span class="w">    </span><span class="c1">// stop-over node it actually needs had had its turn.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// i is where we start, j is where we want to end up: &quot;is going i -&gt; k -&gt; j</span>
+<span class="w">    </span><span class="c1">// cheaper than the best i -&gt; j I have?&quot;</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+<span class="w">                </span><span class="c1">// The commented one-liner reads better but is a trap: an unknown</span>
+<span class="w">                </span><span class="c1">// leg costs INT_MAX, and INT_MAX + anything positive overflows</span>
+<span class="w">                </span><span class="c1">// into a negative number, which then looks like a bargain. So both</span>
+<span class="w">                </span><span class="c1">// legs are checked for INT_MAX before they are added together.</span>
 <span class="w">                </span><span class="c1">// adj_mat[i][j] = min(adj_mat[i][j], adj_mat[i][k] + adj_mat[k][j]);</span>
 <span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]){</span>
 <span class="w">                    </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
@@ -171,6 +293,9 @@ from 1     0   5   8*  14*
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Print the finished chart. Row i, column j is the answer for i -&gt; j. A cell</span>
+<span class="w">    </span><span class="c1">// still holding INT_MAX was never improved, so there is no route at all from</span>
+<span class="w">    </span><span class="c1">// i to j - print INF rather than a meaningless huge number.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">){</span>
@@ -186,7 +311,7 @@ from 1     0   5   8*  14*
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 53 lines ▾</button>
+    <button type="button" class="expand">Show all 97 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 5
@@ -215,7 +340,7 @@ from 1     0   5   8*  14*
   <p class="what">Same triple loop as before, then checks the diagonal. A negative <code>adj_mat[i][i]</code> means a negative cycle, otherwise the full distance table is printed.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 67 lines</span>
+      <span>CPP · 88 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2010/detect_negative_weighted_cycle_Floyd_warshall.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -288,7 +413,37 @@ from 1     0   5   8*  14*
 <span class="normal">64</span>
 <span class="normal">65</span>
 <span class="normal">66</span>
-<span class="normal">67</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Floyd-Warshall again, this time asked a different question: does the graph</span>
+<span class="c1">// contain a negative cycle - a loop you can walk round for ever, getting cheaper</span>
+<span class="c1">// each time? Bellman-Ford answered this in Module 9 by doing one extra relaxation</span>
+<span class="c1">// round. The matrix answers it even more cheaply, in one glance at the diagonal.</span>
+<span class="c1">//</span>
+<span class="c1">// Everything down to the triple loop is exactly floyd-warshall.cpp; read the</span>
+<span class="c1">// comments there for why k is outermost and why INT_MAX is checked before adding.</span>
+<span class="c1">// The new part is at the bottom.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
@@ -329,6 +484,15 @@ from 1     0   5   8*  14*
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// checking for negative cycle</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// adj_mat[i][i] started at 0: standing still costs nothing. The triple loop</span>
+<span class="w">    </span><span class="c1">// only ever lowers a cell, and the only way to lower [i][i] is to find a real</span>
+<span class="w">    </span><span class="c1">// route that leaves i and comes back to i for a total below zero. That route</span>
+<span class="w">    </span><span class="c1">// is a negative cycle. So one negative number anywhere on the diagonal is the</span>
+<span class="w">    </span><span class="c1">// whole test - we do not have to hunt for the cycle itself.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// A cycle that costs exactly 0 does NOT count: the diagonal stays at 0, not</span>
+<span class="w">    </span><span class="c1">// below it, and walking such a loop never makes anything cheaper.</span>
 <span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
 <span class="w">    </span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
@@ -337,6 +501,9 @@ from 1     0   5   8*  14*
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// If a negative cycle exists the numbers in the table are meaningless - every</span>
+<span class="w">    </span><span class="c1">// pair that can reach the cycle has no &quot;shortest&quot; distance at all, because the</span>
+<span class="w">    </span><span class="c1">// cost can always be driven lower. So we say so instead of printing the chart.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">cycle</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Negative weighted cycle detected&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
@@ -357,7 +524,7 @@ from 1     0   5   8*  14*
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 67 lines ▾</button>
+    <button type="button" class="expand">Show all 88 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3 3
@@ -818,7 +985,7 @@ from 1     0   5   8*  14*
   <p class="what">Undirected graph with possibly repeated roads. Run Floyd-Warshall once with <code>long long</code> distances, then answer each query <code>s d</code> in O(1), printing -1 when unreachable.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 53 lines</span>
+      <span>CPP · 90 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2010/shortest_route_2.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -877,19 +1044,80 @@ from 1     0   5   8*  14*
 <span class="normal">50</span>
 <span class="normal">51</span>
 <span class="normal">52</span>
-<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// CSES 1672 - Shortest Routes II.  https://cses.fi/problemset/task/1672</span>
+<span class="c1">//</span>
+<span class="c1">// n cities, e two-way roads, then q questions of the form &quot;how cheap is it to get</span>
+<span class="c1">// from s to d?&quot;. Running Dijkstra once per question would be far too slow. Build</span>
+<span class="c1">// the whole chart once with Floyd-Warshall (O(n^3)) and every question after that</span>
+<span class="c1">// is a single table lookup.</span>
+<span class="c1">//</span>
+<span class="c1">// Two things differ from floyd-warshall.cpp:</span>
+<span class="c1">//   * the cities are numbered 1..n here, not 0..n-1;</span>
+<span class="c1">//   * the distances need long long. Up to 500 cities with roads of a billion each</span>
+<span class="c1">//     can add up past what an int holds, so a route total is stored as long long.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">   // for min()</span>
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="p">;</span><span class="w">       </span><span class="c1">// cities, roads, questions</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// BUG - this is why the program crashes before printing anything.</span>
+<span class="w">    </span><span class="c1">// adj_mat[n][n] has valid indices 0..n-1, but every loop below runs i from 1</span>
+<span class="w">    </span><span class="c1">// to n and writes adj_mat[n][n], one row past the end of the array. That is</span>
+<span class="w">    </span><span class="c1">// out-of-bounds memory, and here it kills the program (access violation).</span>
+<span class="w">    </span><span class="c1">// The fix is adj_mat[n+1][n+1], or better a global long long adj_mat[505][505]</span>
+<span class="w">    </span><span class="c1">// - a 500x500 long long array is 2 MB, which is a lot to put on the stack.</span>
+<span class="w">    </span><span class="c1">// The code is left exactly as it was written; only this note is new.</span>
 <span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">n</span><span class="p">];</span>
 
+<span class="w">    </span><span class="c1">// Same starting chart as before, but over 1..n because CSES numbers cities</span>
+<span class="w">    </span><span class="c1">// from 1. LLONG_MAX is the long long version of INT_MAX and means &quot;no route</span>
+<span class="w">    </span><span class="c1">// known yet&quot;; like INT_MAX it comes from &lt;climits&gt;, which is not included and</span>
+<span class="w">    </span><span class="c1">// only arrives by accident through another header.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
@@ -900,6 +1128,14 @@ from 1     0   5   8*  14*
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Read the roads. min() rather than plain assignment, because CSES allows</span>
+<span class="w">    </span><span class="c1">// several roads between the same two cities: a later, dearer road must not</span>
+<span class="w">    </span><span class="c1">// wipe out a cheaper one already read.</span>
+<span class="w">    </span><span class="c1">// Both directions are filled because the roads are two-way.</span>
+<span class="w">    </span><span class="c1">// Note the second line reads adj_mat[a][b], not adj_mat[b][a]. It still gives</span>
+<span class="w">    </span><span class="c1">// the right answer, but only because the line above has just set [a][b] to the</span>
+<span class="w">    </span><span class="c1">// cheapest value and the two cells are always kept equal. Writing</span>
+<span class="w">    </span><span class="c1">// min(adj_mat[b][a], c) would say what is meant.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
@@ -907,6 +1143,8 @@ from 1     0   5   8*  14*
 <span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">b</span><span class="p">][</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">adj_mat</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">],</span><span class="w"> </span><span class="n">c</span><span class="p">);</span><span class="w"> </span><span class="c1">// we have undirected graph here</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// The same triple loop, over 1..n. This is the expensive part and it runs</span>
+<span class="w">    </span><span class="c1">// once, before any question is read - that is the whole point of the file.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
@@ -918,6 +1156,9 @@ from 1     0   5   8*  14*
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Each question is now O(1): the answer is already sitting in the table.</span>
+<span class="w">    </span><span class="c1">// A cell still at LLONG_MAX means d cannot be reached from s at all, and CSES</span>
+<span class="w">    </span><span class="c1">// wants -1 for that case.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">q</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">d</span><span class="p">;</span>
@@ -932,7 +1173,7 @@ from 1     0   5   8*  14*
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 53 lines ▾</button>
+    <button type="button" class="expand">Show all 90 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 3
@@ -1777,7 +2018,7 @@ from 1     0   5   8*  14*
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

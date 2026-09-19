@@ -19,6 +19,7 @@ from pygments.lexers import CLexer, CppLexer, PythonLexer
 
 sys.path.insert(0, str(Path(__file__).parent))
 import runner  # noqa: E402
+import cheatsheets  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
@@ -26,7 +27,7 @@ NOTES = ROOT / "_build" / "notes"
 REPO = "shammun/phitron-cse-notes"
 SITE_TITLE = "CSE Fundamentals — Revision Notes"
 GITHUB_BLOB = f"https://github.com/{REPO}/blob/main/"
-ASSET_V = "6"
+ASSET_V = "7"
 
 COURSE_INFO = {
     "1_Introduction to Programming Language": ("c-programming", "Introduction to Programming", "C",
@@ -371,6 +372,19 @@ def module_card(m, href):
             f'<span class="mcount">{count}</span></a>')
 
 
+def cheatsheet_html(cslug):
+    cs = cheatsheets.DATA.get(cslug)
+    if not cs:
+        return ""
+    head = "".join(f"<th>{md(c)}</th>" for c in cs["columns"])
+    body = "".join("<tr>" + "".join(f"<td>{md(c)}</td>" for c in row) + "</tr>" for row in cs["rows"])
+    foot = "".join(f"<li>{md(x)}</li>" for x in cs.get("footer", []))
+    return (f'<section class="block sheet" id="cheatsheet"><h2>🧮 {md(cs["title"])}</h2>'
+            f'<p class="rlead">{md(cs["intro"])}</p>'
+            f'<div class="tablewrap"><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
+            + (f'<ul class="sheetfoot">{foot}</ul>' if foot else "") + "</section>")
+
+
 def render_course(cdir, mods):
     cslug, ctitle, lang, blurb = COURSE_INFO[cdir]
     cards = "".join(module_card(m, f'{m["slug"]}.html') for m in mods)
@@ -382,7 +396,8 @@ def render_course(cdir, mods):
   <p class="lead">{esc(blurb)}</p>
   <p class="chips"><span>{len(mods)} modules</span><span>{n} programs</span></p>
 </header>
-<div class="mgrid">{cards}</div>"""
+<div class="mgrid">{cards}</div>
+{cheatsheet_html(cslug)}"""
     return page(f"{ctitle} · {SITE_TITLE}", body, 1, blurb, crumbs=[(ctitle, None)])
 
 

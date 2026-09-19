@@ -7,7 +7,7 @@
 <meta name="description" content="Bellman-Ford finds single-source shortest paths even with negative edge weights. It simply relaxes every edge n−1 times. One more round that still improves a distance proves a negative cycle, where no shortest path exists.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -60,7 +60,159 @@ extra round  0   -7   -8   still falling</pre><p>With n = 3 you do n-1 = 2 round
   for(auto ed : edges)
     if(dis[ed.a] != INT_MAX &amp;&amp; dis[ed.a] + ed.c &lt; dis[ed.b])
       dis[ed.b] = dis[ed.a] + ed.c;</pre></div><div class="concept"><h4>INT_MAX guard</h4><p>Skip edges whose start is still infinite; otherwise <code>INT_MAX + c</code> overflows.</p></div><div class="concept"><h4>Negative cycle check</h4><p>Run one extra round. If any edge still relaxes, a cycle with negative total weight is reachable.</p></div><div class="concept"><h4>Cost</h4><p>O(V·E): slower than Dijkstra, but it handles negative edges.</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: one edge relaxed at a time</h3><p>The four directed edges of <code>bellman-ford.cpp</code>, always tried in the same order, starting from node 0. A dash means still unknown. Watch node 1: the direct edge gives it a 4, and then the negative edge takes it back off again.</p><div class="stepper" data-n="8"><p class="stitle">Press the arrows to relax the edges</p><div class="frames"><div class="frame" data-i="0"><pre>  0 --4--&gt; 1 --2--&gt; 3
+  |        ^
+  5        |
+  |       -3
+  v        |
+  2 -------+
+
+edge order: 0-&gt;1  0-&gt;2  2-&gt;1  1-&gt;3
+
+node     0    1    2    3
+dis      0    -    -    -
+         ^ round 1 is about to start</pre><p class="flabel">Only the source has a number. Every other node is unknown, which the real program stores as <code>INT_MAX</code>.</p></div><div class="frame" data-i="1"><pre>  0 --4--&gt; 1 --2--&gt; 3
+  |        ^
+  5        |
+  |       -3
+  v        |
+  2 -------+
+
+edge order: 0-&gt;1  0-&gt;2  2-&gt;1  1-&gt;3
+
+node     0    1    2    3
+dis      0    4    -    -
+              ^ 0 + 4 = 4</pre><p class="flabel">Round 1, edge 0-&gt;1 costing 4. Node 0 is known, and 0 + 4 is better than unknown, so <code>dis[1] = 4</code>.</p></div><div class="frame" data-i="2"><pre>  0 --4--&gt; 1 --2--&gt; 3
+  |        ^
+  5        |
+  |       -3
+  v        |
+  2 -------+
+
+edge order: 0-&gt;1  0-&gt;2  2-&gt;1  1-&gt;3
+
+node     0    1    2    3
+dis      0    4    5    -
+                   ^ 0 + 5 = 5</pre><p class="flabel">Round 1, edge 0-&gt;2 costing 5. Same again: <code>dis[2] = 5</code>.</p></div><div class="frame" data-i="3"><pre>  0 --4--&gt; 1 --2--&gt; 3
+  |        ^
+  5        |
+  |       -3
+  v        |
+  2 -------+
+
+edge order: 0-&gt;1  0-&gt;2  2-&gt;1  1-&gt;3
+
+node     0    1    2    3
+dis      0    2    5    -
+              ^ 4 improved to 2</pre><p class="flabel">Round 1, edge 2-&gt;1 costing -3. This is the moment. 5 - 3 = 2, which is less than the 4 already written, so node 1 is rewritten. The longer route wins because one of its edges pays you back.</p></div><div class="frame" data-i="4"><pre>  0 --4--&gt; 1 --2--&gt; 3
+  |        ^
+  5        |
+  |       -3
+  v        |
+  2 -------+
+
+edge order: 0-&gt;1  0-&gt;2  2-&gt;1  1-&gt;3
+
+node     0    1    2    3
+dis      0    2    5    4
+                        ^ 2 + 2 = 4</pre><p class="flabel">Round 1, edge 1-&gt;3 costing 2. It uses the brand-new 2, so <code>dis[3] = 4</code>. Round one is over and the table reads 0, 2, 5, 4.</p></div><div class="frame" data-i="5"><pre>  0 --4--&gt; 1 --2--&gt; 3
+  |        ^
+  5        |
+  |       -3
+  v        |
+  2 -------+
+
+edge order: 0-&gt;1  0-&gt;2  2-&gt;1  1-&gt;3
+
+node     0    1    2    3
+dis      0    2    5    4
+     no change anywhere in round 2</pre><p class="flabel">Round 2 starts again from the top. Edge 2-&gt;1 is re-checked: 5 - 3 = 2, which is not less than the 2 already there, so nothing moves. Bellman-Ford never knows it is finished; it just keeps asking.</p></div><div class="frame" data-i="6"><pre>  0 --4--&gt; 1 --2--&gt; 3
+  |        ^
+  5        |
+  |       -3
+  v        |
+  2 -------+
+
+edge order: 0-&gt;1  0-&gt;2  2-&gt;1  1-&gt;3
+
+node     0    1    2    3
+dis      0    2    5    4
+     no change anywhere in round 3</pre><p class="flabel">Round 3 - with n = 4 nodes you do n-1 = 3 rounds - changes nothing either. That is the guarantee: a shortest route uses at most 3 edges, and each round settles at least one more of them.</p></div><div class="frame" data-i="7"><pre>  0 --4--&gt; 1 --2--&gt; 3
+  |        ^
+  5        |
+  |       -3
+  v        |
+  2 -------+
+
+edge order: 0-&gt;1  0-&gt;2  2-&gt;1  1-&gt;3
+
+node     0    1    2    3
+dis      0    2    5    4
+              ^ 2, not 4</pre><p class="flabel">The final distances from node 0. Dijkstra would have declared node 1 finished at 4 the moment it was nearest, and never looked again - so it would have printed 4 here, and 6 for node 3. Blind repetition is what saves Bellman-Ford.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div><div class="wstep"><h3>Watch it happen: a table that never settles</h3><p>Three nodes now, from <code>bellman_ford_cycle.cpp</code>. Going 1 -&gt; 2 costs -4 and coming back 2 -&gt; 1 costs 1, so one lap of that little loop gains you -3. Watch the two numbers on the right: they never stop falling.</p><div class="stepper" data-n="8"><p class="stitle">Press the arrows to run the rounds</p><div class="frames"><div class="frame" data-i="0"><pre>  0 --2--&gt; 1 --(-4)--&gt; 2
+           ^           |
+           +-----1-----+
+
+edge order: 0-&gt;1 (2)  1-&gt;2 (-4)  2-&gt;1 (1)
+
+node      0     1     2
+dis       0     -     -
+          ^ the source</pre><p class="flabel">Start at node 0, nothing else known.</p></div><div class="frame" data-i="1"><pre>  0 --2--&gt; 1 --(-4)--&gt; 2
+           ^           |
+           +-----1-----+
+
+edge order: 0-&gt;1 (2)  1-&gt;2 (-4)  2-&gt;1 (1)
+
+node      0     1     2
+dis       0     2     -
+                ^ 0 + 2 = 2</pre><p class="flabel">Round 1, edge 0-&gt;1 costing 2: <code>dis[1] = 2</code>.</p></div><div class="frame" data-i="2"><pre>  0 --2--&gt; 1 --(-4)--&gt; 2
+           ^           |
+           +-----1-----+
+
+edge order: 0-&gt;1 (2)  1-&gt;2 (-4)  2-&gt;1 (1)
+
+node      0     1     2
+dis       0     2    -2
+                      ^ 2 - 4 = -2</pre><p class="flabel">Round 1, edge 1-&gt;2 costing -4: 2 - 4 = -2, so <code>dis[2] = -2</code>. Negative distances are perfectly legal here.</p></div><div class="frame" data-i="3"><pre>  0 --2--&gt; 1 --(-4)--&gt; 2
+           ^           |
+           +-----1-----+
+
+edge order: 0-&gt;1 (2)  1-&gt;2 (-4)  2-&gt;1 (1)
+
+node      0     1     2
+dis       0    -1    -2
+                ^ 2 improved to -1</pre><p class="flabel">Round 1, edge 2-&gt;1 costing 1: -2 + 1 = -1, which beats the 2, so node 1 drops. Round one ends at 0, -1, -2.</p></div><div class="frame" data-i="4"><pre>  0 --2--&gt; 1 --(-4)--&gt; 2
+           ^           |
+           +-----1-----+
+
+edge order: 0-&gt;1 (2)  1-&gt;2 (-4)  2-&gt;1 (1)
+
+node      0     1     2
+dis       0    -4    -5
+                ^     ^ each dropped by 3</pre><p class="flabel">Round 2 runs the same three edges. 0-&gt;1 changes nothing, but 1-&gt;2 gives -5 and then 2-&gt;1 gives -4. Both numbers have fallen by exactly 3 again.</p></div><div class="frame" data-i="5"><pre>  0 --2--&gt; 1 --(-4)--&gt; 2
+           ^           |
+           +-----1-----+
+
+edge order: 0-&gt;1 (2)  1-&gt;2 (-4)  2-&gt;1 (1)
+
+node      0     1     2
+dis       0    -4    -5
+      this is what the program would print</pre><p class="flabel">With n = 3 nodes the algorithm does n-1 = 2 rounds and stops. So this row is what it would print: 0, -4, -5. It looks like a perfectly ordinary answer.</p></div><div class="frame" data-i="6"><pre>  0 --2--&gt; 1 --(-4)--&gt; 2
+           ^           |
+           +-----1-----+
+
+edge order: 0-&gt;1 (2)  1-&gt;2 (-4)  2-&gt;1 (1)
+
+node      0     1     2
+dis       0    -7    -8
+                ^     ^ still falling</pre><p class="flabel">Now run one extra round, the one the code does only as a test. The numbers fall by 3 yet again. An edge that still relaxes after n-1 rounds means something is wrong.</p></div><div class="frame" data-i="7"><pre>  0 --2--&gt; 1 --(-4)--&gt; 2
+           ^           |
+           +-----1-----+
+
+edge order: 0-&gt;1 (2)  1-&gt;2 (-4)  2-&gt;1 (1)
+
+node      0     1     2
+dis       0   ...   ...
+      no shortest route exists: report it</pre><p class="flabel">And it would fall by 3 every round for ever, because you can go round the loop again and always beat your own answer. There is no shortest route to node 1 at all, so the honest output is not a number - it is &quot;negative cycle&quot;.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/sssp" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — shortest paths</b><span class="rnote">Dijkstra and Bellman-Ford animated, with the distance table updating.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/graph/bellman_ford.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — Bellman-Ford</b><span class="rnote">Why n-1 rounds, and how the extra round finds a negative cycle.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>William Fiset — graph theory playlist</b><span class="rnote">Every graph algorithm of this course, drawn before it is coded.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-bellman-ford">
@@ -74,215 +226,10 @@ extra round  0   -7   -8   still falling</pre><p>With n = 3 you do n-1 = 2 round
   <p class="what">Stores directed weighted edges and relaxes all of them n−1 times from source 0, then prints the distances.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 67 lines</span>
+      <span>CPP · 96 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%209/bellman-ford.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-<span class="n">vector</span><span class="o">&lt;</span><span class="n">Edge</span><span class="o">&gt;</span><span class="w"> </span><span class="n">edge_list</span><span class="p">;</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Edge</span><span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
-<span class="w">        </span><span class="n">Edge</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">){</span>
-<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
-<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="p">};</span>
-
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">bellman_ford</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="c1">// relaxing edges</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">ed</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">edge_list</span><span class="p">){</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
-<span class="w">            </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">a</span><span class="p">;</span>
-<span class="w">            </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">b</span><span class="p">;</span>
-<span class="w">            </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">c</span><span class="p">;</span>
-
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">b</span><span class="p">]){</span>
-<span class="w">                </span><span class="n">dis</span><span class="p">[</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
-<span class="w">        </span><span class="n">edge_list</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Edge</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">));</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="cm">/*</span>
-<span class="cm">    for(aut edge : edge_list){</span>
-<span class="cm">        cout &lt;&lt; edge.a &lt;&lt; &quot; &quot; &lt;&lt; edge.b &lt;&lt; &quot; &quot; &lt;&lt; edge.c &lt;&lt; endl;</span>
-<span class="cm">    }</span>
-<span class="cm">    */</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">dis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">bellman_ford</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;-&gt;&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 67 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
-0 1 4
-0 2 5
-2 1 -3
-1 3 2</pre><p class="io-note"><code>n e</code>, then e lines <code>a b c</code> (directed). Edge 2→1 has weight -3.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>bellman-ford.cpp:9:8: error: &#x27;Edge&#x27; was not declared in this scope
- vector&lt;Edge&gt; edge_list;
-        ^~~~
-bellman-ford.cpp:9:12: error: template argument 1 is invalid
- vector&lt;Edge&gt; edge_list;
-            ^
-bellman-ford.cpp:9:12: error: template argument 2 is invalid
-bellman-ford.cpp: In function &#x27;void bellman_ford(int)&#x27;:
-bellman-ford.cpp:25:23: error: &#x27;begin&#x27; was not declared in this scope
-         for(auto ed : edge_list){
-                       ^~~~~~~~~
-bellman-ford.cpp:25:23: note: suggested alternative:
-In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/string:51,
-                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/locale_classes.h:40,
-                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/ios_base.h:41,
-                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:42,
-                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
-                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
-                 from bellman-ford.cpp:1:
-C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/range_access.h:105:37: note:   &#x27;std::begin&#x27;
-   template&lt;typename _Tp&gt; const _Tp* begin(const valarray&lt;_Tp&gt;&amp;);
-                                     ^~~~~
-bellman-ford.cpp:25:23: error: &#x27;end&#x27; was not declared in this scope
-         for(auto ed : edge_list){
-                       ^~~~~~~~~
-bellman-ford.cpp:25:23: note: suggested alternative:
-In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/string:51,
-                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/locale_classes.h:40,
-                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/ios_base.h:41,
-                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:42,
-                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
-                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
-                 from bellman-ford.cpp:1:
-C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/range_access.h:107:37: note:   &#x27;std::end&#x27;
-   template&lt;typename _Tp&gt; const _Tp* end(const valarray&lt;_Tp&gt;&amp;);
-                                     ^~~
-bellman-ford.cpp: In function &#x27;int main()&#x27;:
-bellman-ford.cpp:46:19: error: request for member &#x27;push_back&#x27; in &#x27;edge_list&#x27;, which is of non-class type &#x27;int&#x27;
-         edge_list.push_back(Edge(a, b, c));
-                   ^~~~~~~~~</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> The real output is a compile error. With the fix it prints <code>1-&gt;2</code> (0→2→1 = 5 − 3, cheaper than the direct 4) and <code>3-&gt;4</code>.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read edges into <code>edge_list</code> as <code>Edge(a, b, c)</code>.</li><li><code>dis[i] = INT_MAX</code>, <code>dis[0] = 0</code>.</li><li>Repeat n−1 times: for every edge, if <code>dis[a]</code> is known and <code>dis[a] + c &lt; dis[b]</code>, update <code>dis[b]</code>.</li><li>Print <code>i-&gt;dis[i]</code>.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> The file does <strong>not compile</strong>: <code>vector&lt;Edge&gt; edge_list;</code> appears before <code>class Edge</code> is declared, so the compiler does not know <code>Edge</code> yet. Fix: move the <code>class Edge { ... };</code> block above the <code>edge_list</code> line.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> Why n−1 rounds?</summary><div>A shortest path without cycles has at most n−1 edges, and each round fixes at least one more edge of it.</div></details>
-</section>
-<section class="prog" id="p-bellman-ford-cycle">
-  <div class="prog-h">
-    <span class="num">2</span>
-    <div class="prog-t">
-      <h3>Bellman-Ford with negative cycle check</h3>
-      <div class="meta"><code class="fname">bellman_ford_cycle.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(V·E) · Space O(V + E)</span></div>
-    </div>
-  </div>
-  <p class="what">After the n−1 rounds it does one more pass; any improvement means a negative cycle, otherwise it prints the distances.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 87 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%209/bellman_ford_cycle.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -372,56 +319,338 @@ bellman-ford.cpp:46:19: error: request for member &#x27;push_back&#x27; in &#x27
 <span class="normal">84</span>
 <span class="normal">85</span>
 <span class="normal">86</span>
-<span class="normal">87</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-
+<span class="c1">// Bellman-Ford: shortest paths from one source, even when a weight is negative.</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="c1">// (Dijkstra cannot do that. The note at the end of this file explains why.)</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span><span class="w">            </span><span class="c1">// dis[i] = cheapest cost known so far to node i</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">Edge</span><span class="o">&gt;</span><span class="w"> </span><span class="n">edge_list</span><span class="p">;</span>
-
+<span class="c1">// ^ the whole graph in one flat list - and a BUG: Edge is not yet known here.</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Edge</span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w">      </span><span class="c1">// the edge a -&gt; b costs c, and c may be negative</span>
+<span class="w">        </span><span class="n">Edge</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">){</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w">  </span><span class="c1">// this-&gt; is needed: the parameter hides the field</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">};</span>
+<span class="c1">// The fix: move this class Edge block above line 9, then the file compiles.</span>
+<span class="c1">// Relax one edge a -&gt; b of cost c: take the cheaper of dis[b] and dis[a] + c.</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">bellman_ford</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">   </span><span class="c1">// n-1 rounds; why n-1 is explained at the end</span>
+<span class="w">        </span><span class="c1">// relaxing edges: one sweep over every edge, in any order</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">ed</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">edge_list</span><span class="p">){</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">            </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">a</span><span class="p">;</span><span class="w">   </span><span class="c1">// from</span>
+<span class="w">            </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">b</span><span class="p">;</span><span class="w">   </span><span class="c1">// to</span>
+<span class="w">            </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">c</span><span class="p">;</span><span class="w">   </span><span class="c1">// cost</span>
+<span class="w">            </span><span class="c1">// The guard comes first: INT_MAX + c overflows and wraps round to a</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">b</span><span class="p">]){</span><span class="w"> </span><span class="c1">// big negative, a fake bargain</span>
+<span class="w">                </span><span class="n">dis</span><span class="p">[</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">// No adjacency list here: the algorithm only ever sweeps over all edges.</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">      </span><span class="c1">// n nodes, then e directed edges</span>
+<span class="w">    </span><span class="c1">// One line per edge, a b c, stored once because the edge is one-way. They are</span>
+<span class="w">    </span><span class="c1">// simply appended in input order; the order they are relaxed in never matters.</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w">   </span><span class="c1">// then Edge(a, b, c) builds one edge object</span>
+<span class="w">        </span><span class="n">edge_list</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Edge</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Handy while learning: print the edges back to check they were read right.</span>
+<span class="w">    </span><span class="cm">/*</span>
+<span class="cm">    for(aut edge : edge_list){</span>
+<span class="cm">        cout &lt;&lt; edge.a &lt;&lt; &quot; &quot; &lt;&lt; edge.b &lt;&lt; &quot; &quot; &lt;&lt; edge.c &lt;&lt; endl;</span>
+<span class="cm">    }</span>
+<span class="cm">    */</span>
+
+<span class="w">    </span><span class="c1">// Everything starts out unreachable, at infinity, except the source.</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">dis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// node 0 is the source here; reaching it costs nothing</span>
+
+<span class="w">    </span><span class="c1">// Why n-1 rounds, and why that is enough.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// A shortest path can never visit the same node twice, because cutting the</span>
+<span class="w">    </span><span class="c1">// repeat out would only make it cheaper. So it touches at most n nodes and</span>
+<span class="w">    </span><span class="c1">// therefore uses at most n-1 edges.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Now watch what one round buys. Before any round, every path of 0 edges is</span>
+<span class="w">    </span><span class="c1">// correct (only the source). A full sweep over all edges relaxes, among</span>
+<span class="w">    </span><span class="c1">// others, the last edge of every shortest path that uses 1 edge, so after</span>
+<span class="w">    </span><span class="c1">// round 1 every 1-edge shortest path is correct. After round 2 every 2-edge</span>
+<span class="w">    </span><span class="c1">// one is, and so on. The edges may be swept in any order: a round can only</span>
+<span class="w">    </span><span class="c1">// ever improve things, never spoil them, and the worst case is that just one</span>
+<span class="w">    </span><span class="c1">// more edge of each path settles per round.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Since no shortest path is longer than n-1 edges, n-1 rounds settle them all.</span>
+<span class="w">    </span><span class="n">bellman_ford</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// A node still showing INT_MAX has no route from the source at all.</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;-&gt;&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Cost: e edges swept n-1 times, so O(V * E). Slower than Dijkstra&#39;s</span>
+<span class="w">    </span><span class="c1">// O((V + E) log V), and that is the trade. Dijkstra is fast because it</span>
+<span class="w">    </span><span class="c1">// assumes a node&#39;s distance is final as soon as it is the closest one left,</span>
+<span class="w">    </span><span class="c1">// which a negative edge further on can make false. Bellman-Ford assumes</span>
+<span class="w">    </span><span class="c1">// nothing and just keeps relaxing, so negative weights do not bother it.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// It does have a limit: if a cycle has a negative total weight, going round</span>
+<span class="w">    </span><span class="c1">// it again is always cheaper and there is no shortest path to speak of. One</span>
+<span class="w">    </span><span class="c1">// extra round spots that; bellman_ford_cycle.cpp is the same file with that</span>
+<span class="w">    </span><span class="c1">// round added.</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 96 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
+0 1 4
+0 2 5
+2 1 -3
+1 3 2</pre><p class="io-note"><code>n e</code>, then e lines <code>a b c</code> (directed). Edge 2→1 has weight -3.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>bellman-ford.cpp:9:8: error: &#x27;Edge&#x27; was not declared in this scope
+ vector&lt;Edge&gt; edge_list;
+        ^~~~
+bellman-ford.cpp:9:12: error: template argument 1 is invalid
+ vector&lt;Edge&gt; edge_list;
+            ^
+bellman-ford.cpp:9:12: error: template argument 2 is invalid
+bellman-ford.cpp: In function &#x27;void bellman_ford(int)&#x27;:
+bellman-ford.cpp:25:23: error: &#x27;begin&#x27; was not declared in this scope
+         for(auto ed : edge_list){
+                       ^~~~~~~~~
+bellman-ford.cpp:25:23: note: suggested alternative:
+In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/string:51,
+                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/locale_classes.h:40,
+                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/ios_base.h:41,
+                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:42,
+                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
+                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
+                 from bellman-ford.cpp:1:
+C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/range_access.h:105:37: note:   &#x27;std::begin&#x27;
+   template&lt;typename _Tp&gt; const _Tp* begin(const valarray&lt;_Tp&gt;&amp;);
+                                     ^~~~~
+bellman-ford.cpp:25:23: error: &#x27;end&#x27; was not declared in this scope
+         for(auto ed : edge_list){
+                       ^~~~~~~~~
+bellman-ford.cpp:25:23: note: suggested alternative:
+In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/string:51,
+                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/locale_classes.h:40,
+                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/ios_base.h:41,
+                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ios:42,
+                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:38,
+                 from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
+                 from bellman-ford.cpp:1:
+C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/range_access.h:107:37: note:   &#x27;std::end&#x27;
+   template&lt;typename _Tp&gt; const _Tp* end(const valarray&lt;_Tp&gt;&amp;);
+                                     ^~~
+bellman-ford.cpp: In function &#x27;int main()&#x27;:
+bellman-ford.cpp:46:19: error: request for member &#x27;push_back&#x27; in &#x27;edge_list&#x27;, which is of non-class type &#x27;int&#x27;
+         edge_list.push_back(Edge(a, b, c));
+                   ^~~~~~~~~</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> The real output is a compile error. With the fix it prints <code>1-&gt;2</code> (0→2→1 = 5 − 3, cheaper than the direct 4) and <code>3-&gt;4</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read edges into <code>edge_list</code> as <code>Edge(a, b, c)</code>.</li><li><code>dis[i] = INT_MAX</code>, <code>dis[0] = 0</code>.</li><li>Repeat n−1 times: for every edge, if <code>dis[a]</code> is known and <code>dis[a] + c &lt; dis[b]</code>, update <code>dis[b]</code>.</li><li>Print <code>i-&gt;dis[i]</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The file does <strong>not compile</strong>: <code>vector&lt;Edge&gt; edge_list;</code> appears before <code>class Edge</code> is declared, so the compiler does not know <code>Edge</code> yet. Fix: move the <code>class Edge { ... };</code> block above the <code>edge_list</code> line.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why n−1 rounds?</summary><div>A shortest path without cycles has at most n−1 edges, and each round fixes at least one more edge of it.</div></details>
+</section>
+<section class="prog" id="p-bellman-ford-cycle">
+  <div class="prog-h">
+    <span class="num">2</span>
+    <div class="prog-t">
+      <h3>Bellman-Ford with negative cycle check</h3>
+      <div class="meta"><code class="fname">bellman_ford_cycle.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(V·E) · Space O(V + E)</span></div>
+    </div>
+  </div>
+  <p class="what">After the n−1 rounds it does one more pass; any improvement means a negative cycle, otherwise it prints the distances.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 105 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%209/bellman_ford_cycle.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="c1">// bellman-ford.cpp plus the one extra round that catches a negative cycle.</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="c1">// Everything down to line 35 is that file unchanged; the new part starts at 37.</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span><span class="w">            </span><span class="c1">// cheapest cost known so far from the source to node i</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="n">Edge</span><span class="o">&gt;</span><span class="w"> </span><span class="n">edge_list</span><span class="p">;</span>
+<span class="c1">// ^ the same BUG as in bellman-ford.cpp: Edge is used before the class exists.</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Edge</span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w">      </span><span class="c1">// the edge a -&gt; b costs c, and c may be negative</span>
 <span class="w">        </span><span class="n">Edge</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">){</span>
 <span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 <span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
-
-
+<span class="c1">// The fix is the same too: move this class Edge block above line 9.</span>
+<span class="c1">// A negative cycle is a loop whose weights add up to less than zero.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">bellman_ford</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">   </span><span class="c1">// the n-1 settling rounds, as before</span>
 <span class="w">        </span><span class="c1">// relaxing edges</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">ed</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">edge_list</span><span class="p">){</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">            </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">a</span><span class="p">;</span>
 <span class="w">            </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">b</span><span class="p">;</span>
 <span class="w">            </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">c</span><span class="p">;</span>
-
+<span class="w">            </span><span class="c1">// Guard first, or INT_MAX + c wraps round to a huge negative number.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">b</span><span class="p">]){</span>
 <span class="w">                </span><span class="n">dis</span><span class="p">[</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
-
+<span class="w">    </span><span class="c1">// One more sweep, identical to the ones above except that it changes nothing.</span>
 <span class="w">    </span><span class="c1">// checking for negative cycle by running an extra iteration</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">   </span><span class="c1">// &quot;did anything still get cheaper?&quot;</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">ed</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">edge_list</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">a</span><span class="p">;</span>
 <span class="w">        </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ed</span><span class="p">.</span><span class="n">c</span><span class="p">;</span>
-
+<span class="w">        </span><span class="c1">// Same relax test, but here we only ASK; nothing is ever written.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">b</span><span class="p">]){</span>
 <span class="w">            </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span><span class="w">   </span><span class="c1">// one improvement is proof enough; no need to look further</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">cycle</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// dis is meaningless now, so it is not printed: no shortest path exists.</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Negative weighted cycle detected&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// print when there is no negative cycle</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;No negative weighted cycle detected&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
@@ -430,12 +659,11 @@ bellman-ford.cpp:46:19: error: request for member &#x27;push_back&#x27; in &#x27
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
-
+<span class="c1">// Reading the graph: one flat edge list, exactly as in bellman-ford.cpp.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span>
-
+<span class="w">    </span><span class="c1">// e directed edges a b c. Here 1 -&gt; 2 costs -4 and 2 -&gt; 1 costs +1: a -3 loop.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
@@ -449,10 +677,28 @@ bellman-ford.cpp:46:19: error: request for member &#x27;push_back&#x27; in &#x27
 <span class="cm">    */</span>
 
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
+<span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span><span class="w">   </span><span class="c1">// unreachable until proved otherwise</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">dis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Why one extra round is exactly the right test.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// A shortest path uses at most n-1 edges, so after n-1 rounds every distance</span>
+<span class="w">    </span><span class="c1">// that CAN settle has settled, and another sweep must find nothing to improve.</span>
+<span class="w">    </span><span class="c1">// That is the whole argument, and it only holds if there is no negative cycle.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Now suppose there is one. Take the route to a node on that cycle and send it</span>
+<span class="w">    </span><span class="c1">// round the loop once more: the total drops, because the loop&#39;s weights add up</span>
+<span class="w">    </span><span class="c1">// to a negative number. Send it round again and it drops again. There is no</span>
+<span class="w">    </span><span class="c1">// cheapest route, only cheaper and cheaper ones, so nothing can ever settle.</span>
+<span class="w">    </span><span class="c1">// Some edge of that cycle is therefore still improvable no matter how many</span>
+<span class="w">    </span><span class="c1">// rounds have been run, including this extra one.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// So: the extra round finds an improvement if and only if a negative cycle is</span>
+<span class="w">    </span><span class="c1">// reachable from the source. Note the &quot;reachable from the source&quot; - a negative</span>
+<span class="w">    </span><span class="c1">// cycle sitting in a part of the graph the source cannot get to is never</span>
+<span class="w">    </span><span class="c1">// relaxed, so it is never noticed. To find those as well, start every node at</span>
+<span class="w">    </span><span class="c1">// distance 0 instead of only the source.</span>
 <span class="w">    </span><span class="n">bellman_ford</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
 
 <span class="w">    </span>
@@ -461,7 +707,7 @@ bellman-ford.cpp:46:19: error: request for member &#x27;push_back&#x27; in &#x27
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 87 lines ▾</button>
+    <button type="button" class="expand">Show all 105 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3 3
@@ -551,94 +797,141 @@ bellman_ford_cycle.cpp:68:19: error: request for member &#x27;push_back&#x27; in
   <p class="what">GFG version: returns the distance list, <code>{-1}</code> for a negative cycle, and uses 10^8 as infinity.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 81 lines</span>
+      <span>CPP · 118 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%209/extra_problem.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// GeeksforGeeks: &quot;Distance from the Source (Bellman-Ford Algorithm)&quot;.</span>
+<span class="c1">//</span>
+<span class="c1">// Given V nodes, a list of directed weighted edges and a source, return the</span>
+<span class="c1">// shortest distance to every node, or {-1} if a negative cycle is reachable.</span>
+<span class="c1">//</span>
+<span class="c1">// It is bellman_ford_cycle.cpp wearing the shape the judge asks for: the answer</span>
+<span class="c1">// is returned as a vector instead of printed, and the whole thing sits inside a</span>
+<span class="c1">// class Solution, which is how GFG and LeetCode hand you a problem. Two small</span>
+<span class="c1">// differences are worth noticing as you read.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
@@ -654,20 +947,37 @@ bellman_ford_cycle.cpp:68:19: error: request for member &#x27;push_back&#x27; in
 <span class="cm">       */</span>
 <span class="w">      </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">bellmanFord</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">edges</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">          </span><span class="c1">// Code here</span>
+<span class="w">          </span><span class="c1">// Difference one: infinity is 10^8, not INT_MAX. The problem promises</span>
+<span class="w">          </span><span class="c1">// that no real distance comes anywhere near it, and a number this far</span>
+<span class="w">          </span><span class="c1">// from the top of int leaves room to add a weight without overflowing.</span>
+<span class="w">          </span><span class="c1">// The guard below is still written, and still worth writing.</span>
+<span class="w">          </span><span class="c1">//</span>
+<span class="w">          </span><span class="c1">// Difference two: dist is a local vector sized V, not a global array.</span>
+<span class="w">          </span><span class="c1">// A fresh one per call means no leftovers between test cases, which is</span>
+<span class="w">          </span><span class="c1">// what the memset calls were doing in the earlier files.</span>
 <span class="w">          </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dist</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="mi">100000000</span><span class="p">);</span>
 <span class="w">          </span><span class="n">dist</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">          </span>
+<span class="w">          </span><span class="c1">// The n-1 settling rounds. A shortest path never repeats a node, so it</span>
+<span class="w">          </span><span class="c1">// uses at most V-1 edges, and each round pushes every path one edge</span>
+<span class="w">          </span><span class="c1">// further towards being correct. V-1 rounds therefore settle them all.</span>
 <span class="w">          </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="w"> </span><span class="n">V</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">              </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">edge</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">edges</span><span class="p">){</span>
-<span class="w">                  </span><span class="kt">int</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-<span class="w">                  </span><span class="kt">int</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-<span class="w">                  </span><span class="kt">int</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="w">                  </span><span class="kt">int</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span><span class="w">   </span><span class="c1">// from</span>
+<span class="w">                  </span><span class="kt">int</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span><span class="w">   </span><span class="c1">// to</span>
+<span class="w">                  </span><span class="kt">int</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span><span class="w">   </span><span class="c1">// weight</span>
+<span class="w">                  </span><span class="c1">// Relax: if reaching u and taking this edge beats the best</span>
+<span class="w">                  </span><span class="c1">// route to v so far, keep the cheaper number.</span>
 <span class="w">                  </span><span class="k">if</span><span class="p">(</span><span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">100000000</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">]){</span>
 <span class="w">                      </span><span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">w</span><span class="p">;</span>
 <span class="w">                  </span><span class="p">}</span>
 <span class="w">              </span><span class="p">}</span>
 <span class="w">          </span><span class="p">}</span>
 <span class="w">          </span>
+<span class="w">          </span><span class="c1">// The extra round. After V-1 rounds nothing honest can improve, so an</span>
+<span class="w">          </span><span class="c1">// improvement here proves a reachable negative cycle: a loop you can</span>
+<span class="w">          </span><span class="c1">// walk round to lower the total again and again, with no cheapest</span>
+<span class="w">          </span><span class="c1">// route to settle on. The problem wants {-1} in that case.</span>
 <span class="w">          </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">edge</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">edges</span><span class="p">){</span>
 <span class="w">              </span><span class="kt">int</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
 <span class="w">              </span><span class="kt">int</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
@@ -676,19 +986,27 @@ bellman_ford_cycle.cpp:68:19: error: request for member &#x27;push_back&#x27; in
 <span class="w">                  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">};</span>
 <span class="w">              </span><span class="p">}</span>
 <span class="w">          </span><span class="p">}</span>
-<span class="w">          </span><span class="k">return</span><span class="w"> </span><span class="n">dist</span><span class="p">;</span>
+<span class="w">          </span><span class="k">return</span><span class="w"> </span><span class="n">dist</span><span class="p">;</span><span class="w">   </span><span class="c1">// nodes never reached keep the 10^8, as the judge expects</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">  </span><span class="p">};</span>
 
 <span class="w">  </span><span class="c1">// Driver Code Starts.</span>
 
+<span class="c1">// Below this line is the judge&#39;s own test harness, not part of the solution.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// BUG: t is declared and never given a value, so it holds whatever was in</span>
+<span class="w">    </span><span class="c1">// that memory. The line should be cin &gt;&gt; t; instead, cin.ignore() throws</span>
+<span class="w">    </span><span class="c1">// away a single character. On this run t happened to be 0 or negative, the</span>
+<span class="w">    </span><span class="c1">// while loop did not run once, and the program printed nothing at all.</span>
+<span class="w">    </span><span class="c1">// The Solution class above is fine; only the driver is broken.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="p">.</span><span class="n">ignore</span><span class="p">();</span>
 <span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">N</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">N</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">   </span><span class="c1">// nodes and edges for this test case</span>
 <span class="w">        </span>
+<span class="w">        </span><span class="c1">// The edge list the judge uses is a vector&lt;vector&lt;int&gt;&gt;: each inner</span>
+<span class="w">        </span><span class="c1">// vector is {u, v, w}. Same idea as the Edge class, spelled differently.</span>
 <span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">edges</span><span class="p">;</span>
 <span class="w">        </span>
 <span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -709,6 +1027,8 @@ bellman_ford_cycle.cpp:68:19: error: request for member &#x27;push_back&#x27; in
 <span class="w">        </span><span class="n">Solution</span><span class="w"> </span><span class="n">obj</span><span class="p">;</span>
 <span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">obj</span><span class="p">.</span><span class="n">bellmanFord</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">edges</span><span class="p">,</span><span class="w"> </span><span class="n">src</span><span class="p">);</span>
 <span class="w">        </span>
+<span class="w">        </span><span class="c1">// Print the answers separated by single spaces, with no trailing space:</span>
+<span class="w">        </span><span class="c1">// that is what the i != res.size() - 1 test is for.</span>
 <span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">res</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 <span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">res</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
@@ -721,7 +1041,7 @@ bellman_ford_cycle.cpp:68:19: error: request for member &#x27;push_back&#x27; in
 <span class="c1">// Driver Code Ends</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 81 lines ▾</button>
+    <button type="button" class="expand">Show all 118 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>1
@@ -746,7 +1066,7 @@ bellman_ford_cycle.cpp:68:19: error: request for member &#x27;push_back&#x27; in
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
 <meta name="description" content="This module introduces the binary heap: a complete binary tree stored in a plain array, where every parent is bigger (max heap) or smaller (min heap) than its children. You learn how to insert by bubbling a value up and how to delete the root by moving the last value to the top and pushing it down. The practice problems apply BST ideas (in-order is sorted, the BST rule lets you skip branches) and a simple top-two scan.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -69,7 +69,164 @@ value  45  30  40  10  20  35</pre><p>Both moves walk one path of a complete tre
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Heap as an array</h4><p>A heap is a complete tree, so it fits in an array with no gaps. For index <code>i</code>, the children are at <code>2*i + 1</code> and <code>2*i + 2</code>, and the parent is at <code>(i - 1) / 2</code>.</p><pre class="snip">int par_idx = (cur_idx - 1) / 2;
 int left_idx = 2 * cur_idx + 1;
 int right_idx = 2 * cur_idx + 2;</pre></div><div class="concept"><h4>Max heap vs min heap</h4><p>In a max heap every parent is at least as big as its children, so the largest value sits at index 0. A min heap is the mirror: the smallest value is at the top.</p></div><div class="concept"><h4>Insert = push back, then bubble up</h4><p>Add the value at the end of the array, then keep swapping it with its parent while it beats the parent. It stops at the root or when the parent is already better.</p></div><div class="concept"><h4>Delete root = move last to top, then push down</h4><p>Copy the last element into index 0 and remove the last slot. Then swap the top with its better child (bigger for max heap, smaller for min heap) until neither child beats it.</p></div><div class="concept"><h4>O(log n) operations</h4><p>A complete tree with n nodes has height about log2(n), and bubbling up or down moves one level per swap, so both operations are O(log n).</p></div><div class="concept"><h4>BST in-order is sorted</h4><p>Several problems here rely on it: the closest pair of values in a BST is always adjacent in in-order, and relinking nodes in in-order gives an increasing chain.</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: 55 climbing into a max heap</h3><p>The heap <code>insert_in_max_heap.cpp</code> starts from (<code>60 40 50 10 30 20</code>), and the value pushed in is 55. The tree and the array are the same thing drawn twice - watch the index arithmetic underneath do the climbing.</p><div class="stepper" data-n="7"><p class="stitle">Press the arrows to let 55 find its level</p><div class="frames"><div class="frame" data-i="0"><pre>insert 55
+
+           60
+        /      \
+      40        50
+     /  \      /
+   10    30  20
+
+i     0   1   2   3   4   5   6
+v     60  40  50  10  30  20</pre><p class="flabel">A max heap: every parent is at least as big as its children, so the biggest value, 60, can only be at the top. It is a complete tree, so it fits in the array with no gaps.</p></div><div class="frame" data-i="1"><pre>insert 55
+
+           60
+        /      \
+      40        50
+     /  \      /  \
+   10    30  20   [55]
+
+i     0   1   2   3   4   5   6
+v     60  40  50  10  30  20  55
+                              ^</pre><p class="flabel">The new value goes at the end of the array, index 6. That is the only place that keeps the tree complete - it becomes the right child of index 2.</p></div><div class="frame" data-i="2"><pre>insert 55
+
+           60
+        /      \
+      40       [50]
+     /  \      /  \
+   10    30  20   [55]
+
+i     0   1   2   3   4   5   6
+v     60  40  50  10  30  20  55
+              ^               ^
+
+parent of 6 = (6 - 1) / 2 = 2</pre><p class="flabel">Who is its parent? <code>(6 - 1) / 2 = 2</code>, and <code>v[2]</code> is 50. No pointers needed: the link is arithmetic.</p></div><div class="frame" data-i="3"><pre>insert 55
+
+           60
+        /      \
+      40       [55]
+     /  \      /  \
+   10    30  20    50
+
+i     0   1   2   3   4   5   6
+v     60  40  55  10  30  20  50
+              ^               ^
+
+55 &gt; 50  -&gt; swap</pre><p class="flabel">55 &gt; 50, so 55 is too big to sit under 50: swap them. 55 moves up one level, 50 drops into the leaf.</p></div><div class="frame" data-i="4"><pre>insert 55
+
+          [60]
+        /      \
+      40       [55]
+     /  \      /  \
+   10    30  20    50
+
+i     0   1   2   3   4   5   6
+v     60  40  55  10  30  20  50
+      ^       ^
+
+parent of 2 = (2 - 1) / 2 = 0</pre><p class="flabel">55 is now at index 2, so its parent is <code>(2 - 1) / 2 = 0</code>, which holds 60.</p></div><div class="frame" data-i="5"><pre>insert 55
+
+          [60]
+        /      \
+      40       [55]
+     /  \      /  \
+   10    30  20    50
+
+i     0   1   2   3   4   5   6
+v     60  40  55  10  30  20  50
+      ^       ^
+
+55 &lt; 60  -&gt; stop</pre><p class="flabel">55 &lt; 60, so the parent is already bigger and the climb stops. Stopping early is the point: nothing above needs checking.</p></div><div class="frame" data-i="6"><pre>insert 55
+
+           60
+        /      \
+      40        55
+     /  \      /  \
+   10    30  20    50
+
+i     0   1   2   3   4   5   6
+v     60  40  55  10  30  20  50
+
+60 40 55 10 30 20 50</pre><p class="flabel">Done. The array is <code>60 40 55 10 30 20 50</code>, exactly what the program prints. One swap per level, so at worst the height of the tree: O(log n).</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 7</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div><div class="wstep"><h3>Watch it happen: deleting the top of a max heap</h3><p>Same heap (<code>60 40 50 10 30 20</code>), the one <code>delete_in_max_heap.cpp</code> builds. Deleting means taking the root, and the trick is which value replaces it and how it sinks back down.</p><div class="stepper" data-n="7"><p class="stitle">Press the arrows to sink the new top back down</p><div class="frames"><div class="frame" data-i="0"><pre>delete the top
+
+          [60]
+        /      \
+      40        50
+     /  \      /
+   10    30  20
+
+i     0   1   2   3   4   5   6
+v     60  40  50  10  30  20
+      ^</pre><p class="flabel">The answer to &quot;who is the most urgent&quot; is always <code>v[0]</code>, here 60. Taking it out is the easy half.</p></div><div class="frame" data-i="1"><pre>delete the top
+
+          [60]
+        /      \
+      40        50
+     /  \      /
+   10    30 [20]
+
+i     0   1   2   3   4   5   6
+v     60  40  50  10  30  20
+      ^                   ^
+
+take v[0] = 60; last value is v[5] = 20</pre><p class="flabel">60 comes out, leaving a hole at the top. Do not slide everything one place left to fill it: that costs O(n) and it scrambles the parent-child arithmetic. The value that moves is the <strong>last</strong> one, <code>v[5] = 20</code>.</p></div><div class="frame" data-i="2"><pre>delete the top
+
+          [20]
+        /      \
+      40        50
+     /  \
+   10    30
+
+i     0   1   2   3   4   5   6
+v     20  40  50  10  30
+      ^</pre><p class="flabel">Instead the last value, 20, is copied into index 0 and the array shrinks by one. The tree is still complete - but 20 has no business being on top.</p></div><div class="frame" data-i="3"><pre>delete the top
+
+           20
+        /      \
+     [40]      [50]
+     /  \
+   10    30
+
+i     0   1   2   3   4   5   6
+v     20  40  50  10  30
+      ^   ^   ^
+
+children of 0 = 1 and 2 : 40 and 50</pre><p class="flabel">Look at its children: <code>2*0 + 1 = 1</code> holds 40 and <code>2*0 + 2 = 2</code> holds 50. The bigger one is 50, and that is the one to swap with - swapping with 40 would leave 40 sitting above 50.</p></div><div class="frame" data-i="4"><pre>delete the top
+
+          [50]
+        /      \
+      40       [20]
+     /  \
+   10    30
+
+i     0   1   2   3   4   5   6
+v     50  40  20  10  30
+      ^       ^
+
+50 &gt; 20  -&gt; swap</pre><p class="flabel">50 &gt; 20, so swap. 50 takes the top, 20 sinks to index 2.</p></div><div class="frame" data-i="5"><pre>delete the top
+
+           50
+        /      \
+      40       [20]
+     /  \
+   10    30
+
+i     0   1   2   3   4   5   6
+v     50  40  20  10  30
+              ^
+
+children of 2 = 5 and 6 : past the end</pre><p class="flabel">20 is at index 2 now, so its children would be at 5 and 6 - both past the end of the five-value array. No children, nothing can beat it, so it stops.</p></div><div class="frame" data-i="6"><pre>delete the top
+
+           50
+        /      \
+      40        20
+     /  \
+   10    30
+
+i     0   1   2   3   4   5   6
+v     50  40  20  10  30
+
+50 40 20 10 30</pre><p class="flabel">The heap rule holds again and the array is <code>50 40 20 10 30</code>, as the fixed program prints. 50 is now sitting at the top, ready to be the next answer.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 7</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/heap" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — heap</b><span class="rnote">Watch a value bubble up on insert and sink down on delete.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/Heap.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — heap</b><span class="rnote">Build a heap step by step and see the array behind the tree.</span></a></li><li class="r-article"><a href="https://www.geeksforgeeks.org/heap-data-structure/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>GeeksforGeeks — heap</b><span class="rnote">Heaps and priority queues, with the array indexing explained.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — A2Z DSA course</b><span class="rnote">A full ordered course if you want to revise a whole topic again.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-insert-in-max-heap">
@@ -81,50 +238,171 @@ int right_idx = 2 * cur_idx + 2;</pre></div><div class="concept"><h4>Max heap vs
     </div>
   </div>
   <p class="what">Reads an array that is already a max heap, adds one new value and bubbles it up to its correct place, then prints the array.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 36 lines</span>
+      <span>CPP · 103 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/insert_in_max_heap.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="cpf">&lt;iostream&gt;</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Insert into a max heap</span>
+
+<span class="cm">A binary heap is a complete binary tree -- every level is full except possibly</span>
+<span class="cm">the last, which is filled from the left -- obeying one rule:</span>
+
+<span class="cm">    max heap: every parent is at least as big as both of its children.</span>
+
+<span class="cm">So the biggest value of all sits at the very top. Note what the rule does NOT</span>
+<span class="cm">say: left and right are in no particular order, and a value two levels down</span>
+<span class="cm">may well be bigger than something on the other side of the tree. A heap is</span>
+<span class="cm">much weaker than a BST, and that is why it is cheaper to maintain.</span>
+
+<span class="cm">The array trick</span>
+<span class="cm">---------------</span>
+<span class="cm">Because the tree is complete it has no gaps, so it can be stored in a plain</span>
+<span class="cm">array, level by level, left to right. No pointers are needed at all -- the</span>
+<span class="cm">family links are arithmetic on the index:</span>
+
+<span class="cm">        index:   0    1    2    3    4    5    6</span>
+<span class="cm">                 |    |    |    |    |    |    |</span>
+<span class="cm">                        0</span>
+<span class="cm">                     /     \</span>
+<span class="cm">                   1         2</span>
+<span class="cm">                  / \       / \</span>
+<span class="cm">                 3   4     5   6</span>
+
+<span class="cm">    parent of i     = (i - 1) / 2      (integer division)</span>
+<span class="cm">    left child of i = 2*i + 1</span>
+<span class="cm">    right child of i= 2*i + 2</span>
+
+<span class="cm">A quick check: children 3 and 4 both give (3-1)/2 = 1 and (4-1)/2 = 1, their</span>
+<span class="cm">parent. And index 0 has no parent, which is why the loop below stops there.</span>
+<span class="cm">An index that comes out &gt;= the array size means that child does not exist.</span>
+
+<span class="cm">Insert = push_back, then bubble up</span>
+<span class="cm">----------------------------------</span>
+<span class="cm">The new value has to go in the only free slot of a complete tree: the end of</span>
+<span class="cm">the array. From there it may be bigger than its parent, which breaks the rule,</span>
+<span class="cm">so swap the two. That can break the rule one level higher, so repeat. The</span>
+<span class="cm">value keeps climbing until its parent beats it, or until it reaches index 0.</span>
+
+<span class="cm">Nothing else in the tree is disturbed: swapping a big value up past a smaller</span>
+<span class="cm">parent leaves the smaller value above the same children it already dominated.</span>
+
+<span class="cm">Cost: a complete tree of n nodes is about log2(n) levels deep and each swap</span>
+<span class="cm">climbs one level, so insert is O(log n).</span>
+
+<span class="cm">This program expects an array that is ALREADY a valid max heap, adds one value</span>
+<span class="cm">to it, and prints the array. It does not build a heap out of arbitrary input.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
@@ -134,24 +412,37 @@ int right_idx = 2 * cur_idx + 2;</pre></div><div class="concept"><h4>Max heap vs
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// The existing heap, in array order (level by level, left to right).</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// The value to insert. push_back puts it in the first free slot, which</span>
+<span class="w">    </span><span class="c1">// is the last position of the bottom level -- the tree stays complete.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// where the new value is sitting now</span>
+<span class="w">    </span><span class="c1">// Climb while there is a parent to climb to. Index 0 is the root, so</span>
+<span class="w">    </span><span class="c1">// reaching it means the value is the new maximum and the loop must end.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">        </span><span class="c1">// Bigger than the parent: the max-heap rule is broken here, so swap</span>
+<span class="w">        </span><span class="c1">// them and carry on checking from the parent&#39;s position.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]){</span>
 <span class="w">            </span><span class="n">swap</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">],</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]);</span>
 <span class="w">            </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_idx</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// The parent already beats it. Everything above the parent is</span>
+<span class="w">            </span><span class="c1">// at least as big, so the whole path is fine -- stop.</span>
 <span class="w">            </span><span class="k">break</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Print the array. It is still a heap, just one element longer.</span>
+<span class="w">    </span><span class="c1">// For heap 60 40 50 10 30 20 and value 55: 55 lands at index 6, beats</span>
+<span class="w">    </span><span class="c1">// its parent 50 at index 2 and swaps, then stops under 60 (55 &lt; 60),</span>
+<span class="w">    </span><span class="c1">// giving 60 40 55 10 30 20 50.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">v</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -161,7 +452,7 @@ int right_idx = 2 * cur_idx + 2;</pre></div><div class="concept"><h4>Max heap vs
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 36 lines ▾</button>
+    <button type="button" class="expand">Show all 103 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
@@ -182,9 +473,9 @@ int right_idx = 2 * cur_idx + 2;</pre></div><div class="concept"><h4>Max heap vs
     </div>
   </div>
   <p class="what">The mirror of the max heap insert: the new value bubbles up while it is smaller than its parent.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 35 lines</span>
+      <span>CPP · 65 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2022/insert_in_min_heap.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -225,7 +516,58 @@ int right_idx = 2 * cur_idx + 2;</pre></div><div class="concept"><h4>Max heap vs
 <span class="normal">32</span>
 <span class="normal">33</span>
 <span class="normal">34</span>
-<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Insert into a min heap</span>
+
+<span class="cm">This is insert_in_max_heap.cpp with one character changed. That file explains</span>
+<span class="cm">the heap, the array-as-tree indexing -- parent (i-1)/2, children 2i+1 and</span>
+<span class="cm">2i+2 -- and why the new value is appended and then bubbled up. All of it</span>
+<span class="cm">applies here unchanged.</span>
+
+<span class="cm">The only difference is which way the rule points:</span>
+
+<span class="cm">    max heap: every parent is at least as big as its children  -&gt; swap on &gt;</span>
+<span class="cm">    min heap: every parent is at most as big as its children   -&gt; swap on &lt;</span>
+
+<span class="cm">So the smallest value ends up at index 0 instead of the largest, and the new</span>
+<span class="cm">value climbs while it is SMALLER than its parent. Same shape, same cost</span>
+<span class="cm">O(log n), one comparison flipped.</span>
+
+<span class="cm">The input must already be a valid min heap.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
@@ -235,24 +577,31 @@ int right_idx = 2 * cur_idx + 2;</pre></div><div class="concept"><h4>Max heap vs
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// The existing min heap, in array order.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">val</span><span class="p">);</span><span class="w">           </span><span class="c1">// the only free slot in a complete tree</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span><span class="w">        </span><span class="c1">// index 0 is the root: nowhere left to climb</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">cur_idx</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">        </span><span class="c1">// `&lt;` instead of `&gt;` -- the whole difference from the max heap.</span>
+<span class="w">        </span><span class="c1">// A value smaller than its parent breaks the min-heap rule, so it</span>
+<span class="w">        </span><span class="c1">// moves up one level and the check repeats from there.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]){</span>
 <span class="w">            </span><span class="n">swap</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">],</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">par_idx</span><span class="p">]);</span>
 <span class="w">            </span><span class="n">cur_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_idx</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span><span class="w">              </span><span class="c1">// parent is already smaller; the path is fine</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// For heap 10 20 30 40 50 60 and value 5: 5 lands at index 6, beats its</span>
+<span class="w">    </span><span class="c1">// parent 30 (index 2), then beats 10 (index 0), so it becomes the new</span>
+<span class="w">    </span><span class="c1">// smallest value at the top -- 5 20 10 40 50 60 30.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">v</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -262,7 +611,7 @@ int right_idx = 2 * cur_idx + 2;</pre></div><div class="concept"><h4>Max heap vs
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 35 lines ▾</button>
+    <button type="button" class="expand">Show all 65 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
@@ -1700,7 +2049,7 @@ getFourthLargest = -2147483648
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

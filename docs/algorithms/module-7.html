@@ -7,7 +7,7 @@
 <meta name="description" content="When edges have weights, BFS levels are no longer shortest distances. Dijkstra&#x27;s algorithm fixes this by always expanding the node with the smallest known distance, using a min-priority queue. The module builds a naive queue version first, then the optimized priority-queue version, and practises it on GFG, CSES and LeetCode.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -60,7 +60,84 @@ while(!pq.empty()){
 }</pre><p><strong>A second example.</strong> Make every road 1 km long and Dijkstra gives exactly the BFS levels back: BFS is the special case where all weights are equal.</p><p><strong>A third example.</strong> In Network Delay Time a signal starts at one computer and each cable takes some milliseconds. Dijkstra gives the moment each computer hears it; the answer is the largest of those numbers, because you wait for the last one. Any computer still at infinity was never reached, and the answer is -1.</p><p><strong>Where it breaks.</strong> Dijkstra rests on one promise: once a village is the nearest unfinished one, its distance is final. That promise holds only while every weight is zero or more. <strong>A negative edge can make a finished village cheaper later, and then the promise is a lie</strong> - so Dijkstra is not allowed on graphs with negative weights. Module 9 handles that case.</p><p>With the priority queue the cost is O((V + E) log V), which is fast enough for the judges. The programs below build it twice: first with a plain queue, so you can see why re-processing hurts, then the real version, and then the same code on GFG, LeetCode and CSES.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-priority-queue-of-pairs"><span class="n">1</span>Min-heap of pairs</a></li><li><a href="#p-dijkstra-naive"><span class="n">2</span>Dijkstra with a plain queue</a></li><li><a href="#p-dijkstra-optimized"><span class="n">3</span>Dijkstra with a priority queue</a></li><li><a href="#p-problem-implement-dijkstra"><span class="n">4</span>GFG - Implementing Dijkstra</a></li><li><a href="#p-problem-network-delay-time"><span class="n">5</span>LeetCode 743 - Network Delay Time</a></li><li><a href="#p-gfg-undirected-graph-cycle-bfs"><span class="n">6</span>GFG - Detect cycle (BFS version)</a></li><li><a href="#p-problem-building-roads"><span class="n">7</span>CSES 1666 - Building Roads</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Distance array</h4><p><code>dis[v]</code> = best cost found so far from the source; start with <code>INT_MAX</code> (infinity) and <code>dis[src] = 0</code>.</p></div><div class="concept"><h4>Relaxation</h4><p>For an edge <code>u → v</code> with weight <code>w</code>: if <code>dis[u] + w &lt; dis[v]</code>, update <code>dis[v]</code> and push <code>v</code> again.</p><pre class="snip">if(d + w &lt; dis[v]){ dis[v] = d + w; pq.push({dis[v], v}); }</pre></div><div class="concept"><h4>Min-priority queue of pairs</h4><p><code>priority_queue&lt;pair&lt;int,int&gt;, vector&lt;pair&lt;int,int&gt;&gt;, greater&lt;pair&lt;int,int&gt;&gt;&gt;</code> pops the smallest pair; pairs compare by <code>first</code>, so store <code>{distance, node}</code>.</p></div><div class="concept"><h4>Naive vs optimized</h4><p>A plain queue works but may re-process nodes many times. The priority queue processes the closest node first, giving O((V + E) log V).</p></div><div class="concept"><h4>No negative edges</h4><p>Dijkstra assumes a node&#x27;s distance is final once popped as the smallest; a negative edge can break that. Use Bellman-Ford then.</p></div><div class="concept"><h4>Components again</h4><p>Building Roads: the number of new roads needed is (components − 1); connect one representative of each piece to the next.</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: Dijkstra across the five roads</h3><p>The map is the one at the top of the page, in kilometres, and the run starts at village 0. A dash means no route is known yet, and a <code>*</code> means that village is finished - its number can never change again. Watch the 10 under village 1: it does not survive.</p><div class="stepper" data-n="7"><p class="stitle">Press the arrows to finish one village at a time</p><div class="frames"><div class="frame" data-i="0"><pre>        10
+    0---------1
+    |       / |
+  3 |    4/   | 2
+    |   /     |
+    2---------3
+        8
+
+node     0    1    2    3
+dis      0    -    -    -
+done     .    .    .    .
+         ^ the source, 0 km</pre><p class="flabel">Home costs nothing, so <code>dis[0] = 0</code> and everyone else is unknown. The priority queue holds one pair, <code>{0, 0}</code>.</p></div><div class="frame" data-i="1"><pre>        10
+    0---------1
+    |       / |
+  3 |    4/   | 2
+    |   /     |
+    2---------3
+        8
+
+node     0    1    2    3
+dis      0   10    3    -
+done     *    .    .    .
+              ^    ^ first guesses</pre><p class="flabel">Village 0 is the nearest unfinished one, so it is taken and finished. Both roads leaving it are relaxed: 1 becomes 10, and 2 becomes 3.</p></div><div class="frame" data-i="2"><pre>        10
+    0---------1
+    |       / |
+  3 |    4/   | 2
+    |   /     |
+    2---------3
+        8
+
+node     0    1    2    3
+dis      0   10    3    -
+done     *    .    .    .
+                   ^ nearest unfinished: 3 km</pre><p class="flabel">Which village next? Not 1, even though there is a direct road to it. Compare the unfinished numbers: 3 is smaller than 10, so village 2 is the nearest and goes next. This one choice is the whole algorithm.</p></div><div class="frame" data-i="3"><pre>        10
+    0---------1
+    |       / |
+  3 |    4/   | 2
+    |   /     |
+    2---------3
+        8
+
+node     0    1    2    3
+dis      0    7    3   11
+done     *    .    *    .
+              ^ 10 improved to 7</pre><p class="flabel">Finish village 2 and relax its roads. 3 + 4 = 7 beats the 10 already written for village 1, so the 10 is crossed out. 3 + 8 = 11 gives village 3 its first number.</p></div><div class="frame" data-i="4"><pre>        10
+    0---------1
+    |       / |
+  3 |    4/   | 2
+    |   /     |
+    2---------3
+        8
+
+node     0    1    2    3
+dis      0    7    3    9
+done     *    *    *    .
+                        ^ 11 improved to 9</pre><p class="flabel">Now 7 is the smallest unfinished number, so village 1 is finished. Its road to 3 costs 2, and 7 + 2 = 9 beats the 11, so village 3 improves a second time.</p></div><div class="frame" data-i="5"><pre>        10
+    0---------1
+    |       / |
+  3 |    4/   | 2
+    |   /     |
+    2---------3
+        8
+
+node     0    1    2    3
+dis      0    7    3    9
+done     *    *    *    *
+     nothing improves, queue empties</pre><p class="flabel">Village 3 is the last one left, at 9. Relaxing its roads changes nothing: 9 + 2 is not better than 7, and 9 + 8 is not better than 3. Everything is finished.</p></div><div class="frame" data-i="6"><pre>        10
+    0---------1
+    |       / |
+  3 |    4/   | 2
+    |   /     |
+    2---------3
+        8
+
+node     0    1    2    3
+dis      0    7    3    9
+done     *    *    *    *
+              ^ 7 km via village 2</pre><p class="flabel">The queue is empty and the row is the answer. Village 1 costs 7, by going 0 -&gt; 2 -&gt; 1: two roads, and cheaper than the single 10 km road. That is exactly the case where BFS levels would have lied to you.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 7</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/sssp" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — shortest paths</b><span class="rnote">Dijkstra and Bellman-Ford animated, with the distance table updating.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/Dijkstra.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — Dijkstra</b><span class="rnote">The distance labels being lowered, one finished node at a time.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/graph/dijkstra.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — Dijkstra</b><span class="rnote">Both versions, and when the priority queue one is worth it.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>William Fiset — graph theory playlist</b><span class="rnote">Every graph algorithm of this course, drawn before it is coded.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-priority-queue-of-pairs">
@@ -72,9 +149,9 @@ while(!pq.empty()){
     </div>
   </div>
   <p class="what">Pushes four pairs into a min-priority queue and prints the top, showing that pairs are ordered by their first value.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 22 lines</span>
+      <span>CPP · 46 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%207/priority_queue_of_pairs.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -102,7 +179,38 @@ while(!pq.empty()){
 <span class="normal">19</span>
 <span class="normal">20</span>
 <span class="normal">21</span>
-<span class="normal">22</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// A small warm-up before Dijkstra: a min-heap that holds pairs.</span>
+<span class="c1">//</span>
+<span class="c1">// An ordinary queue hands things back in the order they arrived. A priority_queue</span>
+<span class="c1">// hands back the biggest one first, whatever order it arrived in. Dijkstra needs</span>
+<span class="c1">// the opposite, the SMALLEST first, and it needs each item to carry two numbers,</span>
+<span class="c1">// a distance and a node. This file checks both of those in six lines.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -110,23 +218,40 @@ while(!pq.empty()){
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// Left over from the Dijkstra files this one was copied from; nothing here uses</span>
+<span class="c1">// them. Harmless, but do not go looking for a graph in this program.</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// Read the three template arguments as: what is stored, where it is stored,</span>
+<span class="w">    </span><span class="c1">// and how two items are compared.</span>
+<span class="w">    </span><span class="c1">//   pair&lt;int,int&gt;                 one item</span>
+<span class="w">    </span><span class="c1">//   vector&lt;pair&lt;int,int&gt;&gt;         the container underneath</span>
+<span class="w">    </span><span class="c1">//   greater&lt;pair&lt;int,int&gt;&gt;        compare with &gt;, which flips the heap round</span>
+<span class="w">    </span><span class="c1">// Without that third argument the default is less&lt;&gt;, and the LARGEST item</span>
+<span class="w">    </span><span class="c1">// comes out on top. With greater&lt;&gt; the smallest does, which is what we want.</span>
 <span class="w">    </span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">greater</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">pq</span><span class="p">;</span>
 <span class="w">    </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
 <span class="w">    </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
 <span class="w">    </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
 <span class="w">    </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
 
+<span class="w">    </span><span class="c1">// Two pairs are compared on .first, and only if those tie on .second. So the</span>
+<span class="w">    </span><span class="c1">// order here is decided entirely by 10, 5, 1, 3 and the second numbers just</span>
+<span class="w">    </span><span class="c1">// come along for the ride. That is the whole reason Dijkstra stores its pairs</span>
+<span class="w">    </span><span class="c1">// as {distance, node} and not the more natural-looking {node, distance}: it</span>
+<span class="w">    </span><span class="c1">// wants the heap to sort by distance.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// top() only looks at the smallest item; pop() would remove it. Pushing and</span>
+<span class="w">    </span><span class="c1">// popping each cost O(log n), and top() is free.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 22 lines ▾</button>
+    <button type="button" class="expand">Show all 46 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>1 4
@@ -147,7 +272,7 @@ while(!pq.empty()){
   <p class="what">Relaxes edges using an ordinary FIFO queue of <code>{node, distance}</code> pairs.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 58 lines</span>
+      <span>CPP · 97 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%207/dijkstra_naive.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -211,7 +336,65 @@ while(!pq.empty()){
 <span class="normal">55</span>
 <span class="normal">56</span>
 <span class="normal">57</span>
-<span class="normal">58</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span>
+<span class="normal">97</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Shortest paths with weights, first attempt: a plain queue.</span>
+<span class="c1">//</span>
+<span class="c1">// Module 2 got shortest distances out of BFS because every edge cost one step, so</span>
+<span class="c1">// the ring a node came out in was its distance. Put weights on the edges and that</span>
+<span class="c1">// collapses: the direct edge 0-1 here costs 10, while going 0-2-1 costs 3 + 4 = 7,</span>
+<span class="c1">// two edges but a cheaper trip. Counting edges is no longer the right answer.</span>
+<span class="c1">//</span>
+<span class="c1">// What still works is relaxation. Keep dis[v], the cheapest cost found to v so</span>
+<span class="c1">// far, starting at infinity for everybody except the source. Whenever you are at</span>
+<span class="c1">// u and see an edge u-v of weight w, ask: is dis[u] + w cheaper than what I have</span>
+<span class="c1">// written down for v? If it is, write the better number down and put v back in</span>
+<span class="c1">// the queue so its own neighbours can be re-examined with the improvement.</span>
+<span class="c1">//</span>
+<span class="c1">// This file does exactly that with an ordinary FIFO queue, and it gets the right</span>
+<span class="c1">// answers. The price is that a node can be pulled out and re-processed many times,</span>
+<span class="c1">// once for every improvement that ever reaches it, and each of those improvements</span>
+<span class="c1">// ripples outwards again. dijkstra_optimized.cpp fixes it with one change: take</span>
+<span class="c1">// the node with the smallest known distance out first, instead of the oldest.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -219,13 +402,14 @@ while(!pq.empty()){
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
-<span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">   </span><span class="c1">// {neighbour, weight}, as in Module 6</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">                           </span><span class="c1">// best cost known so far to each node</span>
 
 <span class="kt">void</span><span class="w"> </span><span class="nf">dijkstra</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// A plain queue: first in, first out. It knows nothing about distances.</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
-<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span>
-<span class="w">    </span><span class="n">dis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span><span class="w">   </span><span class="c1">// here the pair is {node, distance}</span>
+<span class="w">    </span><span class="n">dis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">       </span><span class="c1">// reaching the source costs nothing</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
@@ -234,15 +418,23 @@ while(!pq.empty()){
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
 
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par_node</span><span class="p">]){</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">child_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">child_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">first</span><span class="p">;</span><span class="w">    </span><span class="c1">// .first is the neighbour</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">second</span><span class="p">;</span><span class="w">   </span><span class="c1">// .second is the weight of the edge</span>
 
+<span class="w">            </span><span class="c1">// The relaxation test. Note there is no visited array anywhere in</span>
+<span class="w">            </span><span class="c1">// Dijkstra: a node is not &quot;done&quot; once seen, it is done once nothing</span>
+<span class="w">            </span><span class="c1">// can improve its distance. This if is what decides that.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">par_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">]){</span>
 <span class="w">                </span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">child_dist</span><span class="p">;</span>
+<span class="w">                </span><span class="c1">// Pushed again with the improved figure, because everything</span>
+<span class="w">                </span><span class="c1">// reachable through it just got cheaper too and has to hear</span>
+<span class="w">                </span><span class="c1">// about it. This is where the wasted work comes from.</span>
 <span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">child_node</span><span class="p">,</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">]});</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// It ends because dis only ever goes down and cannot go below the true</span>
+<span class="w">    </span><span class="c1">// shortest distance, so eventually no test succeeds and nothing is pushed.</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
@@ -254,15 +446,26 @@ while(!pq.empty()){
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span><span class="w">   </span><span class="c1">// undirected, both ways cost the same</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Infinity has to be a real number, and INT_MAX is the usual stand-in: any</span>
+<span class="w">    </span><span class="c1">// genuine path is cheaper, so the first route found always wins the test.</span>
+<span class="w">    </span><span class="c1">// The trap that comes with it: never add anything to a distance that is still</span>
+<span class="w">    </span><span class="c1">// INT_MAX, or it overflows and wraps round to a negative. Here the addition</span>
+<span class="w">    </span><span class="c1">// uses par_dist, which came out of the queue and is therefore a real cost, so</span>
+<span class="w">    </span><span class="c1">// the file is safe. Bellman-Ford in Module 9 needs an explicit guard.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="n">dijkstra</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// A copy-paste slip: this loop was meant to PRINT the answers, but it repeats</span>
+<span class="w">    </span><span class="c1">// the initialisation instead and wipes them. That is why the program prints</span>
+<span class="w">    </span><span class="c1">// nothing at all. It should be the line from dijkstra_optimized.cpp:</span>
+<span class="w">    </span><span class="c1">//     cout &lt;&lt; i &lt;&lt; &quot;-&gt;&quot; &lt;&lt; dis[i] &lt;&lt; endl;</span>
+<span class="w">    </span><span class="c1">// The distances it worked out, and then threw away, are 0, 7, 3, 9.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -271,7 +474,7 @@ while(!pq.empty()){
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 58 lines ▾</button>
+    <button type="button" class="expand">Show all 97 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 5
@@ -296,7 +499,7 @@ while(!pq.empty()){
   <p class="what">The standard Dijkstra: a min-heap always gives the closest unfinished node.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 58 lines</span>
+      <span>CPP · 95 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%207/dijkstra_optimized.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -360,7 +563,64 @@ while(!pq.empty()){
 <span class="normal">55</span>
 <span class="normal">56</span>
 <span class="normal">57</span>
-<span class="normal">58</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Dijkstra&#39;s algorithm, the version you should actually use.</span>
+<span class="c1">//</span>
+<span class="c1">// Put this file next to dijkstra_naive.cpp: the relaxation test, the dis array and</span>
+<span class="c1">// the loop over neighbours are letter for letter the same. One thing changed. The</span>
+<span class="c1">// plain queue became a min-priority queue, the one built in priority_queue_of_</span>
+<span class="c1">// pairs.cpp, and the pair was flipped from {node, distance} to {distance, node} so</span>
+<span class="c1">// that the heap orders by distance.</span>
+<span class="c1">//</span>
+<span class="c1">// Why that one swap matters. The FIFO queue handed back whichever node had waited</span>
+<span class="c1">// longest, which has nothing to do with being close, so a node kept being improved</span>
+<span class="c1">// and re-expanded. The heap always hands back the node with the smallest known</span>
+<span class="c1">// distance. Every other node still waiting is at least that far away, and edge</span>
+<span class="c1">// weights are never negative, so no route through them can come back cheaper:</span>
+<span class="c1">// that smallest distance is final the moment it is popped. Each node therefore</span>
+<span class="c1">// needs to be expanded only once, and the cost falls to O((V + E) log V).</span>
+<span class="c1">//</span>
+<span class="c1">// That argument is exactly where Dijkstra breaks on negative edges. A later,</span>
+<span class="c1">// negative edge could make a longer-looking route cheaper after all, so &quot;final</span>
+<span class="c1">// when popped&quot; stops being true. That is Bellman-Ford&#39;s job, in Module 9.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -372,15 +632,26 @@ while(!pq.empty()){
 <span class="kt">int</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
 
 <span class="kt">void</span><span class="w"> </span><span class="nf">dijkstra</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// greater&lt;&gt; makes it a min-heap: the smallest pair comes out on top.</span>
 <span class="w">    </span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">greater</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">pq</span><span class="p">;</span>
-<span class="w">    </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">src</span><span class="p">});</span>
+<span class="w">    </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">src</span><span class="p">});</span><span class="w">   </span><span class="c1">// {distance, node}: distance first, so the heap sorts on it</span>
 <span class="w">    </span><span class="n">dis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">();</span>
+<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">();</span><span class="w">   </span><span class="c1">// the closest node still waiting</span>
 <span class="w">        </span><span class="n">pq</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span><span class="w">   </span><span class="c1">// the flipped pair: node in .second</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span><span class="w">    </span><span class="c1">// and its distance in .first</span>
+
+<span class="w">        </span><span class="c1">// A node is pushed again each time its distance improves, so the heap can</span>
+<span class="w">        </span><span class="c1">// hold several copies of the same node with different distances. The old,</span>
+<span class="w">        </span><span class="c1">// larger copies are stale: by the time they surface, dis[par_node] is</span>
+<span class="w">        </span><span class="c1">// already smaller, and expanding them only redoes work that is finished.</span>
+<span class="w">        </span><span class="c1">// The standard guard is one line here:</span>
+<span class="w">        </span><span class="c1">//     if(par_dist &gt; dis[par_node]) continue;</span>
+<span class="w">        </span><span class="c1">// Leaving it out does not give wrong answers, because the relaxation test</span>
+<span class="w">        </span><span class="c1">// below simply fails for every neighbour of a stale pair. It just costs a</span>
+<span class="w">        </span><span class="c1">// pass over that node&#39;s edges. On a big graph it is worth adding.</span>
 
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par_node</span><span class="p">]){</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">child_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
@@ -388,6 +659,8 @@ while(!pq.empty()){
 
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">par_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">]){</span>
 <span class="w">                </span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">child_dist</span><span class="p">;</span>
+<span class="w">                </span><span class="c1">// Push {distance, node}, in that order, or the heap will sort by</span>
+<span class="w">                </span><span class="c1">// node number and quietly stop being Dijkstra.</span>
 <span class="w">                </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">],</span><span class="w"> </span><span class="n">child_node</span><span class="p">});</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
@@ -407,11 +680,15 @@ while(!pq.empty()){
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
+<span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span><span class="w">   </span><span class="c1">// infinity until a route is found</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="n">dijkstra</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// This is the printing loop that dijkstra_naive.cpp forgot. On the sample the</span>
+<span class="w">    </span><span class="c1">// answer for node 1 is 7, not 10: Dijkstra preferred 0-2-1 (3 + 4) over the</span>
+<span class="w">    </span><span class="c1">// single edge 0-1 that costs 10. A node left at INT_MAX would mean no route</span>
+<span class="w">    </span><span class="c1">// exists at all.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;-&gt;&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -420,7 +697,7 @@ while(!pq.empty()){
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 58 lines ▾</button>
+    <button type="button" class="expand">Show all 95 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 5
@@ -1149,7 +1426,7 @@ gfg_undirected_graph_cycle_bfs.cpp:44:28: error: &#x27;V&#x27; was not declared 
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
 <meta name="description" content="0-1 knapsack is the classic &#x27;take it or leave it&#x27; DP: for each item you either put it in the bag or skip it, and you keep the better result. The state is (item index, remaining capacity), which you memoize in a 2D table. The practice day uses the same &#x27;make a choice, keep the best&#x27; idea on grid paths, stairs, house robbing and Pascal&#x27;s triangle.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -54,7 +54,66 @@ items 0..2      0   0   3   4   5   7</pre><p><strong>Why the bottom-right cell 
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>State</h4><p><code>knapsack(i, w)</code> = the best value using items 0..i with capacity w left. The answer is <code>knapsack(n-1, W)</code>.</p></div><div class="concept"><h4>Two choices per item</h4><p>If item i fits, compare taking it (<code>val[i] + knapsack(i-1, w - weight[i])</code>) with skipping it (<code>knapsack(i-1, w)</code>). If it does not fit, you can only skip.</p><pre class="snip">op1 = knapsack(i-1, w - weight[i]) + val[i];
 op2 = knapsack(i-1, w);
 return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No items left (<code>i &lt; 0</code>) or no capacity left: value 0.</p></div><div class="concept"><h4>2D memo table</h4><p>There are n x (W+1) states. Fill <code>dp</code> with -1 for <strong>every</strong> capacity 0..W, including W itself, then store each result the first time.</p><pre class="snip">for (i = 0; i &lt; n; i++) for (j = 0; j &lt;= W; j++) dp[i][j] = -1;</pre></div><div class="concept"><h4>Choice DP beyond knapsack</h4><p>Max path sum (go down or right), min cost stairs (come from one or two steps back), house robber (rob this house + best two back, or skip) all follow &#x27;best of the choices&#x27;.</p></div><div class="concept"><h4>Space-saving bottom-up</h4><p>When a state only needs the previous one or two states, two variables replace the whole table.</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: filling the knapsack table cell by cell</h3><p>The three items from the top of the page and the 5 kg bag. Every cell answers one question: <strong>best value using only the items named on the left, with this much space left in the bag?</strong></p><p>Each new cell is a contest between two moves - leave the item (copy the cell straight above) or take it (its value plus the cell one row up, that many kilograms to the left). The bigger one wins.</p><div class="stepper" data-n="10"><p class="stitle">Press the arrows to fill the table</p><div class="frames"><div class="frame" data-i="0"><pre>bag 5kg   item0 2kg/3  item1 3kg/4  item2 4kg/5
+
+space left -&gt;  0  1  2  3  4  5
+items 0..0     .  .  .  .  .  .
+items 0..1     .  .  .  .  .  .
+items 0..2     .  .  .  .  .  .</pre><p class="flabel">Eighteen empty cells. The columns count the kilograms still free in the bag, from 0 up to the full 5.</p></div><div class="frame" data-i="1"><pre>bag 5kg   item0 2kg/3  item1 3kg/4  item2 4kg/5
+
+space left -&gt;  0  1  2  3  4  5
+items 0..0     0  0  3  3  3  3
+items 0..1     .  .  .  .  .  .
+items 0..2     .  .  .  .  .  .
+               ^  ^  ^  ^  ^  ^ row filled</pre><p class="flabel">Top row: only item 0 is on the table, and it weighs 2 kg. With 0 or 1 kg free it does not fit, so the best is 0. From 2 kg up it fits, and taking it is worth 3.</p></div><div class="frame" data-i="2"><pre>bag 5kg   item0 2kg/3  item1 3kg/4  item2 4kg/5
+
+space left -&gt;  0  1  2  3  4  5
+items 0..0     0  0  3  3  3  3
+items 0..1     0  0  3  .  .  .
+items 0..2     .  .  .  .  .  .
+               ^  ^  ^ copied from above</pre><p class="flabel">Second row, item 1 joins in at 3 kg. In columns 0, 1 and 2 there is no room for it at all, so the only move is to leave it and copy the row above.</p></div><div class="frame" data-i="3"><pre>bag 5kg   item0 2kg/3  item1 3kg/4  item2 4kg/5
+
+space left -&gt;  0  1  2  3  4  5
+items 0..0     0  0  3  3  3  3
+items 0..1     0  0  3  4  .  .
+items 0..2     .  .  .  .  .  .
+                        ^</pre><p class="flabel">Column 3. Leave item 1: the 3 straight above. Take it: its value 4 plus the cell one row up at 3 - 3 = 0 kg, which is 0. So 4 beats 3 and taking wins.</p></div><div class="frame" data-i="4"><pre>bag 5kg   item0 2kg/3  item1 3kg/4  item2 4kg/5
+
+space left -&gt;  0  1  2  3  4  5
+items 0..0     0  0  3  3  3  3
+items 0..1     0  0  3  4  4  .
+items 0..2     .  .  .  .  .  .
+                           ^</pre><p class="flabel">Column 4. Leave: 3. Take: 4 plus the row above at 4 - 3 = 1 kg, which is 0, so 4 again. Taking wins, but the leftover kilogram is wasted.</p></div><div class="frame" data-i="5"><pre>bag 5kg   item0 2kg/3  item1 3kg/4  item2 4kg/5
+
+space left -&gt;  0  1  2  3  4  5
+items 0..0     0  0  3  3  3  3
+items 0..1     0  0  3  4  4  7
+items 0..2     .  .  .  .  .  .
+                              ^</pre><p class="flabel">Column 5. Leave: 3. Take: 4 plus the row above at 5 - 3 = 2 kg, which is 3 - that 3 is item 0 sitting in the bag already. 7 wins, and both items are in.</p></div><div class="frame" data-i="6"><pre>bag 5kg   item0 2kg/3  item1 3kg/4  item2 4kg/5
+
+space left -&gt;  0  1  2  3  4  5
+items 0..0     0  0  3  3  3  3
+items 0..1     0  0  3  4  4  7
+items 0..2     0  0  3  4  .  .
+               ^  ^  ^  ^ copied from above</pre><p class="flabel">Last row, item 2 weighs 4 kg. Columns 0 to 3 have no room for it, so the row above is copied down again.</p></div><div class="frame" data-i="7"><pre>bag 5kg   item0 2kg/3  item1 3kg/4  item2 4kg/5
+
+space left -&gt;  0  1  2  3  4  5
+items 0..0     0  0  3  3  3  3
+items 0..1     0  0  3  4  4  7
+items 0..2     0  0  3  4  5  .
+                           ^</pre><p class="flabel">Column 4. Leave item 2: 4. Take it: 5 plus the row above at 4 - 4 = 0 kg, which is 0, so 5. The one heavy item alone beats the two lighter ones at this size of bag.</p></div><div class="frame" data-i="8"><pre>bag 5kg   item0 2kg/3  item1 3kg/4  item2 4kg/5
+
+space left -&gt;  0  1  2  3  4  5
+items 0..0     0  0  3  3  3  3
+items 0..1     0  0  3  4  4  7
+items 0..2     0  0  3  4  5  7
+                              ^</pre><p class="flabel">Column 5, and this time leaving wins. Leave: the 7 straight above. Take: 5 plus the row above at 5 - 4 = 1 kg, which is 0, so only 5. The 7 stays.</p></div><div class="frame" data-i="9"><pre>bag 5kg   item0 2kg/3  item1 3kg/4  item2 4kg/5
+
+space left -&gt;  0  1  2  3  4  5
+items 0..0     0  0  3  3  3  3
+items 0..1     0  0  3  4  4  7
+items 0..2     0  0  3  4  5  7
+                              ^ the answer</pre><p class="flabel">Read the bottom-right cell by its two labels: all three items were offered, and the bag was empty at the start. That is word for word the question asked, so 7 is the answer - items 0 and 1, exactly the pair found by hand. 18 cells instead of 8 guesses, and the gap only widens.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 10</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-article"><a href="https://cp-algorithms.com/dynamic_programming/knapsack.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — knapsack</b><span class="rnote">The 0-1 and unbounded versions next to each other.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0qUlt5H_kiKYaNSqJ81PMMY" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — dynamic programming playlist</b><span class="rnote">Builds every DP from the plain recursion first, which is how this module does it.</span></a></li><li class="r-video"><a href="https://www.youtube.com/@AbdulBari" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Abdul Bari</b><span class="rnote">Algorithms explained on a whiteboard, very slowly and very clearly.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-knapsack">
@@ -66,9 +125,9 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
     </div>
   </div>
   <p class="what">The recursive take-or-skip solution without memoization. It computes the best value but never prints it.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 40 lines</span>
+      <span>CPP · 89 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/knapsack.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -114,34 +173,126 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
 <span class="normal">37</span>
 <span class="normal">38</span>
 <span class="normal">39</span>
-<span class="normal">40</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// 0-1 KNAPSACK, the plain recursive version.</span>
+<span class="c1">//</span>
+<span class="c1">// The problem: a bag that can carry max_weight kilos, and n items, each with a</span>
+<span class="c1">// weight and a value. Pack the bag so the total value is as large as possible.</span>
+<span class="c1">// &quot;0-1&quot; means each item goes in whole or stays out whole - no halves, and no</span>
+<span class="c1">// taking the same item twice.</span>
+<span class="c1">//</span>
+<span class="c1">// The idea is the same &quot;make a choice, keep the better result&quot; shape that runs</span>
+<span class="c1">// through the whole module. Look at the last item and ask one question: do I take</span>
+<span class="c1">// it or leave it?</span>
+<span class="c1">//   * take it   -&gt; I gain its value, but lose weight[i] kilos of room, and the</span>
+<span class="c1">//                  item is gone, so the rest of the packing uses items 0..i-1.</span>
+<span class="c1">//   * leave it  -&gt; I gain nothing, keep all my room, and again carry on with</span>
+<span class="c1">//                  items 0..i-1.</span>
+<span class="c1">// Either way the leftover problem is the same KIND of problem, just smaller, so</span>
+<span class="c1">// the function can call itself. Try both, keep the bigger answer.</span>
+<span class="c1">//</span>
+<span class="c1">// No table here: this file is the slow starting point, the way</span>
+<span class="c1">// fibonacci_recursion.cpp was in Module 14. knapsack_using_dp.cpp adds the table.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// Global so every recursive call can read them without passing them around.</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">1005</span><span class="p">],</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 
+<span class="c1">// The two arguments ARE the state of the problem:</span>
+<span class="c1">//   i          = the highest item still allowed (items 0..i are on offer)</span>
+<span class="c1">//   max_weight = how many kilos of room are left in the bag right now</span>
+<span class="c1">// The return value is the best total value reachable from that situation.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">knapsack</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Two ways to be finished, and both are worth 0:</span>
+<span class="w">    </span><span class="c1">//   i &lt; 0            - no items left to consider</span>
+<span class="w">    </span><span class="c1">//   max_weight &lt;= 0  - the bag is full, nothing more will fit</span>
+<span class="w">    </span><span class="c1">// Without these the calls would never stop.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span><span class="w"> </span><span class="c1">// when we still have space in the bag, we can either take </span>
 <span class="w">        </span><span class="c1">// the current item or not</span>
+<span class="w">        </span><span class="c1">// op1 = TAKE item i. Bank val[i], use the item up (so the next call may</span>
+<span class="w">        </span><span class="c1">// only choose among 0..i-1), and lose weight[i] kilos of room.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"> </span><span class="c1">// taking the current item</span>
+<span class="w">        </span><span class="c1">// op2 = LEAVE item i. Bank nothing, keep all the room, same items 0..i-1.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span><span class="w"> </span><span class="c1">// not taking the current item</span>
+<span class="w">        </span><span class="c1">// Whichever turned out better is the answer for this state.</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span><span class="w"> </span><span class="n">op2</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Item i does not fit in the room that is left, so there is no choice to</span>
+<span class="w">        </span><span class="c1">// make: leaving it is the only legal move.</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Why this is slow: every item that fits splits into two calls, so the calls</span>
+<span class="w">    </span><span class="c1">// form a tree that nearly doubles at each level - O(2^n). And as in plain</span>
+<span class="w">    </span><span class="c1">// Fibonacci the work is repeated: taking item 3 and leaving item 2 lands on</span>
+<span class="w">    </span><span class="c1">// the same (i, w) state as leaving 3 and taking 2, and each is worked out</span>
+<span class="w">    </span><span class="c1">// from scratch. Remembering states is the fix, and that is the next file.</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 <span class="w">    </span>
+<span class="w">    </span><span class="c1">// Input order here: n, then all n values, then all n weights, then the bag</span>
+<span class="w">    </span><span class="c1">// capacity. (codeforces_knapsack.cpp reads the judge&#39;s order instead.)</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span>
@@ -150,13 +301,19 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">max_weight</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Start from the LAST item with the bag empty; the recursion works its way</span>
+<span class="w">    </span><span class="c1">// down to item 0.</span>
+<span class="w">    </span><span class="c1">// BUG, left in place: the answer is computed and then thrown away - there is</span>
+<span class="w">    </span><span class="c1">// no cout, so this program prints nothing at all. For the sample input the</span>
+<span class="w">    </span><span class="c1">// answer would be 90 (the weight-3 and weight-5 items, 30 + 60).</span>
+<span class="w">    </span><span class="c1">// The fix is to wrap the call: cout &lt;&lt; knapsack(n-1, max_weight) &lt;&lt; endl;</span>
 <span class="w">    </span><span class="n">knapsack</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 40 lines ▾</button>
+    <button type="button" class="expand">Show all 89 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3
@@ -179,7 +336,7 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
   <p class="what">Adds a <code>dp[i][w]</code> table to the recursion so each state is solved once, and prints the result.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 54 lines</span>
+      <span>CPP · 97 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/knapsack_using_dp.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -239,7 +396,61 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
 <span class="normal">51</span>
 <span class="normal">52</span>
 <span class="normal">53</span>
-<span class="normal">54</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span>
+<span class="normal">97</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// 0-1 knapsack with MEMOIZATION - knapsack.cpp plus a notebook, exactly the step</span>
+<span class="c1">// fibonacci_with_memoization.cpp took in Module 14.</span>
+<span class="c1">//</span>
+<span class="c1">// The recursion is unchanged. What is new is that its state - the pair</span>
+<span class="c1">// (item index i, room left w) - is used as an address into a 2D table, so each</span>
+<span class="c1">// distinct situation is solved once and looked up ever after. There are only</span>
+<span class="c1">// n x (max_weight + 1) different situations, so the cost falls from O(2^n) to</span>
+<span class="c1">// O(n x W).</span>
+<span class="c1">//</span>
+<span class="c1">// Read this file next to knapsack.cpp; the comments here cover only what is new.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -247,24 +458,47 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">1005</span><span class="p">],</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+
+<span class="c1">// The notebook. dp[i][w] is the answer to exactly one question: &quot;using only items</span>
+<span class="c1">// 0..i, with w kilos of room left, what is the best value I can reach?&quot; - the two</span>
+<span class="c1">// indexes are the two arguments of knapsack(), nothing else. -1 means &quot;not worked</span>
+<span class="c1">// out yet&quot; (safe, because a value total is never negative).</span>
+<span class="c1">// 1005 x 1005 ints is about 4 MB, far too big for the stack, so it is global.</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
 
+<span class="c1">// Same take-or-leave recursion as knapsack.cpp, with the dp notebook added.</span>
+<span class="c1">//   i          = the highest item still allowed (items 0..i are on offer)</span>
+<span class="c1">//   max_weight = how many kilos of room are left in the bag right now</span>
+<span class="c1">// Returns the best total value reachable from that situation.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">knapsack</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Nothing left to offer, or no room left: the best you can do is take</span>
+<span class="w">    </span><span class="c1">// nothing, which is worth 0.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Seen this exact (item, room) pair before? Then the answer is already known.</span>
+<span class="w">    </span><span class="c1">// This is the line that turns 2^n into n x W: the plain recursion reaches the</span>
+<span class="w">    </span><span class="c1">// same (i, w) pair over and over on different branches, and now every repeat</span>
+<span class="w">    </span><span class="c1">// stops here.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span><span class="w"> </span><span class="c1">// when we still have space in the bag, we can either take </span>
 <span class="w">        </span><span class="c1">// the current item or not</span>
+<span class="w">        </span><span class="c1">// op1 = TAKE item i. Its value is banked, item i is used up so the next</span>
+<span class="w">        </span><span class="c1">// call may only use 0..i-1, and the room drops by weight[i].</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"> </span><span class="c1">// taking the current item</span>
+<span class="w">        </span><span class="c1">// op2 = LEAVE item i. Nothing banked, same room, items 0..i-1 remain.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span><span class="w"> </span><span class="c1">// not taking the current item</span>
+<span class="w">        </span><span class="c1">// Keep whichever choice ended up better, and write it down before</span>
+<span class="w">        </span><span class="c1">// returning so this state is never recomputed.</span>
 <span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span><span class="w"> </span><span class="n">op2</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Item i is heavier than the room left, so there is no choice to make:</span>
+<span class="w">        </span><span class="c1">// leaving it is the only legal move. Still worth storing.</span>
 <span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span>
@@ -283,6 +517,15 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">max_weight</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Mark every state &quot;not solved yet&quot;.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// BUG, left in place: the inner loop stops at j &lt; max_weight, so the column</span>
+<span class="w">    </span><span class="c1">// j == max_weight is never touched. dp is global, so those boxes still hold 0</span>
+<span class="w">    </span><span class="c1">// from program start. The very first call made below is</span>
+<span class="w">    </span><span class="c1">// knapsack(n-1, max_weight) - which looks up dp[n-1][max_weight], finds 0</span>
+<span class="w">    </span><span class="c1">// instead of -1, decides the state is already solved, and returns 0 without</span>
+<span class="w">    </span><span class="c1">// doing any work at all. That is why this program prints 0 instead of 90.</span>
+<span class="w">    </span><span class="c1">// One character fixes it: j &lt;= max_weight.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">max_weight</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
@@ -295,7 +538,7 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 54 lines ▾</button>
+    <button type="button" class="expand">Show all 97 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3
@@ -319,7 +562,7 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
   <p class="what">Same memoized knapsack, but reads <code>N W</code> first and then one <code>weight value</code> pair per line, like the judge.</p><p class="same">Re-typed version of <a href="#p-knapsack-using-dp"><code>knapsack_using_dp.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 51 lines</span>
+      <span>CPP · 96 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/codeforces_knapsack.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -376,7 +619,64 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
 <span class="normal">48</span>
 <span class="normal">49</span>
 <span class="normal">50</span>
-<span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Codeforces Group - U. Knapsack</span>
+<span class="c1">// https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/U</span>
+<span class="c1">//</span>
+<span class="c1">// The same memoized 0-1 knapsack as knapsack_using_dp.cpp; see that file for what</span>
+<span class="c1">// dp[i][w] means and why the recursion looks the way it does. The only real</span>
+<span class="c1">// difference is the input format, which follows the judge:</span>
+<span class="c1">//     first line   N W          (how many items, and the bag&#39;s capacity)</span>
+<span class="c1">//     next N lines weight value (one pair per item, weight FIRST)</span>
+<span class="c1">// - where knapsack_using_dp.cpp read all the values, then all the weights, then</span>
+<span class="c1">// the capacity. Getting this order wrong is the usual way to fail such a problem</span>
+<span class="c1">// with otherwise correct code.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -384,24 +684,47 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">1005</span><span class="p">],</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+
+<span class="c1">// The notebook. dp[i][w] is the answer to exactly one question: &quot;using only items</span>
+<span class="c1">// 0..i, with w kilos of room left, what is the best value I can reach?&quot; - the two</span>
+<span class="c1">// indexes are the two arguments of knapsack(), nothing else. -1 means &quot;not worked</span>
+<span class="c1">// out yet&quot; (safe, because a value total is never negative).</span>
+<span class="c1">// 1005 x 1005 ints is about 4 MB, far too big for the stack, so it is global.</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
 
+<span class="c1">// Same take-or-leave recursion as knapsack.cpp, with the dp notebook added.</span>
+<span class="c1">//   i          = the highest item still allowed (items 0..i are on offer)</span>
+<span class="c1">//   max_weight = how many kilos of room are left in the bag right now</span>
+<span class="c1">// Returns the best total value reachable from that situation.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">knapsack</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Nothing left to offer, or no room left: the best you can do is take</span>
+<span class="w">    </span><span class="c1">// nothing, which is worth 0.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Seen this exact (item, room) pair before? Then the answer is already known.</span>
+<span class="w">    </span><span class="c1">// This is the line that turns 2^n into n x W: the plain recursion reaches the</span>
+<span class="w">    </span><span class="c1">// same (i, w) pair over and over on different branches, and now every repeat</span>
+<span class="w">    </span><span class="c1">// stops here.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span><span class="w"> </span><span class="c1">// when we still have space in the bag, we can either take </span>
 <span class="w">        </span><span class="c1">// the current item or not</span>
+<span class="w">        </span><span class="c1">// op1 = TAKE item i. Its value is banked, item i is used up so the next</span>
+<span class="w">        </span><span class="c1">// call may only use 0..i-1, and the room drops by weight[i].</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"> </span><span class="c1">// taking the current item</span>
+<span class="w">        </span><span class="c1">// op2 = LEAVE item i. Nothing banked, same room, items 0..i-1 remain.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span><span class="w"> </span><span class="c1">// not taking the current item</span>
+<span class="w">        </span><span class="c1">// Keep whichever choice ended up better, and write it down before</span>
+<span class="w">        </span><span class="c1">// returning so this state is never recomputed.</span>
 <span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span><span class="w"> </span><span class="n">op2</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Item i is heavier than the room left, so there is no choice to make:</span>
+<span class="w">        </span><span class="c1">// leaving it is the only legal move. Still worth storing.</span>
 <span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span>
@@ -412,11 +735,21 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
 
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">max_weight</span><span class="p">;</span>
 <span class="w">    </span>
+<span class="w">    </span><span class="c1">// One line per item, weight before value - the judge&#39;s order.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Mark every state &quot;not solved yet&quot;.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// BUG, left in place: the inner loop stops at j &lt; max_weight, so the column</span>
+<span class="w">    </span><span class="c1">// j == max_weight is never touched. dp is global, so those boxes still hold 0</span>
+<span class="w">    </span><span class="c1">// from program start. The very first call made below is</span>
+<span class="w">    </span><span class="c1">// knapsack(n-1, max_weight) - which looks up dp[n-1][max_weight], finds 0</span>
+<span class="w">    </span><span class="c1">// instead of -1, decides the state is already solved, and returns 0 without</span>
+<span class="w">    </span><span class="c1">// doing any work at all. That is why this program prints 0 instead of 90.</span>
+<span class="w">    </span><span class="c1">// One character fixes it: j &lt;= max_weight.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">max_weight</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
@@ -429,7 +762,7 @@ return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No it
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 51 lines ▾</button>
+    <button type="button" class="expand">Show all 96 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3 8
@@ -1437,7 +1770,7 @@ Example 2 output: 12
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

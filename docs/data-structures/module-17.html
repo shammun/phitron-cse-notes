@@ -7,7 +7,7 @@
 <meta name="description" content="This module starts trees. You build a small binary tree by hand with `Node` objects that have `left` and `right` pointers, then visit every node with the three depth-first orders: pre-order, in-order and post-order. The three orders are the same recursion with the print moved to a different place.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -71,7 +71,63 @@ post-order  Left, Right, Root
    40  20  50  60  30  10     root last</pre><p>Each order suits a different job. Pre-order sees a parent before its children, which is what you want when copying a tree. Post-order finishes both children before the parent, which is what deleting a tree needs: free the children first, because once the parent is gone you have lost the pointers to them. In-order becomes the interesting one in a later module, where a tree is arranged so that in-order hands the values back already sorted.</p><p>All three visit every node once, so each is O(n), and the memory is the depth of the recursion, O(h) for height h. One caution while you experiment: <code>root-&gt;left-&gt;right-&gt;val</code> crashes on this tree, because <code>20</code> has no right child. Know a child exists before you follow it.</p><p>The four programs below take one step each: build the tree by hand, then add pre-order, then in-order, then post-order, each keeping the earlier functions so you see all three outputs together.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-binary-tree"><span class="n">1</span>Build a binary tree by hand</a></li><li><a href="#p-pre-order-traversal"><span class="n">2</span>Pre-order traversal</a></li><li><a href="#p-in-order-traversal"><span class="n">3</span>In-order traversal</a></li><li><a href="#p-post-order-traversal"><span class="n">4</span>Post-order traversal</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Binary tree node</h4><p>Each node stores a value and two pointers, <code>left</code> and <code>right</code>. A missing child is <code>NULL</code>. The top node is the <strong>root</strong>; a node with no children is a <strong>leaf</strong>.</p><pre class="snip">class Node { public: int val; Node* left; Node* right; };</pre></div><div class="concept"><h4>Linking nodes by hand</h4><p>Create nodes with <code>new Node(x)</code> and connect them by assigning <code>root-&gt;left = a;</code> and so on. You reach deeper nodes by chaining arrows, like <code>root-&gt;right-&gt;left</code>.</p></div><div class="concept"><h4>Recursion on a tree</h4><p>A tree is a root plus a left subtree plus a right subtree. So a function can handle the root and call itself on the two subtrees. The base case is <code>root == NULL</code>: nothing to do.</p><pre class="snip">if(root == NULL) return;</pre></div><div class="concept"><h4>Pre-order (Root, Left, Right)</h4><p>Print the node first, then visit left, then right. The root always comes first in the output.</p><pre class="snip">cout &lt;&lt; root-&gt;val; preorder(root-&gt;left); preorder(root-&gt;right);</pre></div><div class="concept"><h4>In-order (Left, Root, Right)</h4><p>Visit the whole left subtree, then print the node, then the right subtree. The root ends up in the middle.</p></div><div class="concept"><h4>Post-order (Left, Right, Root)</h4><p>Visit both subtrees first and print the node last. The root always comes last, which is handy when children must be handled before parents (for example, deleting a tree).</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: pre-order on this very tree</h3><p>Pre-order is three lines of code: print this node, walk the whole left subtree, walk the whole right subtree. The node in <code>[ ]</code> is the one the function is sitting on right now, and the line underneath grows every time something is printed.</p><p>Follow it with a finger on the drawing. The walk goes down and back up exactly the same way for all three depth-first orders; only the moment the value is printed moves.</p><div class="stepper" data-n="9"><p class="stitle">Press the arrows or Play to follow one call at a time</p><div class="frames"><div class="frame" data-i="0"><pre>               10
+             /    \
+           20      30
+          /      /   \
+        40      50    60
+
+printed so far:  (nothing yet)</pre><p class="flabel"><code>preorder(root)</code> is called on 10. Nothing has been printed yet, and the whole tree is still to do.</p></div><div class="frame" data-i="1"><pre>              [10]
+             /    \
+           20      30
+          /      /   \
+        40      50    60
+
+printed so far:  10</pre><p class="flabel">The first line of the function is the <code>cout</code>, so 10 is printed straight away, <strong>before</strong> either child is looked at. Root first - that is what &#x27;pre&#x27; means.</p></div><div class="frame" data-i="2"><pre>               10
+             /    \
+          [20]     30
+          /      /   \
+        40      50    60
+
+printed so far:  10 20</pre><p class="flabel">Then <code>preorder(root-&gt;left)</code> goes to 20 and does the same thing: print, then go left, then go right.</p></div><div class="frame" data-i="3"><pre>               10
+             /    \
+           20      30
+          /      /   \
+       [40]     50    60
+
+printed so far:  10 20 40</pre><p class="flabel">Down to 40 and print it. 40 is a leaf, so both of its calls hit <code>if(root == NULL) return;</code> and come straight back.</p></div><div class="frame" data-i="4"><pre>              [10]
+             /    \
+           20      30
+          /      /   \
+        40      50    60
+
+printed so far:  10 20 40</pre><p class="flabel">Back up to 20, whose right child is NULL, then back up to 10. Nothing is printed on the way back up - a value is only printed when a call <strong>starts</strong>.</p></div><div class="frame" data-i="5"><pre>               10
+             /    \
+           20     [30]
+          /      /   \
+        40      50    60
+
+printed so far:  10 20 40 30</pre><p class="flabel">Now the second call, <code>preorder(root-&gt;right)</code>, finally runs. 30 is printed - and notice it waited until everything on the left was completely finished.</p></div><div class="frame" data-i="6"><pre>               10
+             /    \
+           20      30
+          /      /   \
+        40     [50]   60
+
+printed so far:  10 20 40 30 50</pre><p class="flabel">Into 30&#x27;s left subtree: print 50, and it is a leaf, so come back.</p></div><div class="frame" data-i="7"><pre>               10
+             /    \
+           20      30
+          /      /   \
+        40      50   [60]
+
+printed so far:  10 20 40 30 50 60</pre><p class="flabel">Then 30&#x27;s right child, 60. Every node has now been visited exactly once, so the whole walk is O(n).</p></div><div class="frame" data-i="8"><pre>               10
+             /    \
+           20      30
+          /      /   \
+        40      50    60
+
+printed so far:  10 20 40 30 50 60
+in-order:        40 20 10 50 30 60
+post-order:      40 20 50 60 30 10</pre><p class="flabel">Done: <code>10 20 40 30 50 60</code>, the same line the program prints. The other two orders take this identical walk and only move the <code>cout</code>. Put it <strong>between</strong> the two calls and you get in-order; put it <strong>after</strong> both and you get post-order, where a parent is never printed until both of its children are finished.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 9</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/bst" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — binary search tree</b><span class="rnote">Insert values and watch the tree grow; the traversals are animated too.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/BST.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — binary search tree</b><span class="rnote">Insert, delete and search animated on the tree.</span></a></li><li class="r-article"><a href="https://www.geeksforgeeks.org/binary-tree-data-structure/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>GeeksforGeeks — binary tree</b><span class="rnote">Vocabulary and every traversal in one place.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0q8Hkd7bK2Bpryj2xVJk8Vk" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — binary trees and BSTs</b><span class="rnote">Traversals, views and the classic tree problems, in order.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-binary-tree">
@@ -793,7 +849,7 @@ Pre-order traversal: 10 20 40 30 50 60 In-order traversal: 40 20 10 50 30 60 Pos
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
 <meta name="description" content="This module applies linked-list skills to classic tasks: reversing a singly list with recursion, reversing a doubly list with two pointers, spotting a cycle with slow and fast pointers, and checking a palindrome. It then introduces C++&#x27;s ready-made doubly linked list, `std::list`, with its constructors, modifiers, operations and iterators. Once you can write these by hand, you know what the STL is doing for you.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -66,7 +66,45 @@ head = prev;                  // the old last node</pre><p><strong>What is new h
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Recursive reversal of a singly list</h4><p>Recurse to the last node and make it the new head. While returning, each node makes its next node point back at it (<code>temp-&gt;next-&gt;next = temp</code>) and clears its own <code>next</code>.</p><pre class="snip">rev(temp-&gt;next);
 temp-&gt;next-&gt;next = temp;
 temp-&gt;next = NULL;</pre></div><div class="concept"><h4>Two-pointer reversal of a doubly list</h4><p>Put <code>i</code> at the head and <code>j</code> at the tail, swap their values, and move them towards each other. Stop when they meet (odd length) or cross (<code>i-&gt;prev == j</code>, even length).</p><pre class="snip">for(i=head, j=tail; i!=j &amp;&amp; i-&gt;prev!=j; i=i-&gt;next, j=j-&gt;prev) swap(i-&gt;val, j-&gt;val);</pre></div><div class="concept"><h4>Palindrome check</h4><p>Same two pointers as the reversal, but compare instead of swap. One mismatch means the list is not a palindrome.</p></div><div class="concept"><h4>Floyd&#x27;s cycle detection</h4><p><code>slow</code> moves one step and <code>fast</code> moves two. If there is a loop, <code>fast</code> eventually lands on <code>slow</code>; if not, <code>fast</code> reaches <code>NULL</code>. Move first, then compare, because both start at the head.</p><pre class="snip">while(fast &amp;&amp; fast-&gt;next){ slow=slow-&gt;next; fast=fast-&gt;next-&gt;next; if(slow==fast) return true; }</pre></div><div class="concept"><h4><code>std::list</code> basics</h4><p><code>list&lt;int&gt;</code> is a doubly linked list. It has O(1) <code>push_front</code>, <code>push_back</code>, <code>pop_front</code>, <code>pop_back</code>, <code>front()</code>, <code>back()</code>, <code>size()</code> and <code>empty()</code>. There is no <code>[]</code>; use iterators.</p><pre class="snip">list&lt;int&gt; l = {1, 2, 3};</pre></div><div class="concept"><h4>Iterators and <code>next</code></h4><p><code>l.begin()</code> points to the first element; <code>l.end()</code> points one past the last, so the last element is <code>*prev(l.end())</code> or <code>*(--l.end())</code>. <code>next(l.begin(), i)</code> walks i steps and takes O(i).</p><pre class="snip">cout &lt;&lt; *next(l.begin(), 2);</pre></div><div class="concept"><h4>Insert and erase by position</h4><p><code>l.insert(it, value)</code> or <code>l.insert(it, first, last)</code> puts values before <code>it</code>. <code>l.erase(it)</code> removes one element; <code>l.erase(a, b)</code> removes the half-open range [a, b).</p></div><div class="concept"><h4>List operations</h4><p><code>remove(v)</code> deletes every <code>v</code>; <code>sort()</code> sorts (pass <code>greater&lt;int&gt;()</code> for descending); <code>unique()</code> removes adjacent duplicates, so sort first; <code>reverse()</code> flips the order. <code>find</code> and <code>replace</code> come from <code>&lt;algorithm&gt;</code>.</p><pre class="snip">l.sort(); l.unique();</pre></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: turning the arrows with prev, curr and nxt</h3><p>The list is the <code>10 20 30</code> from the notes above. Three fingers, four lines in the loop, one arrow turned per round -- watch which boxes are reachable at each moment.</p><div class="stepper" data-n="9"><p class="stitle">Press ▶ to step through it</p><div class="frames"><div class="frame" data-i="0"><pre>prev    curr
+NULL    [10] -&gt; [20] -&gt; [30] -&gt; NULL</pre><p class="flabel"><code>prev</code> starts at NULL and <code>curr</code> at the head. <code>prev</code> is NULL on purpose: the old first box becomes the new last box, and a last box points at nothing.</p></div><div class="frame" data-i="1"><pre>prev    curr    nxt
+NULL    [10] -&gt; [20] -&gt; [30] -&gt; NULL</pre><p class="flabel"><code>Node* nxt = curr-&gt;next;</code> holds on to the rest of the list. This must happen before anything is turned, because the next line destroys the only way onward.</p></div><div class="frame" data-i="2"><pre>prev    curr    nxt
+NULL &lt;- [10]    [20] -&gt; [30] -&gt; NULL</pre><p class="flabel"><code>curr-&gt;next = prev;</code> turns one arrow. The 10 box now points at NULL — it is already the new tail — and the only thing still reaching 20 and 30 is <code>nxt</code>.</p></div><div class="frame" data-i="3"><pre>        prev    curr
+NULL &lt;- [10]    [20] -&gt; [30] -&gt; NULL</pre><p class="flabel"><code>prev = curr; curr = nxt;</code> slides both fingers one box along. Everything left of <code>curr</code> is reversed, everything right of it is still the old list.</p></div><div class="frame" data-i="4"><pre>        prev    curr    nxt
+NULL &lt;- [10] &lt;- [20]    [30] -&gt; NULL</pre><p class="flabel">Round two, the same four lines: <code>nxt</code> picks up 30, then <code>curr-&gt;next = prev</code> turns 20&#x27;s arrow back at 10.</p></div><div class="frame" data-i="5"><pre>                prev    curr
+NULL &lt;- [10] &lt;- [20]    [30] -&gt; NULL</pre><p class="flabel">Slide again. Two arrows turned, one to go, and no box has been copied or freed — only the addresses inside them have been rewritten.</p></div><div class="frame" data-i="6"><pre>                prev    curr    nxt
+NULL &lt;- [10] &lt;- [20] &lt;- [30]    NULL</pre><p class="flabel">Round three. <code>nxt</code> picks up NULL, because 30 was the last box, and then 30&#x27;s arrow is turned back at 20.</p></div><div class="frame" data-i="7"><pre>                        prev    curr
+NULL &lt;- [10] &lt;- [20] &lt;- [30]    NULL</pre><p class="flabel">The slide puts <code>curr</code> on NULL, so <code>while(curr != NULL)</code> ends. <code>prev</code> is left standing on the old last box, which is exactly the box that should now be first.</p></div><div class="frame" data-i="8"><pre>
+head -&gt; [30] -&gt; [20] -&gt; [10] -&gt; NULL</pre><p class="flabel"><code>head = prev;</code> and it is done: 30 20 10. The same three boxes at the same addresses, read the other way round, with no second array anywhere.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 9</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div><div class="wstep"><h3>Watch it happen: the two runners meeting in a cycle</h3><p>The chain from <code>cycle_detection_linked_list.cpp</code>: <code>10 20 30 40 50</code>, with 50 pointing back at 20. <code>slow</code> moves one box a step, <code>fast</code> moves two.</p><div class="stepper" data-n="7"><p class="stitle">Press ▶ to step through it</p><div class="frames"><div class="frame" data-i="0"><pre>        slow
+        fast
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; [50]
+                ^                       |
+                +-----------------------+</pre><p class="flabel"><code>d-&gt;next = a;</code> is what makes this a loop: 50 points back at 20, so there is no NULL anywhere and an ordinary walk would run for ever. Both runners start on the head.</p></div><div class="frame" data-i="1"><pre>                slow
+                        fast
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; [50]
+                ^                       |
+                +-----------------------+</pre><p class="flabel">Step 1. <code>slow = slow-&gt;next</code> lands on 20; <code>fast = fast-&gt;next-&gt;next</code> lands on 30. The gap between them has opened to one box.</p></div><div class="frame" data-i="2"><pre>                        slow
+                                        fast
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; [50]
+                ^                       |
+                +-----------------------+</pre><p class="flabel">Step 2. slow is on 30, fast is on 50 — the last box of the loop. On a straight list fast would be about to fall off the end and the answer would be no.</p></div><div class="frame" data-i="3"><pre>                                slow
+                        fast
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; [50]
+                ^                       |
+                +-----------------------+</pre><p class="flabel">Step 3. fast goes 50 -&gt; 20 -&gt; 30, round the bend, and comes out <strong>behind</strong> slow. Nothing fell off the end, which is already the whole story.</p></div><div class="frame" data-i="4"><pre>                                        slow
+                                        fast
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; [40] -&gt; [50]
+                ^                       |
+                +-----------------------+</pre><p class="flabel">Step 4. Both are on 50. <code>slow == fast</code>, so the loop breaks with <code>flag = true</code> and the program prints Cycle Detected.</p></div><div class="frame" data-i="5"><pre>inside the loop, every step:
+  slow moves 1
+  fast moves 2
+  so the gap shrinks by exactly 1
+
+a gap that falls by 1 cannot step over 0</pre><p class="flabel">Why the meeting is certain: once both runners are inside the loop, fast gains exactly one box per step, and a gap that falls by one at a time has to hit zero. They can never jump over each other.</p></div><div class="frame" data-i="6"><pre>while(fast != NULL &amp;&amp; fast-&gt;next != NULL){
+    if(slow == fast) ...   &lt;= too soon
+    slow = slow-&gt;next;
+    fast = fast-&gt;next-&gt;next;
+}</pre><p class="flabel">One warning about the file on this page: it compares <strong>before</strong> the first move, while both pointers are still on the head, so it reports a cycle for any list of two or more boxes. Move first, compare afterwards.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 7</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0rAuz8tVcM0AymmhTRsfaLU" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — linked list playlist</b><span class="rnote">From the basics to the interview problems on lists.</span></a></li><li class="r-visual"><a href="https://visualgo.net/en/list" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — linked list</b><span class="rnote">Press Insert or Remove and watch the arrows re-point, one step at a time.</span></a></li><li class="r-video"><a href="https://www.youtube.com/@NeetCode" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>NeetCode</b><span class="rnote">Each LeetCode problem explained with the picture first, then the code.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-reverse-singly-linked-list">
@@ -80,102 +118,247 @@ temp-&gt;next = NULL;</pre></div><div class="concept"><h4>Two-pointer reversal o
   <p class="what">Reads a list, prints it, reverses the actual links with a recursive function, and prints it again.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 85 lines</span>
+      <span>CPP · 175 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2010/reverse_singly_linked_list.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Reverse a singly linked list - really reverse it, by turning every arrow</span>
+<span class="cm">around. This is not the same as printing the list backwards: when this</span>
+<span class="cm">function is done, the node that used to be last is the one `head` points at,</span>
+<span class="cm">and the old first node is the one whose `next` is NULL.</span>
+
+<span class="cm">The three pointers</span>
+<span class="cm">------------------</span>
+<span class="cm">The plain loop version of this uses three pointers, and it is worth naming</span>
+<span class="cm">them because the recursion below does the same work in a different order:</span>
+
+<span class="cm">    prev - the node whose arrow already points the new way (starts at NULL)</span>
+<span class="cm">    curr - the node whose arrow is being turned this round</span>
+<span class="cm">    next - the node that comes after `curr`, saved before anything moves</span>
+
+<span class="cm">    while(curr != NULL){</span>
+<span class="cm">        next = curr-&gt;next;   // SAVE first</span>
+<span class="cm">        curr-&gt;next = prev;   // turn one arrow: curr now points backwards</span>
+<span class="cm">        prev = curr;         // the pair shuffles one step to the right</span>
+<span class="cm">        curr = next;</span>
+<span class="cm">    }</span>
+<span class="cm">    head = prev;</span>
+
+<span class="cm">Exactly one arrow is turned each round - the arrow belonging to `curr`. And</span>
+<span class="cm">`next` has to be saved *before* `curr-&gt;next = prev` overwrites it: that field</span>
+<span class="cm">was the only thing that knew where the rest of the list is. Lose it and the</span>
+<span class="cm">remainder of the list is gone for good.</span>
+
+<span class="cm">The recursive version used here</span>
+<span class="cm">-------------------------------</span>
+<span class="cm">Recursion gets the same safety for free. Each call goes forward first and only</span>
+<span class="cm">turns an arrow on the way back, so when a call finally does its work its own</span>
+<span class="cm">`temp-&gt;next` has not been touched yet - the recursion stack is doing the job</span>
+<span class="cm">that `next` does in the loop.</span>
+
+<span class="cm">For 10 -&gt; 20 -&gt; 30 -&gt; 40 the calls run down to 40, and then, coming back out:</span>
+
+<span class="cm">    at 40 (the base case):  head = 40</span>
+<span class="cm">    at 30:  temp-&gt;next is 40, so 40-&gt;next = 30, and 30-&gt;next = NULL</span>
+<span class="cm">    at 20:  temp-&gt;next is 30, so 30-&gt;next = 20, and 20-&gt;next = NULL</span>
+<span class="cm">    at 10:  temp-&gt;next is 20, so 20-&gt;next = 10, and 10-&gt;next = NULL</span>
+
+<span class="cm">Each of those NULLs is overwritten a moment later by the node behind it -</span>
+<span class="cm">except the last one, on the old head, which is what correctly ends the new</span>
+<span class="cm">list. Result: 40 -&gt; 30 -&gt; 20 -&gt; 10.</span>
+
+<span class="cm">Cost: O(n) time, and O(n) memory for the recursion stack - the one thing the</span>
+<span class="cm">loop version does better.</span>
+
+<span class="cm">Input: the values of the list, ended by -1.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;list&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;list&gt;</span><span class="c1">   // for `list`, the ready-made doubly linked list</span>
+<span class="w">                    </span><span class="c1">// used later in this module; not needed by this file</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w"> </span><span class="c1">// Allows us to avoid prefixing standard library objects with `std::`.</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
@@ -190,6 +373,9 @@ temp-&gt;next = NULL;</pre></div><div class="concept"><h4>Two-pointer reversal o
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Append a value at the end in O(1): `tail` already points at the last node,</span>
+<span class="c1">// so there is no walk. Both ends are taken by reference, so `main` sees them</span>
+<span class="c1">// change.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -202,6 +388,7 @@ temp-&gt;next = NULL;</pre></div><div class="concept"><h4>Two-pointer reversal o
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w"> </span><span class="c1">// or tail = tail-&gt;next</span>
 <span class="p">}</span>
 
+<span class="c1">// Print forward: follow `next` from the head until it runs out.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -210,6 +397,10 @@ temp-&gt;next = NULL;</pre></div><div class="concept"><h4>Two-pointer reversal o
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
+<span class="c1">// Print the values backwards *without changing the list*: each call prints</span>
+<span class="c1">// everything after itself first, and only then its own value. Handy to</span>
+<span class="c1">// compare with the real reversal below - this one leaves every arrow as it</span>
+<span class="c1">// was. (Defined here for comparison; `main` does not call it.)</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_reverse</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">temp</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">temp</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
@@ -218,22 +409,46 @@ temp-&gt;next = NULL;</pre></div><div class="concept"><h4>Two-pointer reversal o
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Reverse the list itself. `temp` is the node this call is standing on; it</span>
+<span class="c1">// starts at the head and walks forward, one node per call.</span>
+<span class="c1">//</span>
+<span class="c1">// Trap: an empty list crashes here, because the first thing the function</span>
+<span class="c1">// does is read `temp-&gt;next` while `temp` is NULL. Check `head == NULL`</span>
+<span class="c1">// before calling.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">reverse_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">temp</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Base case: nothing after `temp`, so `temp` is the old last node - and</span>
+<span class="w">    </span><span class="c1">// the old last node is the new first one. `head` is a reference, so this</span>
+<span class="w">    </span><span class="c1">// really moves `main`&#39;s head. No arrow is turned here: `temp`&#39;s own</span>
+<span class="w">    </span><span class="c1">// `next` will be filled in by the node behind it, one level up.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Go all the way forward first. When this returns, everything from</span>
+<span class="w">    </span><span class="c1">// `temp-&gt;next` onwards is already reversed - and `temp-&gt;next` itself is</span>
+<span class="w">    </span><span class="c1">// untouched, still pointing at the node in front. That is our saved</span>
+<span class="w">    </span><span class="c1">// &quot;next&quot; pointer; the recursion held it for us.</span>
 <span class="w">    </span><span class="n">reverse_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// Turn exactly one arrow: the node in front of me is made to point back</span>
+<span class="w">    </span><span class="c1">// at me. (`temp-&gt;next` is that node; `temp-&gt;next-&gt;next` is its arrow.)</span>
 <span class="w">    </span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Cut my own old forward arrow. Without this line the last two nodes</span>
+<span class="w">    </span><span class="c1">// would point at each other and `print_linked_list` would never stop.</span>
+<span class="w">    </span><span class="c1">// For every node except the old head this NULL is overwritten by the</span>
+<span class="w">    </span><span class="c1">// node behind it on the next level out.</span>
 <span class="w">    </span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// The old head is the new tail. Every level writes this; the outermost</span>
+<span class="w">    </span><span class="c1">// call - the one standing on the old head - writes last and so wins.</span>
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// Start with an empty list.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Read values until -1; the -1 is only a stop sign and is not stored.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -249,6 +464,9 @@ temp-&gt;next = NULL;</pre></div><div class="concept"><h4>Two-pointer reversal o
 <span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 
 <span class="w">    </span><span class="c1">// Node* temp = head;</span>
+<span class="w">    </span><span class="c1">// The third argument is where the walk starts: the head. The first two</span>
+<span class="w">    </span><span class="c1">// are the list ends the function has to update, which is why they are</span>
+<span class="w">    </span><span class="c1">// references.</span>
 <span class="w">    </span><span class="n">reverse_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">head</span><span class="p">);</span>
 
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;After reversing: The linked list is :&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
@@ -258,7 +476,7 @@ temp-&gt;next = NULL;</pre></div><div class="concept"><h4>Two-pointer reversal o
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 85 lines ▾</button>
+    <button type="button" class="expand">Show all 175 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 -1</pre><p class="io-note">Values ended by -1.</p></div><div class="io out"><div class="io-h">Output </div><pre>
@@ -289,98 +507,155 @@ After reversing: The linked list is :
   <p class="what">Same function, but <code>main</code> calls it with only two arguments, so it does not compile.</p><p class="same">Re-typed version of <a href="#p-reverse-singly-linked-list"><code>reverse_singly_linked_list.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 85 lines</span>
+      <span>CPP · 119 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2010/reverse_singly_linked_list_p.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Practice copy of reverse_singly_linked_list.cpp, re-typed from memory.</span>
+
+<span class="cm">The functions came out identical to the original. The one difference is in</span>
+<span class="cm">`main`, and it stops the compiler:</span>
+
+<span class="cm">    Node* temp = head;</span>
+<span class="cm">    reverse_linked_list(head, temp);      // only two arguments</span>
+
+<span class="cm">`reverse_linked_list` is declared `(Node* &amp;head, Node* &amp;tail, Node* temp)` and</span>
+<span class="cm">needs three - &quot;too few arguments to function reverse_linked_list&quot;. The two</span>
+<span class="cm">references are the list ends that the reversal has to update; the third is the</span>
+<span class="cm">node the current call is standing on. Fix: drop the `temp` line and call</span>
+<span class="cm">`reverse_linked_list(head, tail, head);`, which starts the walk at the head.</span>
+
+<span class="cm">The idea being practised: walk to the last node, make it the new head, and</span>
+<span class="cm">turn one arrow per node on the way back out. The node in front has to be</span>
+<span class="cm">reachable at the moment the arrow is turned - in the loop version you save it</span>
+<span class="cm">in a `next` pointer first, here the untouched `temp-&gt;next` plays that part.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -419,6 +694,8 @@ After reversing: The linked list is :
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
+<span class="c1">// Prints the values backwards without touching a single arrow - the opposite</span>
+<span class="c1">// approach to the function below, which rewires the list for real.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_reverse</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">temp</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">temp</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
@@ -427,14 +704,21 @@ After reversing: The linked list is :
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Reverse the links themselves. `temp` walks forward with the calls.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">reverse_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">temp</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Base case: the old last node becomes the new head.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Reverse the rest first. `temp-&gt;next` is still untouched when we come</span>
+<span class="w">    </span><span class="c1">// back, so it is our saved pointer to the node in front.</span>
 <span class="w">    </span><span class="n">reverse_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// Turn one arrow: the node in front now points back at me...</span>
 <span class="w">    </span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// ...and my own forward arrow is cut, so the list has a proper end.</span>
 <span class="w">    </span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// The old head ends up as the new tail.</span>
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
 <span class="p">}</span>
 
@@ -457,6 +741,8 @@ After reversing: The linked list is :
 <span class="w">    </span>
 <span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// These two lines are the mistake: `temp` is not needed, and the call is</span>
+<span class="w">    </span><span class="c1">// one argument short. It should be `reverse_linked_list(head, tail, head);`.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="n">reverse_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">temp</span><span class="p">);</span>
 
@@ -467,14 +753,14 @@ After reversing: The linked list is :
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 85 lines ▾</button>
+    <button type="button" class="expand">Show all 119 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 -1</pre><p class="io-note">Values ended by -1.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>reverse_singly_linked_list_p.cpp: In function &#x27;int main()&#x27;:
-reverse_singly_linked_list_p.cpp:79:35: error: too few arguments to function &#x27;void reverse_linked_list(Node*&amp;, Node*&amp;, Node*)&#x27;
+reverse_singly_linked_list_p.cpp:113:35: error: too few arguments to function &#x27;void reverse_linked_list(Node*&amp;, Node*&amp;, Node*)&#x27;
      reverse_linked_list(head, temp);
                                    ^
-reverse_singly_linked_list_p.cpp:48:6: note: declared here
+reverse_singly_linked_list_p.cpp:74:6: note: declared here
  void reverse_linked_list(Node* &amp;head, Node* &amp;tail, Node* temp){
       ^~~~~~~~~~~~~~~~~~~</pre></div></div>
   <p class="readout"><b>Reading the output.</b> No output: compile error &quot;too few arguments to function reverse_linked_list&quot;.</p>
@@ -493,7 +779,7 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
   <p class="what">Reverses a doubly list by swapping values from both ends with <code>reverse_doubly</code>, but <code>main</code> never reads the list.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 168 lines</span>
+      <span>CPP · 237 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2010/reverse_doubly_linked_list.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -667,7 +953,111 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="normal">165</span>
 <span class="normal">166</span>
 <span class="normal">167</span>
-<span class="normal">168</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Reverse a doubly linked list by walking in from both ends and swapping the</span>
+<span class="cm">values as you go.</span>
+
+<span class="cm">Here every node has a `prev` as well as a `next`, and that changes everything.</span>
+<span class="cm">You can put one pointer `i` on the head and another `j` on the tail, swap the</span>
+<span class="cm">two values, then step `i` forward and `j` backward. After half a pass the</span>
+<span class="cm">whole list is reversed. Not a single arrow is rewired - the boxes stay exactly</span>
+<span class="cm">where they are and only the numbers change places - which is why this is so</span>
+<span class="cm">much shorter than the singly-list version, where each arrow had to be turned</span>
+<span class="cm">one at a time.</span>
+
+<span class="cm">When to stop is the part worth thinking about:</span>
+
+<span class="cm">  * odd length (say 5 nodes): the pointers meet on the middle node, `i == j`,</span>
+<span class="cm">    and that node has nothing to be swapped with.</span>
+<span class="cm">  * even length (say 4 nodes): they never land on the same node. After the</span>
+<span class="cm">    last useful swap they cross, and at that moment `j` is exactly one step to</span>
+<span class="cm">    the left of `i` - that is `i-&gt;prev == j`.</span>
+
+<span class="cm">Both tests are needed. With only `i != j` an even-length list runs past the</span>
+<span class="cm">crossing point and swaps every pair back again, undoing the work.</span>
+
+<span class="cm">This file prints two empty lines and nothing else, because of a bug in `main`:</span>
+<span class="cm">the input loop is written `while(tail)`, and `tail` is still NULL at that</span>
+<span class="cm">moment, so the body never runs and no value is ever read. It should be</span>
+<span class="cm">`while(true)` with `break;` when -1 arrives. (`return;` inside `int main` is</span>
+<span class="cm">also what makes the compiler warn &quot;return-statement with no value&quot;.) With</span>
+<span class="cm">that fixed you would see 10 20 30 40 and then 40 30 20 10.</span>
+
+<span class="cm">Input: the values of the list, ended by -1.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -686,6 +1076,12 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Everything from here down to `delete_at_any_position` is the Module 9</span>
+<span class="c1">// doubly-linked-list toolkit, copied in unchanged so this file can stand on</span>
+<span class="c1">// its own. The new work starts at `reverse_doubly` near the bottom.</span>
+<span class="c1">//</span>
+<span class="c1">// Print forward along `next`; print backward along `prev`. A doubly list can</span>
+<span class="c1">// do both, and that is the whole reason `prev` exists.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_forward</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -704,6 +1100,9 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Inserting: the head and tail cases write two arrows, the middle case four.</span>
+<span class="c1">// An empty list is the special case in both - the new node becomes head and</span>
+<span class="c1">// tail at once.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_head</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
@@ -748,6 +1147,9 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="w">    </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Deleting: unlink, then free. In a doubly list the node before the victim is</span>
+<span class="c1">// reachable through `prev`, so there is no walk when you already hold the</span>
+<span class="c1">// node - which is why `delete_at_tail` here is O(1), unlike the singly list.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">delete_at_head</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">tail</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
@@ -801,6 +1203,7 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Swap two ints through references, so the caller&#39;s values really change.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">swap</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">b</span><span class="p">){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 <span class="w">    </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
@@ -808,8 +1211,23 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="p">}</span>
 
 
+<span class="c1">// Reverse the list by swapping values from both ends towards the middle.</span>
+<span class="c1">//</span>
+<span class="c1">// `head` and `tail` are references out of habit; they are never assigned here</span>
+<span class="c1">// because the boxes never move - only the numbers inside them do, so the</span>
+<span class="c1">// first and last box stay the first and last box.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">reverse_doubly</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// The `for` header does three jobs at once: `i` starts at the head and</span>
+<span class="w">    </span><span class="c1">// `j` at the tail; the loop runs while they have not met (`i != j`, odd</span>
+<span class="w">    </span><span class="c1">// length) and have not crossed (`i-&gt;prev != j`, even length); and each</span>
+<span class="w">    </span><span class="c1">// round steps `i` one to the right and `j` one to the left.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Reading `i-&gt;prev` is safe because the two pointers always stop at each</span>
+<span class="w">    </span><span class="c1">// other before either can walk off an end - except on an empty list,</span>
+<span class="w">    </span><span class="c1">// where `i` starts out NULL and `i-&gt;prev` crashes. Guard with</span>
+<span class="w">    </span><span class="c1">// `if(head == NULL) return;` if that can happen.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="n">Node</span><span class="w"> </span><span class="o">*</span><span class="n">i</span><span class="o">=</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">j</span><span class="o">=</span><span class="n">tail</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">!=</span><span class="n">j</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">i</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">j</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">,</span><span class="n">j</span><span class="o">=</span><span class="n">j</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// Exchange the two ends of the part that is still unreversed.</span>
 <span class="w">        </span><span class="n">swap</span><span class="p">(</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
@@ -819,25 +1237,31 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Bug: `tail` is NULL here, so this loop never runs even once and the</span>
+<span class="w">    </span><span class="c1">// list stays empty. It should be `while(true)`, with the -1 test below</span>
+<span class="w">    </span><span class="c1">// ending it - which is also why the two prints come out blank.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tail</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="o">==</span><span class="mi">-1</span><span class="p">){</span>
+<span class="w">            </span><span class="c1">// `return;` in a function declared `int main()` returns no</span>
+<span class="w">            </span><span class="c1">// value; the compiler lets it pass with a warning. `break;` is</span>
+<span class="w">            </span><span class="c1">// what was meant: leave the loop, then print.</span>
 <span class="w">            </span><span class="k">return</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">        </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">print_forward</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
+<span class="w">    </span><span class="n">print_forward</span><span class="p">(</span><span class="n">head</span><span class="p">);</span><span class="w">   </span><span class="c1">// would be 10 20 30 40 once the loop is fixed</span>
 
 <span class="w">    </span><span class="n">reverse_doubly</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">);</span>
 
-<span class="w">    </span><span class="n">print_forward</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
+<span class="w">    </span><span class="n">print_forward</span><span class="p">(</span><span class="n">head</span><span class="p">);</span><span class="w">   </span><span class="c1">// would be 40 30 20 10</span>
 <span class="w">    </span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 168 lines ▾</button>
+    <button type="button" class="expand">Show all 237 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 -1</pre><p class="io-note">Values ended by -1.</p></div><div class="io out"><div class="io-h">Output </div><pre><span class="muted">(prints nothing)</span></pre></div></div>
@@ -857,7 +1281,7 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
   <p class="what">Adds a second approach, <code>reverse_doubly_1</code>, that swaps each node&#x27;s <code>next</code> and <code>prev</code>, and uses the value-swap version (<code>reverse_doubly_2</code>) in <code>main</code>. The same <code>while(tail)</code> bug remains.</p><p class="same">Re-typed version of <a href="#p-reverse-doubly-linked-list"><code>reverse_doubly_linked_list.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 177 lines</span>
+      <span>CPP · 220 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2010/reverse_doubly_linked_list_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1040,7 +1464,72 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="normal">174</span>
 <span class="normal">175</span>
 <span class="normal">176</span>
-<span class="normal">177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Practice copy of reverse_doubly_linked_list.cpp, re-typed from memory.</span>
+
+<span class="cm">What is new here: a second way to reverse, `reverse_doubly_1`, which turns the</span>
+<span class="cm">list around for real instead of moving values about. For every node it swaps</span>
+<span class="cm">the two pointer fields - `next` becomes `prev` and `prev` becomes `next` - and</span>
+<span class="cm">then swaps `head` with `tail`. The value-swapping version from the original is</span>
+<span class="cm">kept as `reverse_doubly_2`, and that is the one `main` calls, so the output is</span>
+<span class="cm">the same as the original&#39;s.</span>
+
+<span class="cm">Two things to watch:</span>
+
+<span class="cm">  * `reverse_doubly_1` takes `Node* head, Node* tail` *by value*, so its</span>
+<span class="cm">    closing `swap(head, tail)` only swaps two local copies and `main`&#39;s head</span>
+<span class="cm">    and tail are left pointing at the wrong ends of the list. It needs</span>
+<span class="cm">    `Node* &amp;head, Node* &amp;tail`.</span>
+<span class="cm">  * the `while(tail)` input-loop bug of the original is still here, so this</span>
+<span class="cm">    file also reads nothing and prints two empty lines.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -1059,6 +1548,8 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Everything down to `delete_at_any_position` is the Module 9 doubly-list</span>
+<span class="c1">// toolkit, unchanged. The two reversal functions are near the bottom.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_forward</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -1174,6 +1665,7 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">deleteNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Swap two ints. Note: this one only matches `int` arguments - see below.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">swap</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">b</span><span class="p">){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 <span class="w">    </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
@@ -1181,15 +1673,30 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="p">}</span>
 
 
+<span class="c1">// Reversal, approach 1: rewire the list properly. Every node&#39;s two arrows</span>
+<span class="c1">// change places, and the two ends of the list change places with them.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">reverse_doubly_1</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// This is the standard library&#39;s `swap` from &lt;algorithm&gt;, not the</span>
+<span class="w">        </span><span class="c1">// `swap(int&amp;, int&amp;)` above: these arguments are `Node*`, not `int`.</span>
+<span class="w">        </span><span class="c1">// After it, the node&#39;s `next` holds what used to be its `prev`.</span>
 <span class="w">        </span><span class="n">swap</span><span class="p">(</span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">,</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">);</span>
+<span class="w">        </span><span class="c1">// Move on through `prev`, because `prev` is now carrying the old</span>
+<span class="w">        </span><span class="c1">// `next` - the direction we still have to travel. Using `tmp-&gt;next`</span>
+<span class="w">        </span><span class="c1">// here would send us straight back the way we came.</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// The first node is now the last one, so the two ends must trade places</span>
+<span class="w">    </span><span class="c1">// too. Except that `head` and `tail` were passed by value, so this swaps</span>
+<span class="w">    </span><span class="c1">// two copies and `main` never sees it. `Node* &amp;head, Node* &amp;tail` fixes it.</span>
 <span class="w">    </span><span class="n">swap</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">);</span>
 <span class="p">}</span>
 
+<span class="c1">// Reversal, approach 2: leave every arrow alone and swap the values instead.</span>
+<span class="c1">// `i` comes in from the head, `j` from the tail; they stop when they meet</span>
+<span class="c1">// (`i == j`, odd length) or cross (`i-&gt;prev == j`, even length). Both tests</span>
+<span class="c1">// are needed, or an even-length list gets swapped back to where it started.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">reverse_doubly_2</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">){</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">j</span><span class="o">=</span><span class="n">tail</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">!=</span><span class="n">j</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">i</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">j</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">j</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">){</span>
 <span class="w">        </span><span class="n">swap</span><span class="p">(</span><span class="n">i</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span>
@@ -1201,6 +1708,8 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Same bug as the original: `tail` is NULL here, so nothing is ever read.</span>
+<span class="w">    </span><span class="c1">// `while(true)` with `break;` on -1 is what was meant.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tail</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="o">==</span><span class="mi">-1</span><span class="p">){</span>
@@ -1211,6 +1720,7 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 
 <span class="w">    </span><span class="n">print_forward</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// The value-swap version; `reverse_doubly_1` above is left unused.</span>
 <span class="w">    </span><span class="n">reverse_doubly_2</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">);</span>
 
 <span class="w">    </span><span class="n">print_forward</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
@@ -1219,7 +1729,7 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 177 lines ▾</button>
+    <button type="button" class="expand">Show all 220 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 -1</pre><p class="io-note">Values ended by -1.</p></div><div class="io out"><div class="io-h">Output </div><pre><span class="muted">(prints nothing)</span></pre></div></div>
@@ -1239,73 +1749,183 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
   <p class="what">Builds 10→20→30→40→50 and links 50 back to 20, then uses Floyd&#x27;s slow/fast pointers to report whether a cycle exists.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 56 lines</span>
+      <span>CPP · 121 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2010/cycle_detection_linked_list.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Does the list loop back on itself? Floyd&#39;s &quot;tortoise and hare&quot; test.</span>
+
+<span class="cm">LeetCode 141 - Linked List Cycle</span>
+<span class="cm">https://leetcode.com/problems/linked-list-cycle/</span>
+
+<span class="cm">Two pointers start at the head. `slow` moves one node per round, `fast` moves</span>
+<span class="cm">two. Then one of two things must happen.</span>
+
+<span class="cm">If the list ends, `fast` is the one that gets there first and the walk simply</span>
+<span class="cm">stops - no cycle.</span>
+
+<span class="cm">If the list loops, neither pointer can ever leave the loop again, so `fast`</span>
+<span class="cm">keeps going round and must eventually come up behind `slow`. And it cannot</span>
+<span class="cm">jump over it. Once both are inside the loop, look at the gap from `fast` to</span>
+<span class="cm">`slow`, counted forwards around the loop. Every round `fast` closes that gap</span>
+<span class="cm">by exactly one node: it gains two and `slow` gains one. So the gap goes</span>
+<span class="cm">5, 4, 3, 2, 1, 0 - it cannot skip a value, and 0 means the two pointers are</span>
+<span class="cm">standing on the same node. That is the whole proof, and it is also the reason</span>
+<span class="cm">the stride is two and not three: with a longer stride the gap shrinks by more</span>
+<span class="cm">than one each round and could step straight over `slow`.</span>
+
+<span class="cm">The NULL checks are the other half of the method. `slow` never needs one - it</span>
+<span class="cm">is always behind `fast`, on ground `fast` has already walked. `fast` is the</span>
+<span class="cm">one that can fall off the end, and it reads two links per round, so both have</span>
+<span class="cm">to be checked before it moves: `fast != NULL` (am I still standing on a</span>
+<span class="cm">node?) and `fast-&gt;next != NULL` (is there a second node to jump to?). `&amp;&amp;`</span>
+<span class="cm">stops at the first false, so `fast-&gt;next` is only read once `fast` is known to</span>
+<span class="cm">be a real node.</span>
+
+<span class="cm">The bug in this file (worth seeing, not worth copying): the comparison</span>
+<span class="cm">`if(slow == fast)` is made at the top of the loop, before either pointer has</span>
+<span class="cm">moved. On the very first round both are still sitting on `head`, so the test</span>
+<span class="cm">is true straight away and this program answers &quot;Cycle Detected&quot; for any list</span>
+<span class="cm">of two or more nodes. It prints the right answer here only because there</span>
+<span class="cm">really is a cycle. Move both pointers first and compare afterwards. To see it</span>
+<span class="cm">for yourself, change `d-&gt;next = a;` to `d-&gt;next = NULL;` below: the answer</span>
+<span class="cm">should become &quot;No Cycle&quot;, and it does not.</span>
+
+<span class="cm">No input is read; the list is built by hand in `main`.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w"> </span><span class="c1">// Allows us to avoid prefixing standard library objects with `std::`.</span>
 
+<span class="c1">// The plain singly linked node: a value and one arrow forward.</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
@@ -1320,32 +1940,52 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// Five nodes, made one by one. Nothing is read from the input here, so</span>
+<span class="w">    </span><span class="c1">// the shape of the list is entirely under our control - which is what we</span>
+<span class="w">    </span><span class="c1">// want when testing a detector.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">30</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">40</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// Wire them up: 10 -&gt; 20 -&gt; 30 -&gt; 40 -&gt; 50.</span>
 <span class="w">    </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 <span class="w">    </span><span class="n">a</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">    </span><span class="n">b</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">    </span><span class="n">c</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// And the line that closes the loop: the last node points back at the</span>
+<span class="w">    </span><span class="c1">// second one, so 20 -&gt; 30 -&gt; 40 -&gt; 50 -&gt; 20 goes round for ever. Note</span>
+<span class="w">    </span><span class="c1">// that the loop does not have to include the head.</span>
 <span class="w">    </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Both runners start on the same node.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">slow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">fast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// `break` leaves the loop without saying why it stopped, so we record</span>
+<span class="w">    </span><span class="c1">// the reason in a flag and read it afterwards.</span>
 <span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Keep going while `fast` can still take two steps. Both tests are</span>
+<span class="w">    </span><span class="c1">// needed, and in this order: `fast-&gt;next` must not be read unless `fast`</span>
+<span class="w">    </span><span class="c1">// itself is a real node.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">fast</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">fast</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// Here is the bug: on the first round neither pointer has moved yet,</span>
+<span class="w">        </span><span class="c1">// so both are still on `head` and this is true at once. The compare</span>
+<span class="w">        </span><span class="c1">// belongs *after* the two moves below.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">slow</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">fast</span><span class="p">){</span>
 <span class="w">            </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">            </span><span class="k">break</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">        </span>
+<span class="w">        </span><span class="c1">// One step for the tortoise, two for the hare. Inside a loop the hare</span>
+<span class="w">        </span><span class="c1">// gains exactly one node on the tortoise per round, so the distance</span>
+<span class="w">        </span><span class="c1">// between them shrinks to zero and they land on the same node.</span>
 <span class="w">        </span><span class="n">slow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slow</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">        </span><span class="n">fast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fast</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Report what the walk found.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">flag</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">true</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Cycle Detected&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -1357,7 +1997,7 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 56 lines ▾</button>
+    <button type="button" class="expand">Show all 121 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>Cycle Detected
@@ -1378,7 +2018,7 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
   <p class="what">Identical re-typing, including the compare-before-move bug.</p><p class="same">Re-typed version of <a href="#p-cycle-detection-linked-list"><code>cycle_detection_linked_list.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 53 lines</span>
+      <span>CPP · 84 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2010/cycle_detection_linked_list_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1437,7 +2077,61 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="normal">50</span>
 <span class="normal">51</span>
 <span class="normal">52</span>
-<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Practice copy of cycle_detection_linked_list.cpp, re-typed from memory. It is</span>
+<span class="cm">the same program line for line - including the bug.</span>
+
+<span class="cm">The idea: `slow` takes one step per round, `fast` takes two. Inside a loop</span>
+<span class="cm">`fast` gains exactly one node on `slow` each round, so the gap between them</span>
+<span class="cm">shrinks 3, 2, 1, 0 and they must end up on the same node - a fast runner</span>
+<span class="cm">cannot jump over a slow one when it only gains one place at a time. If the</span>
+<span class="cm">list ends instead, `fast` is the pointer that runs out first, which is why</span>
+<span class="cm">both `fast != NULL` and `fast-&gt;next != NULL` are checked before it jumps two</span>
+<span class="cm">nodes. `slow` needs no check: it only walks where `fast` has already been.</span>
+
+<span class="cm">The bug, kept from the original: `if(slow == fast)` is tested at the top of</span>
+<span class="cm">the loop, before the pointers move. On the first round both are still on</span>
+<span class="cm">`head`, so every list of two or more nodes is reported as having a cycle.</span>
+<span class="cm">Move the pointers first, then compare.</span>
+
+<span class="cm">LeetCode 141 - Linked List Cycle</span>
+<span class="cm">https://leetcode.com/problems/linked-list-cycle/</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -1455,28 +2149,36 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="p">};</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// Five nodes built by hand - no input is read.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">30</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">40</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span>
 <span class="w">    </span>
+<span class="w">    </span><span class="c1">// 10 -&gt; 20 -&gt; 30 -&gt; 40 -&gt; 50 ...</span>
 <span class="w">    </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 <span class="w">    </span><span class="n">a</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">    </span><span class="n">b</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">    </span><span class="n">c</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// ... and then back from 50 to 20, which closes the loop.</span>
 <span class="w">    </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Both runners start at the head; `flag` remembers why the loop ended.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">slow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">fast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Stop as soon as `fast` cannot take two more steps.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">fast</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">fast</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// The bug: this test runs before the first move, when both pointers</span>
+<span class="w">        </span><span class="c1">// are still on `head`. It should come after the two lines below.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">slow</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">fast</span><span class="p">){</span>
 <span class="w">            </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">            </span><span class="k">break</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// One step, then two steps.</span>
 <span class="w">        </span><span class="n">slow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slow</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">        </span><span class="n">fast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fast</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -1492,7 +2194,7 @@ reverse_singly_linked_list_p.cpp:48:6: note: declared here
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 53 lines ▾</button>
+    <button type="button" class="expand">Show all 84 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>Cycle Detected
@@ -2250,7 +2952,7 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
   <p class="what">For each query <code>X V</code>, inserts V at index X of an initially empty doubly list (printing &quot;Invalid&quot; if X is outside 0..size) and prints the list.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 142 lines</span>
+      <span>CPP · 207 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2010/practice_problem_4_insert.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -2395,7 +3097,72 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 <span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
-<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">You have a doubly linked list which is empty initially. You need to </span>
 <span class="cm">take a value Q which refers to queries. For each query you will be </span>
@@ -2405,12 +3172,42 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 
 <span class="cm">*/</span>
 
+<span class="cm">/*</span>
+
+<span class="cm">How it is solved: keep a doubly linked list, start it empty, and for each</span>
+<span class="cm">query `X V` first ask whether X is a legal index and only then insert.</span>
+
+<span class="cm">&quot;Legal&quot; means 0 &lt;= X &lt;= size. The upper end is `size`, not `size-1`, because</span>
+<span class="cm">inserting one step past the last element is exactly how a list grows at the</span>
+<span class="cm">end. On an empty list, therefore, only X = 0 is legal.</span>
+
+<span class="cm">This file does not compile: `insert_at_tail` is written out twice, once near</span>
+<span class="cm">the top and once again a few lines further down, word for word. C++ lets a</span>
+<span class="cm">function be *declared* as often as you like but defined only once, so the</span>
+<span class="cm">compiler reports &quot;redefinition of &#39;void insert_at_tail(Node*&amp;, Node*&amp;, int)&#39;&quot;</span>
+<span class="cm">and points at both copies. Delete the second one.</span>
+
+<span class="cm">Two more things to fix once it compiles:</span>
+
+<span class="cm">  * `int Q;` is never read. `while(Q--)` then tests whatever happened to be</span>
+<span class="cm">    lying in that memory, so the number of queries is anybody&#39;s guess. Add</span>
+<span class="cm">    `cin &gt;&gt; Q;` before the loop.</span>
+<span class="cm">  * the task asks for the list left-to-right *and* right-to-left, but only</span>
+<span class="cm">    `print_forward(head)` is called. `print_backward(tail)` is already written</span>
+<span class="cm">    below - it just has to be called too. (The `_p.cpp` copy of this file does</span>
+<span class="cm">    call it.)</span>
+
+<span class="cm">Input: Q, then Q lines of `X V`.</span>
+
+<span class="cm">*/</span>
+
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w"> </span>
 
+<span class="c1">// A doubly linked node: the value, an arrow forward and an arrow back.</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
@@ -2424,6 +3221,8 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Append at the end. On an empty list the new node is both head and tail;</span>
+<span class="c1">// otherwise two arrows are written - old tail -&gt; new, and new -&gt; old tail.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
@@ -2436,6 +3235,7 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Insert at the front, the mirror image of the above.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_head</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
@@ -2448,6 +3248,8 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 <span class="w">    </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// This second, identical copy of `insert_at_tail` is what stops the compiler.</span>
+<span class="c1">// One definition is all C++ allows. Delete this one.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
@@ -2460,6 +3262,8 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Count the nodes by walking the whole list - O(n) every time it is called.</span>
+<span class="c1">// It is needed because the list keeps no size counter of its own.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">get_size</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
@@ -2470,6 +3274,7 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">size</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Print left to right, following `next`.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_forward</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="o">!=</span><span class="nb">NULL</span><span class="p">){</span>
@@ -2479,6 +3284,8 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Print backwards by recursion: print everything after me first, then me.</span>
+<span class="c1">// It works on a singly list too, since it never uses `prev`. Not called here.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_reverse</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">temp</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">temp</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
@@ -2487,6 +3294,8 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Print right to left the easy way, following `prev` from the tail. This is</span>
+<span class="c1">// the function the task needs and `main` forgets to call.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_backward</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -2496,24 +3305,39 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Insert `val` so that it ends up at 0-based index `pos`. Three cases:</span>
+<span class="c1">//     pos == 0      -&gt; it becomes the new head</span>
+<span class="c1">//     pos == size   -&gt; it becomes the new tail</span>
+<span class="c1">//     in between    -&gt; it goes between two existing nodes, and then *four*</span>
+<span class="c1">//                      arrows have to be written, not two.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_any_position</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">pos</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// Note that `newNode` above is already allocated, and on the two</span>
+<span class="w">    </span><span class="c1">// shortcut paths below it is never linked to anything - the helpers make</span>
+<span class="w">    </span><span class="c1">// their own node. Harmless here, but it is a small memory leak.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">pos</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span>
 <span class="w">        </span><span class="n">insert_at_head</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// The same &quot;stop one node early&quot; walk as deleting: after this loop `tmp`</span>
+<span class="w">    </span><span class="c1">// stands on index pos-1, the node the new one has to come after.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">pos</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// `tmp` turned out to be the last node, so this insert is an append.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
-<span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
-<span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
-<span class="w">    </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// The middle case. Four links, and the order matters: the new node&#39;s own</span>
+<span class="w">    </span><span class="c1">// two arrows are written first, while `tmp-&gt;next` still points at the old</span>
+<span class="w">    </span><span class="c1">// right-hand neighbour. Overwrite `tmp-&gt;next` too early and that</span>
+<span class="w">    </span><span class="c1">// neighbour is unreachable.</span>
+<span class="w">    </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w">        </span><span class="c1">// new -&gt; right neighbour</span>
+<span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">        </span><span class="c1">// right neighbour -&gt; new</span>
+<span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">             </span><span class="c1">// left neighbour -&gt; new</span>
+<span class="w">    </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span><span class="w">            </span><span class="c1">// new -&gt; left neighbour</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
@@ -2521,22 +3345,30 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Bug: nothing was ever read into `Q`. `Q--` uses its value and then</span>
+<span class="w">    </span><span class="c1">// decreases it, so this loop runs an unpredictable number of times, or</span>
+<span class="w">    </span><span class="c1">// not at all. It needs `cin &gt;&gt; Q;` on the line above.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">Q</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">V</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Reject the index before touching the list. `X == size` is allowed</span>
+<span class="w">        </span><span class="c1">// on purpose - that is an append. Each check walks the list, so a</span>
+<span class="w">        </span><span class="c1">// query costs O(n).</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">X</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">get_size</span><span class="p">(</span><span class="n">head</span><span class="p">)){</span>
 <span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Invalid&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span><span class="w">      </span><span class="c1">// skip the insert, go straight to the next query</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="n">insert_at_any_position</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">);</span>
+<span class="w">        </span><span class="c1">// Only half of what the task asks for: `print_backward(tail);`</span>
+<span class="w">        </span><span class="c1">// should follow, to show the list right to left as well.</span>
 <span class="w">        </span><span class="n">print_forward</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 142 lines ▾</button>
+    <button type="button" class="expand">Show all 207 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
@@ -2545,10 +3377,10 @@ practice_problem_3_is_palindrome_doubly_linked_list_p.cpp:102:45: error: void va
 4 30
 0 30
 1 40
-5 50</pre><p class="io-note">Q, then Q lines of <code>X V</code>.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>practice_problem_4_insert.cpp:54:6: error: redefinition of &#x27;void insert_at_tail(Node*&amp;, Node*&amp;, int)&#x27;
+5 50</pre><p class="io-note">Q, then Q lines of <code>X V</code>.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>practice_problem_4_insert.cpp:89:6: error: redefinition of &#x27;void insert_at_tail(Node*&amp;, Node*&amp;, int)&#x27;
  void insert_at_tail(Node* &amp;head, Node* &amp;tail, int val){
       ^~~~~~~~~~~~~~
-practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, Node*&amp;, int)&#x27; previously defined here
+practice_problem_4_insert.cpp:62:6: note: &#x27;void insert_at_tail(Node*&amp;, Node*&amp;, int)&#x27; previously defined here
  void insert_at_tail(Node* &amp;head, Node* &amp;tail, int val){
       ^~~~~~~~~~~~~~</pre></div></div>
   <p class="readout"><b>Reading the output.</b> No output: compile error &quot;redefinition of insert_at_tail&quot;.</p>
@@ -2567,7 +3399,7 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
   <p class="what">Renames the parameters to <code>X</code> and <code>V</code> and adds <code>print_backward(tail)</code>, but keeps the duplicate function and the missing <code>cin &gt;&gt; Q</code>.</p><p class="same">Re-typed version of <a href="#p-practice-problem-4-insert"><code>practice_problem_4_insert.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 143 lines</span>
+      <span>CPP · 188 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2010/practice_problem_4_insert_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -2713,13 +3545,84 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 <span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
-<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">You have a doubly linked list which is empty initially. You need to </span>
 <span class="cm">take a value Q which refers to queries. For each query you will be </span>
 <span class="cm">given X and V. You will insert the value V to the Xth index of the </span>
 <span class="cm">doubly linked list and print the list in both left to right and </span>
 <span class="cm">right to left. If the index is invalid then print “Invalid”.</span>
+
+<span class="cm">*/</span>
+
+<span class="cm">/*</span>
+
+<span class="cm">Practice copy of practice_problem_4_insert.cpp, re-typed from memory.</span>
+
+<span class="cm">What differs from the original:</span>
+
+<span class="cm">  * `insert_at_any_position` names its two parameters `X` and `V`, matching</span>
+<span class="cm">    the wording of the problem. The code itself is the same.</span>
+<span class="cm">  * `main` also calls `print_backward(tail)`, so this copy really does print</span>
+<span class="cm">    the list in both directions, which is what the task asked for. The</span>
+<span class="cm">    original only printed forward.</span>
+
+<span class="cm">What is still wrong, exactly as in the original:</span>
+
+<span class="cm">  * `insert_at_tail` is defined twice, so the file does not compile:</span>
+<span class="cm">    &quot;redefinition of &#39;void insert_at_tail(Node*&amp;, Node*&amp;, int)&#39;&quot;. Delete the</span>
+<span class="cm">    second copy.</span>
+<span class="cm">  * `int Q;` is never read, so `while(Q--)` runs on an uninitialised value.</span>
+<span class="cm">    Add `cin &gt;&gt; Q;` before the loop.</span>
+
+<span class="cm">The rule being practised: an index X is legal when 0 &lt;= X &lt;= size. The upper</span>
+<span class="cm">end is the size itself, because inserting one place past the last element is</span>
+<span class="cm">how the list grows at the end; on an empty list only X = 0 is legal.</span>
 
 <span class="cm">*/</span>
 
@@ -2742,6 +3645,7 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Append at the end: on an empty list the node becomes head and tail at once.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
@@ -2754,6 +3658,7 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Insert at the front - the mirror image.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_head</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
@@ -2766,6 +3671,7 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 <span class="w">    </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// The duplicate definition that stops the compiler. Delete it.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="o">==</span><span class="nb">NULL</span><span class="p">){</span>
@@ -2778,6 +3684,7 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Walk the list to count it - O(n), because no size is kept anywhere.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">get_size</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
@@ -2788,6 +3695,7 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">size</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Left to right, along `next`.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_forward</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="o">!=</span><span class="nb">NULL</span><span class="p">){</span>
@@ -2797,6 +3705,8 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Backwards by recursion; works without `prev`, so it suits a singly list.</span>
+<span class="c1">// Not used here - `print_backward` below is the simpler choice for this list.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_reverse</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">temp</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">temp</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
@@ -2805,6 +3715,7 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">temp</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Right to left, along `prev` from the tail.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_backward</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tail</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -2814,6 +3725,8 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Insert V at index X. Three cases: the head, the tail, and the middle -</span>
+<span class="c1">// where four arrows have to be rewritten instead of two.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_any_position</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">V</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">V</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">X</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
@@ -2821,13 +3734,17 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Stop one node early: `tmp` ends on index X-1.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">X</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// `tmp` is the last node, so this is really an append.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// The middle case: write the new node&#39;s own two arrows first, while</span>
+<span class="w">    </span><span class="c1">// `tmp-&gt;next` still points at the old right-hand neighbour.</span>
 <span class="w">    </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
@@ -2839,23 +3756,28 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Bug kept from the original: `Q` was never read, so this loop runs on</span>
+<span class="w">    </span><span class="c1">// whatever value happened to be in that memory. Add `cin &gt;&gt; Q;` above.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">Q</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">V</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// 0 &lt;= X &lt;= size, and the size is recounted on every query.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">X</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">get_size</span><span class="p">(</span><span class="n">head</span><span class="p">)){</span>
 <span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Invalid&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">            </span><span class="k">continue</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="n">insert_at_any_position</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">);</span>
+<span class="w">        </span><span class="c1">// Both directions, as the task asks - this is what the original</span>
+<span class="w">        </span><span class="c1">// forgot.</span>
 <span class="w">        </span><span class="n">print_forward</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 <span class="w">        </span><span class="n">print_backward</span><span class="p">(</span><span class="n">tail</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 143 lines ▾</button>
+    <button type="button" class="expand">Show all 188 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6
@@ -2864,10 +3786,10 @@ practice_problem_4_insert.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, 
 4 30
 0 30
 1 40
-5 50</pre><p class="io-note">Q, then Q lines of <code>X V</code>.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>practice_problem_4_insert_p.cpp:54:6: error: redefinition of &#x27;void insert_at_tail(Node*&amp;, Node*&amp;, int)&#x27;
+5 50</pre><p class="io-note">Q, then Q lines of <code>X V</code>.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>practice_problem_4_insert_p.cpp:83:6: error: redefinition of &#x27;void insert_at_tail(Node*&amp;, Node*&amp;, int)&#x27;
  void insert_at_tail(Node* &amp;head, Node* &amp;tail, int val){
       ^~~~~~~~~~~~~~
-practice_problem_4_insert_p.cpp:30:6: note: &#x27;void insert_at_tail(Node*&amp;, Node*&amp;, int)&#x27; previously defined here
+practice_problem_4_insert_p.cpp:57:6: note: &#x27;void insert_at_tail(Node*&amp;, Node*&amp;, int)&#x27; previously defined here
  void insert_at_tail(Node* &amp;head, Node* &amp;tail, int val){
       ^~~~~~~~~~~~~~</pre></div></div>
   <p class="readout"><b>Reading the output.</b> No output: the same redefinition compile error.</p>
@@ -3966,7 +4888,7 @@ Is the list l empty? 0
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

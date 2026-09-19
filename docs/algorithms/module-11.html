@@ -7,7 +7,7 @@
 <meta name="description" content="DSU keeps track of which items belong to the same group, and can merge two groups quickly. Each group has a leader; `find` walks up to the leader and `union` joins two leaders. With path compression and union by size both operations are almost O(1). The module uses DSU to detect cycles in undirected graphs and to count connected components.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -65,7 +65,79 @@ par:  1:-1  2:1  3:1  4:1</pre><p>What is new here compared with Modules 2 and 3
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Parent array</h4><p><code>par[x]</code> points to x&#x27;s parent in its group&#x27;s tree. <code>par[x] == -1</code> means x is the leader (the root) of its group.</p><pre class="snip">memset(par, -1, sizeof(par));</pre></div><div class="concept"><h4>find(x)</h4><p>Follow parent links until you reach a node whose parent is -1. That node is the leader. Two nodes are in the same group exactly when they have the same leader.</p></div><div class="concept"><h4>Path compression</h4><p>While coming back from the recursion, point every visited node straight at the leader. The next <code>find</code> on any of them takes one step.</p><pre class="snip">int leader = find(par[node]);
 par[node] = leader;
 return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joining two groups, hang the smaller tree under the bigger one and add the sizes. Trees stay shallow, so <code>find</code> stays fast.</p><pre class="snip">if (sz[l1] &gt;= sz[l2]) { par[l2] = l1; sz[l1] += sz[l2]; }</pre></div><div class="concept"><h4>Cycle detection in an undirected graph</h4><p>Add edges one by one. If both ends of a new edge already have the same leader, they were already connected, so this edge closes a cycle.</p></div><div class="concept"><h4>Counting components</h4><p>Start with n components. Every successful union (two different leaders) reduces the count by one. At the end, the leaders are the nodes with <code>par[i] == -1</code>.</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: six strangers, two handshakes and a question</h3><p>The room from the top of the page. <code>par</code> is the one link each person remembers; <code>-1</code> means &quot;I am the leader&quot;. The <code>find</code> row is the leader each person ends up at, which is the only thing the structure is ever asked. Watch how the <code>find</code> row stops changing before the tree does.</p><div class="stepper" data-n="8"><p class="stitle">Press the arrows to shake hands</p><div class="frames"><div class="frame" data-i="0"><pre> 1    2    3    4    5    6
+
+
+
+
+
+person    1    2    3    4    5    6
+par      -1   -1   -1   -1   -1   -1
+find      1    2    3    4    5    6
+      six groups, every par is -1</pre><p class="flabel">Six strangers, six circles of one. Nobody points at anybody, so everybody is their own leader.</p></div><div class="frame" data-i="1"><pre> 1         3    4    5    6
+ |
+ 2
+
+
+
+person    1    2    3    4    5    6
+par      -1    1   -1   -1   -1   -1
+find      1    1    3    4    5    6
+               ^ 2 now points at 1</pre><p class="flabel">1 shakes hands with 2. Both are leaders of groups of one, so the tie is broken by the <code>&gt;=</code> in the code and 2 is hung under 1: <code>par[2] = 1</code>. Five circles left.</p></div><div class="frame" data-i="2"><pre> 1         3         5    6
+ |         |
+ 2         4
+
+
+
+person    1    2    3    4    5    6
+par      -1    1   -1    3   -1   -1
+find      1    1    3    3    5    6
+                         ^ 4 now points at 3</pre><p class="flabel">3 shakes hands with 4, and the same thing happens on the other side of the room: <code>par[4] = 3</code>. Two little trees and two people still alone.</p></div><div class="frame" data-i="3"><pre> 1         3         5    6
+ |         |
+ 2         4
+
+
+
+person    1    2    3    4    5    6
+par      -1    1   -1    3   -1   -1
+find      1    1    3    3    5    6
+      find(4) = 3,  find(6) = 6,  different</pre><p class="flabel">Ask the question now: are 4 and 6 in the same circle? <code>find(4)</code> walks 4 -&gt; 3 and stops at the -1, so the leader is 3. <code>find(6)</code> stops immediately at 6. Different leaders, so no - and no graph was searched to find that out.</p></div><div class="frame" data-i="4"><pre>   1                 5    6
+  / \
+ 2   3
+     |
+     4
+
+person    1    2    3    4    5    6
+par      -1    1    1    3   -1   -1
+find      1    1    1    1    5    6
+                    ^    ^ 3 and 4 now lead to 1</pre><p class="flabel">Now 2 shakes hands with 3. You do <strong>not</strong> write <code>par[3] = 2</code>. You find both leaders, 1 and 3, and link those, so a whole tree swings under one leader in a single assignment: <code>par[3] = 1</code>.</p></div><div class="frame" data-i="5"><pre>   1                 5    6
+  / \
+ 2   3
+     |
+     4
+
+person    1    2    3    4    5    6
+par      -1    1    1    3   -1   -1
+find      1    1    1    1    5    6
+      find(4): 4 -&gt; 3 -&gt; 1, two steps</pre><p class="flabel">Ask <code>find(4)</code> again. The walk is longer now: 4 -&gt; 3 -&gt; 1, two steps. In a room of a hundred thousand people that walk is what you have to worry about.</p></div><div class="frame" data-i="6"><pre>   1                 5    6
+  /|\
+ 2 3 4
+
+
+
+person    1    2    3    4    5    6
+par      -1    1    1    1   -1   -1
+find      1    1    1    1    5    6
+                         ^ par[4] is 1 now</pre><p class="flabel">Path compression happens on the way back out of the recursion. Every node the walk passed is re-pointed straight at the leader, so <code>par[4]</code> becomes 1. The tree is flat now - and look at the <code>find</code> row: not a single answer changed.</p></div><div class="frame" data-i="7"><pre>   1                 5    6
+  /|\
+ 2 3 4
+
+
+
+person    1    2    3    4    5    6
+par      -1    1    1    1   -1   -1
+find      1    1    1    1    5    6
+      find(4): 4 -&gt; 1, one step</pre><p class="flabel">Ask <code>find(4)</code> a third time and it costs one step, for ever. The work of walking the tree was done once and then written down, which is why a find ends up costing almost nothing no matter how many handshakes came before it.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/ufds" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — union-find</b><span class="rnote">See the group trees flatten as path compression does its work.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/data_structures/disjoint_set_union.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — disjoint set union</b><span class="rnote">The clearest account of why the two optimisations make it near-instant.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>William Fiset — graph theory playlist</b><span class="rnote">Every graph algorithm of this course, drawn before it is coded.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-find-using-recursion">
@@ -77,9 +149,9 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
     </div>
   </div>
   <p class="what">Builds a small hard-coded parent array and finds the leader of node 4 by recursing up the parent links.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 27 lines</span>
+      <span>CPP · 68 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2011/find_using_recursion.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -112,13 +184,78 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="normal">24</span>
 <span class="normal">25</span>
 <span class="normal">26</span>
-<span class="normal">27</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Disjoint Set Union (DSU), also called Union-Find: a way of keeping track of</span>
+<span class="c1">// which items are in the same group, when groups keep merging.</span>
+<span class="c1">//</span>
+<span class="c1">// The whole idea rests on one trick. Every group picks one member as its LEADER,</span>
+<span class="c1">// and every other member remembers one node above it, its parent. Follow the</span>
+<span class="c1">// parents upwards and you always end at the leader. Two items are in the same</span>
+<span class="c1">// group exactly when they end at the same leader - so &quot;are these two together?&quot;</span>
+<span class="c1">// becomes &quot;do they have the same leader?&quot;.</span>
+<span class="c1">//</span>
+<span class="c1">// par[x] holds the parent of x, and par[x] == -1 is the marker for &quot;x has no</span>
+<span class="c1">// parent, so x IS a leader&quot;. Nothing else is stored: no lists, no edges, just one</span>
+<span class="c1">// int per node.</span>
+<span class="c1">//</span>
+<span class="c1">// This first file only does the climbing half (find). Joining two groups comes</span>
+<span class="c1">// later, in union.cpp.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span><span class="c1">   // for memset</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="c1">// One parent slot per node. It is global, so it starts as all zeros - which would</span>
+<span class="c1">// wrongly mean &quot;everyone&#39;s parent is node 0&quot;, hence the memset in main().</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 
+<span class="c1">// find(node): climb from node up to the leader of its group and return it.</span>
+<span class="c1">// If node has no parent it is already the leader - that is the stopping point of</span>
+<span class="c1">// the recursion, and without it the calls would never end.</span>
+<span class="c1">// Otherwise ask the same question one step up and pass the answer back down.</span>
+<span class="c1">// Cost: one call per step, so O(height of the tree).</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">node</span><span class="p">;</span>
@@ -127,6 +264,10 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// memset writes the same BYTE over the whole block. -1 as a byte is 11111111,</span>
+<span class="w">    </span><span class="c1">// and an int made of four such bytes is also -1, so this really does set every</span>
+<span class="w">    </span><span class="c1">// par[i] to -1: at the start each node is alone and is its own leader.</span>
+<span class="w">    </span><span class="c1">// (The same trick with 1 instead of -1 does NOT work - see union.cpp.)</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">par</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">par</span><span class="p">));</span>
 <span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
@@ -135,13 +276,26 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
 <span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Now a small group is built by hand, to have something to climb:</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">//            1            &lt;- leader, par[1] = -1</span>
+<span class="w">    </span><span class="c1">//           /|\</span>
+<span class="c1">    //          0 2 3</span>
+<span class="w">    </span><span class="c1">//              |</span>
+<span class="w">    </span><span class="c1">//              5</span>
+<span class="w">    </span><span class="c1">//              |</span>
+<span class="w">    </span><span class="c1">//              4</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// find(4) walks 4 -&gt; 5 -&gt; 3 -&gt; 1 and stops at 1, because par[1] is -1.</span>
+<span class="w">    </span><span class="c1">// Four calls, four steps: that is why a tall tree makes find slow, and why the</span>
+<span class="w">    </span><span class="c1">// next two files work on making it shorter.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 27 lines ▾</button>
+    <button type="button" class="expand">Show all 68 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>1
@@ -162,7 +316,7 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
   <p class="what">The same leader search written as a loop: keep moving <code>node = par[node]</code> until the parent is -1.</p>
   <div class="codebox-wrap">
     <div class="code-bar">
-      <span>CPP · 27 lines</span>
+      <span>CPP · 44 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2011/find._using_loop.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -195,13 +349,43 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="normal">24</span>
 <span class="normal">25</span>
 <span class="normal">26</span>
-<span class="normal">27</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The same find() as find_using_recursion.cpp, written as a loop instead.</span>
+<span class="c1">// The parent array, the -1 marker and the hand-built group are all unchanged -</span>
+<span class="c1">// see find_using_recursion.cpp for what they mean.</span>
+<span class="c1">//</span>
+<span class="c1">// What the change buys: no recursion means no call stack. The recursive version</span>
+<span class="c1">// keeps one stack frame per step, so a chain of a million nodes can overflow the</span>
+<span class="c1">// stack; this one uses a single variable however tall the tree is. Space drops</span>
+<span class="c1">// from O(height) to O(1). The number of steps, and so the running time, is the</span>
+<span class="c1">// same.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 
+<span class="c1">// Keep stepping to the parent while there is one. The moment par[node] is -1 we</span>
+<span class="c1">// are standing on the leader, so node itself is the answer.</span>
+<span class="c1">// `node` is a copy of the argument, so moving it does not disturb the caller.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="p">){</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">];</span>
@@ -218,13 +402,17 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
 <span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Same tree, same walk 4 -&gt; 5 -&gt; 3 -&gt; 1, same answer: 1.</span>
+<span class="w">    </span><span class="c1">// Notice that neither this version nor the recursive one changes the tree,</span>
+<span class="w">    </span><span class="c1">// so the next find(4) would do all four steps again. find_optimized.cpp fixes</span>
+<span class="w">    </span><span class="c1">// exactly that.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 27 lines ▾</button>
+    <button type="button" class="expand">Show all 44 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>1
@@ -243,9 +431,9 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
     </div>
   </div>
   <p class="what">Recursive <code>find</code> that also re-points each node on the path directly to the leader, so later searches are fast.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 29 lines</span>
+      <span>CPP · 51 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2011/find_optimized.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -280,7 +468,42 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="normal">26</span>
 <span class="normal">27</span>
 <span class="normal">28</span>
-<span class="normal">29</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// find() with PATH COMPRESSION - the third version, and the one used from here</span>
+<span class="c1">// on. The parent array and the -1 marker are as in find_using_recursion.cpp.</span>
+<span class="c1">//</span>
+<span class="c1">// What changed: the recursion already visits every node between `node` and the</span>
+<span class="c1">// leader, so on the way back down it re-points each of them straight at the</span>
+<span class="c1">// leader. The tall chain is flattened as a side effect of asking the question.</span>
+<span class="c1">//</span>
+<span class="c1">// What it buys: the first find(4) still costs four steps, but afterwards 4, 5 and</span>
+<span class="c1">// 3 all hang directly under 1, so every later find on them costs one step. Work</span>
+<span class="c1">// done once is never repeated. Together with union by size (union.cpp) this makes</span>
+<span class="c1">// find effectively constant time in practice - the O(logn) note below is the safe</span>
+<span class="c1">// pessimistic figure.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
@@ -288,10 +511,15 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="p">){</span><span class="w"> </span><span class="c1">// O(logn)</span>
+<span class="w">    </span><span class="c1">// Same stopping point: no parent means this node is the leader.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">node</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Ask upwards first...</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]);</span>
+<span class="w">    </span><span class="c1">// ...then shorten this node&#39;s own link before handing the answer back. This</span>
+<span class="w">    </span><span class="c1">// single line is the whole optimisation. It is safe because re-pointing a node</span>
+<span class="w">    </span><span class="c1">// at its own leader cannot change which group it belongs to.</span>
 <span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span>
 <span class="p">}</span>
@@ -305,13 +533,17 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
 <span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Before the call:  4 -&gt; 5 -&gt; 3 -&gt; 1</span>
+<span class="w">    </span><span class="c1">// After the call:   4 -&gt; 1, 5 -&gt; 1, 3 -&gt; 1</span>
+<span class="w">    </span><span class="c1">// The printed answer is still 1; what changed is the shape of the tree, which</span>
+<span class="w">    </span><span class="c1">// this program does not print. A second find(4) would finish in one step.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 29 lines ▾</button>
+    <button type="button" class="expand">Show all 51 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>1
@@ -330,9 +562,9 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
     </div>
   </div>
   <p class="what">Joins the groups of 1 and 2 with <code>dsu_union</code>, which hangs the smaller group under the bigger one, then prints the parent of nodes 0..3.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 41 lines</span>
+      <span>CPP · 80 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2011/union.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -379,13 +611,65 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="normal">38</span>
 <span class="normal">39</span>
 <span class="normal">40</span>
-<span class="normal">41</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The other half of DSU: joining two groups. find() (with path compression, as in</span>
+<span class="c1">// find_optimized.cpp) is copied in unchanged; the new part is dsu_union.</span>
+<span class="c1">//</span>
+<span class="c1">// Merging is cheap because of how the groups are stored: to fold group B into</span>
+<span class="c1">// group A you do not touch B&#39;s members at all - you just make B&#39;s leader point at</span>
+<span class="c1">// A&#39;s leader. One assignment, and every node that used to climb to B now climbs</span>
+<span class="c1">// one step further and reaches A.</span>
+<span class="c1">//</span>
+<span class="c1">// The only real decision is which leader goes under which. That is UNION BY SIZE:</span>
+<span class="c1">// hang the smaller group under the bigger one. Then only the smaller group&#39;s</span>
+<span class="c1">// nodes get one step deeper, so the tree can never grow taller than about log n.</span>
+<span class="c1">// That is what keeps find fast even before path compression helps.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span><span class="w">   </span><span class="c1">// group_size[L] = how many nodes are in leader L&#39;s group</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -396,9 +680,19 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Put the groups of node1 and node2 together.</span>
+<span class="c1">// Only the LEADERS matter; the two nodes themselves are never touched.</span>
+<span class="c1">// Missing check: if leader1 == leader2 the two were already in one group, and</span>
+<span class="c1">// this code would then hang a leader under itself and double the recorded size.</span>
+<span class="c1">// Callers in this module must test for that first - see</span>
+<span class="c1">// detect_cycle_in_undirected_graph_using_DSU.cpp, where the equal case is exactly</span>
+<span class="c1">// the cycle it is hunting for.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">dsu_union</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node1</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">node2</span><span class="p">){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">node1</span><span class="p">);</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">node2</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// The bigger group keeps its leader; the smaller one is hung underneath and</span>
+<span class="w">    </span><span class="c1">// its members are added to the winner&#39;s count. On a tie either side may win -</span>
+<span class="w">    </span><span class="c1">// here leader1 does, because of the &gt;=.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">]){</span>
 <span class="w">        </span><span class="n">par</span><span class="p">[</span><span class="n">leader2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader1</span><span class="p">;</span>
 <span class="w">        </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">];</span>
@@ -409,11 +703,27 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// Everyone starts alone: no parent, group of one.</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">par</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">par</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// BUG, left in place on purpose. memset fills BYTES, not ints. Setting every</span>
+<span class="w">    </span><span class="c1">// byte to 1 makes each int 0x01010101 = 16843009, not 1. So every group is</span>
+<span class="w">    </span><span class="c1">// recorded as holding 16843009 members. The program still prints the right</span>
+<span class="w">    </span><span class="c1">// thing, because all the sizes are equally wrong and only the comparison</span>
+<span class="w">    </span><span class="c1">// group_size[leader1] &gt;= group_size[leader2] is ever read - but the moment a</span>
+<span class="w">    </span><span class="c1">// program prints a group size, or adds sizes up, the numbers are nonsense.</span>
+<span class="w">    </span><span class="c1">// Correct ways: a loop `for(int i=0; i&lt;1005; i++) group_size[i] = 1;`</span>
+<span class="w">    </span><span class="c1">// or `fill(group_size, group_size + 1005, 1);`</span>
+<span class="w">    </span><span class="c1">// (memset(par, -1, ...) above is fine only because the byte 11111111 happens</span>
+<span class="w">    </span><span class="c1">// to make the int -1 as well.)</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">group_size</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">group_size</span><span class="p">));</span>
 <span class="w">    </span>
+<span class="w">    </span><span class="c1">// 1 and 2 are both alone, so each is its own leader and the sizes tie.</span>
+<span class="w">    </span><span class="c1">// The &gt;= sends 2 under 1: par[2] becomes 1.</span>
 <span class="w">    </span><span class="n">dsu_union</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// A leader still has par == -1. Only node 2 has a parent now, so the output</span>
+<span class="w">    </span><span class="c1">// is -1, -1, 1, -1 for nodes 0, 1, 2, 3.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; -&gt; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -422,7 +732,7 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 41 lines ▾</button>
+    <button type="button" class="expand">Show all 80 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>0 -&gt; -1
@@ -446,7 +756,7 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
   <p class="what">Reads edges one by one. If an edge joins two nodes that already share a leader, the graph has a cycle; otherwise the two groups are merged.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 58 lines</span>
+      <span>CPP · 88 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2011/detect_cycle_in_undirected_graph_using_DSU.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -510,7 +820,52 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="normal">55</span>
 <span class="normal">56</span>
 <span class="normal">57</span>
-<span class="normal">58</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The first real use of DSU: does an undirected graph contain a cycle?</span>
+<span class="c1">//</span>
+<span class="c1">// Module 6 answered this with DFS or BFS. DSU answers it without walking the</span>
+<span class="c1">// graph at all, by reading the edges one at a time and asking one question of</span>
+<span class="c1">// each: &quot;were these two nodes already connected before this edge arrived?&quot;</span>
+<span class="c1">//</span>
+<span class="c1">//   * No  -&gt; the edge joins two separate groups. Merge them and move on.</span>
+<span class="c1">//   * Yes -&gt; there is already a path between a and b, so this edge closes a loop.</span>
+<span class="c1">//            That is a cycle.</span>
+<span class="c1">//</span>
+<span class="c1">// find() and dsu_union() are exactly the versions built up in find_optimized.cpp</span>
+<span class="c1">// and union.cpp; only main() is new.</span>
+<span class="c1">//</span>
+<span class="c1">// Time: about O(E) - one almost-constant find per edge. Space O(n).</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
@@ -542,23 +897,38 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">par</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">par</span><span class="p">));</span>
+<span class="w">    </span><span class="c1">// Same memset-fills-bytes bug as union.cpp: every size becomes 16843009</span>
+<span class="w">    </span><span class="c1">// instead of 1. Harmless here, because only the &gt;= comparison is used and all</span>
+<span class="w">    </span><span class="c1">// the starting sizes are wrong by the same amount. See union.cpp.</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">group_size</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">group_size</span><span class="p">));</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">             </span><span class="c1">// n nodes (0..n-1) and e undirected edges</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">   </span><span class="c1">// stays false until some edge closes a loop</span>
 
+<span class="w">    </span><span class="c1">// Read the edges one by one. The order they come in does not matter.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">leader1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">leader2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">leader1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">leader2</span><span class="p">){</span>
+<span class="w">            </span><span class="c1">// Same leader means a and b could already reach each other, so this</span>
+<span class="w">            </span><span class="c1">// edge is a second route between them: a cycle. The two groups are</span>
+<span class="w">            </span><span class="c1">// deliberately NOT merged here - they are already one group, and</span>
+<span class="w">            </span><span class="c1">// dsu_union assumes two different leaders.</span>
 <span class="w">            </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// Different groups, no loop yet. Join them, so that later edges see</span>
+<span class="w">            </span><span class="c1">// a and b as connected.</span>
 <span class="w">            </span><span class="n">dsu_union</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Why this works only for UNDIRECTED graphs: DSU remembers that two nodes are</span>
+<span class="w">    </span><span class="c1">// connected, not which way the edges point. In a directed graph 1-&gt;2, 1-&gt;3,</span>
+<span class="w">    </span><span class="c1">// 2-&gt;3 would share a leader and be reported as a cycle, even though you can</span>
+<span class="w">    </span><span class="c1">// never walk back to where you started.</span>
 
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">cycle</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Cycle Detected&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
@@ -570,7 +940,7 @@ return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joi
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 58 lines ▾</button>
+    <button type="button" class="expand">Show all 88 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
@@ -1284,7 +1654,7 @@ practice_problem_3_building_roads.cpp:80:5: note: suggested alternative: &#x27;m
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>

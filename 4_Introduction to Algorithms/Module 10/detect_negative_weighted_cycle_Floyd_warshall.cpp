@@ -1,3 +1,12 @@
+// Floyd-Warshall again, this time asked a different question: does the graph
+// contain a negative cycle - a loop you can walk round for ever, getting cheaper
+// each time? Bellman-Ford answered this in Module 9 by doing one extra relaxation
+// round. The matrix answers it even more cheaply, in one glance at the diagonal.
+//
+// Everything down to the triple loop is exactly floyd-warshall.cpp; read the
+// comments there for why k is outermost and why INT_MAX is checked before adding.
+// The new part is at the bottom.
+
 #include <iostream>
 #include <queue>
 #include <cstring>
@@ -39,6 +48,15 @@ int main(){
     }
 
     // checking for negative cycle
+    //
+    // adj_mat[i][i] started at 0: standing still costs nothing. The triple loop
+    // only ever lowers a cell, and the only way to lower [i][i] is to find a real
+    // route that leaves i and comes back to i for a total below zero. That route
+    // is a negative cycle. So one negative number anywhere on the diagonal is the
+    // whole test - we do not have to hunt for the cycle itself.
+    //
+    // A cycle that costs exactly 0 does NOT count: the diagonal stays at 0, not
+    // below it, and walking such a loop never makes anything cheaper.
     bool cycle = false;
     
     for(int i=0; i<n; i++){
@@ -47,6 +65,9 @@ int main(){
         }
     }
 
+    // If a negative cycle exists the numbers in the table are meaningless - every
+    // pair that can reach the cycle has no "shortest" distance at all, because the
+    // cost can always be driven lower. So we say so instead of printing the chart.
     if(cycle){
         cout << "Negative weighted cycle detected" << endl;
     } else{

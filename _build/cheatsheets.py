@@ -1,0 +1,107 @@
+"""Per-course summary tables, rendered on the course index page.
+
+Keyed by course slug (see COURSE_INFO in build.py). Each entry:
+    title    - heading of the section
+    intro    - one or two sentences under the heading
+    columns  - table header
+    rows     - list of rows; cells may use `code` and **bold** like the notes do
+    footer   - optional list of one-line reminders under the table
+"""
+
+DATA = {
+ "data-structures": {
+  "title": "Which structure, and what it costs",
+  "intro": "One table for the whole course. Read it as a question: what do you need to do most often? "
+           "That is what decides the structure, and the cost column is what happens when the input is big.",
+  "columns": ["Structure", "What it is good at", "What it costs", "Reach for it when", "Module"],
+  "rows": [
+   ["Array / `vector`", "Reading or changing any position straight away",
+    "read `a[i]` O(1) · `push_back` O(1) · insert or erase in the middle O(n)",
+    "You mostly read by position and add at the end.", "2"],
+   ["Prefix sum array", "Answering many range-sum questions",
+    "build O(n) · each question O(1)", "The values never change and the questions keep coming.", "3"],
+   ["Binary search (sorted array)", "Finding a value, or the first value past a limit",
+    "O(log n) per search, once sorted", "The data is sorted and you search it many times.", "3"],
+   ["Singly linked list", "Adding or removing at a known node without shifting anything",
+    "insert at head O(1) · reach position `i` O(i) · delete at tail O(n)",
+    "You build and cut a chain, and never need `a[i]`.", "5–8"],
+   ["Doubly linked list", "The same, plus walking backwards and dropping the last box",
+    "insert or delete at either end O(1) · one extra pointer per node",
+    "You need both directions, or the tail changes often.", "9–10"],
+   ["Stack (LIFO)", "Dealing with the newest unfinished thing first",
+    "push, pop and top all O(1)", "Brackets, undo, \"the last one that is still open\".", "13"],
+   ["Queue (FIFO)", "Serving things in the order they arrived",
+    "push, pop and front all O(1)", "Simulations, and every level-by-level walk.", "14"],
+   ["Binary tree", "Data that splits in two at every step",
+    "one walk over every node O(n) · recursion depth = height",
+    "The problem is about parents, children, levels or subtrees.", "17–20"],
+   ["Binary search tree", "Keeping values in order while still inserting and deleting",
+    "search, insert, delete O(height) — O(log n) when balanced, O(n) when the input arrives sorted",
+    "You need sorted order and changes at the same time.", "21"],
+   ["Heap / `priority_queue`", "Always handing back the largest (or smallest) value",
+    "push and pop O(log n) · peek the top O(1)",
+    "You only ever need the most urgent item, right now.", "22–23"],
+   ["`set`", "Have I seen this before, and what is next in order",
+    "insert, find, erase O(log n) · kept sorted", "Duplicates must go, or you need the next value up.", "23"],
+   ["`map`", "Counting or labelling things whose keys are not small numbers",
+    "insert, find, erase O(log n) · kept sorted by key",
+    "A frequency array would need a billion slots, or the key is a word.", "23"],
+   ["Frequency array", "Counting small numbers or letters",
+    "count O(n) · each question O(1) · needs a slot per possible value",
+    "Values are small and non-negative. Otherwise use a `map`.", "C course 13"],
+  ],
+  "footer": [
+   "`n` is how many items you hold; a step is one comparison or one pointer move.",
+   "About 10^8 steps fit in one second, so an O(n^2) plan dies at n = 100000 and an O(n log n) one survives.",
+   "When two structures both fit, pick the one whose *most frequent* operation is the cheap one.",
+  ],
+ },
+ "algorithms": {
+  "title": "Which algorithm answers which question",
+  "intro": "Contest problems rarely name the tool. They describe a shape. This table goes from the shape "
+           "to the tool, with the cost that decides whether it will finish in time.",
+  "columns": ["The question sounds like", "Use", "What it costs", "Watch out for", "Module"],
+  "rows": [
+   ["Can I get from here to there at all? How many separate pieces are there?",
+    "DFS or BFS", "O(V + E)", "A graph can come back on itself, so mark nodes visited.", "1–5"],
+   ["Fewest moves, every move costing the same",
+    "BFS", "O(V + E)", "The level array *is* the distance; DFS will not give it to you.", "2"],
+   ["Flood this grid / count the islands",
+    "DFS or BFS on cells", "O(rows × columns)",
+    "A cell's neighbours are computed, not stored; guard the edges.", "3, 5"],
+   ["Does this graph contain a loop?",
+    "DFS with a parent check (undirected) or an on-path flag (directed)", "O(V + E)",
+    "The undirected rule and the directed rule are genuinely different.", "6"],
+   ["Cheapest route, roads have different lengths, no negative ones",
+    "Dijkstra with a priority queue", "O((V + E) log V)",
+    "Skip a pair popped from the queue if you have already finished that node.", "7"],
+   ["Cheapest route, and some costs are negative",
+    "Bellman-Ford", "O(V × E)", "One extra round that still improves means a negative cycle.", "9"],
+   ["Distance between every pair of places",
+    "Floyd-Warshall", "O(n^3)", "The middle city must be the outermost loop; guard against overflow.", "10"],
+   ["Are these two in the same group? Join two groups.",
+    "Disjoint set union", "Near O(1) per question with compression and union by size",
+    "Join the leaders, not the two nodes.", "11"],
+   ["Connect everything as cheaply as possible",
+    "Kruskal with DSU", "O(E log E)", "Sum the cost in a `long long`.", "18"],
+   ["Count the ways / the best total, built from smaller choices",
+    "Recursion first, then memoise it", "states × work per state",
+    "`dp[i]` means \"the answer for i\" — write that down before you code.", "14"],
+   ["Take it or leave it, with a limit",
+    "0-1 knapsack table", "O(items × capacity)", "Fill the capacity column 0..W inclusive.", "15"],
+   ["Can I hit this total exactly? / split into two equal halves",
+    "Subset sum table", "O(items × total)", "An odd total can never be split in two.", "17"],
+   ["An item may be used again and again",
+    "Unbounded knapsack", "O(items × capacity)", "One index changes: stay on the same item.", "17"],
+   ["Sort it yourself / count the inversions",
+    "Merge sort", "O(n log n)", "The merge is one walk, not a search.", "18"],
+   ["Longest common part of two strings",
+    "LCS table", "O(|A| × |B|)", "A subsequence may skip letters; a substring may not.", "18"],
+  ],
+  "footer": [
+   "Read the constraints before choosing: they tell you which costs will fit in one second.",
+   "Every graph algorithm here needs the adjacency list, not the matrix, once n passes a few thousand.",
+   "When a shortest-path problem has all edges equal, BFS beats Dijkstra and is simpler to write.",
+  ],
+ },
+}

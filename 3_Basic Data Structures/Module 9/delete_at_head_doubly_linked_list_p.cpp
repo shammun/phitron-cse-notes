@@ -1,17 +1,23 @@
+// Practice copy of delete_at_head_doubly_linked_list.cpp - with the one-node
+// case fixed. This version sets `head = NULL` after deleting the last node
+// instead of leaving it commented out, so an emptied list really is two NULL
+// pointers rather than one NULL and one dangling pointer. Everything else, and
+// the whole demo, is the same.
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <string>
-using namespace std; 
+using namespace std;
 
 class Node {
     public:
-        int val;     
+        int val;
         Node* next;
         Node* prev;
 
     Node(int val) {
-        this->val = val; 
+        this->val = val;
         this->next = NULL;
         this->prev = NULL;
     }
@@ -80,10 +86,13 @@ void insert_at_any_position(Node* &head, Node* &tail, int pos, int val){
 }
 
 void delete_at_head(Node* &head, Node* &tail){
-    if(head == NULL){
+    if(head == NULL){       // empty list: nothing to do, and nothing safe to read
         return;
     }
 
+    // One node only. The list becomes empty, so both ends are blanked - `delete`
+    // frees the memory but would leave both pointers aimed at it. This is the
+    // line the original file left commented out.
     if(head->next == NULL){
         delete head;
         head = NULL;
@@ -91,9 +100,9 @@ void delete_at_head(Node* &head, Node* &tail){
         return;
     }
 
-    Node* deleteNode = head;
+    Node* deleteNode = head;   // save it before `head` moves away from it
     head = head->next;
-    head->prev = NULL;
+    head->prev = NULL;         // the new first node has nothing behind it now
     delete deleteNode;
 }
 
@@ -138,6 +147,6 @@ int main(){
     delete_at_head(head, tail); // 20 200 30 400 100 100
 
     print_forward(head); // 20 200 30 400 100 100
-    
+
     return 0;
 }

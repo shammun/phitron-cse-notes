@@ -7,7 +7,7 @@
 <meta name="description" content="This module turns the hand-built list into real operations: insert at the head, at the tail (slow and O(1) versions), and at any index, plus reading a list from input until `-1`. It explains why `head` must be passed as a reference to a pointer, and uses recursion to print a list backwards. The practice day applies these to size, duplicates, the middle element, indexed inserts and a sorted check.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=6">
+<link rel="stylesheet" href="../assets/site.css?v=7">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -61,7 +61,41 @@ head = newNode;</pre></div><div class="concept"><h4>Insert at tail, O(n) vs O(1)
 tail = newNode;</pre></div><div class="concept"><h4>Empty list case</h4><p>When <code>head == NULL</code> there is no node to attach to, so the new node becomes both head and tail.</p></div><div class="concept"><h4>Insert at an index</h4><p>Walk to the node just before the position (<code>idx - 1</code> steps), then point the new node at its successor and the previous node at the new node.</p><pre class="snip">newNode-&gt;next = tmp-&gt;next;
 tmp-&gt;next = newNode;</pre></div><div class="concept"><h4>Reading until a sentinel</h4><p>Read values in a loop and stop when you see <code>-1</code>; each other value is added at the tail.</p></div><div class="concept"><h4>Recursion for reverse printing</h4><p>Call the function on <code>next</code> first and print afterwards. The prints then happen while the calls return, from the last node back to the first.</p><pre class="snip">print_reverse(tmp-&gt;next);
 cout &lt;&lt; tmp-&gt;val;</pre></div><div class="concept"><h4>Visited array</h4><p>When values are small (at most 100), a <code>bool visited[101]</code> array detects repeats in one pass.</p></div></div></section>
-  
+  <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: inserting 100 at the head</h3><p>Two lines do this, and the order of the two is the whole lesson. The list is the <code>10 20 30</code> from <code>insert_at_head.cpp</code>.</p><div class="stepper" data-n="6"><p class="stitle">Press ▶ to step through it</p><div class="frames"><div class="frame" data-i="0"><pre>
+        head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; NULL</pre><p class="flabel">The list today. <code>head</code> holds the address of the 10 box; the 30 box holds NULL to say the chain ends there.</p></div><div class="frame" data-i="1"><pre>
+        head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; NULL
+
+[100] -&gt; NULL</pre><p class="flabel"><code>Node* newNode = new Node(100);</code> makes one box on the heap. The constructor sets its <code>next</code> to NULL, so it is a chain of one, standing outside the list.</p></div><div class="frame" data-i="2"><pre>
+        head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; NULL
+                 ^
+[100] -----------+</pre><p class="flabel">Line 1 of 2: <code>newNode-&gt;next = head;</code>. The new box now points at the current first box. Nothing in the list has changed yet, and <code>head</code> still reaches all of it.</p></div><div class="frame" data-i="3"><pre>head
+ |
+ v
+[100] -&gt; [10] -&gt; [20] -&gt; [30] -&gt; NULL</pre><p class="flabel">Line 2 of 2: <code>head = newNode;</code>. <code>head</code> now names the new box, which already points at the old front, so the chain is whole again: 100 10 20 30.</p></div><div class="frame" data-i="4"><pre>
+head -&gt; [100] -&gt; [10] -&gt; [20] -&gt; [30] -&gt; NULL</pre><p class="flabel">The same list, drawn the usual way. Two assignments did it, and the other three boxes were never read, moved or copied. In an array every value would have shifted one place right.</p></div><div class="frame" data-i="5"><pre>wrong order:
+  head = newNode;   then   newNode-&gt;next = head;
+
+head -&gt; [100] &lt;-+
+         |      |
+         +------+   [10] -&gt; [20] -&gt; [30]  lost</pre><p class="flabel">Swap the two lines and it falls apart. With <code>head = newNode;</code> first, <code>head</code> already means the new box, so <code>newNode-&gt;next = head;</code> points 100 at itself and nothing reaches 10 any more. Point the new box first, move <code>head</code> second.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 6</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div><div class="wstep"><h3>Watch it happen: inserting 1000 in the middle</h3><p>This is <code>insert_at_any_index(head, 2, 1000)</code> on the list <code>10 20 30</code>. Again only two arrows change; again the order decides whether it works.</p><div class="stepper" data-n="8"><p class="stitle">Press ▶ to step through it</p><div class="frames"><div class="frame" data-i="0"><pre>
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; NULL</pre><p class="flabel">The list is 10 20 30, counted from 0 at the head. The 1000 has to end up at index 2, in the gap between 20 and 30.</p></div><div class="frame" data-i="1"><pre>        tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; NULL</pre><p class="flabel"><code>Node* tmp = head;</code>. The walk starts at the front because there is nowhere else to start: only <code>head</code> is known.</p></div><div class="frame" data-i="2"><pre>                tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; NULL</pre><p class="flabel"><code>for(int i=1; i&lt;idx; i++)</code> runs once for index 2, so <code>tmp</code> takes one hop and stands on index 1. That is deliberate: you must stand one box <strong>before</strong> the gap, because the arrow that has to change lives in that box.</p></div><div class="frame" data-i="3"><pre>                tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; NULL
+
+newNode -&gt; [1000] -&gt; NULL</pre><p class="flabel"><code>new Node(1000)</code> makes the box. Its <code>next</code> is NULL and nothing points at it, so it is not in the list yet.</p></div><div class="frame" data-i="4"><pre>                tmp
+head -&gt; [10] -&gt; [20] -&gt; [30] -&gt; NULL
+                         ^
+newNode -&gt; [1000] -------+</pre><p class="flabel">Line 1 of 2: <code>newNode-&gt;next = tmp-&gt;next;</code>. The new box is pointed at whatever 20 was pointing at, which is the 30 box. The list itself is untouched so far.</p></div><div class="frame" data-i="5"><pre>                tmp
+head -&gt; [10] -&gt; [20] -&gt; [1000] -&gt; [30] -&gt; NULL
+                         ^ 20 points here now</pre><p class="flabel">Line 2 of 2: <code>tmp-&gt;next = newNode;</code>. 20&#x27;s arrow is bent to the new box. No box changed its address and nothing was shifted; two arrows were rewritten and the job is done.</p></div><div class="frame" data-i="6"><pre>
+head -&gt; [10] -&gt; [20] -&gt; [1000] -&gt; [30] -&gt; NULL</pre><p class="flabel">The list is now 10 20 1000 30, which is exactly what <code>print_linked_list</code> prints for the first insertion in that program.</p></div><div class="frame" data-i="7"><pre>wrong order:
+  tmp-&gt;next = newNode;   then
+  newNode-&gt;next = tmp-&gt;next;
+
+head -&gt; [10] -&gt; [20] -&gt; [1000] &lt;-+
+                          |      |
+                          +------+   30 lost</pre><p class="flabel">Swap the two lines and <code>tmp-&gt;next</code> no longer means 30 by the time you read it: it already means the new box. So 1000 points at itself and 30 is gone. Point the new box first, then bend the old arrow.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 8</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/list" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — linked list</b><span class="rnote">Press Insert or Remove and watch the arrows re-point, one step at a time.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0rAuz8tVcM0AymmhTRsfaLU" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — linked list playlist</b><span class="rnote">From the basics to the interview problems on lists.</span></a></li><li class="r-tool"><a href="https://pythontutor.com/cpp.html" target="_blank" rel="noopener"><span class="rkind">🔧 Tool</span><b>Python Tutor — step through C++ code</b><span class="rnote">Paste your own program and step through it line by line, with the pointers drawn.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-reference-of-a-pointer">
@@ -391,7 +425,7 @@ Address of p in main() 0x1041fe40
   <p class="what">A re-typed copy of <code>insert_at_head.cpp</code>. The only difference is that <code>print_linked_list</code> takes <code>Node* &amp;head</code>, which is unnecessary but harmless because it does not change <code>head</code>.</p><p class="same">Re-typed version of <a href="#p-insert-at-head"><code>insert_at_head.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 47 lines</span>
+      <span>CPP · 70 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%206/insert_at_head_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -444,7 +478,33 @@ Address of p in main() 0x1041fe40
 <span class="normal">44</span>
 <span class="normal">45</span>
 <span class="normal">46</span>
-<span class="normal">47</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Practice copy of insert_at_head.cpp, typed again from memory. The full explanation</span>
+<span class="c1">// lives in that file; this one only notes the idea and the one place the copy differs.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -456,19 +516,36 @@ Address of p in main() 0x1041fe40
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Typed correctly here: `this-&gt;next = NULL` marks the new node as the end of the</span>
+<span class="w">        </span><span class="c1">// list. Every loop over a list stops on NULL, so this one line is what keeps the</span>
+<span class="w">        </span><span class="c1">// other files in this folder from running for ever.</span>
 <span class="w">        </span><span class="n">Node</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Insert at head in O(1): no walking needed, the head is already in your hand.</span>
+<span class="c1">// The order of the two lines is the whole trick.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_head</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
-<span class="w">    </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
-<span class="w">    </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">    </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span><span class="w">   </span><span class="c1">// first: hook the new node onto the old first node</span>
+<span class="w">    </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">         </span><span class="c1">// then: the new node becomes the first node</span>
+<span class="w">    </span><span class="c1">// Swapping these two lines loses the list: head would already point at newNode, so</span>
+<span class="w">    </span><span class="c1">// `newNode-&gt;next = head` would point the node at itself.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// `Node* &amp;head` is a reference to the pointer, not a copy of it. A plain `Node* head`</span>
+<span class="w">    </span><span class="c1">// would let this function change only its own copy, and main&#39;s head would still point</span>
+<span class="w">    </span><span class="c1">// at the old first node.</span>
 <span class="p">}</span>
 
+<span class="c1">// The one difference from the original: here print takes `Node* &amp;head` too. It is</span>
+<span class="c1">// unnecessary - this function only reads the list and never assigns to head - but it is</span>
+<span class="c1">// harmless, and the output is the same. A plain `Node* head` copy says more clearly</span>
+<span class="c1">// &quot;I will not move your head pointer&quot;.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Walk with a separate pointer tmp so that head itself is never moved; losing head</span>
+<span class="w">    </span><span class="c1">// would lose the only way back to the start of the list.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="o">!=</span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
@@ -477,6 +554,7 @@ Address of p in main() 0x1041fe40
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// Build 10 -&gt; 20 -&gt; 30 by hand, the way Module 5 did it.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">30</span><span class="p">);</span>
@@ -484,6 +562,8 @@ Address of p in main() 0x1041fe40
 <span class="w">    </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 <span class="w">    </span><span class="n">a</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Each insert puts the new value in front, so the values come out in the reverse</span>
+<span class="w">    </span><span class="c1">// order of insertion: 300 200 100, then the original 10 20 30.</span>
 <span class="w">    </span><span class="n">insert_at_head</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">);</span>
 <span class="w">    </span><span class="n">insert_at_head</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">);</span>
 <span class="w">    </span><span class="n">insert_at_head</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">300</span><span class="p">);</span>
@@ -493,7 +573,7 @@ Address of p in main() 0x1041fe40
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 47 lines ▾</button>
+    <button type="button" class="expand">Show all 70 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>300
@@ -687,7 +767,7 @@ Address of p in main() 0x1041fe40
   <p class="what">A re-typed copy of <code>insert_at_tail.cpp</code>, but the constructor has a bug that makes it run forever.</p><p class="same">Re-typed version of <a href="#p-insert-at-tail"><code>insert_at_tail.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 56 lines</span>
+      <span>CPP · 87 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%206/insert_at_tail_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -749,11 +829,45 @@ Address of p in main() 0x1041fe40
 <span class="normal">53</span>
 <span class="normal">54</span>
 <span class="normal">55</span>
-<span class="normal">56</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w"> </span><span class="c1">// Allows us to avoid prefixing standard library objects with `std::`.</span>
+
+<span class="c1">// Practice copy of insert_at_tail.cpp, typed again from memory. The original carries the</span>
+<span class="c1">// full explanation; here the interesting part is one character that went missing.</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
@@ -762,25 +876,49 @@ Address of p in main() 0x1041fe40
 
 <span class="w">        </span><span class="n">Node</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">            </span><span class="c1">// BUG (left in place on purpose - do not fix it here, study it).</span>
+<span class="w">            </span><span class="c1">// The original says `this-&gt;next = NULL;`. This copy says `next`, and inside</span>
+<span class="w">            </span><span class="c1">// the constructor the bare name `next` means the member itself, which has</span>
+<span class="w">            </span><span class="c1">// not been given a value yet. So the line reads &quot;set next to whatever</span>
+<span class="w">            </span><span class="c1">// rubbish next already holds&quot; and the new node ends up with a garbage</span>
+<span class="w">            </span><span class="c1">// address instead of NULL.</span>
+<span class="w">            </span><span class="c1">// Consequence: nothing marks the end of the list. The walk to the tail below</span>
+<span class="w">            </span><span class="c1">// keeps following garbage pointers, never meets NULL, and the program runs</span>
+<span class="w">            </span><span class="c1">// until the judge kills it (timeout) or it crashes.</span>
+<span class="w">            </span><span class="c1">// Fix: this-&gt;next = NULL;</span>
 <span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
 
 
+<span class="c1">// Insert at tail without a tail pointer. Unlike insert at head, the place to attach is</span>
+<span class="c1">// at the far end, and the only way to reach it is to walk there from head.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Empty list: there is no last node to attach to, so the new node is the whole list.</span>
+<span class="w">    </span><span class="c1">// This is the case that needs `Node* &amp;head` - it assigns to head, and the caller must</span>
+<span class="w">    </span><span class="c1">// see that change.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Walk to the LAST node. The test is `tmp-&gt;next != NULL`, not `tmp != NULL`: stopping</span>
+<span class="w">    </span><span class="c1">// on tmp == NULL would walk one step too far, off the end of the list, and there</span>
+<span class="w">    </span><span class="c1">// would be nothing left to attach to.</span>
+<span class="w">    </span><span class="c1">// This walk is why the plain tail insert costs O(n) per insert - see the optimized</span>
+<span class="w">    </span><span class="c1">// version, which remembers the tail and attaches in O(1).</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// With the constructor bug above, tmp-&gt;next is never NULL, so this loop never ends.</span>
 <span class="p">}</span>
 
+<span class="c1">// Same as the original except that head comes in by reference here; print only reads the</span>
+<span class="c1">// list, so a plain copy would do just as well.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -790,13 +928,17 @@ Address of p in main() 0x1041fe40
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// 10 -&gt; 20 -&gt; 30, built by hand. Note that b&#39;s next is never set here; it should be</span>
+<span class="w">    </span><span class="c1">// NULL from the constructor, and that is exactly what the bug takes away.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">30</span><span class="p">);</span>
 
 <span class="w">    </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 <span class="w">    </span><span class="n">a</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">    </span>
+
+<span class="w">    </span><span class="c1">// Intended result: 10 20 30 100 200 300, each insert added at the far end.</span>
+<span class="w">    </span><span class="c1">// What actually happens: the first insert walks off the end and hangs.</span>
 <span class="w">    </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">);</span>
 <span class="w">    </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">);</span>
 <span class="w">    </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">300</span><span class="p">);</span>
@@ -807,7 +949,7 @@ Address of p in main() 0x1041fe40
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 56 lines ▾</button>
+    <button type="button" class="expand">Show all 87 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output <span class="tag warn">stopped after 5 s</span></div><pre><span class="muted">(prints nothing)</span></pre></div></div>
@@ -995,7 +1137,7 @@ Address of p in main() 0x1041fe40
   <p class="what">A re-typed copy of the optimized tail insert, with the function renamed <code>insert_at_tail_optimized</code>. It does not compile.</p><p class="same">Re-typed version of <a href="#p-insert-at-tail-optimized"><code>insert_at_tail_optimized.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 52 lines</span>
+      <span>CPP · 75 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%206/insert_at_tail_optimized_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1053,11 +1195,37 @@ Address of p in main() 0x1041fe40
 <span class="normal">49</span>
 <span class="normal">50</span>
 <span class="normal">51</span>
-<span class="normal">52</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="c1">// Practice copy of insert_at_tail_optimized.cpp, typed again from memory. Read the</span>
+<span class="c1">// original for the full story; this copy has two typos and does not compile.</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
@@ -1066,20 +1234,33 @@ Address of p in main() 0x1041fe40
 
 <span class="w">        </span><span class="n">Node</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">            </span><span class="c1">// Same BUG as insert_at_tail_p.cpp: `next` here is the member itself, which</span>
+<span class="w">            </span><span class="c1">// holds nothing yet, so the node&#39;s next ends up as garbage instead of NULL.</span>
+<span class="w">            </span><span class="c1">// Fix: this-&gt;next = NULL;</span>
 <span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// The optimization: keep a second pointer, `tail`, always aimed at the last node. Then</span>
+<span class="c1">// inserting at the end needs no walk at all - two assignments and you are done, O(1)</span>
+<span class="c1">// instead of the O(n) walk in insert_at_tail.cpp.</span>
+<span class="c1">// Both head and tail come in as `Node* &amp;` because both can change here and main must see</span>
+<span class="c1">// it. (The original names this function insert_at_tail; the copy renamed it.)</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail_optimized</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Empty list: the single new node is both the first and the last node, so head and</span>
+<span class="w">    </span><span class="c1">// tail must both be set. Forgetting tail here is the classic mistake - the next</span>
+<span class="w">    </span><span class="c1">// insert would then write through a tail that points nowhere.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">        </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
-<span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">    </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">   </span><span class="c1">// hang the new node off the current last node</span>
+<span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">         </span><span class="c1">// the new node is now the last (same as tail = tail-&gt;next)</span>
+<span class="w">    </span><span class="c1">// Order matters again: move tail first and you lose the link to the old last node.</span>
 <span class="p">}</span>
 
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
@@ -1091,13 +1272,20 @@ Address of p in main() 0x1041fe40
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// 10 -&gt; 20 -&gt; 30 again, but the third node is called `tail` from the start, because</span>
+<span class="w">    </span><span class="c1">// the insert function needs a pointer to the last node.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="mi">30</span><span class="p">);</span>
 
 <span class="w">    </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// BUG (left in place on purpose): there is no `b` in this file - the third node was</span>
+<span class="w">    </span><span class="c1">// named `tail`. The compiler stops right here with &quot;&#39;b&#39; was not declared in this</span>
+<span class="w">    </span><span class="c1">// scope&quot;, which is why the program produces no output at all.</span>
+<span class="w">    </span><span class="c1">// Fix: a-&gt;next = tail;</span>
 <span class="w">    </span><span class="n">a</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Intended result: 10 20 30 100 200 300, with each insert costing O(1).</span>
 <span class="w">    </span><span class="n">insert_at_tail_optimized</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">);</span>
 <span class="w">    </span><span class="n">insert_at_tail_optimized</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">);</span>
 <span class="w">    </span><span class="n">insert_at_tail_optimized</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="mi">300</span><span class="p">);</span>
@@ -1107,11 +1295,11 @@ Address of p in main() 0x1041fe40
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 52 lines ▾</button>
+    <button type="button" class="expand">Show all 75 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>insert_at_tail_optimized_p.cpp: In function &#x27;int main()&#x27;:
-insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in this scope
+insert_at_tail_optimized_p.cpp:66:15: error: &#x27;b&#x27; was not declared in this scope
      a-&gt;next = b;
                ^</pre></div></div>
   <p class="readout"><b>Reading the output.</b> No output: compile error.</p>
@@ -1328,7 +1516,7 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
   <p class="what">A re-typed copy of <code>insert_at_any_index.cpp</code> with the same three inserts, but with the constructor bug <code>this-&gt;next = next;</code>.</p><p class="same">Re-typed version of <a href="#p-insert-at-any-index"><code>insert_at_any_index.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 50 lines</span>
+      <span>CPP · 85 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%206/insert_at_any_index_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1384,11 +1572,50 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="normal">47</span>
 <span class="normal">48</span>
 <span class="normal">49</span>
-<span class="normal">50</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="c1">// Practice copy of insert_at_any_index.cpp, typed again from memory. The original holds</span>
+<span class="c1">// the full explanation; this copy repeats the constructor bug, which shows up only at</span>
+<span class="c1">// the very end of the printing.</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
@@ -1397,11 +1624,20 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 
 <span class="w">        </span><span class="n">Node</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">            </span><span class="c1">// BUG (left in place on purpose): should be `this-&gt;next = NULL;`.</span>
+<span class="w">            </span><span class="c1">// `next` on the right is the member, still uninitialised, so the node&#39;s next</span>
+<span class="w">            </span><span class="c1">// holds a garbage address.</span>
 <span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
 
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// The loop stops when tmp becomes NULL - that is the only thing that marks the end.</span>
+<span class="w">    </span><span class="c1">// Because of the constructor bug the last node&#39;s next is garbage, not NULL, so this</span>
+<span class="w">    </span><span class="c1">// loop walks past the end of the list and keeps printing whatever it finds in memory</span>
+<span class="w">    </span><span class="c1">// until the program is killed. The first six values are still right: their `next`</span>
+<span class="w">    </span><span class="c1">// pointers were all set by hand or by the insert function, so only the final one is</span>
+<span class="w">    </span><span class="c1">// rubbish.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
@@ -1409,13 +1645,26 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
+<span class="c1">// Insert so that the new node ends up at position `idx`, counting the head as 0.</span>
+<span class="c1">// To splice a node in you need the node BEFORE the position, because that is the one</span>
+<span class="c1">// whose `next` has to be changed - a singly linked list has no way back.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_any_index</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Walk idx-1 steps. Starting the counter at 1 and stopping at `i &lt; idx` is what makes</span>
+<span class="w">    </span><span class="c1">// it idx-1 steps, so tmp lands on the node just before the target slot: for idx = 2</span>
+<span class="w">    </span><span class="c1">// it takes one step and tmp is the node at index 1.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">idx</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// The two linking lines, written on one line in this copy but the same as the</span>
+<span class="w">    </span><span class="c1">// original. Order matters: grab the rest of the list first, then re-point tmp.</span>
+<span class="w">    </span><span class="c1">//   newNode-&gt;next = tmp-&gt;next;  the new node takes over whatever followed tmp</span>
+<span class="w">    </span><span class="c1">//   tmp-&gt;next = newNode;        tmp now points at the new node</span>
+<span class="w">    </span><span class="c1">// Doing them the other way round would overwrite tmp-&gt;next before it was read, and</span>
+<span class="w">    </span><span class="c1">// everything after the insertion point would be lost.</span>
 <span class="w">    </span><span class="n">newNode</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="p">}</span>
 
@@ -1426,17 +1675,26 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 
 <span class="w">    </span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 <span class="w">    </span><span class="n">a</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">    </span>
+
+<span class="w">    </span><span class="c1">// Follow the list after each call:</span>
+<span class="w">    </span><span class="c1">//   start           10 20 30</span>
+<span class="w">    </span><span class="c1">//   idx 2, 1000 -&gt;  10 20 1000 30</span>
+<span class="w">    </span><span class="c1">//   idx 2, 2000 -&gt;  10 20 2000 1000 30</span>
+<span class="w">    </span><span class="c1">//   idx 3, 3000 -&gt;  10 20 2000 3000 1000 30</span>
+<span class="w">    </span><span class="c1">// Each insert walks idx-1 nodes, so an insert costs O(idx) and O(1) extra space.</span>
 <span class="w">    </span><span class="n">insert_at_any_index</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">);</span>
 <span class="w">    </span><span class="n">insert_at_any_index</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">);</span>
 <span class="w">    </span><span class="n">insert_at_any_index</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">3000</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Those six numbers do print correctly, and then the garbage `next` of node 30 takes</span>
+<span class="w">    </span><span class="c1">// the printing loop off the end of the list.</span>
 <span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 50 lines ▾</button>
+    <button type="button" class="expand">Show all 85 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output <span class="tag warn">stopped after 5 s</span></div><pre>10
@@ -1445,1822 +1703,1822 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 3000
 1000
 30
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
-1081748304
-1081737552
-1081897120
-1081766752
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
+1082862416
+1082851664
+1081241760
+1082880864
 
 ... (output truncated)</pre></div></div>
   <p class="readout"><b>Reading the output.</b> The first six lines are correct (<code>10 20 2000 3000 1000 30</code>). Then random numbers repeat forever until the program times out.</p>
@@ -3421,7 +3679,7 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
   <p class="what">A re-typed copy of <code>input_a_linked_list.cpp</code> with no real changes.</p><p class="same">Re-typed version of <a href="#p-input-a-linked-list"><code>input_a_linked_list.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 56 lines</span>
+      <span>CPP · 75 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%206/input_a_linked_list_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -3482,7 +3740,26 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="normal">52</span>
 <span class="normal">53</span>
 <span class="normal">54</span>
-<span class="normal">55</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -3500,16 +3777,25 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Practice copy of input_a_linked_list.cpp, typed again from memory. It matches the</span>
+<span class="c1">// original line for line, so this copy only notes what each part is for; the original</span>
+<span class="c1">// carries the longer explanation.</span>
+
+<span class="c1">// The O(1) tail insert from insert_at_tail_optimized.cpp: `tail` always points at the</span>
+<span class="c1">// last node, so no walk is needed. Both pointers are taken as `Node* &amp;` because the</span>
+<span class="c1">// empty-list branch below assigns to both, and main must see those new values.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// The first value read: the list is empty, so this one node is both first and last.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">        </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
-<span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
+<span class="w">    </span><span class="n">tail</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">   </span><span class="c1">// attach behind the current last node</span>
+<span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span><span class="w">         </span><span class="c1">// and that new node becomes the last one</span>
 <span class="p">}</span>
 
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_linked_list</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">){</span>
@@ -3521,9 +3807,16 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// Start with nothing. Setting both pointers to NULL is what tells insert_at_tail</span>
+<span class="w">    </span><span class="c1">// that the list is still empty; leaving them uninitialised would send it straight</span>
+<span class="w">    </span><span class="c1">// into the `tail-&gt;next` line with a garbage tail.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// The count is not given in advance, so the input ends with a sentinel: keep reading</span>
+<span class="w">    </span><span class="c1">// until the value -1 shows up. `while(true)` plus a break in the middle is the normal</span>
+<span class="w">    </span><span class="c1">// shape for this, because the test can only be made after the value has been read.</span>
+<span class="w">    </span><span class="c1">// -1 is only a marker; it is never inserted, since the break happens first.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
@@ -3533,13 +3826,16 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="w">        </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Inserting at the tail keeps the reading order: 10 20 30 40 -1 gives 10 20 30 40.</span>
+<span class="w">    </span><span class="c1">// Using insert_at_head instead would print them reversed, 40 30 20 10.</span>
+<span class="w">    </span><span class="c1">// Reading n values costs O(n) time (each insert is O(1)) and O(n) space for nodes.</span>
 <span class="w">    </span><span class="n">print_linked_list</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 56 lines ▾</button>
+    <button type="button" class="expand">Show all 75 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 -1</pre><p class="io-note">Values ending with -1.</p></div><div class="io out"><div class="io-h">Output </div><pre>10
@@ -3561,9 +3857,9 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
     </div>
   </div>
   <p class="what">Two recursive functions: print-then-recurse gives 1..5, recurse-then-print gives 5..1. This is the idea behind printing a list in reverse.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 28 lines</span>
+      <span>CPP · 53 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%206/printing_reverse_printing.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -3597,23 +3893,64 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="normal">25</span>
 <span class="normal">26</span>
 <span class="normal">27</span>
-<span class="normal">28</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w"> </span><span class="c1">// Allows us to avoid prefixing standard library objects with `std::`.</span>
 
+<span class="cm">/*</span>
+<span class="cm">    No linked list in this file. It is here to isolate one idea before the next file uses</span>
+<span class="cm">    it on a list: a recursive function does work twice - once on the way down, before it</span>
+<span class="cm">    calls itself, and once on the way back up, after the call returns. Which side you put</span>
+<span class="cm">    the printing on decides the order the numbers come out in.</span>
+
+<span class="cm">    The two functions below are the same function except for the order of two lines.</span>
+<span class="cm">*/</span>
+
+<span class="c1">// Print on the way DOWN: print first, then recurse.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">recursion_1_to_n</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Base case. Every recursion needs one line that returns without calling again,</span>
+<span class="w">    </span><span class="c1">// or the calls never stop. Here it is &quot;i has gone past n, there is nothing left&quot;.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="n">recursion_1_to_n</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">             </span><span class="c1">// done before the deeper call is even made</span>
+<span class="w">    </span><span class="n">recursion_1_to_n</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w">      </span><span class="c1">// i+1 is what moves us towards the base case</span>
 <span class="p">}</span>
 
+<span class="c1">// Print on the way UP: recurse first, print afterwards.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">recursion_n_to_1</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">recursion_n_to_1</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="n">recursion_n_to_1</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w">      </span><span class="c1">// go all the way to the bottom first</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">             </span><span class="c1">// this line waits until that whole call has finished</span>
+<span class="w">    </span><span class="c1">// So the call with i = 5 is the deepest one that prints, and it prints first. Then</span>
+<span class="w">    </span><span class="c1">// the call with i = 4 resumes and prints, then 3, 2, 1. The numbers come out in</span>
+<span class="w">    </span><span class="c1">// reverse without ever walking backwards - the call stack remembers them for us.</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
@@ -3623,11 +3960,20 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="w">    </span><span class="c1">// Print 5 to 1</span>
 <span class="w">    </span><span class="n">recursion_n_to_1</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// Cost of either one: n calls, so O(n) time, and O(n) memory for the call stack,</span>
+<span class="w">    </span><span class="c1">// because all n calls are alive at once at the deepest point. That stack is the</span>
+<span class="w">    </span><span class="c1">// price of the reverse order - and it is why very long lists can overflow it.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// The next file, reverse_linked_list_printing.cpp, is recursion_n_to_1 with</span>
+<span class="w">    </span><span class="c1">// `i+1` replaced by `tmp-&gt;next` and `i &gt; n` replaced by `tmp == NULL`. Nothing else</span>
+<span class="w">    </span><span class="c1">// changes: that is how a singly linked list gets printed backwards even though its</span>
+<span class="w">    </span><span class="c1">// pointers only go forward.</span>
+
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 28 lines ▾</button>
+    <button type="button" class="expand">Show all 53 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>1
@@ -3799,7 +4145,7 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
   <p class="what">A re-typed copy of <code>reverse_linked_list_printing.cpp</code> with a typo that stops it compiling.</p><p class="same">Re-typed version of <a href="#p-reverse-linked-list-printing"><code>reverse_linked_list_printing.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 56 lines</span>
+      <span>CPP · 74 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%206/reversed_linked_list_printing_p.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -3860,7 +4206,25 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="normal">52</span>
 <span class="normal">53</span>
 <span class="normal">54</span>
-<span class="normal">55</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
@@ -3878,6 +4242,10 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="w">        </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Practice copy of reverse_linked_list_printing.cpp, typed again from memory. The</span>
+<span class="c1">// original explains the idea in full; this copy has one typo and will not compile.</span>
+
+<span class="c1">// The O(1) tail insert again: `tail` points at the last node, so no walking.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">insert_at_tail</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">){</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">newNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
@@ -3890,18 +4258,30 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="w">    </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newNode</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// This is recursion_n_to_1 from printing_reverse_printing.cpp with the counter replaced</span>
+<span class="c1">// by a node pointer. A singly linked list has no way back, yet this prints it backwards:</span>
+<span class="c1">// the recursive call runs to the very end first, and the printing happens while the calls</span>
+<span class="c1">// return, so the last node is printed by the deepest call and the head is printed last.</span>
+<span class="c1">// Time O(n); memory O(n) for the call stack, since all n calls are open at the bottom.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_reverse</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tmp</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Base case: past the end of the list, print nothing and go back up.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">tmp</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">print_reverse</span><span class="p">(</span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span>
+<span class="w">    </span><span class="n">print_reverse</span><span class="p">(</span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span><span class="w">   </span><span class="c1">// first go all the way to the end</span>
+<span class="w">    </span><span class="c1">// BUG (left in place on purpose): `end` should be `endl`. There is no name `end` in</span>
+<span class="w">    </span><span class="c1">// scope, so the file does not compile and produces no output at all. With `endl` it</span>
+<span class="w">    </span><span class="c1">// prints 40 30 20 10 for the input 10 20 30 40 -1.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tmp</span><span class="o">-&gt;</span><span class="n">val</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">end</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// Both start as NULL so the insert knows the list is empty on the first value.</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Read until the sentinel -1, exactly as in input_a_linked_list.cpp. The -1 itself is</span>
+<span class="w">    </span><span class="c1">// never inserted, because the break comes before the insert.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
@@ -3911,17 +4291,19 @@ insert_at_tail_optimized_p.cpp:44:15: error: &#x27;b&#x27; was not declared in t
 <span class="w">        </span><span class="n">insert_at_tail</span><span class="p">(</span><span class="n">head</span><span class="p">,</span><span class="w"> </span><span class="n">tail</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Note what is NOT here: the list is never rebuilt or reversed in memory. Only the</span>
+<span class="w">    </span><span class="c1">// printing order changes, so the list itself is untouched afterwards.</span>
 <span class="w">    </span><span class="n">print_reverse</span><span class="p">(</span><span class="n">head</span><span class="p">);</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 56 lines ▾</button>
+    <button type="button" class="expand">Show all 74 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 -1</pre><p class="io-note">Values ending with -1.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>reversed_linked_list_printing_p.cpp: In function &#x27;void print_reverse(Node*)&#x27;:
-reversed_linked_list_printing_p.cpp:36:22: error: no match for &#x27;operator&lt;&lt;&#x27; (operand types are &#x27;std::basic_ostream&lt;char&gt;&#x27; and &#x27;&lt;unresolved overloaded function type&gt;&#x27;)
+reversed_linked_list_printing_p.cpp:49:22: error: no match for &#x27;operator&lt;&lt;&#x27; (operand types are &#x27;std::basic_ostream&lt;char&gt;&#x27; and &#x27;&lt;unresolved overloaded function type&gt;&#x27;)
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
      ~~~~~~~~~~~~~~~~~^~~~~~
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
@@ -4018,7 +4400,7 @@ C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/b
      operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os,
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/basic_string.h:6284:5: note:   template argument deduction/substitution failed:
-reversed_linked_list_printing_p.cpp:36:25: note:   couldn&#x27;t deduce template parameter &#x27;_Alloc&#x27;
+reversed_linked_list_printing_p.cpp:49:25: note:   couldn&#x27;t deduce template parameter &#x27;_Alloc&#x27;
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
                          ^~~
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/ios_base.h:46,
@@ -4030,7 +4412,7 @@ C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/system
      operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os, const error_code&amp; __e)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/system_error:217:5: note:   template argument deduction/substitution failed:
-reversed_linked_list_printing_p.cpp:36:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;const std::error_code&amp;&#x27;
+reversed_linked_list_printing_p.cpp:49:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;const std::error_code&amp;&#x27;
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
                          ^~~
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
@@ -4043,7 +4425,7 @@ C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostrea
      operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __out, char __c)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:502:5: note:   template argument deduction/substitution failed:
-reversed_linked_list_printing_p.cpp:36:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;char&#x27;
+reversed_linked_list_printing_p.cpp:49:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;char&#x27;
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
                          ^~~
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
@@ -4052,7 +4434,7 @@ C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostrea
      operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, char __c)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:508:5: note:   template argument deduction/substitution failed:
-reversed_linked_list_printing_p.cpp:36:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;char&#x27;
+reversed_linked_list_printing_p.cpp:49:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;char&#x27;
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
                          ^~~
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
@@ -4061,7 +4443,7 @@ C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostrea
      operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, signed char __c)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:514:5: note:   template argument deduction/substitution failed:
-reversed_linked_list_printing_p.cpp:36:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;signed char&#x27;
+reversed_linked_list_printing_p.cpp:49:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;signed char&#x27;
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
                          ^~~
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
@@ -4070,7 +4452,7 @@ C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostrea
      operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, unsigned char __c)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:519:5: note:   template argument deduction/substitution failed:
-reversed_linked_list_printing_p.cpp:36:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;unsigned char&#x27;
+reversed_linked_list_printing_p.cpp:49:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;unsigned char&#x27;
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
                          ^~~
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
@@ -4086,7 +4468,7 @@ C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/o
      operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __out, const char* __s)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/bits/ostream.tcc:321:5: note:   template argument deduction/substitution failed:
-reversed_linked_list_printing_p.cpp:36:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;const char*&#x27;
+reversed_linked_list_printing_p.cpp:49:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;const char*&#x27;
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
                          ^~~
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
@@ -4095,7 +4477,7 @@ C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostrea
      operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, const char* __s)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:556:5: note:   template argument deduction/substitution failed:
-reversed_linked_list_printing_p.cpp:36:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;const char*&#x27;
+reversed_linked_list_printing_p.cpp:49:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;const char*&#x27;
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
                          ^~~
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
@@ -4104,7 +4486,7 @@ C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostrea
      operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, const signed char* __s)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:569:5: note:   template argument deduction/substitution failed:
-reversed_linked_list_printing_p.cpp:36:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;const signed char*&#x27;
+reversed_linked_list_printing_p.cpp:49:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;const signed char*&#x27;
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
                          ^~~
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
@@ -4113,7 +4495,7 @@ C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostrea
      operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, const unsigned char* __s)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:574:5: note:   template argument deduction/substitution failed:
-reversed_linked_list_printing_p.cpp:36:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;const unsigned char*&#x27;
+reversed_linked_list_printing_p.cpp:49:25: note:   cannot convert &#x27;std::end&#x27; (type &#x27;&lt;unresolved overloaded function type&gt;&#x27;) to type &#x27;const unsigned char*&#x27;
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
                          ^~~
 In file included from C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/iostream:39,
@@ -4122,7 +4504,7 @@ C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostrea
      operator&lt;&lt;(_Ostream&amp;&amp; __os, const _Tp&amp; __x)
      ^~~~~~~~
 C:/Users/sislam27/Work/MinGW/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/ostream:682:5: note:   template argument deduction/substitution failed:
-reversed_linked_list_printing_p.cpp:36:25: note:   couldn&#x27;t deduce template parameter &#x27;_Tp&#x27;
+reversed_linked_list_printing_p.cpp:49:25: note:   couldn&#x27;t deduce template parameter &#x27;_Tp&#x27;
      cout &lt;&lt; tmp-&gt;val &lt;&lt; end;
                          ^~~</pre></div></div>
   <p class="readout"><b>Reading the output.</b> No output: compile error.</p>
@@ -5507,7 +5889,7 @@ reversed_linked_list_printing_p.cpp:36:25: note:   couldn&#x27;t deduce template
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=6" defer></script>
-<script src="../assets/site.js?v=6" defer></script>
+<script src="../assets/search-index.js?v=7" defer></script>
+<script src="../assets/site.js?v=7" defer></script>
 </body>
 </html>
