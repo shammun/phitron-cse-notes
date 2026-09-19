@@ -26,7 +26,7 @@ NOTES = ROOT / "_build" / "notes"
 REPO = "shammun/phitron-cse-notes"
 SITE_TITLE = "CSE Fundamentals — Revision Notes"
 GITHUB_BLOB = f"https://github.com/{REPO}/blob/main/"
-ASSET_V = "3"
+ASSET_V = "4"
 
 COURSE_INFO = {
     "1_Introduction to Programming Language": ("c-programming", "Introduction to Programming", "C",
@@ -272,6 +272,12 @@ def render_module(mod, notes, results, prev_mod, next_mod, course_slug, course_t
         f'<div class="concept"><h4>{md(c.get("term"))}</h4><p>{md(c.get("explain"))}</p>'
         + (f'<pre class="snip">{esc(c["snippet"])}</pre>' if c.get("snippet") else "") + "</div>"
         for c in notes.get("concepts", []))
+    walk = "".join(
+        f'<div class="wstep"><h3>{md(w.get("heading"))}</h3>'
+        + "".join(f"<p>{md(p)}</p>" for p in w.get("body", []))
+        + (f'<pre class="snip">{esc(w["snippet"])}</pre>' if w.get("snippet") else "")
+        + (f'<pre class="trace">{esc(w["trace"])}</pre>' if w.get("trace") else "") + "</div>"
+        for w in notes.get("walkthrough", []))
     progs = "".join(render_program(i, mod, e, results[(mod["id"], e["file"])], depth) for i, e in enumerate(files, 1))
     links = notes.get("practice_links") or []
     links_html = ""
@@ -301,6 +307,7 @@ def render_module(mod, notes, results, prev_mod, next_mod, course_slug, course_t
   </header>
   {f'<nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol>{toc}</ol></details></nav>' if files else ''}
   {f'<section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts">{concepts}</div></section>' if concepts else ''}
+  {f'<section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk">{walk}</div></section>' if walk else ''}
   {f'<section class="block" id="programs"><h2>🧑‍💻 Programs</h2>{progs}</section>' if files else ''}
   {links_html}
   <section class="block recap" id="recap"><h2>📌 Remember</h2><ul>{recap}</ul></section>
