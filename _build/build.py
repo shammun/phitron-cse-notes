@@ -26,7 +26,7 @@ NOTES = ROOT / "_build" / "notes"
 REPO = "shammun/phitron-cse-notes"
 SITE_TITLE = "CSE Fundamentals — Revision Notes"
 GITHUB_BLOB = f"https://github.com/{REPO}/blob/main/"
-ASSET_V = "4"
+ASSET_V = "5"
 
 COURSE_INFO = {
     "1_Introduction to Programming Language": ("c-programming", "Introduction to Programming", "C",
@@ -272,6 +272,12 @@ def render_module(mod, notes, results, prev_mod, next_mod, course_slug, course_t
         f'<div class="concept"><h4>{md(c.get("term"))}</h4><p>{md(c.get("explain"))}</p>'
         + (f'<pre class="snip">{esc(c["snippet"])}</pre>' if c.get("snippet") else "") + "</div>"
         for c in notes.get("concepts", []))
+    intro = "".join(
+        (f'<h3>{md(b["heading"])}</h3>' if b.get("heading") else "")
+        + "".join(f"<p>{md(p)}</p>" for p in b.get("body", []))
+        + (f'<pre class="snip">{esc(b["snippet"])}</pre>' if b.get("snippet") else "")
+        + (f'<pre class="trace">{esc(b["trace"])}</pre>' if b.get("trace") else "")
+        for b in notes.get("intro", []))
     walk = "".join(
         f'<div class="wstep"><h3>{md(w.get("heading"))}</h3>'
         + "".join(f"<p>{md(p)}</p>" for p in w.get("body", []))
@@ -305,6 +311,7 @@ def render_module(mod, notes, results, prev_mod, next_mod, course_slug, course_t
     <p class="lead">{md(notes.get("overview"))}</p>
     <p class="chips"><span>{len(files)} program{"s" if len(files) != 1 else ""}</span>{f'<span>{len(links)} practice links</span>' if links else ''}<a href="{esc(gh_url(mod["rel"]).replace("/blob/", "/tree/"))}" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
+  {f'<section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep">{intro}</div></section>' if intro else ''}
   {f'<nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol>{toc}</ol></details></nav>' if files else ''}
   {f'<section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts">{concepts}</div></section>' if concepts else ''}
   {f'<section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk">{walk}</div></section>' if walk else ''}
