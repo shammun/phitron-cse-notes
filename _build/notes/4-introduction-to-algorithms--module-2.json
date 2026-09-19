@@ -234,6 +234,37 @@
         "q": "Why is this a graph problem even though the word graph never appears?",
         "a": "Rooms are nodes and a key in room a for room b is an edge a → b; the question is whether all nodes are reachable from 0."
       }
+    },
+    {
+      "file": "message_route.cpp",
+      "title": "CSES Message Route (BFS plus a parent array)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "CSES 1667 - Message Route",
+        "url": "https://cses.fi/problemset/task/1667"
+      },
+      "what": "Send a message from computer 1 to computer n through as few computers as possible. Print how many computers the route uses and the route itself, or IMPOSSIBLE. Every connection costs the same, so the shortest route is the one with fewest edges, and that is exactly a BFS level.",
+      "steps": [
+        "Read the graph into `vector<vector<int>> adj_list(n + 1)` and push both directions, because a connection works both ways. A vector, not a fixed `adj_list[1005]`: here n can be in the hundreds of thousands.",
+        "BFS from computer 1, filling `level` and `parent` as each computer is discovered.",
+        "`parent[child] = par` records who put the child into the queue, so the route can be walked backwards later.",
+        "If computer n was never visited, print IMPOSSIBLE and stop.",
+        "Otherwise start at n and follow `parent` until it is -1. Computer 1 keeps parent -1, so that is what ends the walk.",
+        "The collected route comes out from n back to 1, so `reverse` it before printing.",
+        "Print `path.size()` first (the number of computers, one more than `level[n]`), then the route on the next line."
+      ],
+      "complexity": "Time O(n + m) · Space O(n + m)",
+      "input": "5 5\n1 2\n1 3\n1 4\n2 3\n5 4\n",
+      "input_note": "`n m`, then m lines `a b`. Computers are numbered from 1. This is the problem's own sample: 5 computers and 5 connections.",
+      "output_note": "Prints `3` and then `1 4 5`. The message goes 1 -> 4 -> 5, three computers in total. With the second sample in the file header (`4 2`, edges 1-2 and 3-4) it prints `IMPOSSIBLE`, because nothing joins the two halves.",
+      "watch_out": "The count asked for is computers, not connections: it is `level[n] + 1`, not `level[n]`. And check `visited[n]` before touching the parents - walking back from a computer that was never reached gives nonsense.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why is plain BFS enough here, without any distances?",
+        "a": "Every connection counts the same, so the cheapest route is simply the one with the fewest connections, and BFS reaches every computer on its lowest level first."
+      }
     }
   ],
   "practice_links": [
@@ -267,6 +298,81 @@
     {
       "q": "What data structure turns BFS into DFS if you swap it in?",
       "a": "A stack (LIFO) instead of a queue (FIFO)."
+    }
+  ],
+  "intro": [
+    {
+      "heading": null,
+      "body": [
+        "You are standing in town 0 and you want to reach town 5 using as few roads as possible. Here is the map:"
+      ],
+      "snippet": null,
+      "trace": "      (1)-----(3)\n     /           \\\n  (0)             (5)\n     \\           /\n      (2)-----(4)"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Left to yourself you would not wander around. You would write down every town one road away: 1 and 2. Then every new town two roads away: 3 and 4. Then three roads away: 5. The moment 5 appears you stop, and you know the answer is 3 roads, because you had already finished with everything closer.",
+        "That ring-by-ring sweep is **breadth-first search**, and you have done it before. In the binary tree module, level order printed the root, then the whole first level, then the whole second level, using a queue: pop a node, push its children. BFS is that same loop with `adj_list[par]` in place of `left` and `right`.",
+        "**What is new is one array.** A tree has no way back to a node you already printed, so nothing could repeat. A graph does have a way back: standing on 1, one of its neighbours is 0, the town you came from. Push it again and 0 pushes 1 again, and the queue never empties. So every node gets marked in a `visited` array, and only unmarked neighbours are pushed."
+      ],
+      "snippet": "q.push(src); visited[src] = true;\nwhile(!q.empty()){\n    int par = q.front(); q.pop();\n    for(int child : adj_list[par]){\n        if(!visited[child]){\n            q.push(child);\n            visited[child] = true;   // mark when pushed\n        }\n    }\n}",
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "Mark the node when you **push** it, not when you pop it. If you waited until the pop, node 5 would be pushed once by 3 and again by 4 before either push was noticed, and it would be handled twice.",
+        "Run the loop on the map above, starting at 0, and keep a `level` next to each node, `level[child] = level[par] + 1`:"
+      ],
+      "snippet": null,
+      "trace": "pop   queue after   newly pushed   level set\n -     0             0              0 -> 0\n 0     1 2           1, 2           1 -> 1, 2 -> 1\n 1     2 3           3              3 -> 2\n 2     3 4           4              4 -> 2\n 3     4 5           5              5 -> 3\n 4     5             -\n 5     (empty)       -"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Read the last column: `level[5]` is 3, which is the answer you worked out by hand. And you did not only solve it for 5. One run of BFS filled in the distance to **every** town the source can reach, in O(V + E), because each node enters the queue once and each edge is looked at once.",
+        "Why is that level really the shortest distance? Because the queue keeps the towns in the order they were found, so everything at distance 1 leaves the queue before anything at distance 2. The first time a node is reached, it is reached by the fewest edges, and after that it is marked and never reconsidered.",
+        "That argument leans on one quiet assumption: **every edge counts the same, one step**. If one road took five minutes and another took two hours, a path with more roads could be quicker, and counting edges would give the wrong answer. Weighted graphs need a different algorithm, which comes later in the course."
+      ],
+      "snippet": null,
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "Two small additions make BFS answer two more questions. **Which towns can I reach at all?** After the run, `visited[x]` already says so, and a node in a separate piece of the graph keeps its `level` of -1.",
+        "**Which roads do I actually take?** Store `parent[child] = par` at the moment the child is discovered, then walk backwards from the destination. On the trace above: 5 came from 3, 3 came from 1, 1 came from 0, and 0's parent is -1, so the walk stops. That gives `5 3 1 0`; reverse it and you have the path `0 1 3 5`.",
+        "The programs below are these pieces one at a time: plain BFS, BFS with levels, a reachability check, path printing, and three practice problems that reuse them. Watch the resetting: every new BFS from a new source must clear `visited` and `level` first, or the old marks will stop it."
+      ],
+      "snippet": null,
+      "trace": null
+    }
+  ],
+  "resources": [
+    {
+      "kind": "visual",
+      "name": "VisuAlgo — BFS and DFS",
+      "url": "https://visualgo.net/en/dfsbfs",
+      "note": "Run both on the same graph and compare the order the nodes are visited."
+    },
+    {
+      "kind": "visual",
+      "name": "USFCA — breadth-first search",
+      "url": "https://www.cs.usfca.edu/~galles/visualization/BFS.html",
+      "note": "The queue and the visited marks, drawn while the search runs."
+    },
+    {
+      "kind": "article",
+      "name": "cp-algorithms — BFS",
+      "url": "https://cp-algorithms.com/graph/breadth-first-search.html",
+      "note": "Short, exact, and states what BFS does and does not promise."
+    },
+    {
+      "kind": "article",
+      "name": "USACO Guide — unweighted shortest paths",
+      "url": "https://usaco.guide/gold/unweighted-shortest-paths",
+      "note": "When BFS is the shortest-path answer, and when it is not."
     }
   ]
 }

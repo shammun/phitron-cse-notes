@@ -7,7 +7,7 @@
 <meta name="description" content="BFS explores a graph layer by layer from a source using a queue. Because it reaches nodes in order of distance, the same code also gives the shortest number of edges to every node (its level) and, with a parent array, the actual shortest path. These patterns come back in almost every later graph problem.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -34,16 +34,37 @@
     <p class="eyebrow"><a href="index.html">Introduction to Algorithms</a> · Module 2</p>
     <h1>Breadth-first search (BFS), levels and paths</h1>
     <p class="lead">BFS explores a graph layer by layer from a source using a queue. Because it reaches nodes in order of distance, the same code also gives the shortest number of edges to every node (its level) and, with a parent array, the actual shortest path. These patterns come back in almost every later graph problem.</p>
-    <p class="chips"><span>8 programs</span><span>2 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%202" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
+    <p class="chips"><span>9 programs</span><span>2 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%202" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
-  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-bfs"><span class="n">1</span>BFS traversal</a></li><li><a href="#p-single-source-shortest-distance"><span class="n">2</span>Shortest distance with BFS levels</a></li><li><a href="#p-if-a-noce-can-be-visited-or-not"><span class="n">3</span>Can we reach a node?</a></li><li><a href="#p-path-printing"><span class="n">4</span>Print the shortest path</a></li><li><a href="#p-practice-problem-1"><span class="n">5</span>Many shortest-distance queries</a></li><li><a href="#p-practice-problem-2"><span class="n">6</span>Nodes at level L</a></li><li><a href="#p-practice-problem-3"><span class="n">7</span>Count direct neighbours</a></li><li><a href="#p-leetcode-keys-and-rooms"><span class="n">8</span>LeetCode 841 - Keys and Rooms</a></li></ol></details></nav>
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>You are standing in town 0 and you want to reach town 5 using as few roads as possible. Here is the map:</p><pre class="trace">      (1)-----(3)
+     /           \
+  (0)             (5)
+     \           /
+      (2)-----(4)</pre><p>Left to yourself you would not wander around. You would write down every town one road away: 1 and 2. Then every new town two roads away: 3 and 4. Then three roads away: 5. The moment 5 appears you stop, and you know the answer is 3 roads, because you had already finished with everything closer.</p><p>That ring-by-ring sweep is <strong>breadth-first search</strong>, and you have done it before. In the binary tree module, level order printed the root, then the whole first level, then the whole second level, using a queue: pop a node, push its children. BFS is that same loop with <code>adj_list[par]</code> in place of <code>left</code> and <code>right</code>.</p><p><strong>What is new is one array.</strong> A tree has no way back to a node you already printed, so nothing could repeat. A graph does have a way back: standing on 1, one of its neighbours is 0, the town you came from. Push it again and 0 pushes 1 again, and the queue never empties. So every node gets marked in a <code>visited</code> array, and only unmarked neighbours are pushed.</p><pre class="snip">q.push(src); visited[src] = true;
+while(!q.empty()){
+    int par = q.front(); q.pop();
+    for(int child : adj_list[par]){
+        if(!visited[child]){
+            q.push(child);
+            visited[child] = true;   // mark when pushed
+        }
+    }
+}</pre><p>Mark the node when you <strong>push</strong> it, not when you pop it. If you waited until the pop, node 5 would be pushed once by 3 and again by 4 before either push was noticed, and it would be handled twice.</p><p>Run the loop on the map above, starting at 0, and keep a <code>level</code> next to each node, <code>level[child] = level[par] + 1</code>:</p><pre class="trace">pop   queue after   newly pushed   level set
+ -     0             0              0 -&gt; 0
+ 0     1 2           1, 2           1 -&gt; 1, 2 -&gt; 1
+ 1     2 3           3              3 -&gt; 2
+ 2     3 4           4              4 -&gt; 2
+ 3     4 5           5              5 -&gt; 3
+ 4     5             -
+ 5     (empty)       -</pre><p>Read the last column: <code>level[5]</code> is 3, which is the answer you worked out by hand. And you did not only solve it for 5. One run of BFS filled in the distance to <strong>every</strong> town the source can reach, in O(V + E), because each node enters the queue once and each edge is looked at once.</p><p>Why is that level really the shortest distance? Because the queue keeps the towns in the order they were found, so everything at distance 1 leaves the queue before anything at distance 2. The first time a node is reached, it is reached by the fewest edges, and after that it is marked and never reconsidered.</p><p>That argument leans on one quiet assumption: <strong>every edge counts the same, one step</strong>. If one road took five minutes and another took two hours, a path with more roads could be quicker, and counting edges would give the wrong answer. Weighted graphs need a different algorithm, which comes later in the course.</p><p>Two small additions make BFS answer two more questions. <strong>Which towns can I reach at all?</strong> After the run, <code>visited[x]</code> already says so, and a node in a separate piece of the graph keeps its <code>level</code> of -1.</p><p><strong>Which roads do I actually take?</strong> Store <code>parent[child] = par</code> at the moment the child is discovered, then walk backwards from the destination. On the trace above: 5 came from 3, 3 came from 1, 1 came from 0, and 0&#x27;s parent is -1, so the walk stops. That gives <code>5 3 1 0</code>; reverse it and you have the path <code>0 1 3 5</code>.</p><p>The programs below are these pieces one at a time: plain BFS, BFS with levels, a reachability check, path printing, and three practice problems that reuse them. Watch the resetting: every new BFS from a new source must clear <code>visited</code> and <code>level</code> first, or the old marks will stop it.</p></div></section>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-bfs"><span class="n">1</span>BFS traversal</a></li><li><a href="#p-single-source-shortest-distance"><span class="n">2</span>Shortest distance with BFS levels</a></li><li><a href="#p-if-a-noce-can-be-visited-or-not"><span class="n">3</span>Can we reach a node?</a></li><li><a href="#p-path-printing"><span class="n">4</span>Print the shortest path</a></li><li><a href="#p-practice-problem-1"><span class="n">5</span>Many shortest-distance queries</a></li><li><a href="#p-practice-problem-2"><span class="n">6</span>Nodes at level L</a></li><li><a href="#p-practice-problem-3"><span class="n">7</span>Count direct neighbours</a></li><li><a href="#p-leetcode-keys-and-rooms"><span class="n">8</span>LeetCode 841 - Keys and Rooms</a></li><li><a href="#p-message-route"><span class="n">9</span>CSES Message Route (BFS plus a parent array)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Queue + visited</h4><p>Push the source, mark it visited. Repeatedly pop the front node and push every unvisited neighbour, marking it visited <strong>when it is pushed</strong> so it never enters the queue twice.</p><pre class="snip">q.push(src); vis[src] = true;
 while(!q.empty()){
   int par = q.front(); q.pop();
   for(int c : adj[par]) if(!vis[c]){ q.push(c); vis[c] = true; }
 }</pre></div><div class="concept"><h4>Level = shortest distance</h4><p>Set <code>level[src] = 0</code> and <code>level[child] = level[par] + 1</code>. In an unweighted graph this is the fewest edges from the source.</p></div><div class="concept"><h4>Parent array</h4><p>Store <code>parent[child] = par</code> when a child is discovered. Walking <code>parent</code> back from the destination gives the path in reverse.</p></div><div class="concept"><h4>Reachability</h4><p>After one BFS, <code>vis[x]</code> tells whether <code>x</code> can be reached from the source at all.</p></div><div class="concept"><h4>Resetting state</h4><p><code>memset(vis, false, ...)</code> and <code>memset(level, -1, ...)</code> before each BFS; <code>-1</code> means &quot;not reached&quot;. <code>memset</code> needs <code>&lt;cstring&gt;</code>.</p></div><div class="concept"><h4>BFS complexity</h4><p>Every node is pushed once and every edge is looked at once (twice when undirected): O(V + E).</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/dfsbfs" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — BFS and DFS</b><span class="rnote">Run both on the same graph and compare the order the nodes are visited.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/BFS.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — breadth-first search</b><span class="rnote">The queue and the visited marks, drawn while the search runs.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/graph/breadth-first-search.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — BFS</b><span class="rnote">Short, exact, and states what BFS does and does not promise.</span></a></li><li class="r-article"><a href="https://usaco.guide/gold/unweighted-shortest-paths" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>USACO Guide — unweighted shortest paths</b><span class="rnote">When BFS is the shortest-path answer, and when it is not.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-bfs">
   <div class="prog-h">
@@ -1653,6 +1674,287 @@ canVisitAllRooms = false
   <details class="how" open><summary>How it works, step by step</summary><ol><li><code>rooms[i]</code> is already an adjacency list: the keys found in room i.</li><li><code>bfs(0, rooms)</code> visits every room we can unlock.</li><li>Loop over all rooms; if any <code>vis[i]</code> is false, return false.</li><li>Otherwise return true.</li></ol></details>
   
   <details class="check"><summary><span>✅ Check yourself:</span> Why is this a graph problem even though the word graph never appears?</summary><div>Rooms are nodes and a key in room a for room b is an edge a → b; the question is whether all nodes are reachable from 0.</div></details>
+</section>
+<section class="prog" id="p-message-route">
+  <div class="prog-h">
+    <span class="num">9</span>
+    <div class="prog-t">
+      <h3>CSES Message Route (BFS plus a parent array)</h3>
+      <div class="meta"><code class="fname">message_route.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(n + m) · Space O(n + m)</span><a class="prob" href="https://cses.fi/problemset/task/1667" target="_blank" rel="noopener">↗ CSES 1667 - Message Route</a></div>
+    </div>
+  </div>
+  <p class="what">Send a message from computer 1 to computer n through as few computers as possible. Print how many computers the route uses and the route itself, or IMPOSSIBLE. Every connection costs the same, so the shortest route is the one with fewest edges, and that is exactly a BFS level.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 124 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%202/message_route.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Message Route   (CSES 1667)</span>
+
+<span class="cm">Syrjala has n computers and m connections between them. Every connection joins</span>
+<span class="cm">two computers and can be used in both directions. Uolevi wants to send a</span>
+<span class="cm">message from computer 1 to computer n, and he wants the message to pass</span>
+<span class="cm">through as few computers as possible. Print how many computers the route</span>
+<span class="cm">visits and the route itself. If computer n cannot be reached from computer 1</span>
+<span class="cm">at all, print IMPOSSIBLE.</span>
+
+<span class="cm">Every connection costs the same, so &quot;fewest computers&quot; is just &quot;fewest edges&quot;,</span>
+<span class="cm">and that is exactly what BFS measures. BFS gives the levels; a parent array</span>
+<span class="cm">remembers which computer put each computer into the queue, so the route can be</span>
+<span class="cm">walked backwards from n.</span>
+
+<span class="cm">Input</span>
+<span class="cm">The first line has two numbers n and m: the number of computers and the number</span>
+<span class="cm">of connections. The computers are numbered 1, 2, ..., n.</span>
+<span class="cm">Then m lines follow, each with two numbers a and b: there is a connection</span>
+<span class="cm">between computers a and b.</span>
+<span class="cm">Both n and m can be large (hundreds of thousands), so the graph is kept as an</span>
+<span class="cm">adjacency list and BFS touches every computer and every connection once.</span>
+
+<span class="cm">Output</span>
+<span class="cm">If there is no route, print the single word IMPOSSIBLE.</span>
+<span class="cm">Otherwise print on the first line k, the number of computers on the route, and</span>
+<span class="cm">on the second line the k computers in order, starting with 1 and ending with n.</span>
+
+<span class="cm">Examples</span>
+
+<span class="cm">input</span>
+<span class="cm">5 5</span>
+<span class="cm">1 2</span>
+<span class="cm">1 3</span>
+<span class="cm">1 4</span>
+<span class="cm">2 3</span>
+<span class="cm">5 4</span>
+
+<span class="cm">output</span>
+<span class="cm">3</span>
+<span class="cm">1 4 5</span>
+
+<span class="cm">input</span>
+<span class="cm">4 2</span>
+<span class="cm">1 2</span>
+<span class="cm">3 4</span>
+
+<span class="cm">output</span>
+<span class="cm">IMPOSSIBLE</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cm">/* n can be in the hundreds of thousands, so the adjacency list is a</span>
+<span class="cm">       vector of size n+1 instead of a fixed-size global array. Index 0 stays</span>
+<span class="cm">       unused because the computers are numbered from 1. */</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">m</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span><span class="w">   </span><span class="c1">// the connection works both ways</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="w"> </span><span class="n">visited</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">level</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+<span class="w">    </span><span class="cm">/* parent[x] is the computer that first reached x. The source has no</span>
+<span class="cm">       parent, so it is left at -1 and that is what stops the walk back. */</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">parent</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
+<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="w">    </span><span class="n">visited</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="n">level</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">visited</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">                </span><span class="n">level</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">                </span><span class="n">parent</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">;</span>
+<span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">visited</span><span class="p">[</span><span class="n">n</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;IMPOSSIBLE&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Walk back from n through the parents. That gives the route in reverse,</span>
+<span class="cm">       so it is collected in a vector and turned around. */</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">path</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">node</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">path</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">node</span><span class="p">);</span>
+<span class="w">        </span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parent</span><span class="p">[</span><span class="n">node</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">reverse</span><span class="p">(</span><span class="n">path</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">path</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+
+<span class="w">    </span><span class="cm">/* level[n] counts edges; the number of computers is one more than that,</span>
+<span class="cm">       and it is also the size of the path we just built. */</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">path</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">path</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w">   </span><span class="c1">// one space between computers, none at the end</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">path</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 124 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 5
+1 2
+1 3
+1 4
+2 3
+5 4</pre><p class="io-note"><code>n m</code>, then m lines <code>a b</code>. Computers are numbered from 1. This is the problem&#x27;s own sample: 5 computers and 5 connections.</p></div><div class="io out"><div class="io-h">Output </div><pre>3
+1 4 5
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>3</code> and then <code>1 4 5</code>. The message goes 1 -&gt; 4 -&gt; 5, three computers in total. With the second sample in the file header (<code>4 2</code>, edges 1-2 and 3-4) it prints <code>IMPOSSIBLE</code>, because nothing joins the two halves.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read the graph into <code>vector&lt;vector&lt;int&gt;&gt; adj_list(n + 1)</code> and push both directions, because a connection works both ways. A vector, not a fixed <code>adj_list[1005]</code>: here n can be in the hundreds of thousands.</li><li>BFS from computer 1, filling <code>level</code> and <code>parent</code> as each computer is discovered.</li><li><code>parent[child] = par</code> records who put the child into the queue, so the route can be walked backwards later.</li><li>If computer n was never visited, print IMPOSSIBLE and stop.</li><li>Otherwise start at n and follow <code>parent</code> until it is -1. Computer 1 keeps parent -1, so that is what ends the walk.</li><li>The collected route comes out from n back to 1, so <code>reverse</code> it before printing.</li><li>Print <code>path.size()</code> first (the number of computers, one more than <code>level[n]</code>), then the route on the next line.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The count asked for is computers, not connections: it is <code>level[n] + 1</code>, not <code>level[n]</code>. And check <code>visited[n]</code> before touching the parents - walking back from a computer that was never reached gives nonsense.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why is plain BFS enough here, without any distances?</summary><div>Every connection counts the same, so the cheapest route is simply the one with the fewest connections, and BFS reaches every computer on its lowest level first.</div></details>
 </section></section>
   <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://leetcode.com/problems/keys-and-rooms/description/" target="_blank" rel="noopener">Keys and Rooms</a><span class="site">LeetCode</span></li><li><a href="https://cses.fi/problemset/task/1667" target="_blank" rel="noopener">Message Route</a><span class="site">CSES</span></li></ul></section>
   <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>BFS = queue + visited; mark when you push.</li><li><code>level[child] = level[par] + 1</code> gives shortest distance in unweighted graphs.</li><li><code>parent[child] = par</code> lets you rebuild the path; reverse it at the end.</li><li>Reset <code>vis</code>/<code>level</code> before every new BFS.</li><li>BFS runs in O(V + E).</li></ul></section>
@@ -1665,7 +1967,7 @@ canVisitAllRooms = false
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

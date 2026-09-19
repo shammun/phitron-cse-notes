@@ -7,7 +7,7 @@
 <meta name="description" content="The course&#x27;s final exam problems. Two ask for the same sequence in top-down and bottom-up style. One turns &#x27;can I reach N?&#x27; into a BFS over numbers. One is a straight 0-1 knapsack with several test cases, and the last is an anagram check by sorting.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,10 +36,27 @@
     <p class="lead">The course&#x27;s final exam problems. Two ask for the same sequence in top-down and bottom-up style. One turns &#x27;can I reach N?&#x27; into a BFS over numbers. One is a straight 0-1 knapsack with several test cases, and the last is an anagram check by sorting.</p>
     <p class="chips"><span>5 programs</span><span>5 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%2016" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>The exam paper gives you five problems and not one of them says which algorithm to use. That is the real test. By now you own a small workshop of tools, and the skill being checked today is pulling the right one out of the box within a minute of reading the question.</p><p>So before any code, here is the map. Read the shape of the question, not the story wrapped around it.</p><pre class="trace">the question really asks...      reach for
+-----------------------------    ---------
+fewest moves, every step equal   BFS
+can I get there at all           BFS or DFS
+count regions / islands / area   DFS on a grid
+cheapest path, weights &gt;= 0      Dijkstra
+weights may be negative          Bellman-Ford
+every pair, n is small           Floyd-Warshall
+same group? cycle? merging       DSU
+pick some items, best total      DP table</pre><p>Four of the five problems today are dynamic programming in some form, which tells you where the course has spent most of its time. So it is worth one worked reminder of the pattern.</p><p>Three items, written as (weight, value), and a bag that holds 7:</p><pre class="trace">items: (2,4)  (3,7)  (4,6)      bag = 7
+
+look at the last item (4,6):
+  skip it -&gt; best of (2,4),(3,7) in 7  = 11
+  take it -&gt; 6 + best of the rest in 3 =  6 + 7 = 13
+answer = max(11, 13) = 13</pre><p>Two lines carry the whole idea, and <code>dp</code> is what makes it fast:</p><pre class="snip">int take = knapsack(i-1, cap - weight[i]) + val[i];
+int skip = knapsack(i-1, cap);
+dp[i][cap] = max(take, skip);</pre><p>Without <code>dp</code> the same pair <code>(i, cap)</code> is worked out again and again and the cost doubles with every extra item. With <code>dp</code> each pair is solved once, so 1000 items and a bag of 1000 is a million pairs — nothing for a computer. The same saving is what turns the four-term sequence problem from a tree of repeated calls into a straight line of additions, whether you write it top-down with a memo or bottom-up with a loop.</p><p><strong>A graph need not be drawn for you.</strong> One problem starts at 1, lets you add 3 or double, and asks whether you can land on N exactly. Nothing in that sentence mentions a graph, but every number is a node and every allowed step is an edge, so it is plain BFS with a queue and a visited array. Throw away any value above N, because from there you can only move further away.</p><p><strong>Two habits cost more marks than any algorithm.</strong> When the input has many test cases, clear the visited array and the memo table before the next one, or yesterday&#x27;s answer leaks into today&#x27;s. And check the size of the numbers: a sum that fits in <code>int</code> at n = 30 will not fit at n = 60, so read the constraints and choose <code>long long</code> before you are wrong.</p><p>The lightest problem is last: two words use the same letters exactly when sorting both gives the same string — after checking that the lengths match, since sorting alone will not notice that one word is longer.</p><p>The programs below take the five problems in order, with the input format and a small check for each.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-final-exam-1-tetranacci"><span class="n">1</span>Tetranacci Number I (top-down)</a></li><li><a href="#p-final-exam-2-tetranacci-2"><span class="n">2</span>Tetranacci Number II (bottom-up, long long)</a></li><li><a href="#p-final-exam-3-make-it"><span class="n">3</span>Make it (BFS over numbers)</a></li><li><a href="#p-final-exam-4-adventure"><span class="n">4</span>Adventure (0-1 knapsack, many tests)</a></li><li><a href="#p-final-exam-5-pile-of-word"><span class="n">5</span>Pile of Word (anagram check)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Top-down vs bottom-up</h4><p>The same recurrence can be memoized recursion or a forward loop. Bottom-up avoids deep recursion and is natural when every smaller value is needed anyway.</p></div><div class="concept"><h4>Tetranacci recurrence</h4><p>Each term is the sum of the previous <strong>four</strong>, starting with 0, 1, 1, 2. Four base cases are needed.</p><pre class="snip">T[n] = T[n-1] + T[n-2] + T[n-3] + T[n-4]</pre></div><div class="concept"><h4>Numbers as graph nodes</h4><p>In &#x27;reach N from 1 by +3 or x2&#x27;, each number is a node and each operation is an edge. BFS with a <code>vis</code> array explores every reachable number up to N once.</p></div><div class="concept"><h4>Prune values above the target</h4><p>Both operations only increase the value, so anything bigger than N can never come back down. Don&#x27;t push it.</p></div><div class="concept"><h4>Reset state between test cases</h4><p>With many test cases, clear <code>dp</code>/<code>vis</code> before each one, for the full range the test uses.</p></div><div class="concept"><h4>Anagram check by sorting</h4><p>Two words use the same letters exactly when their sorted forms are equal.</p><pre class="snip">sort(a.begin(), a.end()); sort(b.begin(), b.end()); return a == b;</pre></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — A2Z DSA course</b><span class="rnote">A full ordered course if you want to revise a whole topic again.</span></a></li><li class="r-article"><a href="https://neetcode.io/roadmap" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>NeetCode roadmap</b><span class="rnote">A map of which problem to try next, grouped by the idea it uses.</span></a></li><li class="r-article"><a href="https://www.bigocheatsheet.com/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>Big-O cheat sheet</b><span class="rnote">One table with the cost of every operation of every structure.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-final-exam-1-tetranacci">
   <div class="prog-h">
@@ -1148,7 +1165,7 @@ YES
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

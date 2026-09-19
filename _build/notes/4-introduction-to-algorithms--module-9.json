@@ -135,5 +135,76 @@
       "q": "Can you stop Bellman-Ford early?",
       "a": "Yes: if a full round changes nothing, all distances are final."
     }
+  ],
+  "intro": [
+    {
+      "heading": null,
+      "body": [
+        "Module 7 ended with a warning: Dijkstra is not allowed when an edge can be negative. This module is the answer to exactly that case.",
+        "Negative weights are not a made-up puzzle. Think of a journey where one leg pays you back more than it costs - a refund, a discount, a currency trade that gains. The cost of that leg is a negative number, and the cheapest overall route may well go through it.",
+        "Why does Dijkstra fall over? Because it rests on one promise: the moment a node is the nearest unfinished one, its distance is final and it is never looked at again. With every weight zero or more that promise is safe. Add one negative edge and a node you already declared finished can become cheaper afterwards, and the algorithm never goes back to notice.",
+        "Bellman-Ford throws that cleverness away. It does not choose a clever order at all. It just **relaxes every edge in the graph, over and over**. Because it never declares anything final, nothing can catch it out.",
+        "How many rounds are enough? A shortest route never repeats a node, so with n nodes it uses at most n-1 edges. One full round over all the edges settles at least one more edge of that route, whatever order the edges happen to be in. So **n-1 rounds is always enough** - no more is needed, and no fewer is safe."
+      ],
+      "snippet": null,
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "Take four nodes and four directed edges, stored as a plain edge list, and start from node 0. Note the edge `2 -> 1` costs -3:",
+        "Here is round one, one edge at a time. A dash means \"still unknown\":"
+      ],
+      "snippet": null,
+      "trace": "edges in order:\n  0->1 (4)   0->2 (5)   2->1 (-3)   1->3 (2)\n\n             0    1    2    3\nstart        0    -    -    -\n0->1 (4)     0    4    -    -\n0->2 (5)     0    4    5    -\n2->1 (-3)    0    2    5    -\n1->3 (2)     0    2    5    4"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Watch node 1. The direct edge put a 4 there, and then the negative edge from node 2 rewrote it: 5 - 3 = 2, so the two-edge route wins. Dijkstra, having already finished node 1 at 4, would never have looked again.",
+        "Round two changes nothing, and so does round three; the table is settled. Each round is the same four lines of code:"
+      ],
+      "snippet": "for(int i = 0; i < n - 1; i++)\n    for(auto ed : edge_list)\n        if(dis[ed.a] != INT_MAX &&\n           dis[ed.a] + ed.c < dis[ed.b])\n            dis[ed.b] = dis[ed.a] + ed.c;",
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "That `dis[ed.a] != INT_MAX` guard matters: without it you would add a weight to `INT_MAX`, overflow the `int`, and get a huge negative number that looks like a wonderful route.",
+        "Now the second half of the module. Three nodes, with `1 -> 2` costing -4 and `2 -> 1` costing 1, so one lap of that little loop gains you -3 every time:"
+      ],
+      "snippet": null,
+      "trace": "edges: 0->1 (2)   1->2 (-4)   2->1 (1)\n\n             0    1    2\nstart        0    -    -\nround 1      0   -1   -2\nround 2      0   -4   -5\nextra round  0   -7   -8   still falling"
+    },
+    {
+      "heading": null,
+      "body": [
+        "With n = 3 you do n-1 = 2 rounds and stop. But run **one extra round** and the distances drop again, by 3, and they would drop by 3 more every round for ever. There is no shortest route here: go round the loop once more and you always beat your own answer. That is a negative cycle, and the extra round is how you detect it - if any edge still relaxes after n-1 rounds, say so and stop.",
+        "The price is O(V.E): for 1000 nodes and 5000 edges that is about 5 million relaxations, clearly slower than Dijkstra's O((V + E) log V). So the rule for choosing is short. All weights zero or more: Dijkstra, and it is faster. Any weight negative: Bellman-Ford, and you get a negative-cycle test for one extra round of work.",
+        "The programs below write it twice - plain, then with the cycle check - and once more in the shape a judge wants, where the distances start at 10^8 instead of `INT_MAX` and a negative cycle is reported as `{-1}`. Read the watch-out notes as you go: two of the three files have small mistakes worth spotting yourself."
+      ],
+      "snippet": null,
+      "trace": null
+    }
+  ],
+  "resources": [
+    {
+      "kind": "visual",
+      "name": "VisuAlgo — shortest paths",
+      "url": "https://visualgo.net/en/sssp",
+      "note": "Dijkstra and Bellman-Ford animated, with the distance table updating."
+    },
+    {
+      "kind": "article",
+      "name": "cp-algorithms — Bellman-Ford",
+      "url": "https://cp-algorithms.com/graph/bellman_ford.html",
+      "note": "Why n-1 rounds, and how the extra round finds a negative cycle."
+    },
+    {
+      "kind": "video",
+      "name": "William Fiset — graph theory playlist",
+      "url": "https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P",
+      "note": "Every graph algorithm of this course, drawn before it is coded."
+    }
   ]
 }

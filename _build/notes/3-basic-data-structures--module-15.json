@@ -2,29 +2,153 @@
   "module_id": "3-basic-data-structures--module-15",
   "title": "Stack & queue problem practice",
   "overview": "A practice module with no new code: you use the stack and queue you already built to solve judge problems. The goal is to recognise when a problem is secretly a stack problem (matching, undo, most-recent-first) or a queue problem (first come, first served, rotating order). Solve the linked problems, then check the patterns below.",
+  "intro": [
+    {
+      "heading": null,
+      "body": [
+        "There is no new code today. Everything you need was built in Modules 13 and 14. What this day trains is one small decision you have to make before writing a single line: **is this a stack problem or a queue problem?**",
+        "Two everyday pictures answer it. A canteen counter has a pile of washed plates. New plates go on the top, and whoever needs a plate takes the top one, the plate put down last. A ticket window has a line of people. You join at the back, and the person served next is the one who has been waiting longest."
+      ],
+      "snippet": null,
+      "trace": "pile of plates        ticket line\n\n  [ D ]  <- take       A  B  C  D\n  [ C ]                ^        ^\n  [ B ]                serve    join\n  [ A ]                here     here"
+    },
+    {
+      "heading": null,
+      "body": [
+        "So the question to ask a problem is: when the time comes to deal with something, is it the **newest** thing that must be dealt with, or the **oldest**? Newest first means a stack. Oldest first means a queue. Nothing else about the problem matters for this choice.",
+        "**First worked example.** Check that the brackets in `( [ ] )` are balanced. You read `]`. Which opening bracket is it supposed to close? Not the first one you saw, but the most recent one still waiting, which is `[`. The last thing seen has to be dealt with first, so the waiting brackets belong on a stack."
+      ],
+      "snippet": null,
+      "trace": "string:  ( [ ] )\n\nread (   push        stack: (\nread [   push        stack: ( [\nread ]   top is [ -> pop     stack: (\nread )   top is ( -> pop     stack: empty\n\nstack empty at the end  ->  balanced"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Notice what the stack saved you. Without it, for every closing bracket you would walk backwards through the string hunting for the nearest opening bracket that is still unmatched. That is a loop inside a loop: O(n²), which on a string of 100000 characters is about 10,000,000,000 steps and will not finish in a second. With a stack every character is pushed at most once and popped at most once, so the whole scan is O(n).",
+        "**Second worked example**, this time with arrival order. A queue holds `1 2 3 4 5` and you must reverse only the first 3. Pour those 3 through a stack, because a stack hands them back in the opposite order, then rotate the untouched 2 items from the front to the back so they end up behind again."
+      ],
+      "snippet": null,
+      "trace": "queue: 1 2 3 4 5      k = 3\n\npop 3 into a stack    stack: 3 2 1  (top first)\n                      queue: 4 5\npush them back        queue: 4 5 3 2 1\nrotate 5 - 3 = 2      queue: 5 3 2 1 4\n  front to back       queue: 3 2 1 4 5"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Three patterns cover most of the linked problems. **Matching and cancelling**: push each character, and pop instead of pushing when the new one cancels the top. Brackets work this way, and so do backspaces and removing adjacent duplicates. For `abbaca` the stack goes `a`, `ab`, then the second `b` cancels the `b`, the next `a` cancels the `a`, so `c` and `a` are pushed and `ca` is what is left.",
+        "**Next greater element**: for every number, find the first larger number to its right. Comparing every pair is O(n²). Instead walk from right to left with a stack holding only the numbers that could still be somebody's answer: pop everything not larger than the current value, and what is left on top is the answer.",
+        "**Simulation with a queue**: when the problem describes people or jobs arriving and being handled in order, act the story out. Join at the back with `push`, serve the front with `front()` and `pop()`, and send someone to the back of the line by popping and pushing the same value."
+      ],
+      "snippet": "if(!st.empty() && st.top() == c) st.pop();\nelse st.push(c);",
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "Two habits save most of the wrong answers here. Always check `empty()` before `top()`, `front()` or `pop()`, because reading the top of an empty stack is not an error message, it is undefined behaviour. And remember the stack only lets you touch the top: to reach the bottom, or to keep a running minimum, you need a second stack or a recursive call to hold the rest while you work.",
+        "The concepts below name each pattern with its snippet, and the practice links are the problems to try. Decide plates or ticket line first, and the code usually follows in a few lines."
+      ],
+      "snippet": null,
+      "trace": null
+    }
+  ],
   "concepts": [
-    {"term": "Stack = last in, first out", "explain": "A stack only lets you touch the top. Use it when the newest item must be handled first, like the last opened bracket or the last typed character.", "snippet": "stack<char> st; st.push('('); st.top(); st.pop();"},
-    {"term": "Bracket matching", "explain": "Push every opening bracket. On a closing bracket, the top must be its partner; if the stack is empty or the top does not match, the string is invalid. At the end the stack must be empty.", "snippet": null},
-    {"term": "Stack as an undo button", "explain": "For problems like 'backspace' or 'remove adjacent duplicates', push characters and pop when the new character cancels the top. What is left in the stack is the final string (read it bottom to top).", "snippet": "if(!st.empty() && st.top()==c) st.pop(); else st.push(c);"},
-    {"term": "Reversing with a stack", "explain": "Pouring a queue into a stack and back reverses it, because the stack gives items back in the opposite order. To reverse only the first k items, pour k items through a stack, then rotate the remaining n-k items to the back.", "snippet": null},
-    {"term": "Inserting at the bottom of a stack", "explain": "You cannot reach the bottom directly. Pop everything into a helper (another stack or recursion), push the new value, then push everything back.", "snippet": null},
-    {"term": "Min stack", "explain": "Keep a second stack that stores the minimum so far at every level. Push `min(x, minStack.top())` together with each push, and pop both together, so `getMin` is O(1).", "snippet": "mn.push(mn.empty() ? x : min(x, mn.top()));"},
-    {"term": "Queue = first in, first out", "explain": "A queue adds at the back and removes at the front. Use it when order of arrival matters, or to rotate items (pop from front, push to back).", "snippet": "queue<int> q; q.push(x); q.front(); q.pop();"}
+    {
+      "term": "Stack = last in, first out",
+      "explain": "A stack only lets you touch the top. Use it when the newest item must be handled first, like the last opened bracket or the last typed character.",
+      "snippet": "stack<char> st; st.push('('); st.top(); st.pop();"
+    },
+    {
+      "term": "Bracket matching",
+      "explain": "Push every opening bracket. On a closing bracket, the top must be its partner; if the stack is empty or the top does not match, the string is invalid. At the end the stack must be empty.",
+      "snippet": null
+    },
+    {
+      "term": "Stack as an undo button",
+      "explain": "For problems like 'backspace' or 'remove adjacent duplicates', push characters and pop when the new character cancels the top. What is left in the stack is the final string (read it bottom to top).",
+      "snippet": "if(!st.empty() && st.top()==c) st.pop(); else st.push(c);"
+    },
+    {
+      "term": "Reversing with a stack",
+      "explain": "Pouring a queue into a stack and back reverses it, because the stack gives items back in the opposite order. To reverse only the first k items, pour k items through a stack, then rotate the remaining n-k items to the back.",
+      "snippet": null
+    },
+    {
+      "term": "Inserting at the bottom of a stack",
+      "explain": "You cannot reach the bottom directly. Pop everything into a helper (another stack or recursion), push the new value, then push everything back.",
+      "snippet": null
+    },
+    {
+      "term": "Min stack",
+      "explain": "Keep a second stack that stores the minimum so far at every level. Push `min(x, minStack.top())` together with each push, and pop both together, so `getMin` is O(1).",
+      "snippet": "mn.push(mn.empty() ? x : min(x, mn.top()));"
+    },
+    {
+      "term": "Queue = first in, first out",
+      "explain": "A queue adds at the back and removes at the front. Use it when order of arrival matters, or to rotate items (pop from front, push to back).",
+      "snippet": "queue<int> q; q.push(x); q.front(); q.pop();"
+    }
   ],
   "files": [],
   "practice_links": [
-    {"name": "Valid Parentheses", "url": "https://leetcode.com/problems/valid-parentheses/", "site": "LeetCode"},
-    {"name": "Backspace String Compare", "url": "https://leetcode.com/problems/backspace-string-compare/description/", "site": "LeetCode"},
-    {"name": "Insert An Element At Its Bottom In A Given Stack", "url": "https://www.codingninjas.com/studio/problems/insert-an-element-at-its-bottom-in-a-given-stack_1171166", "site": "Coding Ninjas"},
-    {"name": "Maximum Equal Stack Sum", "url": "https://www.codingninjas.com/studio/problems/maximum-equal-stack-sum_1062571", "site": "Coding Ninjas"},
-    {"name": "Reversing a Queue", "url": "https://www.codingninjas.com/studio/problems/reversing-a-queue_982934", "site": "Coding Ninjas"},
-    {"name": "Min Stack", "url": "https://leetcode.com/problems/min-stack/description/", "site": "LeetCode"},
-    {"name": "Remove All Adjacent Duplicates In String", "url": "https://leetcode.com/problems/remove-all-adjacent-duplicates-in-string/description/", "site": "LeetCode"},
-    {"name": "Implement Stack With Linked List", "url": "https://www.codingninjas.com/studio/problems/implement-stack-with-linked-list_630475", "site": "Coding Ninjas"},
-    {"name": "Implement a Queue", "url": "https://www.codingninjas.com/studio/problems/queue-using-array-or-singly-linked-list_2099908", "site": "Coding Ninjas"},
-    {"name": "Reverse First K Elements of Queue", "url": "https://www.codingninjas.com/studio/problems/reverse-first-k-elements-of-queue_982771", "site": "Coding Ninjas"},
-    {"name": "Min Stack", "url": "https://www.codingninjas.com/studio/problems/min-stack_3843991", "site": "Coding Ninjas"},
-    {"name": "Kevin's Stack Problem", "url": "https://www.codingninjas.com/studio/problems/kevin-s-stack-problem_1169465", "site": "Coding Ninjas"}
+    {
+      "name": "Valid Parentheses",
+      "url": "https://leetcode.com/problems/valid-parentheses/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Backspace String Compare",
+      "url": "https://leetcode.com/problems/backspace-string-compare/description/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Insert An Element At Its Bottom In A Given Stack",
+      "url": "https://www.codingninjas.com/studio/problems/insert-an-element-at-its-bottom-in-a-given-stack_1171166",
+      "site": "Coding Ninjas"
+    },
+    {
+      "name": "Maximum Equal Stack Sum",
+      "url": "https://www.codingninjas.com/studio/problems/maximum-equal-stack-sum_1062571",
+      "site": "Coding Ninjas"
+    },
+    {
+      "name": "Reversing a Queue",
+      "url": "https://www.codingninjas.com/studio/problems/reversing-a-queue_982934",
+      "site": "Coding Ninjas"
+    },
+    {
+      "name": "Min Stack",
+      "url": "https://leetcode.com/problems/min-stack/description/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Remove All Adjacent Duplicates In String",
+      "url": "https://leetcode.com/problems/remove-all-adjacent-duplicates-in-string/description/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Implement Stack With Linked List",
+      "url": "https://www.codingninjas.com/studio/problems/implement-stack-with-linked-list_630475",
+      "site": "Coding Ninjas"
+    },
+    {
+      "name": "Implement a Queue",
+      "url": "https://www.codingninjas.com/studio/problems/queue-using-array-or-singly-linked-list_2099908",
+      "site": "Coding Ninjas"
+    },
+    {
+      "name": "Reverse First K Elements of Queue",
+      "url": "https://www.codingninjas.com/studio/problems/reverse-first-k-elements-of-queue_982771",
+      "site": "Coding Ninjas"
+    },
+    {
+      "name": "Min Stack",
+      "url": "https://www.codingninjas.com/studio/problems/min-stack_3843991",
+      "site": "Coding Ninjas"
+    },
+    {
+      "name": "Kevin's Stack Problem",
+      "url": "https://www.codingninjas.com/studio/problems/kevin-s-stack-problem_1169465",
+      "site": "Coding Ninjas"
+    }
   ],
   "recap": [
     "Newest-first or 'cancel the last thing' problems are stack problems.",
@@ -34,9 +158,47 @@
     "A second stack of running minimums gives O(1) `getMin`."
   ],
   "check_yourself": [
-    {"q": "For the string `([)]`, at which character does the bracket check fail, and why?", "a": "At `)`: the top of the stack is `[`, which is not the partner of `)`."},
-    {"q": "Why is a string like `((` invalid even though no mismatch happens?", "a": "Because the stack is not empty at the end; two brackets were never closed."},
-    {"q": "You push 5, 3, 7 into a min stack. What does the helper stack hold, bottom to top?", "a": "5, 3, 3 — each level stores the smallest value seen so far."},
-    {"q": "How do you reverse only the first k items of a queue of size n?", "a": "Pop k items into a stack, push them back into the queue (now reversed at the back), then move the front n-k items to the back once each."}
+    {
+      "q": "For the string `([)]`, at which character does the bracket check fail, and why?",
+      "a": "At `)`: the top of the stack is `[`, which is not the partner of `)`."
+    },
+    {
+      "q": "Why is a string like `((` invalid even though no mismatch happens?",
+      "a": "Because the stack is not empty at the end; two brackets were never closed."
+    },
+    {
+      "q": "You push 5, 3, 7 into a min stack. What does the helper stack hold, bottom to top?",
+      "a": "5, 3, 3 — each level stores the smallest value seen so far."
+    },
+    {
+      "q": "How do you reverse only the first k items of a queue of size n?",
+      "a": "Pop k items into a stack, push them back into the queue (now reversed at the back), then move the front n-k items to the back once each."
+    }
+  ],
+  "resources": [
+    {
+      "kind": "visual",
+      "name": "USFCA — stack (linked list)",
+      "url": "https://www.cs.usfca.edu/~galles/visualization/StackLL.html",
+      "note": "Push and pop, one click each, with the top pointer drawn."
+    },
+    {
+      "kind": "article",
+      "name": "GeeksforGeeks — stack",
+      "url": "https://www.geeksforgeeks.org/stack-data-structure/",
+      "note": "Short write-up plus a long list of stack problems."
+    },
+    {
+      "kind": "article",
+      "name": "NeetCode roadmap",
+      "url": "https://neetcode.io/roadmap",
+      "note": "A map of which problem to try next, grouped by the idea it uses."
+    },
+    {
+      "kind": "video",
+      "name": "NeetCode",
+      "url": "https://www.youtube.com/@NeetCode",
+      "note": "Each LeetCode problem explained with the picture first, then the code."
+    }
   ]
 }

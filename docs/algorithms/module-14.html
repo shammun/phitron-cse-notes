@@ -7,7 +7,7 @@
 <meta name="description" content="The module starts with recursion: a function that solves a problem by calling itself on a smaller version. Plain recursive Fibonacci repeats the same work many times. Memoization (top-down DP) and a bottom-up loop remove that repeated work. The practice problems apply the same ideas to digits, factorials, reachability and Tribonacci.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,11 +36,42 @@
     <p class="lead">The module starts with recursion: a function that solves a problem by calling itself on a smaller version. Plain recursive Fibonacci repeats the same work many times. Memoization (top-down DP) and a bottom-up loop remove that repeated work. The practice problems apply the same ideas to digits, factorials, reachability and Tribonacci.</p>
     <p class="chips"><span>11 programs</span><span>7 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%2014" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Fibonacci numbers are the ones where each is the sum of the two before it: 0, 1, 1, 2, 3, 5, 8, 13. That rule is almost the definition of recursion, so you can write it down without thinking.</p><p>It is correct, and for small <code>n</code> it is fast. Ask it for <code>fib(50)</code> and the program sits there for minutes. Nothing is broken. It is doing an astonishing amount of repeated work, and seeing exactly where that repetition lives is the point of this module.</p><pre class="snip">int fib(int n){
+    if(n &lt; 2) return n;
+    return fib(n-1) + fib(n-2);
+}</pre><p>Draw the calls for <code>fib(5)</code>. It asks for <code>fib(4)</code> and <code>fib(3)</code>, each of those asks two more, and so on down to 0 and 1.</p><p>Look at the picture, not at the code. <code>fib(3)</code> appears twice. <code>fib(2)</code> appears three times. Each time it is worked out again from nothing, as if the program had never seen it before. That is what <strong>overlapping subproblems</strong> means: the same small question keeps coming back. Count the calls and the damage is plain — the total roughly doubles for every step of <code>n</code>, which is about 2^n work and hopeless past 40.</p><pre class="trace">             fib(5)
+            /      \
+       fib(4)      fib(3)
+       /    \      /    \
+   fib(3) fib(2) fib(2) fib(1)
+   /    \
+fib(2) fib(1)
+
+n        5    10     20       40       50
+calls   15   177  21891   ~3.3e8   ~4.0e10</pre><p>The fix is embarrassingly small: keep a notebook. The first time you work an answer out, write it down; every later time, read it instead of working it out again. That is all <strong>memoisation</strong> is.</p><p>The notebook is an array called <code>dp</code>, one slot per question, filled with -1 to mean &quot;not answered yet&quot;. It is not a list of Fibonacci numbers planned in advance — it is a record of answers already found, indexed by the question that produced them, so <code>dp[4]</code> means &quot;the answer to <code>fib(4)</code>&quot;. Watch it fill while <code>fib(5)</code> runs.</p><pre class="snip">int dp[1005];
+int fib(int n){
+    if(n &lt; 2) return n;
+    if(dp[n] != -1) return dp[n];    // already answered
+    dp[n] = fib(n-1) + fib(n-2);     // answer it once
+    return dp[n];
+}</pre><pre class="trace">index     0   1   2   3   4   5
+start    -1  -1  -1  -1  -1  -1
+later     0   1   1  -1  -1  -1
+later     0   1   1   2   3  -1
+end       0   1   1   2   3   5
+
+the second fib(3) reads dp[3] and returns at once</pre><p>The count collapses. Every value of <code>n</code> is computed once, so the work is about <code>n</code> steps instead of 2^n. <code>fib(50)</code> drops from roughly 40 billion calls to about a hundred and answers instantly.</p><p><strong>What is new.</strong> Recursion you know. Arrays you know. The new thing is giving the recursion a memory, so a question already answered is never re-opened. That combination is dynamic programming, and everything later in the course is a harder version of this one move.</p><p><strong>There are two directions to fill the same table.</strong> Top-down is what you just saw: begin at the big question, recurse downwards, store on the way back up. Bottom-up drops the recursion, begins at the smallest cases and walks forwards with a loop. Same table, same values, opposite order of arrival — and no stack to overflow.</p><pre class="snip">int f[n+1];
+f[0] = 0; f[1] = 1;
+for(int i = 2; i &lt;= n; i++) f[i] = f[i-1] + f[i-2];
+cout &lt;&lt; f[n];</pre><pre class="trace">i = 2:  f[2] = f[1] + f[0] = 1 + 0 = 1
+i = 3:  f[3] = f[2] + f[1] = 1 + 1 = 2
+i = 4:  f[4] = f[3] + f[2] = 2 + 1 = 3
+i = 5:  f[5] = f[4] + f[3] = 3 + 2 = 5</pre><p><strong>Two more examples.</strong> Climbing a staircase of <code>n</code> steps one or two at a time: the number of ways to reach step <code>n</code> is the ways to reach <code>n-1</code> plus the ways to reach <code>n-2</code>, which is Fibonacci wearing a hat. Tribonacci is the same again with three terms instead of two. In the &quot;reach value&quot; problem the remembered thing is a set of values already tried, so no value is explored twice — a different notebook, the same idea.</p><p><strong>When it does not help.</strong> Memoisation only pays if the same question genuinely comes back; if every call is a fresh question, the notebook fills and is never read. And these numbers grow fast, so reach for <code>long long</code>: 13! already overflows an <code>int</code>.</p><p>The programs below walk the same road slowly — plain recursion, the call tree, memoisation, the bottom-up loop, then five practice problems.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-recursion"><span class="n">1</span>Recursion warm-up: print and sum</a></li><li><a href="#p-factorial-recursion"><span class="n">2</span>Factorial with recursion</a></li><li><a href="#p-fibonacci-recursion"><span class="n">3</span>Fibonacci with plain recursion</a></li><li><a href="#p-fibonacci-with-memoization"><span class="n">4</span>Fibonacci with memoization (top-down DP)</a></li><li><a href="#p-fibonacci-bottom-up-loop"><span class="n">5</span>Fibonacci bottom-up (tabulation)</a></li><li><a href="#p-leetcode-climbing-stairs"><span class="n">6</span>LeetCode 70: Climbing Stairs</a></li><li><a href="#p-practice-problem-1-print-digits-using-recursion"><span class="n">7</span>Print digits using recursion</a></li><li><a href="#p-practice-problem-2-factorial"><span class="n">8</span>Factorial (up to N = 20)</a></li><li><a href="#p-practice-problem-3-reach-value"><span class="n">9</span>Reach Value (multiply by 10 or 20)</a></li><li><a href="#p-practice-problem-4-fibonacci"><span class="n">10</span>LeetCode 509: Fibonacci Number (bottom-up)</a></li><li><a href="#p-practice-problem-5-n-th-tribonacci-number"><span class="n">11</span>LeetCode 1137: N-th Tribonacci Number</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Base case + recursive case</h4><p>Every recursive function needs a stopping condition (base case) and a call that moves toward it. Without the base case it never stops and the stack overflows.</p><pre class="snip">int fact(int n) { if (n == 1) return 1; return n * fact(n - 1); }</pre></div><div class="concept"><h4>Work before vs after the call</h4><p>Printing before the recursive call prints in the order the calls are made (1..5). Printing after the call prints as the calls return (5..1).</p></div><div class="concept"><h4>Overlapping subproblems</h4><p><code>fib(n)</code> calls <code>fib(n-1)</code> and <code>fib(n-2)</code>, and both of them call <code>fib(n-3)</code> again. The plain version takes about 2^n steps.</p></div><div class="concept"><h4>Memoization (top-down DP)</h4><p>Keep a <code>dp</code> array filled with -1. Before computing, check whether the answer is already stored; after computing, store it. Each state is computed once.</p><pre class="snip">if (dp[n] != -1) return dp[n];
 dp[n] = fib(n-1) + fib(n-2);</pre></div><div class="concept"><h4>Tabulation (bottom-up DP)</h4><p>Fill the table from the smallest cases upward with a loop. No recursion and no stack depth issues.</p><pre class="snip">for (i = 2; i &lt;= n; i++) f[i] = f[i-1] + f[i-2];</pre></div><div class="concept"><h4>Choose the right integer type</h4><p>Factorials and Fibonacci numbers grow fast. 13! already overflows <code>int</code>; use <code>long long</code> (good up to 20!).</p></div><div class="concept"><h4>Recursion visualiser</h4><p>Drawing the call tree helps you see repeated calls. The module links an online recursion visualiser for this.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/recursion" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — recursion</b><span class="rnote">The call tree drawn as it happens, which is hard to picture from code alone.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/RecFact.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — recursive factorial</b><span class="rnote">The calls stacking up and unwinding, drawn.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0qUlt5H_kiKYaNSqJ81PMMY" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — dynamic programming playlist</b><span class="rnote">Builds every DP from the plain recursion first, which is how this module does it.</span></a></li><li class="r-video"><a href="https://www.youtube.com/@AbdulBari" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Abdul Bari</b><span class="rnote">Algorithms explained on a whiteboard, very slowly and very clearly.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-recursion">
   <div class="prog-h">
@@ -1423,7 +1454,7 @@ YES
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

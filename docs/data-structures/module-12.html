@@ -7,7 +7,7 @@
 <meta name="description" content="Module 12 is the mid-term exam of Basic Data Structures. The five questions test what you built in Modules 8-11: inserting at any index of a doubly linked list, printing it both ways, checking a palindrome with two pointers, a browser-history style walk, and query processing with the STL `list`. Each question has Shammunul&#x27;s solution plus a `_p` practice re-type.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,7 +36,37 @@
     <p class="lead">Module 12 is the mid-term exam of Basic Data Structures. The five questions test what you built in Modules 8-11: inserting at any index of a doubly linked list, printing it both ways, checking a palindrome with two pointers, a browser-history style walk, and query processing with the STL <code>list</code>. Each question has Shammunul&#x27;s solution plus a <code>_p</code> practice re-type.</p>
     <p class="chips"><span>11 programs</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/3_Basic%20Data%20Structures/Module%2012" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>This is the mid-term. Five questions, and the calming thing to notice before you start is that not one of them needs an idea you have not already written out by hand. They are the list operations from Modules 5 to 11 in exam wording and under a clock. The skill being tested is choosing quickly, not inventing.</p><p>So begin with the map. Here is everything you can already do, and what it costs in each of the three containers you may reach for:</p><pre class="trace">                       singly  doubly  STL list
+add at head              O(1)    O(1)   push_front
+add at tail              O(1)*   O(1)   push_back
+delete the head          O(1)    O(1)   pop_front
+delete the tail          O(n)    O(1)   pop_back
+reach index X            O(X)    O(X)   next(begin,X)
+walk backwards            no      yes    yes
+sort, drop duplicates    hand    hand   sort + unique
+
+* O(1) at the tail only if you keep a tail pointer</pre><p>Now match the wording to a row. &quot;Print the list from left to right and right to left&quot; means you need a way back, so it is a doubly linked list, or an STL <code>list</code> walked with <code>it--</code> starting from the last element. &quot;Go to the next address, go to the previous one, stay where you are if there is none&quot; is the same requirement wearing a browser&#x27;s clothes: keep one marker for where you are and step it either way.</p><p>&quot;Insert the value V at index X, print Invalid if the index is wrong&quot; is a walk with a guard — you cannot reach index X without counting to it, and you must test the index against the current size before touching a single pointer. &quot;Remove duplicates and print in ascending order&quot; is the one question where the container does the work: <code>l.sort()</code> and then <code>l.unique()</code>, in that order, because <code>unique</code> only removes neighbours. &quot;Is it a palindrome&quot; is two pointers from both ends.</p><p>One more line in each question deserves reading twice: the line saying which structure you must use. Two of the five say STL <code>list</code> or no marks, one says doubly linked list or no marks. A right answer built the wrong way scores zero.</p><p><strong>The pattern that turns up most is the guarded walk to an index.</strong> Every query-style question here is a version of it. Get the size, refuse the impossible indexes, handle the two ends as their own cases, and only then walk.</p><pre class="snip">int size = get_size(head);
+if(pos &lt; 0 || pos &gt; size){         // pos == size is allowed:
+    cout &lt;&lt; &quot;Invalid&quot; &lt;&lt; endl;     // it means &quot;add at the end&quot;
+    return;
+}
+if(pos == 0)    { insert_at_head(head, tail, val); return; }
+if(pos == size) { insert_at_tail(head, tail, val); return; }
+
+Node* tmp = head;
+for(int i = 1; i &lt; pos; i++) tmp = tmp-&gt;next;</pre><p>That loop is the part people get wrong under pressure. It starts at <code>i = 1</code>, not <code>0</code>, because you must stop on the node <strong>before</strong> the gap you are filling: you need the left-hand neighbour in your hand to relink it. With <code>10 20 30</code> and <code>pos = 2</code>:</p><pre class="trace">index     0     1     2
+         10 -&gt; 20 -&gt; 30
+
+tmp starts at 10
+i = 1:  1 &lt; 2, move  -&gt;  tmp = 20
+i = 2:  stop
+
+tmp is 20, the node before index 2.
+The new node needs four links:
+    new-&gt;next = tmp-&gt;next     (30)
+    tmp-&gt;next-&gt;prev = new
+    tmp-&gt;next = new
+    new-&gt;prev = tmp</pre><p><strong>What actually costs marks.</strong> Input first: two questions stop at a sentinel, <code>-1</code> for the numbers and <code>end</code> for the web addresses, so read in a loop and break — never assume a count. If you read a number with <code>cin &gt;&gt;</code> and then need whole lines with <code>getline</code>, put <code>cin.ignore()</code> in between or your first line comes back empty.</p><p>Then the edges: the empty list, a list of one node, index 0 and index size. Most exam bugs live there and not in the middle of the walk. And print exactly what the samples print, including the <code>L -&gt; </code> and <code>R -&gt; </code> prefixes and the trailing space after each value.</p><p>Every question below has Shammunul&#x27;s solution and a <code>_p</code> copy to retype from memory. Some of the copies contain a bug, and the note under each one tells you where to look.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-mid-term-question-1-remove-duplicate"><span class="n">1</span>Q1 · Remove duplicates and sort (STL list)</a></li><li><a href="#p-mid-term-question-1-remove-duplicate-p"><span class="n">2</span>Q1 · Remove duplicates (practice copy) <em>(re-typed)</em></a></li><li><a href="#p-mid-term-question-2-queries-again"><span class="n">3</span>Q2 · Insert at index X, print both ways</a></li><li><a href="#p-mid-term-question-2-queries-again-p"><span class="n">4</span>Q2 · Insert at index X (practice copy, has a bug) <em>(re-typed)</em></a></li><li><a href="#p-check"><span class="n">5</span>Scratch: Q2 with STL list (does not compile)</a></li><li><a href="#p-mid-term-question-3-palindrome"><span class="n">6</span>Q3 · Palindrome with a doubly linked list</a></li><li><a href="#p-mid-term-question-3-palindrome-p"><span class="n">7</span>Q3 · Palindrome (practice copy) <em>(re-typed)</em></a></li><li><a href="#p-mid-term-question-4-web-address"><span class="n">8</span>Q4 · Browser history (visit / next / prev)</a></li><li><a href="#p-mid-term-question-4-web-address-p"><span class="n">9</span>Q4 · Browser history (practice copy, has a bug) <em>(re-typed)</em></a></li><li><a href="#p-mid-term-question-5-remember-previous-queries"><span class="n">10</span>Q5 · Head / tail / delete queries (STL list)</a></li><li><a href="#p-mid-term-question-5-remember-previous-queries-p"><span class="n">11</span>Q5 · List queries (practice copy) <em>(re-typed)</em></a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Read until a sentinel</h4><p>Several questions end the input with <code>-1</code> (or the word <code>end</code>). Read in a <code>while(true)</code> loop and <code>break</code> when you see it, instead of reading a count first.</p><pre class="snip">while(true){
     cin &gt;&gt; val;
@@ -44,6 +74,7 @@
     l.push_back(val);
 }</pre></div><div class="concept"><h4>STL <code>list</code> helpers</h4><p><code>sort()</code> orders a <code>list</code> in place and <code>unique()</code> removes <strong>neighbouring</strong> equal values. Sort first, then <code>unique()</code>, and every duplicate is gone.</p></div><div class="concept"><h4>Insert at any index (doubly linked)</h4><p>Valid indexes are <code>0..size</code>. Index <code>0</code> is insert-at-head, index <code>size</code> is insert-at-tail, anything in between needs the node before the position and four pointer updates.</p></div><div class="concept"><h4>Print both directions</h4><p>Forward printing follows <code>next</code> from <code>head</code>; backward printing follows <code>prev</code> from <code>tail</code>. If the backward line looks wrong, a <code>prev</code> link was forgotten.</p></div><div class="concept"><h4>Two-pointer palindrome</h4><p>With a doubly linked list, start <code>i</code> at the head and <code>j</code> at the tail and walk them toward each other, comparing values. Stop when they meet (odd length) or cross (even length).</p></div><div class="concept"><h4>Iterators on <code>list</code></h4><p>A <code>list</code> has no <code>[]</code>. To reach index <code>X</code>, start at <code>l.begin()</code> and do <code>it++</code> X times; <code>next(it, k)</code> does the same in one call. <code>l.insert(it, v)</code> puts <code>v</code> before <code>it</code>; <code>l.erase(it)</code> removes it.</p></div><div class="concept"><h4>Mixed <code>cin</code> and <code>getline</code></h4><p>After <code>cin &gt;&gt; Q</code>, a newline is still waiting. Call <code>cin.ignore()</code> before the first <code>getline</code>, or the first line you read will be empty.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/list" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — linked list</b><span class="rnote">Press Insert or Remove and watch the arrows re-point, one step at a time.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0rAuz8tVcM0AymmhTRsfaLU" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — linked list playlist</b><span class="rnote">From the basics to the interview problems on lists.</span></a></li><li class="r-article"><a href="https://www.bigocheatsheet.com/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>Big-O cheat sheet</b><span class="rnote">One table with the cost of every operation of every structure.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-mid-term-question-1-remove-duplicate">
   <div class="prog-h">
@@ -3750,7 +3781,7 @@ R -&gt;
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

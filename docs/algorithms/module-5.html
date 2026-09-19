@@ -7,7 +7,7 @@
 <meta name="description" content="A module of LeetCode practice built on one template: loop over every cell and start a DFS (or BFS) from each unvisited land cell. Small changes to that template count islands, measure their area or perimeter, add up values, or check a condition on the whole island with a flag.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,11 +36,43 @@
     <p class="lead">A module of LeetCode practice built on one template: loop over every cell and start a DFS (or BFS) from each unvisited land cell. Small changes to that template count islands, measure their area or perimeter, add up values, or check a condition on the whole island with a flag.</p>
     <p class="chips"><span>10 programs</span><span>7 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%205" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Look at a satellite photo of the sea with some land in it and count the islands. Your eye does it instantly, and it is worth asking what your eye actually did, because that is the whole module.</p><p>It did not count land cells; that would give you the amount of land, not the number of islands. What it did was pick a piece of land, spread over everything joined to it, call all of that one island, and then look for the next piece of land that was not part of anything already traced.</p><p>That sentence is the template. <strong>Find an unvisited land cell, flood everything reachable from it, and count that flood as one island.</strong> Every problem on this page is that template with a different thing counted while the flood runs.</p><p>Here it is on a 4 x 4 grid, where <code>1</code> is land and <code>.</code> is water. Walk the cells in reading order and watch what happens.</p><pre class="trace">       c0 c1 c2 c3
+  r0    1  1  .  .
+  r1    1  .  .  1
+  r2    .  .  1  1
+  r3    1  .  .  .
+
+(0,0) land, unvisited -&gt; island 1, flood it
+        A  A  .  .
+        A  .  .  1
+        .  .  1  1
+        1  .  .  .
+
+(0,1) land, but already marked -&gt; skip
+(1,3) land, unvisited -&gt; island 2, flood it
+        A  A  .  .
+        A  .  .  B
+        .  .  B  B
+        1  .  .  .
+
+(3,0) land, unvisited -&gt; island 3
+        A  A  .  .
+        A  .  .  B
+        .  .  B  B
+        C  .  .  .
+
+islands = 3</pre><p>The marking is what makes the count right. When the outer loop later reaches <code>(0,1)</code> or <code>(2,3)</code>, those cells are already marked, so no second island is started for them. The outer loop starts a search only from land that no earlier search has swallowed.</p><p><strong>How do you mark a cell?</strong> There are two ways, and the module uses both. Keep a separate <code>vis[i][j]</code> array, or overwrite the cell in the grid itself — set it to water as you enter it, and the outer loop will simply not see it as land any more.</p><p>Overwriting is shorter and needs no extra memory, but it destroys the input: if the problem asks anything about the original values later, the answer is gone. The perimeter problem must still see which sides face water, and Count Sub Islands must still read the other grid. A separate <code>vis</code> array keeps the grid intact for one boolean per cell, and must be cleared before each run — on the judge the <code>Solution</code> object can be reused between tests, so clear it inside the method.</p><p>What is new here is not the search. Counting connected pieces is exactly the apartment counting of Modules 3 and 4. What is new is that the flood can carry a job with it, and the job is all that changes from problem to problem.</p><p>Count the cells you enter, keep the biggest total, and you have the largest island. Add the value of each cell instead of 1, and you have the pond with the most fish. For the perimeter, add one for each of a land cell&#x27;s four sides that faces water or falls off the grid. For a yes/no question about a whole island — is it a sub-island, does it touch the border — set a flag to true before the flood and let any offending cell turn it false, then count the island only if the flag survived.</p><pre class="snip">for(int i = 0; i &lt; n; i++)
+  for(int j = 0; j &lt; m; j++)
+    if(!vis[i][j] &amp;&amp; grid[i][j] == 1){
+        cnt = 0;            // the job
+        dfs(i, j);          // the flood
+        mx = max(mx, cnt);  // or islands++
+    }</pre><p>Two traps are worth knowing before you start. With the flag pattern, do not <code>return</code> the moment the flag turns false: the rest of that island would stay unmarked, and the outer loop would later walk into it and count it as a brand new island. Finish the flood, then decide. And always check which value means land — in Number of Closed Islands the land is <code>0</code> and the water is <code>1</code>, the opposite of every other problem here.</p><p>DFS and BFS give the same answers here, because both mark the same cells; BFS is safer only when an island is large enough for deep recursion to overflow the stack. Each cell is entered once and has four neighbours, so the work is O(n·m).</p><p>The programs below are this one template written out ten times. Read the first one carefully, then read the others only for the line that differs.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-leetcode-number-of-islands"><span class="n">1</span>LeetCode 200 - Number of Islands</a></li><li><a href="#p-leetcode-max-area-of-island"><span class="n">2</span>LeetCode 695 - Max Area of Island</a></li><li><a href="#p-leetcode-maximum-number-of-fish-in-a-grid"><span class="n">3</span>LeetCode 2658 - Maximum Fish in a Grid</a></li><li><a href="#p-leetcode-island-perimeter-bfs"><span class="n">4</span>LeetCode 463 - Island Perimeter (BFS)</a></li><li><a href="#p-leetcode-island-perimeter-dfs"><span class="n">5</span>Island Perimeter (DFS over all cells)</a></li><li><a href="#p-leetcode-island-perimeter-dfs-v2"><span class="n">6</span>Island Perimeter (DFS, land only)</a></li><li><a href="#p-leetcode-find-if-path-exists-in-a-graph"><span class="n">7</span>LeetCode 1971 - Find if Path Exists</a></li><li><a href="#p-leetcode-count-sub-islands"><span class="n">8</span>LeetCode 1905 - Count Sub Islands</a></li><li><a href="#p-leetcode-number-of-closed-islands"><span class="n">9</span>LeetCode 1254 - Closed Islands (DFS)</a></li><li><a href="#p-leetcode-number-of-closed-islands-bfs"><span class="n">10</span>Closed Islands (BFS version) <em>(re-typed)</em></a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>The island template</h4><p>Double loop over cells; each unvisited land cell starts a search that marks its whole island.</p><pre class="snip">for i, for j:
   if(!vis[i][j] &amp;&amp; grid[i][j]==1){ dfs(i,j); cnt++; }</pre></div><div class="concept"><h4>Accumulate inside the search</h4><p>Add 1 per cell for area, <code>grid</code> value for fish, or edges touching water for perimeter.</p></div><div class="concept"><h4>Flag pattern</h4><p>Set <code>flag = true</code> before a search; the search sets it false if any cell breaks the rule (touches the border, lies on water in grid1, ...). Count the island only if the flag survived.</p></div><div class="concept"><h4>Do not stop early</h4><p>Even after the flag turns false, finish the search so the entire island is marked visited and not counted again later.</p></div><div class="concept"><h4>Perimeter</h4><p>Each land cell contributes one unit for every side that faces water or the outside of the grid.</p></div><div class="concept"><h4>Class members on the judge</h4><p>LeetCode creates the <code>Solution</code> object for you; member arrays like <code>vis</code> work, but reset them inside the method.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-video"><a href="https://www.youtube.com/@NeetCode" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>NeetCode</b><span class="rnote">Each LeetCode problem explained with the picture first, then the code.</span></a></li><li class="r-visual"><a href="https://algorithm-visualizer.org/" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>Algorithm Visualizer</b><span class="rnote">Code on one side, animation on the other; you can edit the code.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0oE3gA41TKO2H5bHpPd7fzn" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — graph series</b><span class="rnote">Problem-by-problem graph course in C++, close to how the judge asks.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-leetcode-number-of-islands">
   <div class="prog-h">
@@ -2210,7 +2242,7 @@ closedIsland = 2
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

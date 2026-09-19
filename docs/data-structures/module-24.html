@@ -7,7 +7,7 @@
 <meta name="description" content="Shammunul&#x27;s solutions to the course final exam. Each question is a small data-handling task that becomes easy once you pick the right STL container: a `set` to sort and remove duplicates, a priority queue with a custom comparator to order pairs or students, a `map` to count words, and a min-heap to answer &#x27;current minimum&#x27; queries. Revise these to practise choosing a container quickly.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,10 +36,49 @@
     <p class="lead">Shammunul&#x27;s solutions to the course final exam. Each question is a small data-handling task that becomes easy once you pick the right STL container: a <code>set</code> to sort and remove duplicates, a priority queue with a custom comparator to order pairs or students, a <code>map</code> to count words, and a min-heap to answer &#x27;current minimum&#x27; queries. Revise these to practise choosing a container quickly.</p>
     <p class="chips"><span>7 programs</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/3_Basic%20Data%20Structures/Module%2024" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>This is the final exam of the course, and the hard part is not writing the code. It is reading a question and deciding, inside a minute, which container answers it. The whole course points at that one decision, so here is the map:</p><pre class="trace">the question asks for        reach for
+---------------------------  ------------------
+sorted, no duplicates        set
+how many times, or which     map
+  word or value wins
+the smallest or biggest one  priority_queue
+  right now, while items
+  keep arriving and leaving
+the answer for a position,   prefix sums
+  from sums of the rest
+first in first out / last    queue / stack
+  in first out
+search by comparing, and     BST
+  in-order comes out sorted</pre><p>The pattern that comes up most is counting with a <code>map</code> and then picking the best count, so trace it once before the exam. Read the words with <code>getline</code> and a <code>stringstream</code>, tick a box per word, and keep track of the best as you go.</p><p>The trap is the tie. If the question wants the <strong>first</strong> word to reach the highest count, update the answer only when the new count is strictly greater than the best so far. Using <code>&gt;=</code> would let a later word steal the place on a tie:</p><pre class="snip">map&lt;string,int&gt; freq;
+string best = &quot;&quot;;
+int bestCount = 0;
+string w;
+while(ss &gt;&gt; w){
+    freq[w]++;
+    if(freq[w] &gt; bestCount){   // strictly greater, not &gt;=
+        bestCount = freq[w];
+        best = w;
+    }
+}</pre><pre class="trace">sentence: bat cat bat cat dog
+
+word   its count   best so far
+bat        1        bat 1
+cat        1        bat 1
+bat        2        bat 2
+cat        2        bat 2   (tie: no change)
+dog        1        bat 2
+
+answer: bat 2</pre><p>The second pattern is a pile that changes while you are being asked about it. Keep the numbers in a min-heap and the current smallest is always <code>top()</code>, whatever has been added or removed since. Nothing is re-sorted, and each command costs O(log n):</p><pre class="trace">start with 7 3 9      min-heap top = 3
+insert 5           -&gt; top 3
+ask for the min    -&gt; 3
+delete the min     -&gt; 5 is now on top
+delete the min     -&gt; 7 is now on top
+delete the min     -&gt; 9 is now on top
+delete the min     -&gt; nothing left: Empty</pre><p>Watch that last line. A delete question asks for the minimum <strong>after</strong> the deletion, so the heap can be empty by the time you print. Check <code>empty()</code> before every <code>top()</code> and <code>pop()</code>, and check again after popping, or the program prints rubbish on the last query.</p><p>Three more things that cost marks rather than ideas. After <code>cin &gt;&gt; T</code> the newline is still sitting in the input, so <code>cin.ignore()</code> must come before the first <code>getline</code>. In a priority queue comparator with two keys, compare the main key and only fall through to the second when the first ties, and remember that returning true means the left item comes out <strong>later</strong>. And counting words in a vector of pairs works, but each word is an O(n) search through it, so a long input runs out of time where a <code>map</code> at O(log n) does not.</p><p>The solutions below are Shammunul&#x27;s answers to the five questions. Read each problem first and choose your container before looking, then compare; that is the part the exam actually tests.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-final-exam-question-1-sorted"><span class="n">1</span>Q1: Sorted (sort and remove duplicates)</a></li><li><a href="#p-final-exam-question-2-pairs"><span class="n">2</span>Q2: Pairs (sort by name, then value descending)</a></li><li><a href="#p-final-exam-pairs"><span class="n">3</span>Pairs (copy of Q2) <em>(re-typed)</em></a></li><li><a href="#p-final-exam-question-3-count-me-unoptimized"><span class="n">4</span>Q3: Count Me (vector of pairs)</a></li><li><a href="#p-final-exam-question-3-count-me-optimized"><span class="n">5</span>Q3: Count Me (map)</a></li><li><a href="#p-final-exam-question-4-current-min"><span class="n">6</span>Q4: Give Current Min</a></li><li><a href="#p-final-exam-question-5-current-max"><span class="n">7</span>Q5: Give Current Max (students)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Pick the container from the question</h4><p>&#x27;Sorted and unique&#x27; means <code>set</code>. &#x27;How many times&#x27; means <code>map</code>. &#x27;Current min/max while items come and go&#x27; means <code>priority_queue</code>.</p></div><div class="concept"><h4>Comparator with two keys</h4><p>Compare the main key first; only when it ties, compare the second key. In a priority queue, return true when the left item should come out later.</p><pre class="snip">if(l.name != r.name) return l.name &gt; r.name; return l.val &lt; r.val;</pre></div><div class="concept"><h4>Reading a number, then whole lines</h4><p>After <code>cin &gt;&gt; T</code>, the newline is still waiting in the input. <code>cin.ignore()</code> throws it away so the next <code>getline</code> reads the real sentence.</p><pre class="snip">cin &gt;&gt; T; cin.ignore(); getline(cin, S);</pre></div><div class="concept"><h4>First word to reach the maximum</h4><p>Update the answer only when a count becomes <strong>strictly</strong> greater than the best so far. A later word that only ties does not replace it.</p><pre class="snip">if(freq[w] &gt; best){ best = freq[w]; ans = w; }</pre></div><div class="concept"><h4>Guard every heap access</h4><p>Before <code>top()</code> or <code>pop()</code>, check <code>empty()</code> and print <code>Empty</code> instead. After a pop, check again before printing the new top.</p></div><div class="concept"><h4>map vs. vector of pairs for counting</h4><p>A <code>map</code> finds a word in O(log n). Searching a vector of pairs is O(n) per word, which can be too slow for long inputs.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/Algorithms.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — all the visualisations</b><span class="rnote">One page linking every structure and algorithm of this course.</span></a></li><li class="r-article"><a href="https://www.bigocheatsheet.com/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>Big-O cheat sheet</b><span class="rnote">One table with the cost of every operation of every structure.</span></a></li><li class="r-article"><a href="https://takeuforward.org/strivers-a2z-dsa-course/strivers-a2z-dsa-course-sheet-2/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>Striver&#x27;s A2Z DSA sheet</b><span class="rnote">An ordered list of problems per topic, easy ones first.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-final-exam-question-1-sorted">
   <div class="prog-h">
@@ -1891,7 +1930,7 @@ jobbar 24 99
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
 <meta name="description" content="This module adds breadth-first (level-order) traversal with a queue, and uses the same queue idea to read a whole tree from input, where `-1` means &#x27;no child&#x27;. With a real tree in hand you write small recursive functions that count nodes, count leaves and find the height. It ends with STL `pair` and judge practice on traversals.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,7 +36,38 @@
     <p class="lead">This module adds breadth-first (level-order) traversal with a queue, and uses the same queue idea to read a whole tree from input, where <code>-1</code> means &#x27;no child&#x27;. With a real tree in hand you write small recursive functions that count nodes, count leaves and find the height. It ends with STL <code>pair</code> and judge practice on traversals.</p>
     <p class="chips"><span>13 programs</span><span>7 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/3_Basic%20Data%20Structures/Module%2018" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Module 17 gave you three ways to walk a tree, and all three dive to the bottom before they come back up. Pre-order on the tree below prints <code>10 20 40 30 50 60</code>: it goes all the way down the left side before it even looks at 30.</p><p>But look at the picture and ask the question a person would ask about it: what is on the top row, then the second row, then the third row?</p><pre class="trace">        10
+       /  \
+     20    30
+     /     / \
+   40    50   60</pre><p>The answer you want is <code>10</code>, then <code>20 30</code>, then <code>40 50 60</code>. None of the three traversals produces that, because recursion always finishes one child completely before it starts the other.</p><p>You could get it the slow way. Work out the depth of every node, then make one pass printing only the nodes at depth 0, another pass for depth 1, another for depth 2. A tree 20 levels deep would mean 20 passes over the whole tree.</p><p>A clerk in a post office would not do that. They would keep a waiting line: write the root on the line, take the person at the front off the line, deal with them, and put their two children at the back. That line is a queue, exactly the queue of Module 14, and the order it hands nodes back is level order.</p><pre class="trace">queue (front .. back)    just printed
+10                       -
+20 30                    10
+30 40                    20
+40 50 60                 30
+50 60                    40
+60                       50
+(empty)                  60
+
+printed: 10 20 30 40 50 60</pre><p>What is new is only what the queue holds. Until now your queues held numbers or characters; here every item is a <code>Node*</code>, a pointer to a node. The loop itself is four lines:</p><p>Push a child only if it exists. If you push a NULL, the next round reads <code>f-&gt;val</code> through it and the program crashes. The first file also forgets the empty tree, and the files after it add <code>if(root == NULL) return;</code> at the top.</p><pre class="snip">q.push(root);
+while(!q.empty()){
+    Node* f = q.front(); q.pop();
+    cout &lt;&lt; f-&gt;val &lt;&lt; &quot; &quot;;
+    if(f-&gt;left)  q.push(f-&gt;left);
+    if(f-&gt;right) q.push(f-&gt;right);
+}</pre><p>The same queue solves a second problem. So far every tree was built by hand, one <code>new Node</code> and one assignment at a time, which is fine for six nodes and hopeless for a judge. Let the input describe the tree instead. Read the root value, push it, then take a node off the queue and read two numbers: its left child and its right child, where <code>-1</code> means no child. Real children are pushed, so their own children get read later, in the same order.</p><p>That input describes the tree in the picture above. Notice that every node that comes off the queue reads exactly two numbers, leaves included, so each leaf needs its own <code>-1 -1</code>. An empty tree is a single <code>-1</code>.</p><pre class="trace">10          &lt;- the root
+20 30       &lt;- children of 10
+40 -1       &lt;- children of 20
+50 60       &lt;- children of 30
+-1 -1       &lt;- children of 40
+-1 -1       &lt;- children of 50
+-1 -1       &lt;- children of 60</pre><p>With a real tree in hand, the counting questions all have one shape: ask the left child, ask the right child, combine the two answers, and stop at NULL. You never walk the tree yourself.</p><p>Leaves use the same shape with a different rule: a node with no children returns 1, any other node returns left plus right and does not count itself, which gives 3 here (40, 50 and 60). Height is <code>max(left, right) + 1</code>, which gives 3 on this tree if a leaf counts as 1. Some judges count edges instead and want a leaf to be 0, so read the problem before you submit.</p><p>The programs below work through all of it: the queue traversal, the input builder, the three counting functions, <code>pair</code> for carrying two values at once, and judge versions of the traversals you already know.</p><pre class="trace">count(x) = count(left) + count(right) + 1
+
+count(40) = 0 + 0 + 1 = 1
+count(20) = 1 + 0 + 1 = 2
+count(50) = 1   count(60) = 1
+count(30) = 1 + 1 + 1 = 3
+count(10) = 2 + 3 + 1 = 6</pre></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-level-order-traversal"><span class="n">1</span>Level-order traversal with a queue</a></li><li><a href="#p-binary-tree-input"><span class="n">2</span>Read a binary tree from input</a></li><li><a href="#p-count-nodes-in-a-binary-tree"><span class="n">3</span>Count nodes</a></li><li><a href="#p-count-leaf-nodes"><span class="n">4</span>Count leaf nodes</a></li><li><a href="#p-get-max-height"><span class="n">5</span>Maximum height of a tree</a></li><li><a href="#p-stl-pair"><span class="n">6</span>STL pair and vector of pairs</a></li><li><a href="#p-leetcode-binary-preorder-traversal"><span class="n">7</span>LeetCode 144 - Binary Tree Preorder Traversal</a></li><li><a href="#p-leetcode-binary-inorder-traversal"><span class="n">8</span>LeetCode 94 - Binary Tree Inorder Traversal</a></li><li><a href="#p-leetcode-binary-tree-postorder-traversal"><span class="n">9</span>LeetCode 145 - Binary Tree Postorder Traversal</a></li><li><a href="#p-code360-level-order-traversal"><span class="n">10</span>Code360 - Level Order Traversal</a></li><li><a href="#p-code360-count-leaf-nodes"><span class="n">11</span>Code360 - Count Leaf Nodes</a></li><li><a href="#p-code360-left-sum"><span class="n">12</span>Code360 - Left Sum</a></li><li><a href="#p-code360-height-of-a-binary-tree"><span class="n">13</span>Code360 - Height of a Binary Tree</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Level-order traversal (BFS)</h4><p>Visit the tree level by level, left to right. Put the root in a queue; repeatedly take the front, print it, and push its non-NULL children. The queue makes sure upper levels finish before lower ones.</p><pre class="snip">q.push(root);
 while(!q.empty()){ Node* f=q.front(); q.pop();
@@ -49,6 +80,7 @@ while(!q.empty()){ Node* f=q.front(); q.pop();
 -1 -1
 -1 -1</pre></div><div class="concept"><h4>Counting nodes recursively</h4><p>Nodes in a tree = nodes on the left + nodes on the right + 1 (the root). An empty tree has 0.</p><pre class="snip">return count(root-&gt;left) + count(root-&gt;right) + 1;</pre></div><div class="concept"><h4>Counting leaves</h4><p>A leaf has both children NULL, so it returns 1. Any other node returns the sum from its two sides, without adding itself.</p></div><div class="concept"><h4>Height of a tree</h4><p>Height = 1 + the taller of the two subtrees. Decide what a leaf counts as: 0 if you count <strong>edges</strong>, 1 if you count <strong>nodes</strong> (levels). Judges differ, so read the problem.</p><pre class="snip">return max(h(root-&gt;left), h(root-&gt;right)) + 1;</pre></div><div class="concept"><h4>Judge-style traversals</h4><p>LeetCode wants the traversal as a <code>vector&lt;int&gt;</code>. Pass the vector by reference into a helper and <code>push_back</code> where you would have printed.</p><pre class="snip">void inorder(TreeNode* n, vector&lt;int&gt;&amp; res)</pre></div><div class="concept"><h4>STL pair</h4><p><code>pair&lt;A,B&gt;</code> holds two values, reached with <code>.first</code> and <code>.second</code>. Create one with <code>make_pair(a,b)</code> or <code>{a,b}</code>. A <code>vector&lt;pair&lt;int,int&gt;&gt;</code> is a neat way to store coordinates or (value, index) data.</p><pre class="snip">pair&lt;string,int&gt; p = {&quot;Hello&quot;, 3};</pre></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/bst" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — binary search tree</b><span class="rnote">Insert values and watch the tree grow; the traversals are animated too.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0q8Hkd7bK2Bpryj2xVJk8Vk" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — binary trees and BSTs</b><span class="rnote">Traversals, views and the classic tree problems, in order.</span></a></li><li class="r-article"><a href="https://www.geeksforgeeks.org/binary-tree-data-structure/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>GeeksforGeeks — binary tree</b><span class="rnote">Vocabulary and every traversal in one place.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-level-order-traversal">
   <div class="prog-h">
@@ -2800,7 +2832,7 @@ stl_pair.cpp:28:28: note: &#x27;std::vector&lt;std::pair&lt;int, int&gt; &gt; v&
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

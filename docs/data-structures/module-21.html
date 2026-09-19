@@ -7,7 +7,7 @@
 <meta name="description" content="This module introduces the binary search tree (BST): a binary tree where everything on the left is smaller than the node and everything on the right is bigger. That one rule lets you throw away half the tree at every step, so search and insert take time proportional to the height, not the number of nodes. You also learn how to build a balanced BST from a sorted array by always picking the middle element as the root.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,13 +36,46 @@
     <p class="lead">This module introduces the binary search tree (BST): a binary tree where everything on the left is smaller than the node and everything on the right is bigger. That one rule lets you throw away half the tree at every step, so search and insert take time proportional to the height, not the number of nodes. You also learn how to build a balanced BST from a sorted array by always picking the middle element as the root.</p>
     <p class="chips"><span>5 programs</span><span>2 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/3_Basic%20Data%20Structures/Module%2021" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Here are seven marks, already in order. Find 40.</p><pre class="trace">20   30   40   50   60   70   80</pre><p>You know the quick way from Module 3. Look at the middle value, and if the target is smaller keep the left half, otherwise keep the right half. Three looks instead of seven, and with a million values about twenty looks instead of a million.</p><p>The trouble is the array itself. To add a new mark in the right place you have to shift everything after it along, and a linked list, where inserting is cheap, gives you no middle to jump to.</p><p>So ask a different question. What if the halving were built into the <strong>shape</strong> of the data, instead of being worked out from indexes every time? That is the binary search tree. It uses the same node with <code>left</code> and <code>right</code> you built in Module 17, but the values now obey one rule: for every node, everything in its left subtree is smaller and everything in its right subtree is bigger. The seven marks look like this:</p><pre class="trace">            50
+          /    \
+        30       70
+       /  \     /  \
+     20    40  60    80</pre><p>Now searching is just walking down. At each node you compare once and step one way; the branch you did not take is thrown away, exactly like the half of the array you dropped in binary search. Two searches, one that succeeds and one that fails:</p><pre class="snip">bool search(Node* root, int val){
+    if(root == NULL) return false;      // fell off the tree
+    if(root-&gt;val == val) return true;   // found it
+    if(val &lt; root-&gt;val)
+        return search(root-&gt;left, val);  // can only be left
+    return search(root-&gt;right, val);     // or only right
+}</pre><pre class="trace">search 40
+  at 50 : 40 &lt; 50  -&gt; go left
+  at 30 : 40 &gt; 30  -&gt; go right
+  at 40 : equal    -&gt; Found
+
+search 65
+  at 50 : 65 &gt; 50  -&gt; go right
+  at 70 : 65 &lt; 70  -&gt; go left
+  at 60 : 65 &gt; 60  -&gt; go right
+  right of 60 is NULL -&gt; Not Found</pre><p>Inserting needs no new idea at all. Walk exactly as the search walks, and the moment the child you want to step into is <code>NULL</code>, that empty place is where the value belongs. A new value always arrives as a leaf. Here is 45 finding its home:</p><pre class="trace">insert 45
+  at 50 : 45 &lt; 50  -&gt; go left
+  at 30 : 45 &gt; 30  -&gt; go right
+  at 40 : 45 &gt; 40  -&gt; go right
+  right of 40 is NULL -&gt; hang 45 there
+
+            50
+          /    \
+        30       70
+       /  \     /  \
+     20    40  60    80
+             \
+              45</pre><p>What is new compared with Module 17: there a tree was only a shape you walked over, and every traversal touched all n nodes. Here the shape carries the order, so one walk from the root to a leaf is enough, and the cost is the <strong>height</strong> of the tree rather than the number of nodes.</p><p>That word height hides the one thing that can go wrong. Insert 20, 30, 40, 50, 60, 70, 80 in that order into an empty tree. 30 is bigger than 20 so it goes right; 40 is bigger than both so it goes right again; nothing ever goes left. You get a chain, height 7, and searching it is a linear search with extra pointers:</p><p>That is why sorted input is the worst input for a BST, and why the page also builds a tree the other way round: take the <strong>middle</strong> of the sorted array as the root, the left half becomes the left subtree and the right half the right subtree. Both halves are the same size, so the height comes out around log2(n): about 10 comparisons for 1000 values instead of 1000.</p><p>One last check you get for free: an in-order traversal of a BST prints the values in increasing order, so if the output is not sorted, the tree is not a BST.</p><p>The programs below take these one at a time. <code>BST_search.cpp</code> searches, <code>insert_in_BST.cpp</code> inserts, <code>array_to_BST.cpp</code> builds the balanced tree from a sorted array, and the two LeetCode files are the same two ideas written in LeetCode&#x27;s own shape.</p><pre class="trace">20 -&gt; 30 -&gt; 40 -&gt; 50 -&gt; 60 -&gt; 70 -&gt; 80
+(every node is a right child: height 7)</pre></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-bst-search"><span class="n">1</span>Search for a value in a BST</a></li><li><a href="#p-insert-in-bst"><span class="n">2</span>Insert a value into a BST</a></li><li><a href="#p-array-to-bst"><span class="n">3</span>Build a balanced BST from a sorted array</a></li><li><a href="#p-leetcode-convert-sorted-array-to-bst"><span class="n">4</span>LeetCode 108: sorted array to BST</a></li><li><a href="#p-leetcode-search-in-a-bst-return-subtree"><span class="n">5</span>LeetCode 700: search in a BST</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>BST rule</h4><p>For every node, all values in its left subtree are smaller and all values in its right subtree are bigger. The rule must hold for the whole subtree, not just the direct children.</p></div><div class="concept"><h4>Search by comparing</h4><p>Compare the target with the current node. Equal means found; smaller means go left; bigger means go right. Reaching <code>NULL</code> means the value is not in the tree.</p><pre class="snip">if (val &lt; root-&gt;val) return search(root-&gt;left, val);
 else return search(root-&gt;right, val);</pre></div><div class="concept"><h4>Insert walks the same path as search</h4><p>A new value always becomes a leaf. Follow the search path until the child you need is <code>NULL</code>, then hang the new node there.</p></div><div class="concept"><h4>Height decides speed</h4><p>Search and insert cost O(h). A balanced tree has h about log2(n); a tree built from sorted inserts becomes a chain with h = n.</p></div><div class="concept"><h4>Sorted array to balanced BST</h4><p>Take the middle element as root, build the left half into the left subtree and the right half into the right subtree. Both halves have about the same size, so the tree stays balanced.</p><pre class="snip">int mid = (start + end) / 2;
 root-&gt;left = convert(a, start, mid - 1);
 root-&gt;right = convert(a, mid + 1, end);</pre></div><div class="concept"><h4>In-order of a BST is sorted</h4><p>Visiting left, node, right in a BST prints the values in increasing order. This is a quick way to check that a tree really is a BST.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/bst" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — binary search tree</b><span class="rnote">Insert values and watch the tree grow; the traversals are animated too.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/BST.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — binary search tree</b><span class="rnote">Insert, delete and search animated on the tree.</span></a></li><li class="r-article"><a href="https://www.geeksforgeeks.org/binary-search-tree-data-structure/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>GeeksforGeeks — binary search tree</b><span class="rnote">Search, insert and delete written out case by case.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0q8Hkd7bK2Bpryj2xVJk8Vk" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — binary trees and BSTs</b><span class="rnote">Traversals, views and the classic tree problems, in order.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-bst-search">
   <div class="prog-h">
@@ -1261,7 +1294,7 @@ searchBST(5):
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

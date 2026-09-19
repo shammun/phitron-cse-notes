@@ -100,4 +100,27 @@
       else if (e.key === '/' && box.hidden && !/input|textarea/i.test(document.activeElement.tagName)) { e.preventDefault(); openSearch(); }
     });
   }
+  // ---- step players: click through a traced example one frame at a time
+  document.querySelectorAll('.stepper').forEach(function (st) {
+    var frames = st.querySelectorAll('.frame');
+    var n = frames.length, i = 0, timer = null;
+    var prev = st.querySelector('.sprev'), next = st.querySelector('.snext');
+    var play = st.querySelector('.splay'), count = st.querySelector('.scount');
+    function show(k) {
+      i = Math.max(0, Math.min(n - 1, k));
+      frames.forEach(function (f, j) { f.classList.toggle('on', j === i); });
+      count.textContent = 'Step ' + (i + 1) + ' of ' + n;
+      prev.disabled = i === 0; next.disabled = i === n - 1;
+    }
+    function stop() { clearInterval(timer); timer = null; play.textContent = 'Play ▶'; }
+    prev.addEventListener('click', function () { stop(); show(i - 1); });
+    next.addEventListener('click', function () { stop(); show(i + 1); });
+    play.addEventListener('click', function () {
+      if (timer) { stop(); return; }
+      if (i === n - 1) show(0);
+      play.textContent = 'Pause ⏸';
+      timer = setInterval(function () { if (i === n - 1) stop(); else show(i + 1); }, 1400);
+    });
+    show(0);
+  });
 })();

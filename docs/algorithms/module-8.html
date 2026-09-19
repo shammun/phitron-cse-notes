@@ -7,7 +7,7 @@
 <meta name="description" content="The mid-term exam solutions. All four are grid problems: reachability with DFS, the smallest component area, knight moves with BFS on a chessboard, and printing the BFS path through a maze with a parent array. Together they are a good revision of Modules 2-6.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,10 +36,21 @@
     <p class="lead">The mid-term exam solutions. All four are grid problems: reachability with DFS, the smallest component area, knight moves with BFS on a chessboard, and printing the BFS path through a maze with a parent array. Together they are a good revision of Modules 2-6.</p>
     <p class="chips"><span>4 programs</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%208" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>This is the mid-term, and all four problems are grids. Before reading any of them, sort out the one question that decides your whole solution: <strong>what is the exam actually asking for?</strong> Four answers, four tools:</p><pre class="trace">asks for                 use
+----------------------   --------------------
+can I get there at all?  DFS (or BFS)
+how big is this piece?   DFS, count as you go
+fewest moves             BFS, the level is it
+the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for a shortest-path question. DFS finds *a* way through; it will happily wander round three sides of the grid and arrive. BFS spreads out one ring at a time, so the ring a cell falls in <strong>is</strong> its smallest number of moves. If the words &quot;minimum&quot;, &quot;fewest&quot; or &quot;shortest&quot; appear, you want BFS.</p><p>Here is the worked reminder. A 3 by 4 grid, <code>-</code> is a wall, and you start at the top-left corner:</p><pre class="trace">. . - .
+. - . .
+. . . .</pre><p>Fill <code>dist</code> with -1, set the start to 0, and push it. Pop a cell, and for each of the four neighbours that is inside the grid and still -1, write the parent&#x27;s distance plus one and push it. The grid of distances comes out like this:</p><pre class="trace"> 0   1   -   7
+ 1   -   5   6
+ 2   3   4   5</pre><p>Look at the top-right cell. On the paper it sits three squares from the start, but the walls force the long way round the bottom, and BFS quietly reports 7. No counting by hand would have got that right.</p><p>Two small habits carry most of the marks. First, <code>dist</code> filled with -1 doubles as the visited array: <code>dist[i][j] == -1</code> means &quot;not seen yet&quot;, so there is no second <code>vis</code> grid to forget to reset. Second, check <code>valid(i, j)</code> <strong>before</strong> you touch <code>grid[i][j]</code>, or you read outside the grid and the run dies.</p><p>The move list is the only thing that changes between problems. Four directions for a maze, eight for a knight:</p><pre class="snip">int direction[8][2] = {{1,2},{1,-2},{2,1},{2,-1},
+                       {-1,2},{-1,-2},{-2,1},{-2,-1}};</pre><p>The search code does not change at all; only the list it loops over does. On a 2 by 2 board no knight jump fits anywhere, so the queue empties and the answer is -1 - always have an answer ready for &quot;never reached&quot;.</p><p>For the route itself, keep a <code>path</code> grid: when BFS first reaches a cell, store which cell it came from. At the end, start at the destination and keep stepping to the stored parent until you are back home; each cell you pass gets marked. And when several shortest routes tie, the order of your <code>direction</code> list decides which one comes out, so use the exact order the statement asks for.</p><p>Last things to watch: reset every array between test cases, print -1 (not <code>INT_MAX</code>) when nothing was found, and remember that a recursive DFS on a 1000 by 1000 open grid can go a million calls deep - BFS has no such risk. The four solutions below show each of these patterns once.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-mid-term-1-same-component"><span class="n">1</span>Same component?</a></li><li><a href="#p-mid-term-2-area-of-component"><span class="n">2</span>Minimum area of a component</a></li><li><a href="#p-mid-term-3-knight-moves"><span class="n">3</span>Knight moves</a></li><li><a href="#p-mid-term-4-maze"><span class="n">4</span>Maze path marking</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Early-exit DFS</h4><p>Return true from DFS as soon as the target is found, and pass it up through every caller.</p></div><div class="concept"><h4>Min over components</h4><p>Start <code>min_area = INT_MAX</code>, update after each DFS, and use a flag to print -1 when no component exists.</p></div><div class="concept"><h4>Custom move sets</h4><p>A knight has 8 moves; put them in the <code>direction</code> list and BFS works unchanged.</p><pre class="snip">{{1,2},{1,-2},{2,1},{2,-1},{-1,2},{-1,-2},{-2,1},{-2,-1}}</pre></div><div class="concept"><h4>dist as visited</h4><p>Filling <code>dist</code> with -1 lets <code>dist[i][j] == -1</code> mean &quot;not visited&quot;, so no separate <code>vis</code> is needed.</p></div><div class="concept"><h4>Path on a grid</h4><p>Store <code>path[child] = parent cell</code> during BFS, then walk back from the destination and mark cells.</p></div><div class="concept"><h4>Direction order matters</h4><p>When several shortest paths exist, the order of <code>direction</code> decides which one BFS records.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/BFS.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — breadth-first search</b><span class="rnote">The queue and the visited marks, drawn while the search runs.</span></a></li><li class="r-visual"><a href="https://algorithm-visualizer.org/" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>Algorithm Visualizer</b><span class="rnote">Code on one side, animation on the other; you can edit the code.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0oE3gA41TKO2H5bHpPd7fzn" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — graph series</b><span class="rnote">Problem-by-problem graph course in C++, close to how the judge asks.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-mid-term-1-same-component">
   <div class="prog-h">
@@ -1427,7 +1438,7 @@
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

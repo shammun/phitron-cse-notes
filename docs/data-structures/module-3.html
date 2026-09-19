@@ -7,7 +7,7 @@
 <meta name="description" content="This module makes two slow patterns fast. Prefix sums answer range-sum queries in O(1) after one O(n) pass, and binary search finds a value in a sorted array in O(log n) instead of O(n). The practice day applies both ideas: running sums, equilibrium index, search queries and an O(1) formula.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,11 +36,31 @@
     <p class="lead">This module makes two slow patterns fast. Prefix sums answer range-sum queries in O(1) after one O(n) pass, and binary search finds a value in a sorted array in O(log n) instead of O(n). The practice day applies both ideas: running sums, equilibrium index, search queries and an O(1) formula.</p>
     <p class="chips"><span>10 programs</span><span>3 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/3_Basic%20Data%20Structures/Module%203" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>A shop writes down its takings each day. Six days: 6, 4, 2, 7, 2, 7. Someone asks how much came in over days 1 to 3, and you add them up: 12. Then days 3 to 6: 2 + 7 + 2 + 7 = 18. Then days 1 to 6. Every question sends you back over the list.</p><p>That is fine for six days and three questions. The real version has 100000 days and 100000 questions, and adding up to 100000 numbers per question is O(n) each time, O(n*q) altogether - about 10^10 steps, with no hope of finishing in 1 second.</p><p>A shopkeeper would not work that way either. They would keep a running total: 6 after day 1, 10 after day 2, 12 after day 3, and so on. One walk down the list, one line of the book per day.</p><p>Now any stretch of days is a subtraction. Days 3 to 6 is everything up to day 6 minus everything before day 3: <code>pre[6] - pre[2]</code> = 28 - 10 = 18. Check it by hand: 2 + 7 + 2 + 7 = 18. Days 1 to 3 is <code>pre[3] - pre[0]</code> = 12 - 0 = 12, and that is why it pays to store the array from index 1 with <code>pre[0] = 0</code> - then <code>l = 1</code> needs no special case.</p><p><strong>What is new.</strong> One walk over the data, paid for once, turns every later question into a single subtraction: O(n) to build, O(1) per query. Keep the totals in <code>long long</code>, because 100000 values of up to 10^9 pass the <code>int</code> limit of about 2.1 * 10^9 long before the end.</p><pre class="snip">vector&lt;long long&gt; pre(n + 1);
+pre[0] = 0;
+for(int i = 1; i &lt;= n; i++) pre[i] = pre[i-1] + a[i];
+// after that, one line answers a query:
+cout &lt;&lt; pre[r] - pre[l-1] &lt;&lt; endl;</pre><pre class="trace">day          1    2    3    4    5    6
+takings      6    4    2    7    2    7
+pre          6   10   12   19   21   28</pre><p>The second idea starts with a phone book. To find &quot;Rahman&quot; you do not begin at page one; you open somewhere in the middle, see that you are past the R&#x27;s, and drop the whole second half. It is the game of guessing a number between 1 and 100: guess 50, hear &quot;too high&quot;, and fifty possibilities are gone at once.</p><p>It only works because the pages are in order. In code you keep a window <code>lo..hi</code>, look at the middle <code>mid</code>, and throw away the half that cannot hold the value. Here is the search for 31 in a sorted array of eight numbers:</p><p>Three looks, where a linear search would have compared seven elements before reaching it.</p><pre class="trace">a:    3   8  12  15  19  23  31  40
+idx   0   1   2   3   4   5   6   7
+looking for 31
+
+lo  hi  mid  a[mid]  what happens
+ 0   7    3      15  too small, lo = 4
+ 4   7    5      23  too small, lo = 6
+ 6   7    6      31  found at index 6</pre><p>Each step halves the window, so the work is O(log n): at most about 20 looks in a million elements, 30 in a billion. The price is that the array must be sorted - on an unsorted array the middle element tells you nothing about which half to keep.</p><p>So when there are many searches you sort once and then search fast: O(n log n) for the sort plus O(log n) for each of the <code>q</code> queries, against O(n) per query for a linear scan. With <code>n</code> and <code>q</code> both 100000 that is roughly 3.4 million steps instead of 10^10.</p><pre class="snip">int lo = 0, hi = n - 1, found = 0;
+while(lo &lt;= hi){
+    int mid = (lo + hi) / 2;
+    if(a[mid] == x){ found = 1; break; }
+    else if(a[mid] &lt; x) lo = mid + 1;
+    else hi = mid - 1;
+}</pre><p><strong>Two more places the running total turns up.</strong> An equilibrium index is a position where everything to its left adds up to the same as everything to its right; knowing the total, the right side is <code>total - leftSum - a[i]</code>, so one pass finds it. And the sum 1 + 2 + ... + n needs no loop at all: <code>n * (n + 1) / 2</code> answers in O(1).</p><p>The programs below show the important ones twice - the slow version first, then the fast one - so you can see exactly which loop disappeared.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-y-range-sum-query"><span class="n">1</span>Range sum query (1-based brute force)</a></li><li><a href="#p-range-sum-query-prefix-sum"><span class="n">2</span>Range sum query with prefix sums</a></li><li><a href="#p-binary-search"><span class="n">3</span>Linear search vs binary search</a></li><li><a href="#p-binary-search-brute-force"><span class="n">4</span>Many search queries, brute force</a></li><li><a href="#p-binary-search-efficient"><span class="n">5</span>Many search queries, sort + binary search</a></li><li><a href="#p-practice-day2-problem1-running-sum-array"><span class="n">6</span>Running sum of an array</a></li><li><a href="#p-practice-day2-problem2-equilibrium-index"><span class="n">7</span>Equilibrium index (total minus left)</a></li><li><a href="#p-practice-day2-problem2-equilibrium-index-prefixsum"><span class="n">8</span>Equilibrium index with a prefix array</a></li><li><a href="#p-practice-day2-problem3-search-query"><span class="n">9</span>Search query with a binarySearch function</a></li><li><a href="#p-practice-day2-problem5-summation-1ton"><span class="n">10</span>Summation from 1 to N in O(1)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Prefix sum array</h4><p><code>pre[i]</code> stores the sum of the first <code>i</code> elements. You build it once with <code>pre[i] = pre[i-1] + a[i]</code>.</p><pre class="snip">pre[i] = pre[i-1] + a[i];</pre></div><div class="concept"><h4>Range sum in O(1)</h4><p>The sum of <code>a[l..r]</code> is everything up to <code>r</code> minus everything before <code>l</code>: <code>pre[r] - pre[l-1]</code>. Using 1-based arrays with <code>pre[0] = 0</code> removes the special case for <code>l = 1</code>.</p><pre class="snip">sum = pre[r] - pre[l-1];</pre></div><div class="concept"><h4>Use long long for sums</h4><p>Many values up to 10^9 added together quickly pass the <code>int</code> limit (about 2.1 * 10^9), so sums should be <code>long long</code>.</p></div><div class="concept"><h4>Binary search</h4><p>In a sorted array, look at the middle. If it is too small, throw away the left half; if too big, throw away the right half. Each step halves the range, so it takes O(log n) steps.</p><pre class="snip">int mid = (l + r) / 2;
 if(a[mid] &lt; x) l = mid + 1; else r = mid - 1;</pre></div><div class="concept"><h4>Sort first, then search many times</h4><p>Sorting costs O(n log n) once; after that, each of the <code>q</code> queries costs O(log n). That beats O(n*q) linear search for many queries.</p><pre class="snip">sort(a, a + n);</pre></div><div class="concept"><h4>Left sum / right sum</h4><p>If you know the total, the right-side sum at index <code>i</code> is <code>total - leftSum - a[i]</code>, so one pass finds an equilibrium index.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/Search.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — linear vs binary search</b><span class="rnote">Run both on the same array and count the steps.</span></a></li><li class="r-article"><a href="https://www.geeksforgeeks.org/prefix-sum-array-implementation-applications-competitive-programming/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>GeeksforGeeks — prefix sums</b><span class="rnote">The trick and the problems it solves.</span></a></li><li class="r-article"><a href="https://cses.fi/book/book.pdf" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>Competitive Programmer&#x27;s Handbook (free PDF)</b><span class="rnote">Antti Laaksonen&#x27;s book — the chapters on graphs and DP are short and excellent.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-y-range-sum-query">
   <div class="prog-h">
@@ -1579,7 +1599,7 @@ NO
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

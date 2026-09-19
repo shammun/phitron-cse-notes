@@ -7,7 +7,7 @@
 <meta name="description" content="This assignment checks the graph tools from the last modules on judge-style problems. You use Bellman-Ford when edges can be negative, Floyd-Warshall when many pair queries come in, and DSU to count edges that close a cycle. The last problem is a simple one-pass scan for the two tallest lines.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,10 +36,26 @@
     <p class="lead">This assignment checks the graph tools from the last modules on judge-style problems. You use Bellman-Ford when edges can be negative, Floyd-Warshall when many pair queries come in, and DSU to count edges that close a cycle. The last problem is a simple one-pass scan for the two tallest lines.</p>
     <p class="chips"><span>4 programs</span><span>4 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%2012" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>This is assignment day, and the hard part is not writing the code. By now you have four shortest-path and grouping tools in your hands, and they all look usable on every problem. The work is reading the constraint list and deciding which one belongs where. That decision is the whole skill this page practises.</p><p><strong>Which shortest-path algorithm.</strong> Look at two numbers only: how many sources you are asked about, and whether the weights can be negative. One source, no negative weights: Dijkstra, from Module 7. One source, weights that may be negative: Bellman-Ford, from Module 9, which also tells you whether a reachable cycle has negative total weight. Many source-destination pairs asked one after another, with a small node count of about 100: Floyd-Warshall, from Module 10 — fill the table once in n^3 steps, then answer each query by reading one square. Running Dijkstra afresh for each of 100,000 queries would be far too slow; filling a 100 x 100 table costs 1,000,000 steps and is done before the queries even start.</p><p>Two details bite here. If the same pair of nodes can appear twice in the input with different weights, only the cheapest one belongs in the table. And a weight of 10^9 added along a path of a hundred edges does not fit in an <code>int</code>, so distances are <code>long long</code>.</p><pre class="snip">adj_mat[a][b] = min(adj_mat[a][b], c);   // keep the cheaper</pre><p><strong>When DSU answers &quot;same group?&quot;.</strong> Module 11&#x27;s structure gives each group one leader. Feed it the edges one at a time and ask, before joining, whether both ends already have the same leader. If they do, they were connected already, so this edge adds nothing new — it closes a cycle. Counting those edges is the whole of one problem. Here is the smallest case worked through, three nodes and three edges:</p><pre class="snip">int l1 = find(a), l2 = find(b);
+if(l1 == l2) edges++;      // already one group: a cycle edge
+else dsu_union(a, b);</pre><pre class="trace">start: each node is its own leader, count = 0
+
+edge 1-2 : leaders 1 and 2 -&gt; different, join
+edge 2-3 : leaders 1 and 3 -&gt; different, join
+edge 1-3 : leaders 1 and 1 -&gt; SAME, count = 1
+
+answer: 1</pre><p><strong>What greedy means here.</strong> The last problem hides behind a picture of water between two vertical lines, but if only the height matters then the answer is simply the two tallest lines. You do not need to try every pair, which would be 10^10 pairs for n = 100,000. You walk the array once, keeping the index of the tallest seen so far and the index of the second tallest, and when a new tallest appears the old tallest slides down into second place. One pass, n steps. That is what greedy means on this page: keep only the few facts that can still matter, and never look back.</p><pre class="trace">H = 5 2 1 6 3        (indexes 0 to 4)
+
+i=1   tallest 0 (5)   second 1 (2)
+i=2   no change
+i=3   6 beats 5 -&gt; tallest 3 (6), second 0 (5)
+i=4   no change
+
+answer: 0 3          (smaller index first)</pre><p>Things to watch while you work. A negative cycle means no distance is meaningful, so that case prints its one line and nothing else. The distance from a node to itself is 0, and an unreachable node is not 0 — it needs its own message or -1, whichever the problem asks for. Read the output format twice: &quot;smaller index first&quot; and &quot;print -1&quot; are where correct algorithms lose marks.</p><p>The four programs below are the assignment solutions. Read the constraints at the top of each file first and try to name the tool before you read the code.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-assignment2-1-can-go-again"><span class="n">1</span>Can Go Again? (Bellman-Ford with negative cycle check)</a></li><li><a href="#p-assignment2-2-shortest-distance"><span class="n">2</span>Shortest Distance (Floyd-Warshall with queries)</a></li><li><a href="#p-assignment2-3-cycle-of-edges"><span class="n">3</span>Cycle of Edges (DSU)</a></li><li><a href="#p-assignment2-4-water"><span class="n">4</span>Water (two tallest lines)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Pick the shortest-path algorithm from the constraints</h4><p>One source with negative weights: Bellman-Ford. Up to about 100 nodes with many pair queries: Floyd-Warshall once, then O(1) per query.</p></div><div class="concept"><h4>Negative cycle means no answer</h4><p>If an extra Bellman-Ford pass still improves a distance, a reachable cycle has negative total weight and &#x27;shortest&#x27; is meaningless.</p></div><div class="concept"><h4>Parallel edges</h4><p>When the same pair can appear several times, keep only the cheapest weight in the matrix.</p><pre class="snip">adj_mat[a][b] = min(adj_mat[a][b], c);</pre></div><div class="concept"><h4>Counting cycle-making edges with DSU</h4><p>Each edge whose two ends already share a leader is one extra edge beyond a spanning forest. Count those.</p></div><div class="concept"><h4>Track the top two in one pass</h4><p>Keep the index of the largest and second largest values while scanning; when a new largest appears, the old largest becomes second.</p></div><div class="concept"><h4>Use long long for sums of big weights</h4><p>Weights up to 10^9 added along a path overflow <code>int</code> quickly.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-article"><a href="https://cp-algorithms.com/data_structures/disjoint_set_union.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — disjoint set union</b><span class="rnote">The clearest account of why the two optimisations make it near-instant.</span></a></li><li class="r-visual"><a href="https://visualgo.net/en/sssp" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — shortest paths</b><span class="rnote">Dijkstra and Bellman-Ford animated, with the distance table updating.</span></a></li><li class="r-article"><a href="https://cses.fi/book/book.pdf" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>Competitive Programmer&#x27;s Handbook (free PDF)</b><span class="rnote">Antti Laaksonen&#x27;s book — the chapters on graphs and DP are short and excellent.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-assignment2-1-can-go-again">
   <div class="prog-h">
@@ -1296,7 +1312,7 @@
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

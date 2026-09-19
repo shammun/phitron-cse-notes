@@ -257,5 +257,80 @@
       "q": "In `priority_queue<pair<int,int>>` without `greater`, which pair is on top?",
       "a": "The largest one (max-heap)."
     }
+  ],
+  "intro": [
+    {
+      "heading": null,
+      "body": [
+        "In Module 2 BFS gave you shortest distances, and it was honest: every step cost the same, so the fewest steps really was the shortest way. Now look at a small map of villages where the roads have lengths in kilometres:"
+      ],
+      "snippet": null,
+      "trace": "0 -- 1    10 km\n0 -- 2     3 km\n2 -- 1     4 km\n1 -- 3     2 km\n2 -- 3     8 km"
+    },
+    {
+      "heading": null,
+      "body": [
+        "You are at village 0 and want to reach village 1. There is a direct road and it is 10 km. BFS would stop there and say \"one road, done\". But go 0 -> 2 -> 1 instead and you pay 3 + 4 = 7 km. Two roads, and still shorter.",
+        "That is the whole problem of this module. **Until now a step cost 1, so counting steps was the same as measuring distance. Here each edge carries its own weight, and the cheapest route is often not the one with the fewest edges.** BFS levels are simply the wrong answer.",
+        "The slow way out is to list every route from 0 to 1, add up the kilometres of each one, and keep the smallest. On a country with 100000 roads the number of routes is beyond counting, so that idea dies immediately.",
+        "Dijkstra's answer is patient and simple. Keep one number per village: the cheapest distance you know so far, starting at 0 for home and \"unknown\" for everyone else. Then repeat one move: **take the nearest village you have not finished yet, and for each road leaving it, check whether going through it makes a neighbour cheaper.** That check is called relaxing the edge. Finish the nearest one first, every time."
+      ],
+      "snippet": null,
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "Run it on the map above, starting at 0. A dash means \"no route known yet\". Each row is the table after one village has been finished:"
+      ],
+      "snippet": null,
+      "trace": "village     0    1    2    3\nstart       0    -    -    -\nfinish 0    0   10    3    -\nfinish 2    0    7    3   11\nfinish 1    0    7    3    9\nfinish 3    0    7    3    9"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Follow row three. Village 2 was the nearest unfinished one at 3 km, so it goes first, and its road to 1 costs 4. That gives 3 + 4 = 7, which beats the 10 already written down, so 10 is crossed out and 7 is written in. Village 3 improves twice in the same way: 11 through village 2, then 9 through village 1. Nothing later improves them, because every remaining village is already further away than they are.",
+        "The one tool you need is the min-priority queue from Data Structures Module 23. Push `{distance, node}` pairs; pairs compare by their first value, so the smallest distance is always on top, and \"the nearest unfinished village\" costs one `pq.top()`:"
+      ],
+      "snippet": "dis[src] = 0;\npq.push({0, src});\nwhile(!pq.empty()){\n    int d = pq.top().first, u = pq.top().second;\n    pq.pop();\n    for(auto ch : adj_list[u]){\n        int v = ch.first, w = ch.second;\n        if(d + w < dis[v]){      // relax the edge\n            dis[v] = d + w;\n            pq.push({dis[v], v});\n        }\n    }\n}",
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "**A second example.** Make every road 1 km long and Dijkstra gives exactly the BFS levels back: BFS is the special case where all weights are equal.",
+        "**A third example.** In Network Delay Time a signal starts at one computer and each cable takes some milliseconds. Dijkstra gives the moment each computer hears it; the answer is the largest of those numbers, because you wait for the last one. Any computer still at infinity was never reached, and the answer is -1.",
+        "**Where it breaks.** Dijkstra rests on one promise: once a village is the nearest unfinished one, its distance is final. That promise holds only while every weight is zero or more. **A negative edge can make a finished village cheaper later, and then the promise is a lie** - so Dijkstra is not allowed on graphs with negative weights. Module 9 handles that case.",
+        "With the priority queue the cost is O((V + E) log V), which is fast enough for the judges. The programs below build it twice: first with a plain queue, so you can see why re-processing hurts, then the real version, and then the same code on GFG, LeetCode and CSES."
+      ],
+      "snippet": null,
+      "trace": null
+    }
+  ],
+  "resources": [
+    {
+      "kind": "visual",
+      "name": "VisuAlgo — shortest paths",
+      "url": "https://visualgo.net/en/sssp",
+      "note": "Dijkstra and Bellman-Ford animated, with the distance table updating."
+    },
+    {
+      "kind": "visual",
+      "name": "USFCA — Dijkstra",
+      "url": "https://www.cs.usfca.edu/~galles/visualization/Dijkstra.html",
+      "note": "The distance labels being lowered, one finished node at a time."
+    },
+    {
+      "kind": "article",
+      "name": "cp-algorithms — Dijkstra",
+      "url": "https://cp-algorithms.com/graph/dijkstra.html",
+      "note": "Both versions, and when the priority queue one is worth it."
+    },
+    {
+      "kind": "video",
+      "name": "William Fiset — graph theory playlist",
+      "url": "https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P",
+      "note": "Every graph algorithm of this course, drawn before it is coded."
+    }
   ]
 }

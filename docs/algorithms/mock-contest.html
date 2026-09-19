@@ -7,7 +7,7 @@
 <meta name="description" content="A practice contest before the final. The first three problems need simple tools: a linear search, a `set` for unique sorted letters, and a little number reasoning. The last two files hold only the problem statements, so the notes explain how to attack them: a sort-then-greedy idea and a subset DP with a size limit.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -34,12 +34,32 @@
     <p class="eyebrow"><a href="index.html">Introduction to Algorithms</a> · Mock Contest</p>
     <h1>Mock contest: search, sets, number reasoning, greedy, partition DP</h1>
     <p class="lead">A practice contest before the final. The first three problems need simple tools: a linear search, a <code>set</code> for unique sorted letters, and a little number reasoning. The last two files hold only the problem statements, so the notes explain how to attack them: a sort-then-greedy idea and a subset DP with a size limit.</p>
-    <p class="chips"><span>5 programs</span><span>2 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Mock%20Contest" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
+    <p class="chips"><span>7 programs</span><span>2 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Mock%20Contest" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
-  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-1-the-lost-book"><span class="n">1</span>The Lost Book (linear search)</a></li><li><a href="#p-2-letters-in-order"><span class="n">2</span>Letters in Order (set of characters)</a></li><li><a href="#p-3-guess-the-no"><span class="n">3</span>Guess the No (sums of 3 and 4)</a></li><li><a href="#p-4-here-comes-the-genie"><span class="n">4</span>Here Comes the Genie (statement only)</a></li><li><a href="#p-5-mina-and-moni"><span class="n">5</span>Mina and Moni (statement only)</a></li></ol></details></nav>
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>A contest is not really a test of how much you know. Two hours, five problems, one screen: what decides the day is how fast you turn a story into the right tool, and how rarely you have to throw code away and start again.</p><p>So do not start with the story. Start with the constraints line. Those two or three dull lines tell you how much work your solution is allowed to do. A judge gives you about one second, and one second is roughly 100 million simple steps. Read the largest <code>n</code> and turn it into a budget:</p><pre class="trace">n up to        what fits in ~1 second
+-------------  --------------------------
+20             2^n, try every subset
+5 000          n^2, two nested loops
+2 x 10^5       n log n, sort / set / map
+10^6           n, a single pass
+10^9           a formula, O(1) per query</pre><p>Here is why that table is worth thirty seconds. Suppose <code>n</code> can be 2 x 10^5 and your first idea is the honest one: for every element, look at every other element. That is 4 x 10^10 steps, and it will score zero. The constraints told you so before you typed a character.</p><p>The same table works the other way round. If <code>n</code> is only 20, stop looking for something clever: trying all 1,048,576 subsets is fine. A small limit is a hint, not an accident.</p><p>With the budget known, read the question again and look for its <strong>shape</strong>. Most beginner-contest problems are one of a handful of sentences in disguise:</p><pre class="trace">&quot;is x in this list?&quot;
+   unsorted -&gt; one scan;  sorted -&gt; binary search
+&quot;which values appear, and how often?&quot;
+   -&gt; frequency array, map or set
+&quot;sum of positions L..R, asked many times&quot;
+   -&gt; prefix sums
+&quot;take as much as possible, all different&quot;
+   -&gt; sort, then a greedy scan
+&quot;pick some items to reach a total&quot;
+   -&gt; DP over (items used, sum)</pre><p>The pattern this contest leans on hardest is the fourth one: <strong>sort, then be greedy with a falling cap</strong>. It is worth doing once by hand.</p><p>Four crates hold 5, 5, 3 and 2 apples. You may take a different number from each crate (taking 0 from several crates is allowed) and you want as many apples as you can. Sort the crates biggest first and keep a <code>cap</code>, the largest count you are still allowed to take. Empty the first crate, then drop the cap by one each time and take <code>min(crate, cap)</code>:</p><pre class="trace">crate    5    5    3    2   (sorted, biggest first)
+cap      -    4    3    2
+take     5    4    3    2
+
+total = 5 + 4 + 3 + 2 = 14</pre><p>Two sentences say why that cannot be beaten. The biggest crates should carry the biggest counts, because a small crate cannot use a big count anyway. And once the cap is fixed, taking less than <code>min(crate, cap)</code> from a crate never lets a later crate take more, since the cap only falls. Note also that the cap must never go below 0 - you cannot take -1 apples.</p><p><strong>A second angle: count by hand before you loop.</strong> Questions of the form &quot;can this total be built from 3s and 4s?&quot; look like they need a search. Write the first twelve answers on paper instead. You will usually find a short list of impossible values and then &quot;yes from here on&quot;, and the whole problem collapses into an <code>if</code>.</p><p><strong>A third angle: read what the question fixes.</strong> If it fixes the total you are aiming at, plain subset sum is enough. If it also fixes *how many* items you may pick, the table needs a second index for the count - same idea, one dimension more.</p><p>Three habits save more marks than any algorithm. Check the sample by hand before submitting. Ask whether any total can pass 2 x 10^9 and reach for <code>long long</code> if it can. And check whether the answer wants a 0-based or a 1-based index, which is the cheapest wrong answer there is.</p><p>The five entries below take the contest&#x27;s problems one at a time: two short ones you should finish in minutes, one that is pure number reasoning, and two where only the statement was saved, so the notes describe the plan instead of the code.</p></div></section>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-1-the-lost-book"><span class="n">1</span>The Lost Book (linear search)</a></li><li><a href="#p-2-letters-in-order"><span class="n">2</span>Letters in Order (set of characters)</a></li><li><a href="#p-3-guess-the-no"><span class="n">3</span>Guess the No (sums of 3 and 4)</a></li><li><a href="#p-4-here-comes-the-genie"><span class="n">4</span>Here Comes the Genie (statement only)</a></li><li><a href="#p-5-mina-and-moni"><span class="n">5</span>Mina and Moni (statement only)</a></li><li><a href="#p-practice-minimum-deletions-frequencies-unique"><span class="n">6</span>Minimum Deletions to Make Character Frequencies Unique (LeetCode 1647)</a></li><li><a href="#p-practice-partition-minimize-sum-difference"><span class="n">7</span>Partition Array Into Two Arrays to Minimize Sum Difference (LeetCode 2035)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Linear search</h4><p>Scan from the left and return the first index where the value matches; return -1 if you reach the end.</p></div><div class="concept"><h4>std::set</h4><p>Keeps unique elements in sorted order automatically, so inserting every character and then printing the set gives unique letters alphabetically.</p><pre class="snip">set&lt;char&gt; s(str.begin(), str.end());</pre></div><div class="concept"><h4>Reachable sums with 3 and 4</h4><p>3, 4, 6, 7, 8 are reachable, and since 6, 7, 8 are three consecutive values, adding 3 again covers every number from 6 upward. Only 1, 2 and 5 are impossible.</p></div><div class="concept"><h4>Sort, then greedy with a falling cap</h4><p>To take distinct counts from bags, sort sizes from large to small and take <code>min(size, previous - 1)</code>, never below 0.</p></div><div class="concept"><h4>Balanced partition with a size rule</h4><p>Choose exactly n/2 items whose sum is as close as possible to half the total. A DP over (items used, sum) records which sums are reachable.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-article"><a href="https://cses.fi/book/book.pdf" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>Competitive Programmer&#x27;s Handbook (free PDF)</b><span class="rnote">Antti Laaksonen&#x27;s book — the chapters on graphs and DP are short and excellent.</span></a></li><li class="r-article"><a href="https://usaco.guide/silver/graph-traversal" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>USACO Guide — graph traversal</b><span class="rnote">Contest-style notes with problems graded by difficulty.</span></a></li><li class="r-article"><a href="https://takeuforward.org/strivers-a2z-dsa-course/strivers-a2z-dsa-course-sheet-2/" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>Striver&#x27;s A2Z DSA sheet</b><span class="rnote">An ordered list of problems per topic, easy ones first.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-1-the-lost-book">
   <div class="prog-h">
@@ -801,6 +821,631 @@ collect2.exe: error: ld returned 1 exit status</pre></div></div>
   <details class="how" open><summary>How it works, step by step</summary><ol><li>Let <code>total</code> be the sum and <code>k = n / 2</code> the size of the smaller group.</li><li>Build <code>can[c][s]</code>: can exactly <code>c</code> coins sum to <code>s</code>? Start with <code>can[0][0] = true</code>.</li><li>For each coin, go through <code>c</code> from high to low and mark <code>can[c+1][s + coin]</code> from <code>can[c][s]</code> (0-1 knapsack style).</li><li>For every <code>s</code> with <code>can[k][s]</code>, the difference is <code>abs(total - 2*s)</code>; print the smallest.</li><li>Use a bitset per count if the sums are large.</li></ol></details>
   <div class="callout warn"><b>Watch out.</b> Only the statement was saved; there is no solution in this file. Plain subset sum is not enough: the group sizes are fixed, so the DP must also track how many coins are used.</div>
   <details class="check"><summary><span>✅ Check yourself:</span> Why must the DP track the number of coins, not only the sum?</summary><div>Each sister must get exactly n/2 (or n/2 + 1) coins; a subset with the right sum but the wrong size is not allowed.</div></details>
+</section>
+<section class="prog" id="p-practice-minimum-deletions-frequencies-unique">
+  <div class="prog-h">
+    <span class="num">6</span>
+    <div class="prog-t">
+      <h3>Minimum Deletions to Make Character Frequencies Unique (LeetCode 1647)</h3>
+      <div class="meta"><code class="fname">practice_minimum_deletions_frequencies_unique.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(|s| + 26 log 26) · Space O(26)</span><a class="prob" href="https://leetcode.com/problems/minimum-deletions-to-make-character-frequencies-unique/" target="_blank" rel="noopener">↗ Minimum Deletions to Make Character Frequencies Unique</a></div>
+    </div>
+  </div>
+  <p class="what">Counts every letter, then deletes as few characters as possible so that no two letters are left with the same count. Same greedy shape as &quot;Here Comes the Genie&quot; above: sort the counts from big to small and let each one fall to the first free value.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 115 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Mock%20Contest/practice_minimum_deletions_frequencies_unique.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">https://leetcode.com/problems/minimum-deletions-to-make-character-frequencies-unique/</span>
+
+<span class="cm">1647. Minimum Deletions to Make Character Frequencies Unique</span>
+
+<span class="cm">Problem (in my own words)</span>
+
+<span class="cm">A string is called &quot;good&quot; when no two different letters appear the same number of times.</span>
+<span class="cm">For example &quot;aab&quot; is good: a appears twice, b appears once, and 2 is not 1. But &quot;aabb&quot; is</span>
+<span class="cm">not good, because a and b both appear twice.</span>
+
+<span class="cm">You are given a lowercase string s. You may delete characters, one at a time, anywhere in</span>
+<span class="cm">the string. Find the smallest number of deletions that makes the string good.</span>
+
+<span class="cm">A letter that disappears completely does not count as a frequency, so several letters are</span>
+<span class="cm">allowed to end up at count 0.</span>
+
+<span class="cm">Input Format</span>
+<span class="cm">One line: the string s, made of lowercase English letters only.</span>
+
+<span class="cm">Output Format</span>
+<span class="cm">One number: the minimum number of deletions.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">The string is non-empty and contains only the 26 lowercase English letters.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">aaabbbcc</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">2</span>
+
+<span class="cm">Explanation 0</span>
+<span class="cm">a appears 3 times, b appears 3 times, c appears 2 times.</span>
+<span class="cm">Sort the counts from big to small: 3, 3, 2.</span>
+<span class="cm">The first 3 may stay. The second 3 clashes with it, so delete one b and it becomes 2.</span>
+<span class="cm">But 2 is now taken by that b, so the c with count 2 must drop to 1 - one more deletion.</span>
+<span class="cm">Counts end up 3, 2, 1, all different, after 2 deletions.</span>
+
+<span class="cm">Sample Input 1</span>
+<span class="cm">ceabaacb</span>
+
+<span class="cm">Sample Output 1</span>
+<span class="cm">2</span>
+
+<span class="cm">Explanation 1</span>
+<span class="cm">Counts: a 3, b 2, c 2, e 1. Sorted big to small: 3, 2, 2, 1.</span>
+<span class="cm">3 stays, the first 2 stays, the second 2 must fall to 1 (one deletion), and then the letter</span>
+<span class="cm">with count 1 must fall to 0 (one more deletion). Total 2.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">minDeletions</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/* Only 26 letters exist, so a plain frequency array is enough - no map needed. */</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">freq</span><span class="p">[</span><span class="mi">26</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">freq</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">&#39;a&#39;</span><span class="p">]</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="cm">/* Keep only the letters that actually show up. A letter with count 0 was never</span>
+<span class="cm">           there, so it can never clash with anything. */</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">counts</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">26</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">freq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">counts</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">freq</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="cm">/* Biggest first. The idea is the same greedy as &quot;Here Comes the Genie&quot;: the biggest</span>
+<span class="cm">           count should be allowed to stay the biggest, because lowering a big count costs</span>
+<span class="cm">           exactly as much as lowering a small one, and leaving big values high keeps more</span>
+<span class="cm">           room free underneath for everybody else. */</span>
+<span class="w">        </span><span class="n">sort</span><span class="p">(</span><span class="n">counts</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">counts</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="n">greater</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">deletions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">allowed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">counts</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span><span class="w">  </span><span class="c1">// the first count is free to keep everything it has</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">counts</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="cm">/* This letter may keep at most `allowed` characters. If it already has fewer,</span>
+<span class="cm">               it keeps all of them; every extra character above the cap is a deletion. */</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">keep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">keep</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">allowed</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">keep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">allowed</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">deletions</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">keep</span><span class="p">;</span>
+
+<span class="w">            </span><span class="cm">/* The value `keep` is now used up, so the next letter must go one lower.</span>
+<span class="cm">               Zero is the floor: any number of letters may end at 0 together. */</span>
+<span class="w">            </span><span class="n">allowed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">keep</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">allowed</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">allowed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">deletions</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">Solution</span><span class="w"> </span><span class="n">sol</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sol</span><span class="p">.</span><span class="n">minDeletions</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 115 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>aaabbbcc</pre><p class="io-note">One lowercase string. Counts are a 3, b 3, c 2 - the smallest case where two letters really do clash.</p></div><div class="io out"><div class="io-h">Output </div><pre>2
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>2</code>. The first 3 stays, the second 3 falls to 2 (one deletion), and c must then fall from 2 to 1 (one more), leaving counts 3, 2, 1. For <code>ceabaacb</code> the program also prints 2.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Count the letters in <code>int freq[26]</code>. Only 26 letters exist, so no map is needed.</li><li>Copy the counts that are above 0 into a vector; a letter that never appeared cannot clash with anything.</li><li>Sort that vector from big to small with <code>greater&lt;int&gt;()</code>.</li><li>Walk it with a cap called <code>allowed</code>. The first count keeps everything, so <code>allowed</code> starts at the largest count.</li><li>For each count, <code>keep = min(count, allowed)</code>, and <code>count - keep</code> characters are deleted.</li><li>Then <code>allowed = keep - 1</code>, clamped at 0, because the value <code>keep</code> is now taken and the next letter must land lower.</li><li>Zero is the floor on purpose: any number of letters may be deleted away completely and all sit at 0 together.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Do not stop the cap at 1. Letters are allowed to vanish, so the cap must be able to reach 0, otherwise a string like <code>aaabbbccc</code> is counted wrong.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> The string <code>bbcebab</code> has counts b 4, c 1, e 1, a 1. How many deletions?</summary><div>2. Sorted 4, 1, 1, 1: the 4 stays, the first 1 stays, the next 1 falls to 0, and the last 1 falls to 0 as well.</div></details>
+</section>
+<section class="prog" id="p-practice-partition-minimize-sum-difference">
+  <div class="prog-h">
+    <span class="num">7</span>
+    <div class="prog-t">
+      <h3>Partition Array Into Two Arrays to Minimize Sum Difference (LeetCode 2035)</h3>
+      <div class="meta"><code class="fname">practice_partition_minimize_sum_difference.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(2^n · n + 2^n · log(2^n)) for n up to 15, about a million steps · Space O(2^n)</span><a class="prob" href="https://leetcode.com/problems/partition-array-into-two-arrays-to-minimize-sum-difference/" target="_blank" rel="noopener">↗ Partition Array Into Two Arrays to Minimize Sum Difference</a></div>
+    </div>
+  </div>
+  <p class="what">Splits 2n numbers into two groups of exactly n and returns the smallest possible difference of the two sums. This is &quot;Mina and Moni&quot; with the hard version of the rules: the numbers may be negative, so the sum cannot be used as an array index, and the answer is found by meet-in-the-middle instead.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 170 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Mock%20Contest/practice_partition_minimize_sum_difference.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">https://leetcode.com/problems/partition-array-into-two-arrays-to-minimize-sum-difference/</span>
+
+<span class="cm">2035. Partition Array Into Two Arrays to Minimize Sum Difference</span>
+
+<span class="cm">Problem (in my own words)</span>
+
+<span class="cm">You are given an array that holds exactly 2n numbers. Split it into two arrays of n numbers</span>
+<span class="cm">each - every number is used once, and both sides must end up with the same amount of numbers.</span>
+<span class="cm">Add up each side and look at the difference between the two sums. Return the smallest</span>
+<span class="cm">difference you can reach.</span>
+
+<span class="cm">This is the same job as &quot;Mina and Moni&quot; in this contest, but harder: the numbers here may be</span>
+<span class="cm">negative, so a table indexed by the sum does not work, and n can be large enough that trying</span>
+<span class="cm">every split one by one is far too slow.</span>
+
+<span class="cm">Input Format</span>
+<span class="cm">First line: an integer m, the amount of numbers (m is always even, m = 2n).</span>
+<span class="cm">Second line: the m numbers, separated by spaces.</span>
+
+<span class="cm">Output Format</span>
+<span class="cm">One number: the smallest possible difference of the two sums.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">The array length is 2n with n at most 15, so there are at most 30 numbers.</span>
+<span class="cm">The numbers may be negative as well as positive.</span>
+
+<span class="cm">Sample Input 0</span>
+<span class="cm">4</span>
+<span class="cm">3 9 7 3</span>
+
+<span class="cm">Sample Output 0</span>
+<span class="cm">2</span>
+
+<span class="cm">Explanation 0</span>
+<span class="cm">n = 2, so each side gets 2 numbers. Take {3, 9} (sum 12) and {7, 3} (sum 10). The difference</span>
+<span class="cm">is 2. No split of these four numbers into two pairs does better: {3, 7} vs {9, 3} gives</span>
+<span class="cm">10 vs 12, again 2, and {3, 3} vs {9, 7} gives 6 vs 16, a difference of 10.</span>
+
+<span class="cm">Sample Input 1</span>
+<span class="cm">6</span>
+<span class="cm">2 -1 0 4 -2 -9</span>
+
+<span class="cm">Sample Output 1</span>
+<span class="cm">0</span>
+
+<span class="cm">Explanation 1</span>
+<span class="cm">n = 3. Take {0, -1, -2} (sum -3) and {2, 4, -9} (sum -3). Both sides are -3, so the</span>
+<span class="cm">difference is 0.</span>
+
+<span class="cm">How the fast method works (&quot;meet in the middle&quot;)</span>
+
+<span class="cm">Trying every way to choose n of the 2n numbers means about 155 million choices when n = 15 -</span>
+<span class="cm">too many. So cut the array in half: the first n numbers and the last n numbers. Each half has</span>
+<span class="cm">only 2^n = 32768 subsets, which is nothing.</span>
+
+<span class="cm">The finished left side takes k numbers from the first half and n - k from the second half, for</span>
+<span class="cm">some k between 0 and n. So:</span>
+<span class="cm">  - list every subset sum of the first half, grouped by how many numbers it took;</span>
+<span class="cm">  - do the same for the second half, and sort each group;</span>
+<span class="cm">  - for each k, walk the left group of size k, and for every sum in it binary-search the</span>
+<span class="cm">    right group of size n - k for the partner that lands the total closest to half of</span>
+<span class="cm">    everything.</span>
+
+<span class="cm">Sorting is what makes the binary search legal, and the binary search is what turns a</span>
+<span class="cm">32768 x 32768 comparison into 32768 x log(32768).</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">minimumDifference</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+
+<span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="cm">/* left[c] holds every sum you can make by taking exactly c numbers out of the first</span>
+<span class="cm">           half; right[c] does the same for the second half. Grouping by the count is the</span>
+<span class="cm">           whole point - the two sides must end up with n numbers each. */</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">left</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">right</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="n">mask</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">sumLeft</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">sumRight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">taken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">bit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">bit</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">bit</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mask</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">bit</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="n">taken</span><span class="o">++</span><span class="p">;</span>
+<span class="w">                    </span><span class="n">sumLeft</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">bit</span><span class="p">];</span><span class="w">       </span><span class="c1">// first half</span>
+<span class="w">                    </span><span class="n">sumRight</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">bit</span><span class="p">];</span><span class="w">  </span><span class="c1">// second half</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">left</span><span class="p">[</span><span class="n">taken</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">sumLeft</span><span class="p">);</span>
+<span class="w">            </span><span class="n">right</span><span class="p">[</span><span class="n">taken</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">sumRight</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="cm">/* The binary search below needs the right-hand groups in order. */</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">c</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">sort</span><span class="p">(</span><span class="n">right</span><span class="p">[</span><span class="n">c</span><span class="p">].</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">right</span><span class="p">[</span><span class="n">c</span><span class="p">].</span><span class="n">end</span><span class="p">());</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">best</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LLONG_MAX</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="cm">/* k numbers come from the first half, so n - k must come from the second. */</span>
+<span class="w">            </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">partners</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">right</span><span class="p">[</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">k</span><span class="p">];</span>
+
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">left</span><span class="p">[</span><span class="n">k</span><span class="p">].</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">sumLeft</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">];</span>
+
+<span class="w">                </span><span class="cm">/* If the chosen side sums to S, the other side sums to total - S and the</span>
+<span class="cm">                   difference is |total - 2*S|. So with sumLeft already fixed we want a</span>
+<span class="cm">                   partner p with 2*(sumLeft + p) as close to total as possible, that is</span>
+<span class="cm">                   2*p as close as possible to target. */</span>
+<span class="w">                </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sumLeft</span><span class="p">;</span>
+
+<span class="w">                </span><span class="cm">/* First position whose doubled value is not below the target. Written by</span>
+<span class="cm">                   hand instead of lower_bound so the &quot;2 *&quot; stays inside the comparison and</span>
+<span class="cm">                   no halving of an odd number can go wrong. */</span>
+<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">lo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">hi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">partners</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+<span class="w">                </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">lo</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">hi</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">lo</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">hi</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">                    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">partners</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">target</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                        </span><span class="n">hi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mid</span><span class="p">;</span>
+<span class="w">                    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                        </span><span class="n">lo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">                    </span><span class="p">}</span>
+<span class="w">                </span><span class="p">}</span>
+
+<span class="w">                </span><span class="cm">/* The best partner is either that one (just above) or the one before it</span>
+<span class="cm">                   (just below), so check both. */</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">lo</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">partners</span><span class="p">.</span><span class="n">size</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">target</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">partners</span><span class="p">[</span><span class="n">lo</span><span class="p">];</span>
+<span class="w">                    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">diff</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">diff</span><span class="p">;</span>
+<span class="w">                    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">diff</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">best</span><span class="p">)</span><span class="w"> </span><span class="n">best</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">diff</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">lo</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">target</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">partners</span><span class="p">[</span><span class="n">lo</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">];</span>
+<span class="w">                    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">diff</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">diff</span><span class="p">;</span>
+<span class="w">                    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">diff</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">best</span><span class="p">)</span><span class="w"> </span><span class="n">best</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">diff</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">best</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nums</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">Solution</span><span class="w"> </span><span class="n">sol</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sol</span><span class="p">.</span><span class="n">minimumDifference</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 170 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
+3 9 7 3</pre><p class="io-note">First the count of numbers (always even, here 4 so n = 2), then the numbers. This is the problem&#x27;s own first sample.</p></div><div class="io out"><div class="io-h">Output </div><pre>2
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>2</code>: {3, 9} sums to 12 and {7, 3} sums to 10. Run with <code>6</code> and <code>2 -1 0 4 -2 -9</code> it prints <code>0</code>, because {0, -1, -2} and {2, 4, -9} both sum to -3. With 30 random values of size up to 10^7 it still answers instantly.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Cut the array in half: the first n numbers and the last n numbers.</li><li>Loop over all 2^n bit masks once. For each mask read off the sum it takes from the first half and the sum the same mask takes from the second half, and file both under <code>taken</code> = how many bits are set.</li><li>So <code>left[c]</code> holds every sum reachable by taking exactly c numbers from the first half, and <code>right[c]</code> the same for the second half.</li><li>Sort each <code>right[c]</code>, because the search below needs it in order.</li><li>The finished group takes k numbers from the first half and n - k from the second. Loop k from 0 to n.</li><li>If the group sums to S, the other side sums to <code>total - S</code>, so the difference is <code>|total - 2*S|</code>. With <code>sumLeft</code> fixed, the aim is a partner p whose <code>2*p</code> lands as close as possible to <code>target = total - 2*sumLeft</code>.</li><li>Binary-search <code>right[n-k]</code> for the first p with <code>2*p &gt;= target</code>, then compare that p and the one just before it - the best partner is always one of those two.</li><li>Keep the smallest difference seen over every k and every subset.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The Mina and Moni DP over (count, sum) does not work here, because the numbers can be negative and a sum cannot index an array. Also keep the <code>2 *</code> inside the binary search comparison rather than halving the target - halving an odd number would round and pick the wrong neighbour. Sums are held in <code>long long</code>; 15 values of 10^7 doubled is still safe in <code>int</code>, but <code>long long</code> costs nothing and removes the worry.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why group the subsets by how many numbers they take, instead of just listing all 2^n sums?</summary><div>Because the two groups must have exactly n numbers each. A subset with a perfect sum but the wrong size is not a legal half, so the count has to be carried alongside the sum.</div></details>
 </section></section>
   <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://leetcode.com/problems/partition-array-into-two-arrays-to-minimize-sum-difference/" target="_blank" rel="noopener">Partition Array Into Two Arrays to Minimize Sum Difference</a><span class="site">LeetCode</span></li><li><a href="https://leetcode.com/problems/minimum-deletions-to-make-character-frequencies-unique/" target="_blank" rel="noopener">Minimum Deletions to Make Character Frequencies Unique</a><span class="site">LeetCode</span></li></ul></section>
   <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>Unsorted data: linear search; do not binary search.</li><li><code>set</code> gives unique + sorted in one step.</li><li>For &#x27;sums of a and b&#x27; problems, find the small impossible values; beyond them everything works.</li><li>Sort descending and use a falling cap to make counts distinct.</li><li>Fixed group sizes turn subset sum into a DP over (count, sum).</li></ul></section>
@@ -813,7 +1458,7 @@ collect2.exe: error: ld returned 1 exit status</pre></div></div>
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

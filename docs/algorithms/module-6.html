@@ -7,7 +7,7 @@
 <meta name="description" content="This module asks: does a graph contain a cycle? In an undirected graph a visited neighbour that is not your parent means a cycle; in a directed graph you need to know whether the neighbour is still on the current DFS path. It also shows how to store edge weights, preparing for Dijkstra.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,13 +36,46 @@
     <p class="lead">This module asks: does a graph contain a cycle? In an undirected graph a visited neighbour that is not your parent means a cycle; in a directed graph you need to know whether the neighbour is still on the current DFS path. It also shows how to store edge weights, preparing for Dijkstra.</p>
     <p class="chips"><span>7 programs</span><span>3 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%206" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>You are walking through a maze holding a piece of chalk, and at every junction you pass you put a mark on the floor. After a while you step into a junction and find your own chalk mark already there. Something has happened, but what?</p><p>Two things are possible. Either it is the junction you have just come from and you have simply turned round, which means nothing. Or you have arrived at it along a different corridor from the one you left by — and then the corridors you walked form a loop. That loop is a <strong>cycle</strong>, and telling those two cases apart is the whole first half of this module.</p><p>You could answer it the slow way: list every path out of every node and look for one that comes back to its start. That is hopeless on any real graph. A single DFS already visits everything once, and it only needs one extra piece of information.</p><p><strong>Undirected graphs first.</strong> Here the extra information is your parent: the node you came from. In an undirected graph every edge is stored in both lists, so standing at <code>1</code> you always see <code>0</code> again — that is the same corridor, not a loop. Any other already-visited neighbour is a second way into a node you have already reached, so it closes a cycle.</p><p>Trace the triangle <code>0-1</code>, <code>1-2</code>, <code>2-0</code>, starting the DFS at 0.</p><pre class="trace">at 0, parent -1 : mark 0, walk to 1
+at 1, parent  0 : 0 is visited = my parent, skip
+                  walk to 2
+at 2, parent  1 : 1 is visited = my parent, skip
+                  0 is visited, my parent is 1
+                  -&gt; a second way into 0: cycle
+
+same code on the path 0-1-2-3-4:
+every visited neighbour met is the parent
+-&gt; no cycle</pre><p><strong>Now put arrows on the corridors and the parent rule breaks.</strong> Take the three edges <code>0 → 2</code>, <code>0 → 1</code>, <code>1 → 2</code>. Starting at 0 you mark 2. Coming back and going down through 1, you meet 2 already marked, and 2 is not 1&#x27;s parent. The rule shouts &quot;cycle&quot; — but there is no loop anywhere, because nothing leads back out of 2. Two arrows simply met at the same node.</p><p>So ask a sharper question. Not &quot;have I ever been here?&quot; but &quot;<strong>am I still standing here?</strong>&quot; — is this node on the road I am walking at this very moment, with its call still open beneath me? That is one more array, <code>pathvisit</code>, set to true when the DFS enters a node and back to false when it leaves.</p><pre class="trace">edges 0-&gt;1, 1-&gt;2, 2-&gt;3, 3-&gt;1
+
+enter 0   path: 0
+enter 1   path: 0 1
+enter 2   path: 0 1 2
+enter 3   path: 0 1 2 3
+  child 1: visited AND still on the path
+  -&gt; cycle  1 -&gt; 2 -&gt; 3 -&gt; 1
+
+edges 0-&gt;1, 0-&gt;2, 1-&gt;2
+enter 0   path: 0
+enter 1   path: 0 1
+enter 2   path: 0 1 2 ... leave 2, leave 1
+back at 0, child 2: visited, NOT on the path
+  -&gt; no cycle</pre><p>The line that sets <code>pathvisit[src] = false</code> on the way out is the entire difference between those two traces. Forget it and every place where two arrows meet looks like a loop. Both rules also need the outer loop over all nodes from Module 3, since the cycle may sit in a disconnected piece your first search never reaches.</p><p>The second half of the module changes the storage, not the algorithm. Until now <code>adj[0]</code> held plain node numbers: <code>adj[0] = {1, 2}</code> meant &quot;from 0 you can step to 1 and to 2&quot;. Real roads have lengths, tickets have prices, cables have delays, so each entry becomes a <strong>pair</strong>: the neighbour, and what that edge costs.</p><p>Nothing else about the list changes. <code>p.first</code> is still where you can go; <code>p.second</code> is the new part, what it costs to go there. For a directed weighted graph you push only the first of the two lines.</p><pre class="snip">vector&lt;pair&lt;int, int&gt;&gt; adj[n];
+
+// edge between a and b costing w
+adj[a].push_back({b, w});
+adj[b].push_back({a, w});
+
+for(pair&lt;int, int&gt; p : adj[u]){
+    int v = p.first;      // neighbour
+    int cost = p.second;  // weight of the edge
+}</pre><p>Why bother now? Because BFS counts steps, and to BFS one step is one step: it finds the path with the fewest edges. Once edges carry costs, fewest is no longer cheapest — three short hops of 1 each beat one road of 10, although BFS would pick the single road. Answering &quot;what is the cheapest way?&quot; is Dijkstra&#x27;s job in the next module, and Dijkstra needs the cost sitting right next to the neighbour, which is exactly what this list gives it.</p><p>The programs below show each rule in code: the undirected test twice, once with a queue and once with recursion, the directed test with <code>pathvisit</code>, and two grid searches from earlier modules for practice.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-adj-list-for-weighted-graph"><span class="n">1</span>Adjacency list with weights</a></li><li><a href="#p-detect-cycle-in-undirected-graph-bfs"><span class="n">2</span>Undirected cycle detection (BFS)</a></li><li><a href="#p-detect-cycle-in-undirected-graph-dfs"><span class="n">3</span>Undirected cycle detection (DFS)</a></li><li><a href="#p-detect-cycle-in-directed-graph-dfs"><span class="n">4</span>Directed cycle detection (DFS + path array)</a></li><li><a href="#p-extra-problem-undirected-graph-cycle-dfs"><span class="n">5</span>GFG - Detect cycle in an undirected graph (DFS)</a></li><li><a href="#p-cses-counting-rooms"><span class="n">6</span>CSES 1192 - Counting Rooms</a></li><li><a href="#p-leetcode-maximum-number-of-fish-in-a-grid"><span class="n">7</span>LeetCode 2658 - Maximum Fish (again)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Weighted adjacency list</h4><p>Store <code>pair&lt;int,int&gt;{neighbour, weight}</code> in each list.</p><pre class="snip">vector&lt;pair&lt;int,int&gt;&gt; adj[n];
 adj[a].push_back({b, w});</pre></div><div class="concept"><h4>Undirected cycle rule</h4><p>While exploring <code>u</code>, if a neighbour <code>v</code> is already visited and <code>v</code> is not <code>u</code>&#x27;s parent, there is another way to reach <code>v</code>, so a cycle exists.</p></div><div class="concept"><h4>Parent tracking</h4><p>Record <code>parent[child] = u</code> when discovering a child (or pass <code>parent</code> as a DFS argument).</p></div><div class="concept"><h4>Directed cycle rule</h4><p>Keep <code>pathvisit[]</code>: true while a node is on the current recursion path. Reaching a node that is still on the path means a back edge, a cycle.</p><pre class="snip">pathvisit[u] = true;
 ... dfs children ...
 pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rule fails for directed graphs</h4><p>In a directed graph two arrows can meet at the same node (0→2, 1→2) without any cycle, so &quot;already visited&quot; is not enough.</p></div><div class="concept"><h4>Disconnected graphs</h4><p>Start a search from every unvisited node so no piece is skipped.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-article"><a href="https://cp-algorithms.com/graph/depth-first-search.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — DFS</b><span class="rnote">DFS with the edge classification that explains cycle detection.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>William Fiset — graph theory playlist</b><span class="rnote">Every graph algorithm of this course, drawn before it is coded.</span></a></li><li class="r-visual"><a href="https://visualgo.net/en/graphds" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — graph structures</b><span class="rnote">Draw a graph and see the same graph as a matrix and as a list.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-adj-list-for-weighted-graph">
   <div class="prog-h">
@@ -1152,7 +1185,7 @@ isCycle = false
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

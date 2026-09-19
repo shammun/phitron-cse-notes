@@ -7,7 +7,7 @@
 <meta name="description" content="Subset sum asks whether some items add up to a target: the knapsack idea with &#x27;reach exactly this sum&#x27; instead of &#x27;maximise value&#x27;. Small changes to the same recursion count the subsets, test whether an array splits into two equal halves, or allow an item to be used many times (unbounded knapsack). The code files in this module carry a few classic bugs, which make them good for learning.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -34,12 +34,29 @@
     <p class="eyebrow"><a href="index.html">Introduction to Algorithms</a> · Module 17</p>
     <h1>Subset sum family and unbounded knapsack</h1>
     <p class="lead">Subset sum asks whether some items add up to a target: the knapsack idea with &#x27;reach exactly this sum&#x27; instead of &#x27;maximise value&#x27;. Small changes to the same recursion count the subsets, test whether an array splits into two equal halves, or allow an item to be used many times (unbounded knapsack). The code files in this module carry a few classic bugs, which make them good for learning.</p>
-    <p class="chips"><span>5 programs</span><span>2 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%2017" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
+    <p class="chips"><span>6 programs</span><span>2 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%2017" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
-  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-subset-sum"><span class="n">1</span>Subset sum with plain recursion</a></li><li><a href="#p-subset-sum-using-dp"><span class="n">2</span>Subset sum with memoization</a></li><li><a href="#p-count-of-subset-sum"><span class="n">3</span>Count the subsets with a given sum</a></li><li><a href="#p-equal-set-sum"><span class="n">4</span>Equal sum partition</a></li><li><a href="#p-unbounded-knapsack"><span class="n">5</span>Unbounded knapsack</a></li></ol></details></nav>
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Empty your pocket onto the table: coins of 3, 4, 5, 12 and 34. Someone asks whether you can put down exactly 9. You try a few piles in your head — 3 and 4 makes 7, no; 4 and 5 makes 9, yes — and you stop the moment one works.</p><p>That is the module. Not &quot;how much value can I fit in the bag&quot; as in Module 15, but &quot;<strong>can I hit this total exactly</strong>&quot;. Everything else on this page is a small twist on that one question.</p><p>The slow way is to try every pile. Five coins give 32 piles, which is fine by hand. Forty coins give about a million million piles, and no computer walks through those in a second.</p><p>The fix is the same take-it-or-leave-it split as the knapsack. Look at the last item and ask two smaller questions: can the rest reach <code>sum</code> without it, or can the rest reach <code>sum - val[i]</code> with it. Either one being true is enough, so the two are joined with <code>||</code>.</p><pre class="snip">bool subset_sum(int i, int sum){
+    if(i &lt; 0) return sum == 0;   // nothing left to pick
+    if(val[i] &gt; sum) return subset_sum(i-1, sum);
+    return subset_sum(i-1, sum - val[i])   // take it
+        || subset_sum(i-1, sum);           // skip it
+}</pre><p>The base case is worth a second: when no items are left, the only way to be right is to be standing on 0. Any other leftover total means that pile failed.</p><p>It is easier to believe once you see the answers as a table of true and false. Items 3, 4 and 5, target 9. Each row adds one more item and marks every total that is now reachable:</p><pre class="trace">sum       0 1 2 3 4 5 6 7 8 9
+--------  - - - - - - - - - -
+no items  T . . . . . . . . .
+with 3    T . . T . . . . . .
+with 4    T . . T T . . T . .
+with 5    T . . T T T . T T T
+                            ^ 9 is T: 4 + 5</pre><p>Read a row as: copy the row above (that is skipping the item), and also copy it shifted right by the item&#x27;s own value (that is taking it). The memoised recursion fills exactly these cells, each one once, so the work is items × target instead of 2 to the power of items.</p><p><strong>Two twists come almost free.</strong> Swap <code>||</code> for <code>+</code> and return 1 instead of <code>true</code> at the base case, and the same function counts how many subsets reach the total rather than saying whether one exists. And to ask whether an array splits into two parts of equal sum: if the total is odd, say no immediately; otherwise ask whether some subset reaches total / 2, because the leftovers are then the other half by themselves.</p><p><strong>The last program changes one index.</strong> In the 0-1 knapsack an item is used up once taken, so taking it moves you past it. If the shop can sell you the same item again, you stay where you are:</p><pre class="snip">// 0-1 knapsack: the item is gone after you take it
+take = knapsack(i-1, cap - weight[i]) + val[i];
+
+// unbounded: the same item may be taken again
+take = knapsack(i,   cap - weight[i]) + val[i];
+//              ^ stay on item i</pre><p>That single <code>i-1</code> becoming <code>i</code> is the whole difference. The recursion still ends, because <code>cap</code> falls by at least one weight every time you take something. With weights 2 and 5, values 3 and 8 and a bag of 9, the 0-1 version can hold 2 and 5 for a value of 11; the unbounded version takes 5, 2 and 2 for 14.</p><p>One warning before you read the code: two of these files carry classic bugs, and they are worth spotting yourself. A local <code>int val[n]</code> declared inside <code>main</code> hides the global <code>val</code> that the recursion reads, so the function sees only zeros. And a memo table cleared only up to half the total, while the call asks about the full total, leaves stale cells that look like real answers. The notes under each program below point at the exact line.</p></div></section>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-subset-sum"><span class="n">1</span>Subset sum with plain recursion</a></li><li><a href="#p-subset-sum-using-dp"><span class="n">2</span>Subset sum with memoization</a></li><li><a href="#p-count-of-subset-sum"><span class="n">3</span>Count the subsets with a given sum</a></li><li><a href="#p-equal-set-sum"><span class="n">4</span>Equal sum partition</a></li><li><a href="#p-unbounded-knapsack"><span class="n">5</span>Unbounded knapsack</a></li><li><a href="#p-partition-equal-subset-sum"><span class="n">6</span>Partition Equal Subset Sum (practice)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Subset sum state</h4><p><code>subset_sum(i, sum)</code> = can items 0..i pick a subset adding to exactly <code>sum</code>? When no items are left, the answer is yes only if <code>sum == 0</code>.</p><pre class="snip">if (i &lt; 0) return sum == 0;</pre></div><div class="concept"><h4>Take or skip, combined with OR</h4><p>If <code>val[i] &lt;= sum</code>, the answer is &#x27;take it and reach sum - val[i]&#x27; <strong>or</strong> &#x27;skip it and reach sum&#x27;.</p><pre class="snip">return subset_sum(i-1, sum - val[i]) || subset_sum(i-1, sum);</pre></div><div class="concept"><h4>Counting instead of yes/no</h4><p>Replace OR with <code>+</code> and return 1/0 at the base case: the result is the number of subsets with that sum.</p></div><div class="concept"><h4>Equal partition</h4><p>An array splits into two equal-sum parts only if the total is even and some subset reaches total/2.</p></div><div class="concept"><h4>Unbounded knapsack</h4><p>When items can be reused, taking item i keeps you at index <code>i</code> instead of moving to <code>i-1</code>.</p><pre class="snip">op1 = knapsack(i, w - weight[i]) + val[i];</pre></div><div class="concept"><h4>Shadowing a global array</h4><p>A local <code>int val[n]</code> in <code>main</code> hides the global <code>val</code> that the recursive function reads. The input goes into the local copy and the function only sees zeros.</p></div><div class="concept"><h4>Memo range must cover the call</h4><p>Initialise <code>dp</code> for every sum the recursion can ask about (0..target inclusive); otherwise the default 0 looks like a stored answer.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-article"><a href="https://cp-algorithms.com/dynamic_programming/knapsack.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — knapsack</b><span class="rnote">The 0-1 and unbounded versions next to each other.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0qUlt5H_kiKYaNSqJ81PMMY" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — dynamic programming playlist</b><span class="rnote">Builds every DP from the plain recursion first, which is how this module does it.</span></a></li><li class="r-article"><a href="https://cses.fi/book/book.pdf" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>Competitive Programmer&#x27;s Handbook (free PDF)</b><span class="rnote">Antti Laaksonen&#x27;s book — the chapters on graphs and DP are short and excellent.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-subset-sum">
   <div class="prog-h">
@@ -755,6 +772,276 @@
   <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>n</code>, values, weights, capacity.</li><li>Reset <code>dp</code> to -1.</li><li>If item i fits: take it and <strong>stay</strong> at <code>i</code>, or skip it and move to <code>i-1</code>; keep the max.</li><li>If it does not fit, only skip.</li><li>Print <code>knapsack(n-1, max_weight)</code>.</li></ol></details>
   <div class="callout warn"><b>Watch out.</b> Same init bug as Module 15: <code>j &lt; max_weight</code> leaves <code>dp[i][max_weight]</code> at 0, so the first call returns 0 immediately. Use <code>j &lt;= max_weight</code>; then the program prints 35.</div>
   <details class="check"><summary><span>✅ Check yourself:</span> Which one-token change turns 0-1 knapsack into unbounded knapsack?</summary><div>In the take branch, call <code>knapsack(i, ...)</code> instead of <code>knapsack(i-1, ...)</code>.</div></details>
+</section>
+<section class="prog" id="p-partition-equal-subset-sum">
+  <div class="prog-h">
+    <span class="num">6</span>
+    <div class="prog-t">
+      <h3>Partition Equal Subset Sum (practice)</h3>
+      <div class="meta"><code class="fname">partition_equal_subset_sum.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(n * total/2) · Space O(n * total/2)</span><a class="prob" href="https://leetcode.com/problems/partition-equal-subset-sum/" target="_blank" rel="noopener">↗ LeetCode 416 - Partition Equal Subset Sum</a></div>
+    </div>
+  </div>
+  <p class="what">Decides whether an array of positive numbers can be split into two groups with the same sum. This is <code>equal_set_sum.cpp</code> written correctly: the two halves are equal only when each one is total / 2, so it is the subset sum question with target total / 2.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 121 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2017/partition_equal_subset_sum.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Partition Equal Subset Sum   (LeetCode 416)</span>
+
+<span class="cm">You are given an array of positive integers. Decide whether it can be split</span>
+<span class="cm">into two groups whose sums are equal. Every number must go into exactly one</span>
+<span class="cm">of the two groups.</span>
+
+<span class="cm">The trick is that the two sums are equal only when each one is total / 2.</span>
+<span class="cm">So the question is really the subset sum question of this module: is there a</span>
+<span class="cm">subset that adds up to exactly total / 2? If the total is odd there is</span>
+<span class="cm">nothing to check, the answer is no.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">    1 &lt;= nums.length &lt;= 200</span>
+<span class="cm">    1 &lt;= nums[i] &lt;= 100</span>
+
+<span class="cm">Input (for the small driver below)</span>
+<span class="cm">    first line: n, the number of values</span>
+<span class="cm">    second line: the n values</span>
+
+<span class="cm">Output</span>
+<span class="cm">    canPartition = true   if the array can be split into two equal halves</span>
+<span class="cm">    canPartition = false  otherwise</span>
+
+<span class="cm">Example 1</span>
+
+<span class="cm">input</span>
+<span class="cm">4</span>
+<span class="cm">1 5 11 5</span>
+
+<span class="cm">output</span>
+<span class="cm">canPartition = true</span>
+
+<span class="cm">    The total is 22, so each side must be 11. One side is {11}, the other</span>
+<span class="cm">    is {1, 5, 5}.</span>
+
+<span class="cm">Example 2</span>
+
+<span class="cm">input</span>
+<span class="cm">4</span>
+<span class="cm">1 2 3 5</span>
+
+<span class="cm">output</span>
+<span class="cm">canPartition = false</span>
+
+<span class="cm">    The total is 11, which is odd, so the two sides can never match.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">dp</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Can the items 0..i pick a subset that adds up to exactly `sum`?</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">subset_sum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// No items left: we succeeded only if nothing is still owed.</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">// Option 1: skip item i and still owe the same sum.</span>
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">// Option 2: take item i, but only if it is not bigger than what is</span>
+<span class="w">        </span><span class="c1">// left to pay, otherwise `sum - val[i]` would go negative.</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">ans</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">sum</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sum</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">canPartition</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">// An odd total cannot be cut into two equal integer halves.</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">total</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">half</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">;</span>
+<span class="w">        </span><span class="c1">// The memo has to cover every sum the recursion can ask about,</span>
+<span class="w">        </span><span class="c1">// that is 0..half inclusive, so the row is half + 1 long.</span>
+<span class="w">        </span><span class="n">dp</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">half</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">));</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">subset_sum</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">half</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nums</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">Solution</span><span class="w"> </span><span class="n">sol</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sol</span><span class="p">.</span><span class="n">canPartition</span><span class="p">(</span><span class="n">nums</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;canPartition = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">ans</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 121 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
+1 5 11 5</pre><p class="io-note">n, then the n values. The first sample of the problem.</p></div><div class="io out"><div class="io-h">Output </div><pre>canPartition = true
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>canPartition = true</code>. The total is 22, so each side needs 11: {11} on one side, {1, 5, 5} on the other. Run it on <code>4\n1 2 3 5\n</code> and it prints <code>canPartition = false</code>, because 11 is odd.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Add up the whole array. If the total is odd, answer no right away: two equal whole halves are impossible.</li><li>Otherwise set <code>half = total / 2</code> and ask the module&#x27;s <code>subset_sum(n-1, half)</code>.</li><li><code>subset_sum(i, sum)</code> is: can items 0..i reach exactly <code>sum</code>? With no items left the answer is yes only if <code>sum == 0</code>.</li><li>Each item is skipped (<code>subset_sum(i-1, sum)</code>) or taken (<code>subset_sum(i-1, sum - val[i])</code>), and taking is only tried when <code>val[i] &lt;= sum</code> so the sum never goes negative.</li><li><code>dp</code> is built with <code>assign(n, vector&lt;int&gt;(half + 1, -1))</code>, so every sum the recursion can ask about has a slot and -1 really means &#x27;not computed yet&#x27;.</li><li>The judge&#x27;s <code>class Solution</code> is kept as it is; the <code>main</code> under it reads n and the values from stdin.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The bug the module&#x27;s own <code>equal_set_sum.cpp</code> carries: it asks for <code>sum</code> (the full total) instead of <code>half</code>, and it re-declares <code>int val[n]</code> inside <code>main</code>, which hides the global array the recursion reads. Here the values are handed to the class and the target is <code>half</code>.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> The array is {2, 2, 3, 5}. What does the program answer and why?</summary><div>No. The total is 12 and half is 6, but no subset of 2, 2, 3, 5 adds up to exactly 6.</div></details>
 </section></section>
   <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://leetcode.com/problems/coin-change-ii/description/" target="_blank" rel="noopener">Coin Change II</a><span class="site">LeetCode</span></li><li><a href="https://leetcode.com/problems/partition-equal-subset-sum/" target="_blank" rel="noopener">Partition Equal Subset Sum</a><span class="site">LeetCode</span></li></ul></section>
   <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>Subset sum = knapsack with &#x27;reach exactly&#x27; and OR instead of max.</li><li>Counting subsets: same recursion, add the two options, base case returns 1 or 0.</li><li>Equal partition = even total + subset sum to half.</li><li>Unbounded: stay on the same item after taking it.</li><li>Never re-declare a global array inside <code>main</code>, and initialise <code>dp</code> up to the target inclusive.</li></ul></section>
@@ -767,7 +1054,7 @@
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

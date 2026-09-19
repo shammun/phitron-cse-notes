@@ -7,7 +7,7 @@
 <meta name="description" content="DSU keeps track of which items belong to the same group, and can merge two groups quickly. Each group has a leader; `find` walks up to the leader and `union` joins two leaders. With path compression and union by size both operations are almost O(1). The module uses DSU to detect cycles in undirected graphs and to count connected components.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,12 +36,37 @@
     <p class="lead">DSU keeps track of which items belong to the same group, and can merge two groups quickly. Each group has a leader; <code>find</code> walks up to the leader and <code>union</code> joins two leaders. With path compression and union by size both operations are almost O(1). The module uses DSU to detect cycles in undirected graphs and to count connected components.</p>
     <p class="chips"><span>8 programs</span><span>5 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%2011" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Picture a room of six people who arrive as strangers. Now and then two of them shake hands, and from that moment their two circles count as one circle. Somebody keeps interrupting with the same question: <strong>are these two in the same circle?</strong></p><p>You could answer it with Module 2&#x27;s tool: draw the handshakes as a graph and run a BFS from one person to see whether the other turns up. That works once. But the circles keep changing, so after every new handshake the old search is stale. A hundred thousand handshakes with a question after each one means a hundred thousand full searches.</p><p>Disjoint Set Union answers the same question without searching anything. Each circle picks one member as its <strong>leader</strong>, and everybody else remembers one single fact: who they point at on the way up to that leader. So a circle is drawn as a tree, and <code>par[x]</code> is that one link. The leader points at nobody, which is written as -1.</p><p>Start with six strangers, so every person is the leader of a group of one. Now shake hands 1 with 2, and 3 with 4:</p><pre class="trace">  1       3       5     6
+  |       |
+  2       4
+
+par:  1:-1  2:1  3:-1  4:3  5:-1  6:-1</pre><p><code>find(x)</code> is the only question the structure really answers: follow <code>par</code> upwards until you reach a -1, and the node you land on is the leader. Two people are in the same circle exactly when <code>find</code> returns the same leader for both.</p><p>Now 2 shakes hands with 3. You do not link 2 to 3. You link their <strong>leaders</strong>, so one whole tree hangs under the other leader and the two circles become one:</p><pre class="trace">     1              5     6
+    / \
+   2   3
+       |
+       4
+
+par:  1:-1  2:1  3:1  4:3
+find(4):  4 -&gt; 3 -&gt; 1,  leader is 1
+find(6):  already -1,   leader is 6
+so 4 and 6 are in different circles</pre><p>The walk 4 -&gt; 3 -&gt; 1 took two steps. In a big group it could take thousands. Two small habits keep it short, and both come down to the same sentence: <strong>make the tree flat, so the next question is fast.</strong></p><p>The first is <strong>path compression</strong>. On the way back out of the recursion, point every node you passed straight at the leader. Ask <code>find(4)</code> once and the tree becomes flat; ask it again and it costs one step.</p><p>The second is <strong>union by size</strong>. When joining two circles, hang the smaller tree under the bigger tree&#x27;s leader, and add the sizes. Without it you could hang 1 under 2, 2 under 3, 3 under 4 and so on, ending with one chain of a hundred thousand links where every <code>find</code> walks the whole chain. With both habits a <code>find</code> and a union cost almost one step each.</p><pre class="snip">int find(int node){
+    if(par[node] == -1) return node;   // it is the leader
+    int leader = find(par[node]);
+    par[node] = leader;                // point straight up
+    return leader;
+}</pre><pre class="trace">after find(4) with path compression
+
+      1
+    / | \
+   2  3  4
+
+par:  1:-1  2:1  3:1  4:1</pre><p>What is new here compared with Modules 2 and 3: back then &quot;are these two connected?&quot; meant walking the graph, and every new edge meant walking it again. Here no graph is stored at all, only one array of parents, and a new edge is one cheap merge.</p><p><strong>A second use.</strong> Read an undirected graph edge by edge. If the two ends of a new edge already have the same leader, they were connected before this edge arrived, so this edge closes a cycle. That is a cycle check in a few lines, with no recursion over neighbours and no parent tracking.</p><p><strong>A third use.</strong> After all the edges are in, the people whose <code>par</code> is still -1 are exactly the leaders, so counting them counts the groups. If a country has 4 towns and only the roads 1-2 and 3-4, there are two groups, and one new road joining any member of one to any member of the other is enough to connect everything.</p><p>The programs below build <code>find</code> three ways (plain recursion, a loop, then with path compression), add union by size, and then use the structure for cycle detection, for a judge&#x27;s union-find problem, for counting an island&#x27;s inner cells, and for joining up the towns of a country.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-find-using-recursion"><span class="n">1</span>find() with plain recursion</a></li><li><a href="#p-find-using-loop"><span class="n">2</span>find() with a while loop</a></li><li><a href="#p-find-optimized"><span class="n">3</span>find() with path compression</a></li><li><a href="#p-union"><span class="n">4</span>union by size</a></li><li><a href="#p-detect-cycle-in-undirected-graph-using-dsu"><span class="n">5</span>Detect a cycle in an undirected graph with DSU</a></li><li><a href="#p-practice-problem-1-disjoint-set"><span class="n">6</span>GfG: Disjoint set (Union-Find)</a></li><li><a href="#p-practice-problem-2-number-of-enclaves"><span class="n">7</span>LeetCode 1020: Number of Enclaves</a></li><li><a href="#p-practice-problem-3-building-roads"><span class="n">8</span>CSES 1666: Building Roads with DSU</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Parent array</h4><p><code>par[x]</code> points to x&#x27;s parent in its group&#x27;s tree. <code>par[x] == -1</code> means x is the leader (the root) of its group.</p><pre class="snip">memset(par, -1, sizeof(par));</pre></div><div class="concept"><h4>find(x)</h4><p>Follow parent links until you reach a node whose parent is -1. That node is the leader. Two nodes are in the same group exactly when they have the same leader.</p></div><div class="concept"><h4>Path compression</h4><p>While coming back from the recursion, point every visited node straight at the leader. The next <code>find</code> on any of them takes one step.</p><pre class="snip">int leader = find(par[node]);
 par[node] = leader;
 return leader;</pre></div><div class="concept"><h4>Union by size</h4><p>When joining two groups, hang the smaller tree under the bigger one and add the sizes. Trees stay shallow, so <code>find</code> stays fast.</p><pre class="snip">if (sz[l1] &gt;= sz[l2]) { par[l2] = l1; sz[l1] += sz[l2]; }</pre></div><div class="concept"><h4>Cycle detection in an undirected graph</h4><p>Add edges one by one. If both ends of a new edge already have the same leader, they were already connected, so this edge closes a cycle.</p></div><div class="concept"><h4>Counting components</h4><p>Start with n components. Every successful union (two different leaders) reduces the count by one. At the end, the leaders are the nodes with <code>par[i] == -1</code>.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/ufds" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — union-find</b><span class="rnote">See the group trees flatten as path compression does its work.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/data_structures/disjoint_set_union.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — disjoint set union</b><span class="rnote">The clearest account of why the two optimisations make it near-instant.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>William Fiset — graph theory playlist</b><span class="rnote">Every graph algorithm of this course, drawn before it is coded.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-find-using-recursion">
   <div class="prog-h">
@@ -1259,7 +1284,7 @@ practice_problem_3_building_roads.cpp:80:5: note: suggested alternative: &#x27;m
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

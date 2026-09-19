@@ -26,7 +26,7 @@ NOTES = ROOT / "_build" / "notes"
 REPO = "shammun/phitron-cse-notes"
 SITE_TITLE = "CSE Fundamentals — Revision Notes"
 GITHUB_BLOB = f"https://github.com/{REPO}/blob/main/"
-ASSET_V = "5"
+ASSET_V = "6"
 
 COURSE_INFO = {
     "1_Introduction to Programming Language": ("c-programming", "Introduction to Programming", "C",
@@ -160,6 +160,37 @@ def page(title, body, depth, description="", crumbs=()):
 """
 
 
+RES_ICON = {"video": "▶️", "visual": "🎛️", "article": "📄", "practice": "🏋️", "tool": "🔧"}
+RES_LABEL = {"video": "Video", "visual": "Interactive", "article": "Read", "practice": "Practice", "tool": "Tool"}
+
+
+def block_html(b, heading=True):
+    """One intro / walkthrough block: paragraphs, a snippet, a trace, and a click-through player."""
+    out = []
+    if heading and b.get("heading"):
+        out.append(f'<h3>{md(b["heading"])}</h3>')
+    out += [f"<p>{md(p)}</p>" for p in b.get("body", [])]
+    if b.get("snippet"):
+        out.append(f'<pre class="snip">{esc(b["snippet"])}</pre>')
+    if b.get("trace"):
+        out.append(f'<pre class="trace">{esc(b["trace"])}</pre>')
+    frames = b.get("frames") or []
+    if frames:
+        cards = "".join(
+            f'<div class="frame" data-i="{i}"><pre>{esc(f.get("art") or "")}</pre>'
+            + (f'<p class="flabel">{md(f["label"])}</p>' if f.get("label") else "") + "</div>"
+            for i, f in enumerate(frames))
+        out.append(
+            f'<div class="stepper" data-n="{len(frames)}">'
+            + (f'<p class="stitle">{md(b["frames_title"])}</p>' if b.get("frames_title") else "")
+            + f'<div class="frames">{cards}</div>'
+            '<div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button>'
+            f'<span class="scount">Step 1 of {len(frames)}</span>'
+            '<button type="button" class="snext" aria-label="Next step">▶</button>'
+            '<button type="button" class="splay">Play ▶</button></div></div>')
+    return "".join(out)
+
+
 # ---------------------------------------------------------------- module page
 def run_file(job):
     mod, entry = job
@@ -272,18 +303,22 @@ def render_module(mod, notes, results, prev_mod, next_mod, course_slug, course_t
         f'<div class="concept"><h4>{md(c.get("term"))}</h4><p>{md(c.get("explain"))}</p>'
         + (f'<pre class="snip">{esc(c["snippet"])}</pre>' if c.get("snippet") else "") + "</div>"
         for c in notes.get("concepts", []))
-    intro = "".join(
-        (f'<h3>{md(b["heading"])}</h3>' if b.get("heading") else "")
-        + "".join(f"<p>{md(p)}</p>" for p in b.get("body", []))
-        + (f'<pre class="snip">{esc(b["snippet"])}</pre>' if b.get("snippet") else "")
-        + (f'<pre class="trace">{esc(b["trace"])}</pre>' if b.get("trace") else "")
-        for b in notes.get("intro", []))
-    walk = "".join(
-        f'<div class="wstep"><h3>{md(w.get("heading"))}</h3>'
-        + "".join(f"<p>{md(p)}</p>" for p in w.get("body", []))
-        + (f'<pre class="snip">{esc(w["snippet"])}</pre>' if w.get("snippet") else "")
-        + (f'<pre class="trace">{esc(w["trace"])}</pre>' if w.get("trace") else "") + "</div>"
-        for w in notes.get("walkthrough", []))
+    intro = "".join(block_html(b) for b in notes.get("intro", []))
+    walk = "".join(f'<div class="wstep"><h3>{md(w.get("heading"))}</h3>{block_html(w, heading=False)}</div>'
+                   for w in notes.get("walkthrough", []))
+    res = notes.get("resources") or []
+    res_html = ""
+    if res:
+        res_html = ('<section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2>'
+                    '<p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the '
+                    'detour: you press a button and watch the structure move.</p><ul class="res">'
+                    + "".join(
+                        f'<li class="r-{esc(r.get("kind") or "article")}"><a href="{esc(r["url"])}" target="_blank" rel="noopener">'
+                        f'<span class="rkind">{RES_ICON.get(r.get("kind"), "📄")} {esc(RES_LABEL.get(r.get("kind"), "Article"))}</span>'
+                        f'<b>{md(r.get("name") or r["url"])}</b>'
+                        + (f'<span class="rnote">{md(r["note"])}</span>' if r.get("note") else "")
+                        + "</a></li>" for r in res if r.get("url"))
+                    + "</ul></section>")
     progs = "".join(render_program(i, mod, e, results[(mod["id"], e["file"])], depth) for i, e in enumerate(files, 1))
     links = notes.get("practice_links") or []
     links_html = ""
@@ -315,6 +350,7 @@ def render_module(mod, notes, results, prev_mod, next_mod, course_slug, course_t
   {f'<nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol>{toc}</ol></details></nav>' if files else ''}
   {f'<section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts">{concepts}</div></section>' if concepts else ''}
   {f'<section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk">{walk}</div></section>' if walk else ''}
+  {res_html}
   {f'<section class="block" id="programs"><h2>🧑‍💻 Programs</h2>{progs}</section>' if files else ''}
   {links_html}
   <section class="block recap" id="recap"><h2>📌 Remember</h2><ul>{recap}</ul></section>

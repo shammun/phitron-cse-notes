@@ -2,13 +2,87 @@
   "module_id": "4-introduction-to-algorithms--module-11",
   "title": "Disjoint Set Union (Union-Find)",
   "overview": "DSU keeps track of which items belong to the same group, and can merge two groups quickly. Each group has a leader; `find` walks up to the leader and `union` joins two leaders. With path compression and union by size both operations are almost O(1). The module uses DSU to detect cycles in undirected graphs and to count connected components.",
+  "intro": [
+    {
+      "heading": null,
+      "body": [
+        "Picture a room of six people who arrive as strangers. Now and then two of them shake hands, and from that moment their two circles count as one circle. Somebody keeps interrupting with the same question: **are these two in the same circle?**",
+        "You could answer it with Module 2's tool: draw the handshakes as a graph and run a BFS from one person to see whether the other turns up. That works once. But the circles keep changing, so after every new handshake the old search is stale. A hundred thousand handshakes with a question after each one means a hundred thousand full searches."
+      ],
+      "snippet": null,
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "Disjoint Set Union answers the same question without searching anything. Each circle picks one member as its **leader**, and everybody else remembers one single fact: who they point at on the way up to that leader. So a circle is drawn as a tree, and `par[x]` is that one link. The leader points at nobody, which is written as -1.",
+        "Start with six strangers, so every person is the leader of a group of one. Now shake hands 1 with 2, and 3 with 4:"
+      ],
+      "snippet": null,
+      "trace": "  1       3       5     6\n  |       |\n  2       4\n\npar:  1:-1  2:1  3:-1  4:3  5:-1  6:-1"
+    },
+    {
+      "heading": null,
+      "body": [
+        "`find(x)` is the only question the structure really answers: follow `par` upwards until you reach a -1, and the node you land on is the leader. Two people are in the same circle exactly when `find` returns the same leader for both.",
+        "Now 2 shakes hands with 3. You do not link 2 to 3. You link their **leaders**, so one whole tree hangs under the other leader and the two circles become one:"
+      ],
+      "snippet": null,
+      "trace": "     1              5     6\n    / \\\n   2   3\n       |\n       4\n\npar:  1:-1  2:1  3:1  4:3\nfind(4):  4 -> 3 -> 1,  leader is 1\nfind(6):  already -1,   leader is 6\nso 4 and 6 are in different circles"
+    },
+    {
+      "heading": null,
+      "body": [
+        "The walk 4 -> 3 -> 1 took two steps. In a big group it could take thousands. Two small habits keep it short, and both come down to the same sentence: **make the tree flat, so the next question is fast.**",
+        "The first is **path compression**. On the way back out of the recursion, point every node you passed straight at the leader. Ask `find(4)` once and the tree becomes flat; ask it again and it costs one step.",
+        "The second is **union by size**. When joining two circles, hang the smaller tree under the bigger tree's leader, and add the sizes. Without it you could hang 1 under 2, 2 under 3, 3 under 4 and so on, ending with one chain of a hundred thousand links where every `find` walks the whole chain. With both habits a `find` and a union cost almost one step each."
+      ],
+      "snippet": "int find(int node){\n    if(par[node] == -1) return node;   // it is the leader\n    int leader = find(par[node]);\n    par[node] = leader;                // point straight up\n    return leader;\n}",
+      "trace": "after find(4) with path compression\n\n      1\n    / | \\\n   2  3  4\n\npar:  1:-1  2:1  3:1  4:1"
+    },
+    {
+      "heading": null,
+      "body": [
+        "What is new here compared with Modules 2 and 3: back then \"are these two connected?\" meant walking the graph, and every new edge meant walking it again. Here no graph is stored at all, only one array of parents, and a new edge is one cheap merge.",
+        "**A second use.** Read an undirected graph edge by edge. If the two ends of a new edge already have the same leader, they were connected before this edge arrived, so this edge closes a cycle. That is a cycle check in a few lines, with no recursion over neighbours and no parent tracking.",
+        "**A third use.** After all the edges are in, the people whose `par` is still -1 are exactly the leaders, so counting them counts the groups. If a country has 4 towns and only the roads 1-2 and 3-4, there are two groups, and one new road joining any member of one to any member of the other is enough to connect everything.",
+        "The programs below build `find` three ways (plain recursion, a loop, then with path compression), add union by size, and then use the structure for cycle detection, for a judge's union-find problem, for counting an island's inner cells, and for joining up the towns of a country."
+      ],
+      "snippet": null,
+      "trace": null
+    }
+  ],
   "concepts": [
-    {"term": "Parent array", "explain": "`par[x]` points to x's parent in its group's tree. `par[x] == -1` means x is the leader (the root) of its group.", "snippet": "memset(par, -1, sizeof(par));"},
-    {"term": "find(x)", "explain": "Follow parent links until you reach a node whose parent is -1. That node is the leader. Two nodes are in the same group exactly when they have the same leader.", "snippet": null},
-    {"term": "Path compression", "explain": "While coming back from the recursion, point every visited node straight at the leader. The next `find` on any of them takes one step.", "snippet": "int leader = find(par[node]);\npar[node] = leader;\nreturn leader;"},
-    {"term": "Union by size", "explain": "When joining two groups, hang the smaller tree under the bigger one and add the sizes. Trees stay shallow, so `find` stays fast.", "snippet": "if (sz[l1] >= sz[l2]) { par[l2] = l1; sz[l1] += sz[l2]; }"},
-    {"term": "Cycle detection in an undirected graph", "explain": "Add edges one by one. If both ends of a new edge already have the same leader, they were already connected, so this edge closes a cycle.", "snippet": null},
-    {"term": "Counting components", "explain": "Start with n components. Every successful union (two different leaders) reduces the count by one. At the end, the leaders are the nodes with `par[i] == -1`.", "snippet": null}
+    {
+      "term": "Parent array",
+      "explain": "`par[x]` points to x's parent in its group's tree. `par[x] == -1` means x is the leader (the root) of its group.",
+      "snippet": "memset(par, -1, sizeof(par));"
+    },
+    {
+      "term": "find(x)",
+      "explain": "Follow parent links until you reach a node whose parent is -1. That node is the leader. Two nodes are in the same group exactly when they have the same leader.",
+      "snippet": null
+    },
+    {
+      "term": "Path compression",
+      "explain": "While coming back from the recursion, point every visited node straight at the leader. The next `find` on any of them takes one step.",
+      "snippet": "int leader = find(par[node]);\npar[node] = leader;\nreturn leader;"
+    },
+    {
+      "term": "Union by size",
+      "explain": "When joining two groups, hang the smaller tree under the bigger one and add the sizes. Trees stay shallow, so `find` stays fast.",
+      "snippet": "if (sz[l1] >= sz[l2]) { par[l2] = l1; sz[l1] += sz[l2]; }"
+    },
+    {
+      "term": "Cycle detection in an undirected graph",
+      "explain": "Add edges one by one. If both ends of a new edge already have the same leader, they were already connected, so this edge closes a cycle.",
+      "snippet": null
+    },
+    {
+      "term": "Counting components",
+      "explain": "Start with n components. Every successful union (two different leaders) reduces the count by one. At the end, the leaders are the nodes with `par[i] == -1`.",
+      "snippet": null
+    }
   ],
   "files": [
     {
@@ -29,7 +103,10 @@
       "input_note": null,
       "output_note": "It prints `1`: node 1 is the leader of the group that contains 4.",
       "watch_out": null,
-      "check": {"q": "What does `par[x] == -1` mean?", "a": "x has no parent, so x is the leader (root) of its group."}
+      "check": {
+        "q": "What does `par[x] == -1` mean?",
+        "a": "x has no parent, so x is the leader (root) of its group."
+      }
     },
     {
       "file": "find._using_loop.cpp",
@@ -48,7 +125,10 @@
       "input_note": null,
       "output_note": "Prints `1`, the same answer as the recursive version.",
       "watch_out": null,
-      "check": {"q": "What is the advantage of the loop version over plain recursion?", "a": "It uses no call stack, so a very deep chain cannot cause a stack overflow."}
+      "check": {
+        "q": "What is the advantage of the loop version over plain recursion?",
+        "a": "It uses no call stack, so a very deep chain cannot cause a stack overflow."
+      }
     },
     {
       "file": "find_optimized.cpp",
@@ -68,7 +148,10 @@
       "input_note": null,
       "output_note": "Prints `1`. The answer is the same as before; what changed is the shape of the tree after the call (not printed).",
       "watch_out": null,
-      "check": {"q": "After `find(4)` with path compression, what is `par[5]`?", "a": "1. Every node on the path from 4 to the leader now points directly at the leader."}
+      "check": {
+        "q": "After `find(4)` with path compression, what is `par[5]`?",
+        "a": "1. Every node on the path from 4 to the leader now points directly at the leader."
+      }
     },
     {
       "file": "union.cpp",
@@ -88,7 +171,10 @@
       "input_note": null,
       "output_note": "`2 -> 1` shows that 2 now hangs under 1. The others print `-1` because they are still leaders.",
       "watch_out": "`memset(group_size, 1, sizeof(group_size))` does **not** store 1 in each element: memset fills bytes, so every int becomes 16843009 (0x01010101). The comparison still works here because all sizes are equal, but the sizes are wrong. Use a loop (`for i: group_size[i] = 1;`) or `fill(group_size, group_size + N, 1)`. Also, calling union on two nodes that are already together would double the size; check `leader1 == leader2` first.",
-      "check": {"q": "Why attach the smaller group under the larger one?", "a": "Only the nodes of the smaller group get one step deeper, so the tree height grows slowly (at most log n) and `find` stays fast."}
+      "check": {
+        "q": "Why attach the smaller group under the larger one?",
+        "a": "Only the nodes of the smaller group get one step deeper, so the tree height grows slowly (at most log n) and `find` stays fast."
+      }
     },
     {
       "file": "detect_cycle_in_undirected_graph_using_DSU.cpp",
@@ -109,14 +195,20 @@
       "input_note": "n e, then e edges. The last edge 3-1 closes the loop 1-2-3.",
       "output_note": "Prints `Cycle Detected`. When edge `3 1` arrives, 3 and 1 are already in one group through 1-2-3. With only the first three edges it would print `No Cycle Detected`.",
       "watch_out": "Same `memset(group_size, 1, ...)` byte problem as in `union.cpp`; the answer is still right because only the comparison is used.",
-      "check": {"q": "Why does this method only work for undirected graphs?", "a": "DSU only knows whether two nodes are connected, not the direction of the edges. In a directed graph, 1->2 and 1->3 then 2->3 share a leader but form no directed cycle."}
+      "check": {
+        "q": "Why does this method only work for undirected graphs?",
+        "a": "DSU only knows whether two nodes are connected, not the direction of the edges. In a directed graph, 1->2 and 1->3 then 2->3 share a leader but form no directed cycle."
+      }
     },
     {
       "file": "practice_problem_1_disjoint_set.cpp",
       "title": "GfG: Disjoint set (Union-Find)",
       "kind": "practice",
       "same_as": null,
-      "problem": {"name": "GeeksforGeeks - Disjoint set (Union-Find)", "url": "https://www.geeksforgeeks.org/problems/disjoint-set-union-find/1"},
+      "problem": {
+        "name": "GeeksforGeeks - Disjoint set (Union-Find)",
+        "url": "https://www.geeksforgeeks.org/problems/disjoint-set-union-find/1"
+      },
       "what": "The judge's version starts with `a[i] = i` (each node is its own parent) and asks you to write `find` and `unionSet`. The driver prints the answer to every FIND query.",
       "steps": [
         "Here a leader is a node with `par[x] == x` (not -1 as in the lessons).",
@@ -129,14 +221,20 @@
       "input_note": "T tests; each: n, k, then k commands.",
       "output_note": "First test prints `4 5`: node 4 is alone at first, and after 1 joins 3 and 3 joins 5, the leader of 1 is 5. Second test prints `2 3`. Each test ends with a `,` line from the driver.",
       "watch_out": "The judge expects x's group to go under z's leader (`par[leader1] = leader2`). Swapping that changes the printed leaders and fails the judge.",
-      "check": {"q": "In this version, how do you recognise a leader?", "a": "A node whose parent is itself: `par[x] == x`."}
+      "check": {
+        "q": "In this version, how do you recognise a leader?",
+        "a": "A node whose parent is itself: `par[x] == x`."
+      }
     },
     {
       "file": "practice_problem_2_number_of_enclaves.cpp",
       "title": "LeetCode 1020: Number of Enclaves",
       "kind": "practice",
       "same_as": null,
-      "problem": {"name": "LeetCode 1020 - Number of Enclaves", "url": "https://leetcode.com/problems/number-of-enclaves/"},
+      "problem": {
+        "name": "LeetCode 1020 - Number of Enclaves",
+        "url": "https://leetcode.com/problems/number-of-enclaves/"
+      },
       "what": "Count land cells that can never walk off the grid. Flood-fill (DFS) from every land cell on the border; whatever land is left unvisited is enclosed.",
       "steps": [
         "Store the grid size in `rows`, `cols` and clear `vis`.",
@@ -152,14 +250,20 @@
       "watch_out": "The file only holds the `Solution` class (no includes, no `main`); the page adds a test driver. Although the module is about DSU, this problem is solved with plain DFS, which is simpler here.",
       "prelude": "#include <bits/stdc++.h>\nusing namespace std;",
       "driver": "int main() {\n    int r, c;\n    cin >> r >> c;\n    vector<vector<int>> grid(r, vector<int>(c));\n    for (auto &row : grid)\n        for (auto &x : row) cin >> x;\n    Solution *s = new Solution();  // big member array, keep it off the stack\n    cout << \"numEnclaves = \" << s->numEnclaves(grid) << endl;\n    return 0;\n}",
-      "check": {"q": "Why start the search from the border instead of from each land cell?", "a": "Escaping land is exactly the land connected to the border. One pass from the border marks all of it, instead of searching again for every cell."}
+      "check": {
+        "q": "Why start the search from the border instead of from each land cell?",
+        "a": "Escaping land is exactly the land connected to the border. One pass from the border marks all of it, instead of searching again for every cell."
+      }
     },
     {
       "file": "practice_problem_3_building_roads.cpp",
       "title": "CSES 1666: Building Roads with DSU",
       "kind": "practice",
       "same_as": null,
-      "problem": {"name": "CSES 1666 - Building Roads", "url": "https://cses.fi/problemset/task/1666/"},
+      "problem": {
+        "name": "CSES 1666 - Building Roads",
+        "url": "https://cses.fi/problemset/task/1666/"
+      },
       "what": "Merge all existing roads with DSU, collect one leader per component, and connect consecutive leaders with new roads. Components - 1 roads are needed.",
       "steps": [
         "Set `par` to -1 and every `group_size[i]` to 1.",
@@ -172,15 +276,38 @@
       "input_note": "n m, then m roads. This is the CSES example (expected `1` and `2 3` or any other valid road).",
       "output_note": "The file does not compile, so no output is shown. After the fix it prints `1` and then `1 3` (the leaders of {1,2} and {3,4}), which is a valid answer.",
       "watch_out": "Two typos: `ccin >> n >> m;` must be `cin >> n >> m;` (this stops compilation), and `group_size[leader1] >= group_size[leader1]` compares a value with itself, so the size rule is never used; it should compare with `group_size[leader2]`.",
-      "check": {"q": "Why are exactly (components - 1) new roads enough?", "a": "Linking the components in a chain joins k separate pieces with k-1 links, and fewer links can never connect k pieces."}
+      "check": {
+        "q": "Why are exactly (components - 1) new roads enough?",
+        "a": "Linking the components in a chain joins k separate pieces with k-1 links, and fewer links can never connect k pieces."
+      }
     }
   ],
   "practice_links": [
-    {"name": "Disjoint set (Union-Find)", "url": "https://www.geeksforgeeks.org/problems/disjoint-set-union-find/1", "site": "GeeksforGeeks"},
-    {"name": "Number of Enclaves", "url": "https://leetcode.com/problems/number-of-enclaves/", "site": "LeetCode"},
-    {"name": "Building Roads", "url": "https://cses.fi/problemset/task/1666/", "site": "CSES"},
-    {"name": "Roads not only in Berland (25D)", "url": "https://codeforces.com/problemset/problem/25/D", "site": "Codeforces"},
-    {"name": "Tutorial for 25D", "url": "https://codeforces.com/blog/entry/594", "site": "Codeforces"}
+    {
+      "name": "Disjoint set (Union-Find)",
+      "url": "https://www.geeksforgeeks.org/problems/disjoint-set-union-find/1",
+      "site": "GeeksforGeeks"
+    },
+    {
+      "name": "Number of Enclaves",
+      "url": "https://leetcode.com/problems/number-of-enclaves/",
+      "site": "LeetCode"
+    },
+    {
+      "name": "Building Roads",
+      "url": "https://cses.fi/problemset/task/1666/",
+      "site": "CSES"
+    },
+    {
+      "name": "Roads not only in Berland (25D)",
+      "url": "https://codeforces.com/problemset/problem/25/D",
+      "site": "Codeforces"
+    },
+    {
+      "name": "Tutorial for 25D",
+      "url": "https://codeforces.com/blog/entry/594",
+      "site": "Codeforces"
+    }
   ],
   "recap": [
     "DSU = parent array + `find` (go to the leader) + `union` (join two leaders).",
@@ -190,8 +317,37 @@
     "`memset` only works for 0 and -1; set other values with a loop."
   ],
   "check_yourself": [
-    {"q": "Edges 1-2, 2-3, 4-5 on 5 nodes. How many components, and which edge would make a cycle: 1-3 or 3-4?", "a": "Two components ({1,2,3} and {4,5}). Edge 1-3 makes a cycle; 3-4 just joins the two components."},
-    {"q": "What happens to `find` if you skip both path compression and union by size?", "a": "Trees can become long chains, so a single `find` may take O(n) steps."},
-    {"q": "Why must `union` check `leader1 == leader2` first?", "a": "Otherwise the leader gets attached to itself (`par[leader] = leader`). The -1 root marker is gone, so the next `find` loops forever, and the size is counted twice."}
+    {
+      "q": "Edges 1-2, 2-3, 4-5 on 5 nodes. How many components, and which edge would make a cycle: 1-3 or 3-4?",
+      "a": "Two components ({1,2,3} and {4,5}). Edge 1-3 makes a cycle; 3-4 just joins the two components."
+    },
+    {
+      "q": "What happens to `find` if you skip both path compression and union by size?",
+      "a": "Trees can become long chains, so a single `find` may take O(n) steps."
+    },
+    {
+      "q": "Why must `union` check `leader1 == leader2` first?",
+      "a": "Otherwise the leader gets attached to itself (`par[leader] = leader`). The -1 root marker is gone, so the next `find` loops forever, and the size is counted twice."
+    }
+  ],
+  "resources": [
+    {
+      "kind": "visual",
+      "name": "VisuAlgo — union-find",
+      "url": "https://visualgo.net/en/ufds",
+      "note": "See the group trees flatten as path compression does its work."
+    },
+    {
+      "kind": "article",
+      "name": "cp-algorithms — disjoint set union",
+      "url": "https://cp-algorithms.com/data_structures/disjoint_set_union.html",
+      "note": "The clearest account of why the two optimisations make it near-instant."
+    },
+    {
+      "kind": "video",
+      "name": "William Fiset — graph theory playlist",
+      "url": "https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P",
+      "note": "Every graph algorithm of this course, drawn before it is coded."
+    }
   ]
 }

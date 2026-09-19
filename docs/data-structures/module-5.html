@@ -7,7 +7,7 @@
 <meta name="description" content="A linked list stores each value in its own node, and each node points to the next one. This module builds nodes by hand (on the stack and with `new`), adds a constructor, links them with `next` pointers, and walks the list with a temporary pointer. It explains why linked lists exist when arrays are fixed-size and costly to insert into.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,7 +36,33 @@
     <p class="lead">A linked list stores each value in its own node, and each node points to the next one. This module builds nodes by hand (on the stack and with <code>new</code>), adds a constructor, links them with <code>next</code> pointers, and walks the list with a temporary pointer. It explains why linked lists exist when arrays are fixed-size and costly to insert into.</p>
     <p class="chips"><span>4 programs</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/3_Basic%20Data%20Structures/Module%205" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>This is the first data structure you build yourself, and it is the hardest jump in the course. Take it slowly; the idea is simple once the picture is right.</p><p>Start from what is wrong with an array. An array is a row of seats, numbered and next to each other, and the number of seats is fixed the moment it is born. Suppose you hold <code>10 20 30 40 50</code> and you want <code>25</code> to sit third. There is no free seat there, so everything from <code>30</code> onwards must shuffle one place to the right before <code>25</code> can sit down:</p><pre class="trace">before   10  20  30  40  50
+shift    10  20  __  30  40  50
+insert   10  20  25  30  40  50</pre><p>With five values that is three moves and nobody minds. With 100000 values, inserting at the front moves 100000 of them, and doing that 100000 times is about 10^10 moves — far too slow. On top of that, the row cannot grow: if you declared 5 seats and a sixth value arrives, you have to build a bigger row and copy everything across.</p><p>So picture the values differently. Instead of one long row of seats, give every value its own little box, and in each box write two things: the value, and the address of the next box. Like railway carriages: each carriage carries goods and is coupled to the one behind it. The boxes may sit anywhere in memory — they do not have to be neighbours — because each one says where the next is. One extra variable, <code>head</code>, holds the address of the first box, and the last box holds <code>NULL</code> to say the chain ends here:</p><pre class="trace">head
+ |
+ v
+[10| ] -&gt; [20| ] -&gt; [30| ] -&gt; [40| ] -&gt; NULL</pre><p>Say plainly what is new. Until now, one name gave you the whole collection, and <code>a[3]</code> put you at the fourth value in a single step. Here you hold exactly one address — <code>head</code> — and there is no <code>a[3]</code>. The only way to the third box is to ask the first box where the second is, then ask the second where the third is.</p><p>In code a box is a small class with the two fields, and a constructor that sets <code>next</code> to <code>NULL</code> so a new box starts unattached. <code>new</code> puts the box on the heap, so it stays alive, and <code>-&gt;</code> reads a field through a pointer:</p><pre class="snip">class Node {
+public:
+    int val;
+    Node* next;
+    Node(int val){
+        this-&gt;val = val;
+        this-&gt;next = NULL;
+    }
+};
+
+Node* head = new Node(10);
+Node* a = new Node(20);
+head-&gt;next = a;              // 10 is now coupled to 20
+cout &lt;&lt; head-&gt;next-&gt;val;     // prints 20</pre><p>Now walking the chain, and the one mistake everybody makes. To print every value you must move forward box by box. It is tempting to write <code>head = head-&gt;next</code>, but that destroys the list: the arrows only point forward, so the moment <code>head</code> moves off the first box there is no way back to it, and the whole start of the list is lost for good.</p><p>So copy the address into a second pointer, <code>tmp</code>, and move that instead. <code>head</code> stays where it is, pointing at the front:</p><pre class="snip">Node* tmp = head;
+while(tmp != NULL){
+    cout &lt;&lt; tmp-&gt;val &lt;&lt; endl;
+    tmp = tmp-&gt;next;
+}</pre><pre class="trace">tmp = head        tmp at [10]   print 10
+tmp = tmp-&gt;next   tmp at [20]   print 20
+tmp = tmp-&gt;next   tmp at [30]   print 30
+tmp = tmp-&gt;next   tmp at [40]   print 40
+tmp = tmp-&gt;next   tmp is NULL   stop</pre><p>Notice where the loop stops. The condition is <code>tmp != NULL</code>, not <code>tmp-&gt;next != NULL</code>. The second one looks reasonable and prints everything except the last value, because it stops while still standing on the last box. One of the programs below shows both so you can see the missing line.</p><p>What have you bought with all this? Putting a value at the front is now two small changes, whatever the length of the list, and the list grows one box at a time, so no size has to be guessed in advance. What you have sold is the jump: reaching the 500th value costs 500 hops, and you cannot go backwards at all, because no box knows who points at it.</p><p>The four programs below build the same short chain in three ways — plain objects, objects with a constructor, and boxes made with <code>new</code> — and then walk it with <code>tmp</code>.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-creating-a-node"><span class="n">1</span>Creating and linking nodes by hand</a></li><li><a href="#p-node-with-constructor"><span class="n">2</span>Node with a constructor</a></li><li><a href="#p-dynamic-node"><span class="n">3</span>Dynamic nodes with new</a></li><li><a href="#p-printing-singly-linked-list"><span class="n">4</span>Printing a linked list</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Node</h4><p>A small class holding a value <code>val</code> and a pointer <code>next</code> to the following node. The last node&#x27;s <code>next</code> is <code>NULL</code>, which marks the end.</p><pre class="snip">class Node {
 public:
@@ -44,6 +70,7 @@ public:
     Node* next;
 };</pre></div><div class="concept"><h4>Why linked lists</h4><p>Arrays have a fixed size and need shifting to insert in the middle. A linked list grows one node at a time and inserts by changing a couple of pointers. The cost: extra memory for each pointer and no O(1) access by index.</p></div><div class="concept"><h4>Constructor</h4><p>A constructor sets <code>val</code> and makes <code>next = NULL</code> as soon as the node is created, so you never forget to end the chain.</p><pre class="snip">Node(int val) { this-&gt;val = val; this-&gt;next = NULL; }</pre></div><div class="concept"><h4>Arrow operator</h4><p><code>p-&gt;val</code> is short for <code>(*p).val</code>: follow the pointer, then take the member. Chaining <code>head-&gt;next-&gt;next-&gt;val</code> walks two links.</p></div><div class="concept"><h4>Static vs dynamic nodes</h4><p><code>Node a(10);</code> lives on the stack and dies when the function ends. <code>new Node(10)</code> lives on the heap until deleted, so it can outlive the function that made it. Real lists use dynamic nodes.</p><pre class="snip">Node* head = new Node(10);</pre></div><div class="concept"><h4>Head pointer</h4><p>The list is known only through <code>head</code>, the address of the first node. Lose it and you lose the whole list.</p></div><div class="concept"><h4>Traversal</h4><p>Copy <code>head</code> into <code>tmp</code> and move <code>tmp = tmp-&gt;next</code> until <code>tmp</code> is <code>NULL</code>. Stopping at <code>tmp-&gt;next == NULL</code> instead would skip the last node.</p><pre class="snip">for(Node* tmp = head; tmp != NULL; tmp = tmp-&gt;next)</pre></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/list" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — linked list</b><span class="rnote">Press Insert or Remove and watch the arrows re-point, one step at a time.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PL2_aWCzGMAwI3W_JlcBbtYTwiQSsOTa6P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>mycodeschool — data structures</b><span class="rnote">The classic slow, patient explanation of lists, stacks and queues.</span></a></li><li class="r-tool"><a href="https://pythontutor.com/cpp.html" target="_blank" rel="noopener"><span class="rkind">🔧 Tool</span><b>Python Tutor — step through C++ code</b><span class="rnote">Paste your own program and step through it line by line, with the pointers drawn.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0rAuz8tVcM0AymmhTRsfaLU" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — linked list playlist</b><span class="rnote">From the basics to the interview problems on lists.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-creating-a-node">
   <div class="prog-h">
@@ -604,7 +631,7 @@ The value of b is: 30
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

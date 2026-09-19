@@ -159,6 +159,62 @@
         "q": "Why is it safe to skip an edge whose ends already share a leader?",
         "a": "Its ends are already connected by cheaper (or equal) edges, so adding it would only create a cycle and raise the cost."
       }
+    },
+    {
+      "file": "sort_an_array.cpp",
+      "title": "Sort an Array (practice)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 912 - Sort an Array",
+        "url": "https://leetcode.com/problems/sort-an-array/"
+      },
+      "what": "Sorts an array without the built-in `sort`, which is exactly what this module's merge sort is for. Same `divide` and `conquer` pair as `merge_sort.cpp`, moved into the judge's `class Solution` and working on a `vector` instead of a raw array.",
+      "steps": [
+        "`divide(a, l, r)` stops when `l >= r`: one value is already sorted.",
+        "Otherwise split at `mid = (l + r) / 2`, sort `l..mid` and `mid+1..r` by the same call, then merge them.",
+        "`conquer` copies the two halves into `left` and `right`, then walks all three with one pointer each, always writing the smaller front value back into `a`.",
+        "When one side runs out, the rest of the other side is copied over: it is already in order.",
+        "The comparison is `left[i] <= right[j]`, so equal values are taken from the left half first and keep their original order.",
+        "`sortArray` just calls `divide` over the whole vector and returns it."
+      ],
+      "complexity": "Time O(n log n) · Space O(n)",
+      "input": "4\n5 2 3 1\n",
+      "input_note": "n, then the n values. The first sample of the problem.",
+      "output_note": "Prints `sorted = 1 2 3 5`. On `6\\n5 1 1 2 0 0\\n` it prints `sorted = 0 0 1 1 2 5`.",
+      "watch_out": "The left half is `mid - l + 1` values and the right half is `r - mid`, not the same count when the range has an odd length. Slicing with `a.begin() + l` to `a.begin() + mid + 1` gets both sizes right without any arithmetic.",
+      "check": {
+        "q": "Why does merge sort cost O(n log n) rather than O(n^2)?",
+        "a": "Halving the range only takes log n levels, and each level merges every value exactly once, which is n work per level."
+      }
+    },
+    {
+      "file": "road_reparation.cpp",
+      "title": "Road Reparation (practice)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "CSES 1675 - Road Reparation",
+        "url": "https://cses.fi/problemset/task/1675"
+      },
+      "what": "Finds the cheapest set of roads that keeps every city reachable from every other city, or prints IMPOSSIBLE. That set is a minimum spanning tree, so this is `mst_using_Kruskal_algorithm.cpp` with the two things the judge needs added: a long long total and a connectivity check.",
+      "steps": [
+        "Read the m roads into a `vector<Edge>` and sort them by cost with the `cmp` comparator.",
+        "DSU starts with `par` all -1 (every city is its own leader) and `group_size` all 1.",
+        "Walk the sorted roads. If `find(a) != find(b)` the two cities are still in different pieces, so take the road: union them, add the cost, and count it.",
+        "If the leaders are already the same, skip the road: it would only close a cycle and cost money for nothing.",
+        "`find` sets `par[node] = leader` on the way back (path compression) and `dsu_union` hangs the smaller group under the bigger one, which keeps the trees flat.",
+        "At the end a tree over n cities must have exactly n-1 roads. If fewer were taken, the roads left the map in two or more pieces, so print IMPOSSIBLE."
+      ],
+      "complexity": "Time O(m log m) for the sort, DSU is near constant per query · Space O(n + m)",
+      "input": "5 6\n1 2 3\n2 3 5\n2 4 2\n3 4 8\n5 1 7\n5 4 4\n",
+      "input_note": "n and m, then m lines `a b c`: a road between cities a and b costing c.",
+      "output_note": "Prints `14`. Sorted by cost the roads are 2-4 (2), 1-2 (3), 5-4 (4), 2-3 (5), 5-1 (7), 3-4 (8); the first four join all five cities and add up to 14, the last two would close cycles. On `3 1\\n1 2 5\\n` it prints `IMPOSSIBLE`, because city 3 has no road.",
+      "watch_out": "Two traps the module's file has. `total_cost` must be a long long: 10^5 roads at 10^9 each overflow an int. And the module's file uses `memset(group_size, 1, sizeof(group_size))`, which fills each byte with 1, not each int; `assign(n + 1, 1)` says what was meant.",
+      "check": {
+        "q": "Why is counting the taken roads enough to spot a disconnected map?",
+        "a": "Kruskal takes a road only when it joins two different pieces, so each taken road drops the number of pieces by one. Starting from n pieces, ending with one needs exactly n-1 of them."
+      }
     }
   ],
   "practice_links": [
@@ -197,6 +253,87 @@
     {
       "q": "Why does Kruskal need the edges sorted?",
       "a": "The greedy rule 'always take the cheapest safe edge' only gives the minimum total if edges are considered from cheapest to most expensive."
+    }
+  ],
+  "intro": [
+    {
+      "heading": null,
+      "body": [
+        "Hand a friend half of an unsorted pile of exam papers, keep the other half, and you both sort your own half. Now two sorted piles lie face up on the table. Joining them is easy: look at the top paper of each pile, take the smaller roll number, repeat. You never look deeper than the top card.",
+        "That joining step is the merge, and it is the only clever part of merge sort. Two sorted halves going in:"
+      ],
+      "snippet": null,
+      "trace": "left  : 2 5 9        right : 1 6 8\n\ncompare      take     result so far\n2 vs 1        1       1\n2 vs 6        2       1 2\n5 vs 6        5       1 2 5\n9 vs 6        6       1 2 5 6\n9 vs 8        8       1 2 5 6 8\nleft over     9       1 2 5 6 8 9"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Every number is copied exactly once, so merging two halves holding n numbers between them costs about n steps.",
+        "And if you have no friend? Split your half again, and again, until each pile holds one paper — a pile of one is already sorted. Eight papers split 8, 4, 2, 1: three rounds, and log2 of n rounds in general. Each round merges everything once, about n steps, so the whole sort is O(n log n). For a million numbers that is roughly 20 million steps, where the compare-everything-with-everything sorts of earlier modules would need a million million."
+      ],
+      "snippet": "void divide(int a[], int l, int r){\n    if(l >= r) return;       // one element, already sorted\n    int mid = (l + r) / 2;\n    divide(a, l, mid);       // sort the left half\n    divide(a, mid+1, r);     // sort the right half\n    conquer(a, l, mid, r);   // merge the two sorted halves\n}",
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "**The second topic is a different animal.** The word `cat` sits inside `cart` if you may skip letters: c, a, jump over r, then t. That is a subsequence. A substring would have to be a solid block, and `cat` is not a solid block of `cart`. The longest common subsequence of two strings is the longest skipping match they share.",
+        "Lay the two words out as a table, one down the side and one along the top. Each cell holds the answer for the two prefixes meeting there. If the two letters match, take the cell diagonally up-left and add 1. If they do not match, take the larger of the cell above and the cell to the left — that is \"drop a letter from one string or the other, and keep the better result\"."
+      ],
+      "snippet": null,
+      "trace": "          \"\"   c   a   t\n   \"\"      0   0   0   0\n   c       0   1   1   1\n   a       0   1   2   2\n   r       0   1   2   2\n   t       0   1   2   3   <- answer\n\n3 letters in common, and they spell \"cat\""
+    },
+    {
+      "heading": null,
+      "body": [
+        "Notice the row for `r`: it matches nothing, so it simply copies the row above. That is the skipped letter.",
+        "**The third topic joins villages with cable.** You know the price of every possible cable and want every village connected for the least money. The rule is almost too simple: sort the cables cheapest first, and lay one only if the two villages it joins are not already connected through cables you have laid. If they are, that cable makes a loop — money spent, nothing new reached."
+      ],
+      "snippet": null,
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "\"Already connected to each other\" is exactly the question Module 11 answered: `find(a) == find(b)` in a disjoint set union. Kruskal's algorithm is nothing more than that DSU checking a sorted edge list as it goes past. Four villages:"
+      ],
+      "snippet": null,
+      "trace": "edge  cost  groups before      take it?\n1-2    1    {1}{2}{3}{4}       yes -> {1,2}\n2-3    2    {1,2}{3}{4}        yes -> {1,2,3}\n1-3    3    {1,2,3}{4}         no, same group\n3-4    4    {1,2,3}{4}         yes -> {1,2,3,4}\n1-4    5    {1,2,3,4}          no, same group\n\ntotal cost = 1 + 2 + 4 = 7, using 3 edges"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Three edges for four nodes, and that is no accident: a tree that spans n nodes always has exactly n-1 edges. Taking the cheapest edge that is still safe, every time, gives the smallest possible total — which is why this one is called the minimum spanning tree.",
+        "The programs below show the splitting and the merging on their own before putting them together as merge sort, then the LCS table, then Kruskal with the DSU written out in full."
+      ],
+      "snippet": null,
+      "trace": null
+    }
+  ],
+  "resources": [
+    {
+      "kind": "visual",
+      "name": "VisuAlgo — sorting",
+      "url": "https://visualgo.net/en/sorting",
+      "note": "Every sort side by side, with the comparison count shown as it runs."
+    },
+    {
+      "kind": "visual",
+      "name": "VisuAlgo — minimum spanning tree",
+      "url": "https://visualgo.net/en/mst",
+      "note": "Watch Kruskal pick edges and skip the ones that would close a loop."
+    },
+    {
+      "kind": "visual",
+      "name": "USFCA — Kruskal",
+      "url": "https://www.cs.usfca.edu/~galles/visualization/Kruskal.html",
+      "note": "Edges taken in price order, with the rejected ones shown."
+    },
+    {
+      "kind": "article",
+      "name": "cp-algorithms — Kruskal's MST",
+      "url": "https://cp-algorithms.com/graph/mst_kruskal.html",
+      "note": "Kruskal with union-find, the same pairing this module uses."
     }
   ]
 }

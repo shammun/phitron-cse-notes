@@ -172,6 +172,61 @@
         "q": "How many times does `ab` occur as a subsequence of `aabb`?",
         "a": "4: each of the two a's pairs with each of the two b's."
       }
+    },
+    {
+      "file": "static_range_sum_queries.cpp",
+      "title": "Static Range Sum Queries (practice)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "CSES 1646 - Static Range Sum Queries",
+        "url": "https://cses.fi/problemset/task/1646"
+      },
+      "what": "Answers q questions of the form 'what is the sum of the values from position a to position b?' on an array that never changes. The plain prefix sum this contest keeps asking for, in its simplest form.",
+      "steps": [
+        "Build `pre` of size n+1 with `pre[0] = 0` and `pre[i] = pre[i-1] + value[i]`, so `pre[i]` is the sum of the first i values.",
+        "A query a..b is then `pre[b] - pre[a-1]`: the whole prefix up to b, minus the part before a.",
+        "`pre[0] = 0` is why a query starting at position 1 needs no special case; `pre[1-1]` is simply 0.",
+        "`pre` is `long long`: 2 * 10^5 values of up to 10^9 add up past what an int holds.",
+        "`ios::sync_with_stdio(false)` and `cin.tie(nullptr)`, and `\"\\n\"` instead of `endl`, because 2 * 10^5 queries of slow I/O is what makes this problem time out."
+      ],
+      "complexity": "Time O(n + q) · Space O(n)",
+      "input": "8 4\n3 2 4 5 1 1 5 3\n2 4\n5 6\n1 8\n3 3\n",
+      "input_note": "n and q, then the n values, then q lines `a b` with 1-based positions.",
+      "output_note": "Prints `11`, `2`, `24`, `4`, one per line. The prefix sums are 3, 5, 9, 14, 15, 16, 21, 24, so query 2..4 is 14 - 3 = 11 and query 3..3 is 9 - 5 = 4.",
+      "watch_out": "The positions are 1-based and both ends are included, so it is `pre[b] - pre[a-1]`, not `pre[b] - pre[a]`. Writing `pre[b] - pre[a]` silently drops the value at position a.",
+      "check": {
+        "q": "What does this print for the query `1 1` on the sample array?",
+        "a": "3, because `pre[1] - pre[0]` is 3 - 0."
+      }
+    },
+    {
+      "file": "distinct_subsequences.cpp",
+      "title": "Distinct Subsequences (practice)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 115 - Distinct Subsequences",
+        "url": "https://leetcode.com/problems/distinct-subsequences/"
+      },
+      "what": "Counts how many different ways the string `t` can be picked out of `s` as a subsequence. Two ways differ when they use different positions of `s`, even if the letters look the same. It is the LCS table of Module 18 with `+` where LCS takes a `max`.",
+      "steps": [
+        "`dp[i][j]` = the number of ways to build the first j letters of t out of the first i letters of s.",
+        "`dp[i][0] = 1` for every i: the empty t is built in exactly one way, by taking nothing.",
+        "Row 0 stays 0 for j > 0: a non-empty t cannot come out of an empty s.",
+        "`dp[i][j]` always includes `dp[i-1][j]`, the ways that leave `s[i-1]` out.",
+        "If `s[i-1] == t[j-1]`, add `dp[i-1][j-1]` as well: the ways that use this letter as `t[j-1]`, with both strings stepping back one.",
+        "The answer is `dp[n][m]`. The table is `long long` because a half-built count can grow past an int even when the final answer fits."
+      ],
+      "complexity": "Time O(n * m) · Space O(n * m)",
+      "input": "rabbbit\nrabbit\n",
+      "input_note": "s on the first line, t on the second. The first sample of the problem.",
+      "output_note": "Prints `numDistinct = 3`: `rabbit` comes out of `rabbbit` by dropping any one of the three b's. On `babgbag\\nbag\\n` it prints `numDistinct = 5`.",
+      "watch_out": "Counting, not matching: when the letters agree you still add `dp[i-1][j]`, because skipping that letter of s is a different set of choices that may also spell t. Dropping that term counts only some of the ways.",
+      "check": {
+        "q": "Why is `dp[i][0]` set to 1 and not 0?",
+        "a": "There is exactly one way to build the empty string out of any prefix of s: pick no letters at all. Zero there would make the whole table zero."
+      }
     }
   ],
   "practice_links": [
@@ -211,6 +266,74 @@
     {
       "q": "Would a 10^6-element `int` array inside `main` be safe?",
       "a": "Usually not: it needs about 4 MB, while the default stack is often 1 MB (Windows) to 8 MB. Make it global."
+    }
+  ],
+  "intro": [
+    {
+      "heading": null,
+      "body": [
+        "This is the last contest of the course, and it rewards the same habit as the mock: spend the first minute on the limits, not on the story.",
+        "Take a question you can picture. Someone hands you a row of numbers and then asks, again and again, \"what do positions L to R add up to?\". If the row has a million numbers and there are a hundred thousand questions, the honest answer - loop from L to R for each question - is 10^11 steps. That is far beyond the second you are given. The limits said so before you started.",
+        "The fix is the oldest trick in the course: do the work once, in advance. Build `pre[i]` = the sum of the first `i` numbers, and every question becomes one subtraction."
+      ],
+      "snippet": null,
+      "trace": "i        0    1    2    3    4    5\na[i]          3    1    4    1    5\npre[i]   0    3    4    8    9   14\n\npositions 2..4 = pre[4] - pre[1]\n               = 9 - 3 = 6      (1 + 4 + 1)"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Why `pre[0] = 0` matters: a question starting at position 1 needs `pre[R] - pre[0]`, so that slot must hold the sum of nothing. Setting it up costs one pass, and each question then costs one step instead of a million."
+      ],
+      "snippet": "long long pre[1000005];          // global: the stack is small\n\npre[0] = 0;\nfor (int i = 1; i <= n; i++)\n    pre[i] = pre[i-1] + a[i];\n\n// every query, however many there are:\ncout << pre[R] - pre[L-1] << \"\\n\";",
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "What is new compared with the earlier modules is not the tool - you have had prefix sums since Data Structures Module 3. What is new is that nobody tells you which tool it is. The statement says \"enchanted fruits\" and you have to hear \"range sum\".",
+        "**A second angle on the same idea.** Sometimes you cannot build the array at all, because the row is a billion long. If it follows a rule, that rule gives a formula for the prefix sum and you store nothing. For the row 1, 2, 3, 4, ... the sum of the first `x` values is `x * (x + 1) / 2`, so positions 5 to 9 add up to 45 - 10 = 35. Same subtraction, no array. Whenever `N` reaches 10^9, this is the shape the problem wants.",
+        "**A third angle: count on paper before you code.** \"In how many ways can two numbers that are 0 or more add up to 4?\" Write them out: (0,4), (1,3), (2,2), (3,1), (4,0). Five - that is S + 1 for a sum of S. A question that looks like a search turns into one line of arithmetic, and that is usually the intended solution when the numbers go up to 10^18."
+      ],
+      "snippet": null,
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "Two more shapes appear here. A string that has to be *decoded* is usually a plain walk with a small state: step through the characters and decide at each step what to append. Remember that `'7'` is a character, not the number 7; `'7' - '0'` gives you the number.",
+        "And \"how many times does this short pattern appear as a subsequence?\" is a small DP. Count `ab` inside `aabb` by hand: each of the two `a`s can pair with each of the two `b`s, so 4. The table version says the same thing - at each letter of the text you either skip it, or, when it matches, also use it and add the ways of building the shorter pattern before it."
+      ],
+      "snippet": "dp[i][j] = dp[i-1][j]\n         + (s[i-1] == t[j-1] ? dp[i-1][j-1] : 0);",
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "Three things cost marks here more than anything else. Totals in these problems reach 10^18, so `int` is not enough; use `long long`. Big arrays must be global or `static`, because a local array of a million `long long` asks for 8 MB and the stack usually has 1 MB. And with many test cases, clear your arrays and counters between them, or the previous answer leaks into the next.",
+        "The six entries below go through the problems one at a time. Four have solutions to read; two kept only the statement, so their notes set out the plan you would have written."
+      ],
+      "snippet": null,
+      "trace": null
+    }
+  ],
+  "resources": [
+    {
+      "kind": "article",
+      "name": "Competitive Programmer's Handbook (free PDF)",
+      "url": "https://cses.fi/book/book.pdf",
+      "note": "Antti Laaksonen's book — the chapters on graphs and DP are short and excellent."
+    },
+    {
+      "kind": "article",
+      "name": "GeeksforGeeks — prefix sums",
+      "url": "https://www.geeksforgeeks.org/prefix-sum-array-implementation-applications-competitive-programming/",
+      "note": "The trick and the problems it solves."
+    },
+    {
+      "kind": "article",
+      "name": "NeetCode roadmap",
+      "url": "https://neetcode.io/roadmap",
+      "note": "A map of which problem to try next, grouped by the idea it uses."
     }
   ]
 }

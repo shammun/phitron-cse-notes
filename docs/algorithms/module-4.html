@@ -7,7 +7,7 @@
 <meta name="description" content="The first graded assignment. It checks that you can read a graph, look at adjacency lists directly, and run BFS on a grid to test reachability, count apartments (components) and measure their sizes. Each problem is a small twist on the Module 2-3 templates.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,10 +36,30 @@
     <p class="lead">The first graded assignment. It checks that you can read a graph, look at adjacency lists directly, and run BFS on a grid to test reachability, count apartments (components) and measure their sizes. Each problem is a small twist on the Module 2-3 templates.</p>
     <p class="chips"><span>5 programs</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%204" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>This is the first graded assignment, so nothing on it is new. Every problem is one of the three tools from Modules 1 to 3 wearing a different hat. The hard part of an assignment day is not writing the code; it is reading a question and knowing within ten seconds which tool it is asking for.</p><p>Start with the question that needs no search at all. If someone asks &quot;is there a road straight from A to B, with no other town in between?&quot;, you do not walk anywhere. You look at A&#x27;s neighbour list and check whether B is written in it. BFS would give the right answer too, but it answers a much bigger question than the one asked, and on 10^6 queries that costs you the time limit.</p><pre class="snip">// is there a single edge a -&gt; b ?
+for(int x : adj_list[a]){
+    if(x == b) return true;
+}
+return false;</pre><p>Three of the five problems hand you a map instead of a list of edges, so it is worth saying once what a map and a graph have in common. A cell <code>(i, j)</code> <strong>is</strong> a node. Its neighbours are the four cells above, below, left and right of it.</p><p>The only difference is where the edges live. In a graph you stored them yourself in <code>adj_list</code>. In a grid nobody stores them, because you can work them out: add one of the four direction pairs to <code>(i, j)</code>, then let <code>valid(i, j)</code> tell you whether you have fallen off the map. So the BFS from Module 2 does not change at all. <code>visited</code> becomes two-dimensional, and &quot;the neighbours of this node&quot; becomes four additions.</p><pre class="trace">            (i-1, j)
+                |
+  (i, j-1) -- (i, j) -- (i, j+1)
+                |
+            (i+1, j)</pre><p>Here is the pattern the grid problems share, on a map small enough to do by hand. <code>#</code> is a wall, <code>.</code> is floor, and you want the number of separate rooms.</p><pre class="trace">map            after the search from (0,1)
+# . . #        #  1  1  #
+# # . #        #  #  1  #
+. . # #        .  .  #  #
+
+next unvisited floor cell is (2,0)
+               #  1  1  #
+               #  #  1  #
+               2  2  #  #
+
+2 searches started  -&gt;  2 apartments
+sizes: 3 cells and 2 cells</pre><p>You walked over the cells in reading order. The first floor cell you met that was not yet visited started a search, and that search swallowed the whole room, so every other cell of that room was already marked when the outer loop reached it. The number of searches you started is therefore the number of apartments, and if the search counts the cells it marks, that count is the size of one apartment. Those two lines of bookkeeping are problems 4 and 5.</p><p><strong>BFS or DFS?</strong> For &quot;can I get from A to B&quot; and &quot;how many rooms are there&quot;, both give the same answer, because both end up marking exactly the reachable cells. Choose BFS when the question mentions distance — fewest steps, shortest path, how many moves — because BFS finishes one level before starting the next, so the level on which a cell is found is its distance. Choose DFS when you only need to touch everything reachable and want shorter code, but remember that it recurses: on a 1000 x 1000 open map the recursion can go a million calls deep.</p><p>Two details catch people on this assignment. First, the special cells: <code>A</code> and <code>B</code> are not <code>.</code>, so a search that walks only on <code>.</code> will refuse to step onto its own target. Note their row and column while you are reading the map, and let the search walk on anything that is not a wall. Second, direction: in the first problem the edges are one-way, so <code>0 1</code> can be YES while <code>1 0</code> is NO. Push <code>b</code> into <code>adj_list[a]</code> and nothing back.</p><p>The five programs below are these ideas with the details filled in. Read each statement first, decide which of the three tools it wants, and only then look at the code.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-assignment1-problem1-connected-or-not"><span class="n">1</span>Is there a direct edge A → B?</a></li><li><a href="#p-assignment1-problem2-connected-nodes"><span class="n">2</span>Neighbours in descending order</a></li><li><a href="#p-assignment1-problem3-can-go-or-not"><span class="n">3</span>Can we walk from room A to room B?</a></li><li><a href="#p-assignment1-problem4-count-apartments"><span class="n">4</span>Count apartments</a></li><li><a href="#p-assignment1-problem5-count-appartments-2"><span class="n">5</span>Rooms in each apartment</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Direct edge check</h4><p>To know whether <code>a → b</code> is one edge, scan <code>adj[a]</code> for <code>b</code>. No search needed.</p></div><div class="concept"><h4>Sorted neighbour list</h4><p>Sorting <code>adj[x]</code> with <code>greater&lt;int&gt;()</code> gives neighbours in descending order.</p></div><div class="concept"><h4>Find special cells while reading</h4><p>Store the row/column of <code>A</code> and <code>B</code> as the grid is read, so BFS knows where to start and stop.</p></div><div class="concept"><h4>Grid components</h4><p>Loop over all cells; each unvisited floor cell starts a BFS and adds one apartment.</p></div><div class="concept"><h4>Component size from BFS</h4><p>Start a counter at 1 and add 1 every time a new cell is pushed; return it from <code>bfs</code>.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/ConnectedComponent.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — connected components</b><span class="rnote">The islands idea on a plain graph.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0oE3gA41TKO2H5bHpPd7fzn" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — graph series</b><span class="rnote">Problem-by-problem graph course in C++, close to how the judge asks.</span></a></li><li class="r-article"><a href="https://usaco.guide/silver/graph-traversal" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>USACO Guide — graph traversal</b><span class="rnote">Contest-style notes with problems graded by difficulty.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-assignment1-problem1-connected-or-not">
   <div class="prog-h">
@@ -1493,7 +1513,7 @@ YES
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

@@ -2,14 +2,90 @@
   "module_id": "3-basic-data-structures--module-5",
   "title": "Singly linked list: nodes & traversal",
   "overview": "A linked list stores each value in its own node, and each node points to the next one. This module builds nodes by hand (on the stack and with `new`), adds a constructor, links them with `next` pointers, and walks the list with a temporary pointer. It explains why linked lists exist when arrays are fixed-size and costly to insert into.",
+  "intro": [
+    {
+      "heading": null,
+      "body": [
+        "This is the first data structure you build yourself, and it is the hardest jump in the course. Take it slowly; the idea is simple once the picture is right.",
+        "Start from what is wrong with an array. An array is a row of seats, numbered and next to each other, and the number of seats is fixed the moment it is born. Suppose you hold `10 20 30 40 50` and you want `25` to sit third. There is no free seat there, so everything from `30` onwards must shuffle one place to the right before `25` can sit down:"
+      ],
+      "snippet": null,
+      "trace": "before   10  20  30  40  50\nshift    10  20  __  30  40  50\ninsert   10  20  25  30  40  50"
+    },
+    {
+      "heading": null,
+      "body": [
+        "With five values that is three moves and nobody minds. With 100000 values, inserting at the front moves 100000 of them, and doing that 100000 times is about 10^10 moves — far too slow. On top of that, the row cannot grow: if you declared 5 seats and a sixth value arrives, you have to build a bigger row and copy everything across.",
+        "So picture the values differently. Instead of one long row of seats, give every value its own little box, and in each box write two things: the value, and the address of the next box. Like railway carriages: each carriage carries goods and is coupled to the one behind it. The boxes may sit anywhere in memory — they do not have to be neighbours — because each one says where the next is. One extra variable, `head`, holds the address of the first box, and the last box holds `NULL` to say the chain ends here:"
+      ],
+      "snippet": null,
+      "trace": "head\n |\n v\n[10| ] -> [20| ] -> [30| ] -> [40| ] -> NULL"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Say plainly what is new. Until now, one name gave you the whole collection, and `a[3]` put you at the fourth value in a single step. Here you hold exactly one address — `head` — and there is no `a[3]`. The only way to the third box is to ask the first box where the second is, then ask the second where the third is.",
+        "In code a box is a small class with the two fields, and a constructor that sets `next` to `NULL` so a new box starts unattached. `new` puts the box on the heap, so it stays alive, and `->` reads a field through a pointer:"
+      ],
+      "snippet": "class Node {\npublic:\n    int val;\n    Node* next;\n    Node(int val){\n        this->val = val;\n        this->next = NULL;\n    }\n};\n\nNode* head = new Node(10);\nNode* a = new Node(20);\nhead->next = a;              // 10 is now coupled to 20\ncout << head->next->val;     // prints 20",
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "Now walking the chain, and the one mistake everybody makes. To print every value you must move forward box by box. It is tempting to write `head = head->next`, but that destroys the list: the arrows only point forward, so the moment `head` moves off the first box there is no way back to it, and the whole start of the list is lost for good.",
+        "So copy the address into a second pointer, `tmp`, and move that instead. `head` stays where it is, pointing at the front:"
+      ],
+      "snippet": "Node* tmp = head;\nwhile(tmp != NULL){\n    cout << tmp->val << endl;\n    tmp = tmp->next;\n}",
+      "trace": "tmp = head        tmp at [10]   print 10\ntmp = tmp->next   tmp at [20]   print 20\ntmp = tmp->next   tmp at [30]   print 30\ntmp = tmp->next   tmp at [40]   print 40\ntmp = tmp->next   tmp is NULL   stop"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Notice where the loop stops. The condition is `tmp != NULL`, not `tmp->next != NULL`. The second one looks reasonable and prints everything except the last value, because it stops while still standing on the last box. One of the programs below shows both so you can see the missing line.",
+        "What have you bought with all this? Putting a value at the front is now two small changes, whatever the length of the list, and the list grows one box at a time, so no size has to be guessed in advance. What you have sold is the jump: reaching the 500th value costs 500 hops, and you cannot go backwards at all, because no box knows who points at it.",
+        "The four programs below build the same short chain in three ways — plain objects, objects with a constructor, and boxes made with `new` — and then walk it with `tmp`."
+      ],
+      "snippet": null,
+      "trace": null
+    }
+  ],
   "concepts": [
-    {"term": "Node", "explain": "A small class holding a value `val` and a pointer `next` to the following node. The last node's `next` is `NULL`, which marks the end.", "snippet": "class Node {\npublic:\n    int val;\n    Node* next;\n};"},
-    {"term": "Why linked lists", "explain": "Arrays have a fixed size and need shifting to insert in the middle. A linked list grows one node at a time and inserts by changing a couple of pointers. The cost: extra memory for each pointer and no O(1) access by index.", "snippet": null},
-    {"term": "Constructor", "explain": "A constructor sets `val` and makes `next = NULL` as soon as the node is created, so you never forget to end the chain.", "snippet": "Node(int val) { this->val = val; this->next = NULL; }"},
-    {"term": "Arrow operator", "explain": "`p->val` is short for `(*p).val`: follow the pointer, then take the member. Chaining `head->next->next->val` walks two links.", "snippet": null},
-    {"term": "Static vs dynamic nodes", "explain": "`Node a(10);` lives on the stack and dies when the function ends. `new Node(10)` lives on the heap until deleted, so it can outlive the function that made it. Real lists use dynamic nodes.", "snippet": "Node* head = new Node(10);"},
-    {"term": "Head pointer", "explain": "The list is known only through `head`, the address of the first node. Lose it and you lose the whole list.", "snippet": null},
-    {"term": "Traversal", "explain": "Copy `head` into `tmp` and move `tmp = tmp->next` until `tmp` is `NULL`. Stopping at `tmp->next == NULL` instead would skip the last node.", "snippet": "for(Node* tmp = head; tmp != NULL; tmp = tmp->next)"}
+    {
+      "term": "Node",
+      "explain": "A small class holding a value `val` and a pointer `next` to the following node. The last node's `next` is `NULL`, which marks the end.",
+      "snippet": "class Node {\npublic:\n    int val;\n    Node* next;\n};"
+    },
+    {
+      "term": "Why linked lists",
+      "explain": "Arrays have a fixed size and need shifting to insert in the middle. A linked list grows one node at a time and inserts by changing a couple of pointers. The cost: extra memory for each pointer and no O(1) access by index.",
+      "snippet": null
+    },
+    {
+      "term": "Constructor",
+      "explain": "A constructor sets `val` and makes `next = NULL` as soon as the node is created, so you never forget to end the chain.",
+      "snippet": "Node(int val) { this->val = val; this->next = NULL; }"
+    },
+    {
+      "term": "Arrow operator",
+      "explain": "`p->val` is short for `(*p).val`: follow the pointer, then take the member. Chaining `head->next->next->val` walks two links.",
+      "snippet": null
+    },
+    {
+      "term": "Static vs dynamic nodes",
+      "explain": "`Node a(10);` lives on the stack and dies when the function ends. `new Node(10)` lives on the heap until deleted, so it can outlive the function that made it. Real lists use dynamic nodes.",
+      "snippet": "Node* head = new Node(10);"
+    },
+    {
+      "term": "Head pointer",
+      "explain": "The list is known only through `head`, the address of the first node. Lose it and you lose the whole list.",
+      "snippet": null
+    },
+    {
+      "term": "Traversal",
+      "explain": "Copy `head` into `tmp` and move `tmp = tmp->next` until `tmp` is `NULL`. Stopping at `tmp->next == NULL` instead would skip the last node.",
+      "snippet": "for(Node* tmp = head; tmp != NULL; tmp = tmp->next)"
+    }
   ],
   "files": [
     {
@@ -31,7 +107,10 @@
       "input_note": null,
       "output_note": "Three lines showing 10, 20, 30. The second and third values were reached through the pointers, not by naming `b` and `c`.",
       "watch_out": "Without a constructor, `val` and `next` start with garbage. Forgetting `c.next = NULL` would leave the list without a proper end.",
-      "check": {"q": "Write `a.next->next->val` without arrows.", "a": "`(*(*a.next).next).val`"}
+      "check": {
+        "q": "Write `a.next->next->val` without arrows.",
+        "a": "`(*(*a.next).next).val`"
+      }
     },
     {
       "file": "node_with_constructor.cpp",
@@ -52,7 +131,10 @@
       "input_note": null,
       "output_note": "Same three lines as before: 10, 20, 30.",
       "watch_out": null,
-      "check": {"q": "Why is `this->` needed in `this->val = val`?", "a": "The parameter `val` hides the member `val`; `this->val` names the member explicitly."}
+      "check": {
+        "q": "Why is `this->` needed in `this->val = val`?",
+        "a": "The parameter `val` hides the member `val`; `this->val` names the member explicitly."
+      }
     },
     {
       "file": "dynamic_node.cpp",
@@ -73,7 +155,10 @@
       "input_note": null,
       "output_note": "Values 10, 20 and 30, all reached from `head`.",
       "watch_out": "Heap nodes are never freed here. That is fine for a short demo, but long-running programs should `delete` nodes they no longer need.",
-      "check": {"q": "Why is `head->next = a;` correct but `head->next = &a;` wrong here?", "a": "`a` is already a `Node*`; `&a` would be a `Node**`, the address of the pointer variable."}
+      "check": {
+        "q": "Why is `head->next = a;` correct but `head->next = &a;` wrong here?",
+        "a": "`a` is already a `Node*`; `&a` would be a `Node**`, the address of the pointer variable."
+      }
     },
     {
       "file": "printing_singly_linked_list.cpp",
@@ -93,7 +178,10 @@
       "input_note": null,
       "output_note": "`10 20 30` (loop 1), `10 20 30` (loop 2), then `40` (loop 3, starting where loop 2 stopped). Each value is on its own line.",
       "watch_out": "Loop 3 does not reset `tmp = head`, so it is not a full print. To print the whole list, reset `tmp` first and use `while (tmp != NULL)`.",
-      "check": {"q": "What condition prints every node, including the last?", "a": "`while (tmp != NULL)`."}
+      "check": {
+        "q": "What condition prints every node, including the last?",
+        "a": "`while (tmp != NULL)`."
+      }
     }
   ],
   "practice_links": [],
@@ -105,8 +193,43 @@
     "Traverse with a copy of head: `while (tmp != NULL) tmp = tmp->next;`."
   ],
   "check_yourself": [
-    {"q": "Why does a linked list use more memory than an array for the same values?", "a": "Each node also stores a pointer (usually 8 bytes) alongside the value."},
-    {"q": "What is the cost of reaching the k-th element in a linked list, and why?", "a": "O(k): you must follow k links from the head; there is no direct indexing."},
-    {"q": "Name two array limitations that linked lists solve.", "a": "Fixed size decided up front, and slow insert/delete in the middle because elements must shift."}
+    {
+      "q": "Why does a linked list use more memory than an array for the same values?",
+      "a": "Each node also stores a pointer (usually 8 bytes) alongside the value."
+    },
+    {
+      "q": "What is the cost of reaching the k-th element in a linked list, and why?",
+      "a": "O(k): you must follow k links from the head; there is no direct indexing."
+    },
+    {
+      "q": "Name two array limitations that linked lists solve.",
+      "a": "Fixed size decided up front, and slow insert/delete in the middle because elements must shift."
+    }
+  ],
+  "resources": [
+    {
+      "kind": "visual",
+      "name": "VisuAlgo — linked list",
+      "url": "https://visualgo.net/en/list",
+      "note": "Press Insert or Remove and watch the arrows re-point, one step at a time."
+    },
+    {
+      "kind": "video",
+      "name": "mycodeschool — data structures",
+      "url": "https://www.youtube.com/playlist?list=PL2_aWCzGMAwI3W_JlcBbtYTwiQSsOTa6P",
+      "note": "The classic slow, patient explanation of lists, stacks and queues."
+    },
+    {
+      "kind": "tool",
+      "name": "Python Tutor — step through C++ code",
+      "url": "https://pythontutor.com/cpp.html",
+      "note": "Paste your own program and step through it line by line, with the pointers drawn."
+    },
+    {
+      "kind": "video",
+      "name": "Striver — linked list playlist",
+      "url": "https://www.youtube.com/playlist?list=PLgUwDviBIf0rAuz8tVcM0AymmhTRsfaLU",
+      "note": "From the basics to the interview problems on lists."
+    }
   ]
 }

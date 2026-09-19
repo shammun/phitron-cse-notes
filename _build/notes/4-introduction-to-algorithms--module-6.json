@@ -251,5 +251,74 @@
       "q": "What changes in the adjacency list for a directed weighted graph?",
       "a": "Push only `{b, w}` into `adj[a]`, not the reverse."
     }
+  ],
+  "intro": [
+    {
+      "heading": null,
+      "body": [
+        "You are walking through a maze holding a piece of chalk, and at every junction you pass you put a mark on the floor. After a while you step into a junction and find your own chalk mark already there. Something has happened, but what?",
+        "Two things are possible. Either it is the junction you have just come from and you have simply turned round, which means nothing. Or you have arrived at it along a different corridor from the one you left by — and then the corridors you walked form a loop. That loop is a **cycle**, and telling those two cases apart is the whole first half of this module.",
+        "You could answer it the slow way: list every path out of every node and look for one that comes back to its start. That is hopeless on any real graph. A single DFS already visits everything once, and it only needs one extra piece of information."
+      ],
+      "snippet": null,
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "**Undirected graphs first.** Here the extra information is your parent: the node you came from. In an undirected graph every edge is stored in both lists, so standing at `1` you always see `0` again — that is the same corridor, not a loop. Any other already-visited neighbour is a second way into a node you have already reached, so it closes a cycle.",
+        "Trace the triangle `0-1`, `1-2`, `2-0`, starting the DFS at 0."
+      ],
+      "snippet": null,
+      "trace": "at 0, parent -1 : mark 0, walk to 1\nat 1, parent  0 : 0 is visited = my parent, skip\n                  walk to 2\nat 2, parent  1 : 1 is visited = my parent, skip\n                  0 is visited, my parent is 1\n                  -> a second way into 0: cycle\n\nsame code on the path 0-1-2-3-4:\nevery visited neighbour met is the parent\n-> no cycle"
+    },
+    {
+      "heading": null,
+      "body": [
+        "**Now put arrows on the corridors and the parent rule breaks.** Take the three edges `0 → 2`, `0 → 1`, `1 → 2`. Starting at 0 you mark 2. Coming back and going down through 1, you meet 2 already marked, and 2 is not 1's parent. The rule shouts \"cycle\" — but there is no loop anywhere, because nothing leads back out of 2. Two arrows simply met at the same node.",
+        "So ask a sharper question. Not \"have I ever been here?\" but \"**am I still standing here?**\" — is this node on the road I am walking at this very moment, with its call still open beneath me? That is one more array, `pathvisit`, set to true when the DFS enters a node and back to false when it leaves."
+      ],
+      "snippet": null,
+      "trace": "edges 0->1, 1->2, 2->3, 3->1\n\nenter 0   path: 0\nenter 1   path: 0 1\nenter 2   path: 0 1 2\nenter 3   path: 0 1 2 3\n  child 1: visited AND still on the path\n  -> cycle  1 -> 2 -> 3 -> 1\n\nedges 0->1, 0->2, 1->2\nenter 0   path: 0\nenter 1   path: 0 1\nenter 2   path: 0 1 2 ... leave 2, leave 1\nback at 0, child 2: visited, NOT on the path\n  -> no cycle"
+    },
+    {
+      "heading": null,
+      "body": [
+        "The line that sets `pathvisit[src] = false` on the way out is the entire difference between those two traces. Forget it and every place where two arrows meet looks like a loop. Both rules also need the outer loop over all nodes from Module 3, since the cycle may sit in a disconnected piece your first search never reaches.",
+        "The second half of the module changes the storage, not the algorithm. Until now `adj[0]` held plain node numbers: `adj[0] = {1, 2}` meant \"from 0 you can step to 1 and to 2\". Real roads have lengths, tickets have prices, cables have delays, so each entry becomes a **pair**: the neighbour, and what that edge costs.",
+        "Nothing else about the list changes. `p.first` is still where you can go; `p.second` is the new part, what it costs to go there. For a directed weighted graph you push only the first of the two lines."
+      ],
+      "snippet": "vector<pair<int, int>> adj[n];\n\n// edge between a and b costing w\nadj[a].push_back({b, w});\nadj[b].push_back({a, w});\n\nfor(pair<int, int> p : adj[u]){\n    int v = p.first;      // neighbour\n    int cost = p.second;  // weight of the edge\n}",
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "Why bother now? Because BFS counts steps, and to BFS one step is one step: it finds the path with the fewest edges. Once edges carry costs, fewest is no longer cheapest — three short hops of 1 each beat one road of 10, although BFS would pick the single road. Answering \"what is the cheapest way?\" is Dijkstra's job in the next module, and Dijkstra needs the cost sitting right next to the neighbour, which is exactly what this list gives it.",
+        "The programs below show each rule in code: the undirected test twice, once with a queue and once with recursion, the directed test with `pathvisit`, and two grid searches from earlier modules for practice."
+      ],
+      "snippet": null,
+      "trace": null
+    }
+  ],
+  "resources": [
+    {
+      "kind": "article",
+      "name": "cp-algorithms — DFS",
+      "url": "https://cp-algorithms.com/graph/depth-first-search.html",
+      "note": "DFS with the edge classification that explains cycle detection."
+    },
+    {
+      "kind": "video",
+      "name": "William Fiset — graph theory playlist",
+      "url": "https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P",
+      "note": "Every graph algorithm of this course, drawn before it is coded."
+    },
+    {
+      "kind": "visual",
+      "name": "VisuAlgo — graph structures",
+      "url": "https://visualgo.net/en/graphds",
+      "note": "Draw a graph and see the same graph as a matrix and as a list."
+    }
   ]
 }

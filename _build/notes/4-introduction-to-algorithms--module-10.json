@@ -2,6 +2,55 @@
   "module_id": "4-introduction-to-algorithms--module-10",
   "title": "Floyd-Warshall: all-pairs shortest paths",
   "overview": "This module moves from single-source shortest paths (Dijkstra, Bellman-Ford) to **all-pairs** shortest paths with Floyd-Warshall. You keep one n x n matrix and let every node, one by one, act as a stop-over. The same matrix also tells you whether a negative cycle exists. The practice day repeats Bellman-Ford and Floyd-Warshall on judge problems.",
+  "intro": [
+    {
+      "heading": null,
+      "body": [
+        "Old road atlases print a distance chart: the towns listed down the side, the same towns across the top, and in every square the distance between that pair of towns. Module 7 and Module 9 gave you tools for **one row** of such a chart. Dijkstra or Bellman-Ford, started at one town, fills in the distances from that town to all the others. This module fills in the whole chart.",
+        "Take four cities and five one-way roads:"
+      ],
+      "snippet": null,
+      "trace": "1 --5--> 2     2 --3--> 3     3 --1--> 4\n1 --10-> 3     2 --9--> 4"
+    },
+    {
+      "heading": null,
+      "body": [
+        "The plodding way to get the whole chart is to run a single-source algorithm once per city: start at 1, then at 2, then at 3, then at 4. It does work. But Dijkstra refuses negative road costs, and Bellman-Ford four times over is slow.",
+        "Floyd-Warshall never walks the graph at all. It works on the chart itself. Write the map down as a table: 0 on the diagonal, the road cost where a direct road exists, and a dash where you know of no way yet."
+      ],
+      "snippet": null,
+      "trace": "        to 1   2   3   4\nfrom 1     0   5  10   -\n     2     -   0   3   9\n     3     -   -   0   1\n     4     -   -   -   0"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Now the single idea of the module. Point at one city and ask the table one question: **if travellers were allowed to stop over in this city, would anything get cheaper?** Try city 2. For every pair (i, j), compare the square you already have with the cost of going i -> 2 -> j.",
+        "Two squares improve. 1 to 3 was 10 by the direct road, but 1 -> 2 -> 3 costs 5 + 3 = 8, so write 8. 1 to 4 was a dash, and 1 -> 2 -> 4 costs 5 + 9 = 14, so write 14. Nothing else changes, because no road leads into city 2 from 3 or 4."
+      ],
+      "snippet": null,
+      "trace": "after letting city 2 be a stop-over\n\n        to 1   2   3   4\nfrom 1     0   5   8*  14*\n     2     -   0   3   9\n     3     -   -   0   1\n     4     -   -   -   0\n\n* changed this round"
+    },
+    {
+      "heading": null,
+      "body": [
+        "Then you do the same for city 3, and for city 4, and (first of all, in code) for city 1. Letting city 3 be a stop turns 1 to 4 into 8 + 1 = 9 and 2 to 4 into 3 + 1 = 4. Note that each round starts from the improved table of the round before, which is why a route may end up using several stops although each round adds only one.",
+        "That is the whole algorithm: three nested loops, and the **outer** one is the city being allowed as a stop.",
+        "Say plainly what is new. Until now a shortest-path algorithm grew outwards from one source, with a queue or a priority queue and a visited array. Here nothing is visited and nothing is queued. You hold the answers for every pair at once, and each round widens the set of cities that may be used as stop-overs. The outer loop must be `k`; move it inwards and the answers are quietly wrong."
+      ],
+      "snippet": "for(int k = 0; k < n; k++)      // k = the allowed stop-over\n  for(int i = 0; i < n; i++)\n    for(int j = 0; j < n; j++)\n      if(d[i][k] != INF && d[k][j] != INF &&\n         d[i][k] + d[k][j] < d[i][j])\n          d[i][j] = d[i][k] + d[k][j];",
+      "trace": null
+    },
+    {
+      "heading": null,
+      "body": [
+        "One thing to watch. A dash is stored as a huge number such as `INT_MAX`, and a huge number plus a road cost overflows and comes out negative, which would look like a marvellous shortcut. So check both halves before you add them, exactly as in the snippet above.",
+        "**Why use it?** The cost is n x n x n steps. With n = 100 that is 1,000,000 steps, done in a blink, and afterwards every question \"cheapest cost from X to Y?\" is one look at one square, so 100,000 queries cost almost nothing. With 100,000 cities, n^3 is hopeless and Dijkstra from the single source you care about is the right tool. Negative road costs are allowed here, unlike Dijkstra. And the diagonal reports trouble by itself: if any `d[i][i]` falls below 0, city i sits on a cycle you can go round and round to lose cost for ever, so shortest paths do not exist.",
+        "The programs below run this on a plain directed graph, use the diagonal to detect a negative cycle, and answer many pair queries on an undirected map after one fill of the table."
+      ],
+      "snippet": null,
+      "trace": null
+    }
+  ],
   "concepts": [
     {
       "term": "Adjacency matrix as a distance table",
@@ -170,6 +219,96 @@
       },
       "prelude": null,
       "driver": null
+    },
+    {
+      "file": "cses_shortest_routes_2.cpp",
+      "title": "CSES Shortest Routes II (the version that runs)",
+      "kind": "practice",
+      "same_as": "shortest_route_2.cpp",
+      "problem": {
+        "name": "CSES 1672 - Shortest Routes II",
+        "url": "https://cses.fi/problemset/task/1672"
+      },
+      "what": "The same problem as `shortest_route_2.cpp` above, written so that it actually runs: one Floyd-Warshall table for all pairs of cities, then every query is a single lookup.",
+      "steps": [
+        "Build the table as `vector<vector<long long>> dist(n + 1, vector<long long>(n + 1, INF))` - (n+1) by (n+1), so cities keep their own numbers 1..n and nothing falls off the end.",
+        "Put 0 on the diagonal: staying in the same city costs nothing.",
+        "Read each road with `min`, in both directions, because two cities can be joined by several roads and a later expensive one must not overwrite a cheaper one.",
+        "Run the triple loop `k, i, j`; each k asks 'is going through city k shorter?'.",
+        "Skip the row early when `dist[i][k] == INF`: if k cannot be reached from i, no route through k exists.",
+        "Answer each query by reading `dist[s][d]`, printing -1 when it is still INF."
+      ],
+      "complexity": "Time O(n^3 + q) · Space O(n^2)",
+      "input": "4 3 3\n1 2 5\n2 3 2\n1 3 10\n1 3\n3 1\n1 4\n",
+      "input_note": "`n m q`, then m roads `a b c`, then q queries `s d`. Cities are numbered from 1.",
+      "output_note": "Prints `7`, `7`, `-1`. Going 1 -> 2 -> 3 costs 5 + 2 = 7 and beats the direct road of 10; the roads are two-way so 3 -> 1 is the same; city 4 has no road at all.",
+      "watch_out": "`INF` is `1e18 / 4`, not `LLONG_MAX`. The inner line adds two table entries together, and `LLONG_MAX + something` overflows into a negative number, which then looks like a wonderfully short route. Also print with `\"\\n\"` instead of `endl` - there can be a hundred thousand queries and `endl` flushes after every one.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why is one Floyd-Warshall run better here than one BFS or Dijkstra per query?",
+        "a": "The n^3 work is paid once and every query afterwards is a single array read. With many queries that beats running a fresh search for each one."
+      }
+    },
+    {
+      "file": "gfg_distance_from_the_source_bellman_ford.cpp",
+      "title": "GfG: Distance from the source, with a main to run it",
+      "kind": "practice",
+      "same_as": "practice_day_1_problem1_bellman_ford.cpp",
+      "problem": {
+        "name": "GeeksforGeeks - Distance from the Source (Bellman-Ford)",
+        "url": "https://www.geeksforgeeks.org/problems/distance-from-the-source-bellman-ford-algorithm/1"
+      },
+      "what": "The same judge function as `practice_day_1_problem1_bellman_ford.cpp`, but this file carries its own `main`, so it compiles and runs on its own. Shortest distance from `src` to every vertex when weights may be negative; 10^8 for unreachable, `{-1}` when a reachable negative cycle makes the question meaningless.",
+      "steps": [
+        "Keep the judge's `Solution` class exactly as it is typed into GeeksforGeeks - that is the part the reader submits.",
+        "`dist(V, 100000000)` is the judge's 'infinity'; set `dist[src] = 0`.",
+        "Relax every edge, V-1 times over: a shortest path that repeats no vertex has at most V-1 edges, and one full pass fixes at least one more edge of it.",
+        "Guard every relaxation with `dist[u] != INF`, so a negative weight cannot shrink the fake infinity and make an unreachable vertex look reachable.",
+        "Do one extra pass. Anything that still improves can improve forever, which means a negative cycle, so return `{-1}`.",
+        "`main` reads V, E, the E edges and the source, calls the function and prints the vector."
+      ],
+      "complexity": "Time O(V * E) · Space O(V)",
+      "input": "3 4\n0 1 5\n1 0 3\n1 2 -1\n2 0 1\n2\n",
+      "input_note": "`V E`, then E lines `u v w`, then the source. Vertices are numbered from 0. This is the judge's second example.",
+      "output_note": "Prints `dist = 1 6 0`, which matches the judge's expected `[1, 6, 0]`: vertex 2 is the source, the edge 2 -> 0 costs 1, and 2 -> 0 -> 1 costs 1 + 5 = 6. If a negative cycle could be reached you would see `dist = -1` instead.",
+      "watch_out": "Bellman-Ford, not Dijkstra, because of the negative edge `1 -> 2` of weight -1. Dijkstra fixes a vertex the moment it leaves the priority queue, and a negative edge found later would make that fixed value wrong.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why does one more pass after the V-1 passes prove a negative cycle?",
+        "a": "After V-1 passes every real shortest path is already found. Another improvement can only come from going round a loop that makes the total smaller, and that loop can be repeated without end."
+      }
+    },
+    {
+      "file": "codeforces_20c_dijkstra.cpp",
+      "title": "Codeforces 20C - Dijkstra? (print the route, in long long)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "Codeforces 20C - Dijkstra?",
+        "url": "https://codeforces.com/problemset/problem/20/C"
+      },
+      "what": "n cities and m two-way weighted roads; print the cities of a shortest route from 1 to n, or -1. Dijkstra with a `parent` array, exactly like the path printing done with BFS in Module 2, only now the distances have weights.",
+      "steps": [
+        "Store the graph as `vector<vector<pair<int, long long>>> adj_list(n + 1)`: for each city a list of (neighbour, road length).",
+        "Use a min-heap `priority_queue<pair<long long, int>, vector<...>, greater<...>>` with the distance first, because the queue compares the first member of the pair.",
+        "Whenever `dis[child]` improves, also set `parent[child] = par_node` - that one line is all the path printing needs.",
+        "Skip a popped pair when `par_dist > dis[par_node]`: it is an old, worse copy left in the queue by a later improvement.",
+        "If `dis[n]` is still INF, print -1.",
+        "Otherwise walk back from n through `parent` until -1 (city 1 keeps -1), `reverse` the list, and print it."
+      ],
+      "complexity": "Time O((n + m) log n) · Space O(n + m)",
+      "input": "5 6\n1 2 2\n2 5 5\n2 3 4\n1 4 1\n4 3 3\n3 5 1\n",
+      "input_note": "`n m`, then m roads `a b w`. Cities are numbered from 1; the route always has to start at 1 and end at n.",
+      "output_note": "Prints `1 4 3 5`, the route of cost 1 + 3 + 1 = 5. The other way round, 1 -> 2 -> 5, would cost 2 + 5 = 7. With the second sample from the file header (`3 1` and the single road `1 2 5`) it prints `-1`, because city 3 is on its own.",
+      "watch_out": "`long long` everywhere a distance is stored or added. The roads are short on their own, but a route can use about 10^5 of them and the total then leaves `int` behind. The name of the problem is a joke about people who answer it with a plain BFS.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why is the pair `(distance, city)` and not `(city, distance)`?",
+        "a": "A priority_queue of pairs compares the first member first. Putting the distance first is what makes the closest city come out of the heap next."
+      }
     }
   ],
   "practice_links": [
@@ -213,6 +352,26 @@
     {
       "q": "Why use `long long` for distances in Shortest Routes II?",
       "a": "A path can use up to n-1 roads each costing up to 10^9, so the total can exceed the `int` limit."
+    }
+  ],
+  "resources": [
+    {
+      "kind": "article",
+      "name": "cp-algorithms — Floyd-Warshall",
+      "url": "https://cp-algorithms.com/graph/all-pair-shortest-path-floyd-warshall.html",
+      "note": "Three loops, and why the middle city must be the outer one."
+    },
+    {
+      "kind": "video",
+      "name": "William Fiset — graph theory playlist",
+      "url": "https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P",
+      "note": "Every graph algorithm of this course, drawn before it is coded."
+    },
+    {
+      "kind": "visual",
+      "name": "VisuAlgo — shortest paths",
+      "url": "https://visualgo.net/en/sssp",
+      "note": "Dijkstra and Bellman-Ford animated, with the distance table updating."
     }
   ]
 }

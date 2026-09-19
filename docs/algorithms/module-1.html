@@ -7,7 +7,7 @@
 <meta name="description" content="The algorithms course opens with graphs: dots (nodes) joined by lines (edges). Before you can search a graph you must store it in memory. This module builds the three standard storages, adjacency matrix, adjacency list and edge list, and shows when each one is handy.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,13 +36,33 @@
     <p class="lead">The algorithms course opens with graphs: dots (nodes) joined by lines (edges). Before you can search a graph you must store it in memory. This module builds the three standard storages, adjacency matrix, adjacency list and edge list, and shows when each one is handy.</p>
     <p class="chips"><span>4 programs</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%201" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Put the word &quot;graph&quot; aside for a moment. Picture five towns, and the roads that join them. Town 0 has a road to town 1 and another to town 2. Town 1 and town 2 both have a road to town 3, and town 3 has a road out to town 4.</p><p>Drawn on paper it looks like this:</p><pre class="trace">    (0)-------(1)
+     |         |
+     |         |
+    (2)-------(3)-------(4)</pre><p>That picture is a graph. The towns are called <strong>nodes</strong> and the roads are called <strong>edges</strong>, and that is the whole vocabulary you need to start. The towns could just as easily be people and the edges &quot;these two are friends&quot;, or web pages and links between them. Nothing changes.</p><p>You have already met a graph without being told. A binary tree is one: the nodes were tree nodes and the edges were the <code>left</code> and <code>right</code> links. A graph is the same idea with the rules taken away. <strong>A tree could never come back to where it started; a graph can.</strong> Look at the picture above: 0 to 1 to 3 to 2 and back to 0 is a loop. A node can also have any number of neighbours, not just two, and a graph can fall into separate pieces with no road between them. One more choice: if a road can be walked both ways the edge is <strong>undirected</strong>, and if it is a one-way street the edge is <strong>directed</strong> and only points one way.</p><p>Now the real question of this module. You can see the picture; the computer cannot. Before any program can answer &quot;can I get from 0 to 4?&quot; the graph has to sit in memory, and there are three ways to put it there. The plainest is to write the edges down exactly as they are read, as pairs. That is the <strong>edge list</strong>:</p><pre class="trace">edge      a   b
+  1       0   1
+  2       0   2
+  3       1   3
+  4       2   3
+  5       3   4</pre><p>It is honest, and later algorithms that simply walk over every edge will want exactly this. But ask it the question a search actually asks, &quot;who are the neighbours of 3?&quot;, and it has to read all <code>e</code> pairs to find out. With 200000 edges that is 200000 steps for one question.</p><p>The second way is a table with one row and one column per node. Put a 1 in row <code>a</code>, column <code>b</code> when there is an edge. This is the <strong>adjacency matrix</strong>:</p><pre class="trace">      0  1  2  3  4
+  0   0  1  1  0  0
+  1   1  0  0  1  0
+  2   1  0  0  1  0
+  3   0  1  1  0  1
+  4   0  0  0  1  0</pre><p>Now &quot;is there an edge from 1 to 3?&quot; is one look, <code>mat[1][3]</code>, in O(1). The table is symmetric because each undirected edge was written twice, <code>mat[1][3]</code> and <code>mat[3][1]</code>; for a one-way edge you set only one of them and the symmetry breaks.</p><p>The price is the empty space. The table always has n² cells, even when almost all are 0: our five towns have 5 edges but 25 cells, and a graph with 100000 nodes would need 10^10 cells, which does not fit in memory at all.</p><p>So the third way keeps only what exists: for each node, a vector of its neighbours. This is the <strong>adjacency list</strong>, and it is the one every BFS and DFS in the next modules will use.</p><pre class="snip">vector&lt;int&gt; adj_list[n];
+adj_list[a].push_back(b);
+adj_list[b].push_back(a);  // drop this line if directed</pre><pre class="trace">0 -&gt; 1 2
+1 -&gt; 0 3
+2 -&gt; 0 3
+3 -&gt; 1 2 4
+4 -&gt; 3</pre><p>Three storages, one rule of thumb. Use the <strong>matrix</strong> when the graph is small or nearly full and you keep asking &quot;is there an edge here?&quot;. Use the <strong>edge list</strong> when the algorithm only sweeps over all edges. Use the <strong>adjacency list</strong> the rest of the time: it costs O(n + e) memory instead of O(n²), and <code>adj_list[3]</code> hands you the neighbours of 3 straight away.</p><p>The four programs below build these three storages from the same kind of input, <code>n e</code> followed by <code>e</code> lines <code>a b</code>, and print them back so you can see the shape of each one.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-adjacency-matrix-for-directed-graph"><span class="n">1</span>Adjacency matrix (directed)</a></li><li><a href="#p-adjacency-matrix-of-undirected-graph"><span class="n">2</span>Adjacency matrix (undirected)</a></li><li><a href="#p-adjacency-list-for-undirected-graph"><span class="n">3</span>Adjacency list (undirected)</a></li><li><a href="#p-edge-list"><span class="n">4</span>Edge list</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Node and edge</h4><p>A node is a thing (a city, a person). An edge is a link between two nodes. We usually number nodes <code>0</code> to <code>n-1</code> so they can be array indexes.</p></div><div class="concept"><h4>Directed vs undirected</h4><p>In an undirected graph an edge <code>a b</code> can be walked both ways, so we store it twice (<code>a→b</code> and <code>b→a</code>). In a directed graph we store only <code>a→b</code>.</p></div><div class="concept"><h4>Adjacency matrix</h4><p>An <code>n x n</code> table where <code>mat[a][b] = 1</code> means there is an edge from <code>a</code> to <code>b</code>. Checking one edge is O(1), but it always uses n² memory.</p><pre class="snip">adj_mat[a][b] = 1;
 adj_mat[b][a] = 1; // only for undirected</pre></div><div class="concept"><h4>Adjacency list</h4><p>An array of vectors: <code>adj[a]</code> holds every neighbour of <code>a</code>. Memory is O(n + e) and it is the storage used by BFS/DFS in later modules.</p><pre class="snip">vector&lt;int&gt; adj[n];
 adj[a].push_back(b);
 adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a list of <code>(a, b)</code> pairs. Very simple, and it is exactly what Bellman-Ford and Kruskal want later.</p></div><div class="concept"><h4>Weighted edge</h4><p>When an edge has a cost, store it next to the neighbour, e.g. <code>pair&lt;int,int&gt;{b, cost}</code> (you will see this in Module 6).</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/graphds" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — graph structures</b><span class="rnote">Draw a graph and see the same graph as a matrix and as a list.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>William Fiset — graph theory playlist</b><span class="rnote">Every graph algorithm of this course, drawn before it is coded.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0oE3gA41TKO2H5bHpPd7fzn" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — graph series</b><span class="rnote">Problem-by-problem graph course in C++, close to how the judge asks.</span></a></li><li class="r-article"><a href="https://usaco.guide/silver/graph-traversal" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>USACO Guide — graph traversal</b><span class="rnote">Contest-style notes with problems graded by difficulty.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-adjacency-matrix-for-directed-graph">
   <div class="prog-h">
@@ -524,7 +544,7 @@ adjacency_matrix_of_undirected_graph.cpp:40:21: error: &#x27;adj_mat&#x27; was n
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

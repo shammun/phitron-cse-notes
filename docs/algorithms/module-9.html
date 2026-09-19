@@ -7,7 +7,7 @@
 <meta name="description" content="Bellman-Ford finds single-source shortest paths even with negative edge weights. It simply relaxes every edge n−1 times. One more round that still improves a distance proves a negative cycle, where no shortest path exists.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,13 +36,32 @@
     <p class="lead">Bellman-Ford finds single-source shortest paths even with negative edge weights. It simply relaxes every edge n−1 times. One more round that still improves a distance proves a negative cycle, where no shortest path exists.</p>
     <p class="chips"><span>3 programs</span><span>1 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%209" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Module 7 ended with a warning: Dijkstra is not allowed when an edge can be negative. This module is the answer to exactly that case.</p><p>Negative weights are not a made-up puzzle. Think of a journey where one leg pays you back more than it costs - a refund, a discount, a currency trade that gains. The cost of that leg is a negative number, and the cheapest overall route may well go through it.</p><p>Why does Dijkstra fall over? Because it rests on one promise: the moment a node is the nearest unfinished one, its distance is final and it is never looked at again. With every weight zero or more that promise is safe. Add one negative edge and a node you already declared finished can become cheaper afterwards, and the algorithm never goes back to notice.</p><p>Bellman-Ford throws that cleverness away. It does not choose a clever order at all. It just <strong>relaxes every edge in the graph, over and over</strong>. Because it never declares anything final, nothing can catch it out.</p><p>How many rounds are enough? A shortest route never repeats a node, so with n nodes it uses at most n-1 edges. One full round over all the edges settles at least one more edge of that route, whatever order the edges happen to be in. So <strong>n-1 rounds is always enough</strong> - no more is needed, and no fewer is safe.</p><p>Take four nodes and four directed edges, stored as a plain edge list, and start from node 0. Note the edge <code>2 -&gt; 1</code> costs -3:</p><p>Here is round one, one edge at a time. A dash means &quot;still unknown&quot;:</p><pre class="trace">edges in order:
+  0-&gt;1 (4)   0-&gt;2 (5)   2-&gt;1 (-3)   1-&gt;3 (2)
+
+             0    1    2    3
+start        0    -    -    -
+0-&gt;1 (4)     0    4    -    -
+0-&gt;2 (5)     0    4    5    -
+2-&gt;1 (-3)    0    2    5    -
+1-&gt;3 (2)     0    2    5    4</pre><p>Watch node 1. The direct edge put a 4 there, and then the negative edge from node 2 rewrote it: 5 - 3 = 2, so the two-edge route wins. Dijkstra, having already finished node 1 at 4, would never have looked again.</p><p>Round two changes nothing, and so does round three; the table is settled. Each round is the same four lines of code:</p><pre class="snip">for(int i = 0; i &lt; n - 1; i++)
+    for(auto ed : edge_list)
+        if(dis[ed.a] != INT_MAX &amp;&amp;
+           dis[ed.a] + ed.c &lt; dis[ed.b])
+            dis[ed.b] = dis[ed.a] + ed.c;</pre><p>That <code>dis[ed.a] != INT_MAX</code> guard matters: without it you would add a weight to <code>INT_MAX</code>, overflow the <code>int</code>, and get a huge negative number that looks like a wonderful route.</p><p>Now the second half of the module. Three nodes, with <code>1 -&gt; 2</code> costing -4 and <code>2 -&gt; 1</code> costing 1, so one lap of that little loop gains you -3 every time:</p><pre class="trace">edges: 0-&gt;1 (2)   1-&gt;2 (-4)   2-&gt;1 (1)
+
+             0    1    2
+start        0    -    -
+round 1      0   -1   -2
+round 2      0   -4   -5
+extra round  0   -7   -8   still falling</pre><p>With n = 3 you do n-1 = 2 rounds and stop. But run <strong>one extra round</strong> and the distances drop again, by 3, and they would drop by 3 more every round for ever. There is no shortest route here: go round the loop once more and you always beat your own answer. That is a negative cycle, and the extra round is how you detect it - if any edge still relaxes after n-1 rounds, say so and stop.</p><p>The price is O(V.E): for 1000 nodes and 5000 edges that is about 5 million relaxations, clearly slower than Dijkstra&#x27;s O((V + E) log V). So the rule for choosing is short. All weights zero or more: Dijkstra, and it is faster. Any weight negative: Bellman-Ford, and you get a negative-cycle test for one extra round of work.</p><p>The programs below write it twice - plain, then with the cycle check - and once more in the shape a judge wants, where the distances start at 10^8 instead of <code>INT_MAX</code> and a negative cycle is reported as <code>{-1}</code>. Read the watch-out notes as you go: two of the three files have small mistakes worth spotting yourself.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-bellman-ford"><span class="n">1</span>Bellman-Ford</a></li><li><a href="#p-bellman-ford-cycle"><span class="n">2</span>Bellman-Ford with negative cycle check</a></li><li><a href="#p-extra-problem"><span class="n">3</span>GFG - Distance from the Source (Bellman-Ford)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Edge list input</h4><p>Bellman-Ford loops over all edges, so an edge list (<code>a</code>, <code>b</code>, <code>c</code>) is the natural storage; here each edge is an <code>Edge</code> object.</p></div><div class="concept"><h4>Relax all edges n−1 times</h4><p>A shortest path uses at most n−1 edges, so n−1 full rounds are enough to settle every distance.</p><pre class="snip">for(int i = 0; i &lt; n - 1; i++)
   for(auto ed : edges)
     if(dis[ed.a] != INT_MAX &amp;&amp; dis[ed.a] + ed.c &lt; dis[ed.b])
       dis[ed.b] = dis[ed.a] + ed.c;</pre></div><div class="concept"><h4>INT_MAX guard</h4><p>Skip edges whose start is still infinite; otherwise <code>INT_MAX + c</code> overflows.</p></div><div class="concept"><h4>Negative cycle check</h4><p>Run one extra round. If any edge still relaxes, a cycle with negative total weight is reachable.</p></div><div class="concept"><h4>Cost</h4><p>O(V·E): slower than Dijkstra, but it handles negative edges.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/sssp" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — shortest paths</b><span class="rnote">Dijkstra and Bellman-Ford animated, with the distance table updating.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/graph/bellman_ford.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — Bellman-Ford</b><span class="rnote">Why n-1 rounds, and how the extra round finds a negative cycle.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>William Fiset — graph theory playlist</b><span class="rnote">Every graph algorithm of this course, drawn before it is coded.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-bellman-ford">
   <div class="prog-h">
@@ -727,7 +746,7 @@ bellman_ford_cycle.cpp:68:19: error: request for member &#x27;push_back&#x27; in
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

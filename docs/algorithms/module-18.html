@@ -7,7 +7,7 @@
 <meta name="description" content="Three classic algorithms close the course. Merge sort shows divide and conquer: split the array in half, sort each half, merge them. Longest common subsequence is a two-string DP. Kruskal&#x27;s algorithm builds a minimum spanning tree by taking the cheapest edges that do not form a cycle, using DSU. The module&#x27;s quiz material also contrasts substrings with subsequences.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -34,13 +34,42 @@
     <p class="eyebrow"><a href="index.html">Introduction to Algorithms</a> · Module 18</p>
     <h1>Merge sort, LCS and Kruskal&#x27;s MST</h1>
     <p class="lead">Three classic algorithms close the course. Merge sort shows divide and conquer: split the array in half, sort each half, merge them. Longest common subsequence is a two-string DP. Kruskal&#x27;s algorithm builds a minimum spanning tree by taking the cheapest edges that do not form a cycle, using DSU. The module&#x27;s quiz material also contrasts substrings with subsequences.</p>
-    <p class="chips"><span>5 programs</span><span>3 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%2018" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
+    <p class="chips"><span>7 programs</span><span>3 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%2018" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
-  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-conquer"><span class="n">1</span>Merge two sorted arrays</a></li><li><a href="#p-divide"><span class="n">2</span>The divide step (splitting only)</a></li><li><a href="#p-merge-sort"><span class="n">3</span>Merge sort</a></li><li><a href="#p-lcs"><span class="n">4</span>Longest common subsequence (memoized)</a></li><li><a href="#p-mst-using-kruskal-algorithm"><span class="n">5</span>Minimum spanning tree with Kruskal</a></li></ol></details></nav>
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Hand a friend half of an unsorted pile of exam papers, keep the other half, and you both sort your own half. Now two sorted piles lie face up on the table. Joining them is easy: look at the top paper of each pile, take the smaller roll number, repeat. You never look deeper than the top card.</p><p>That joining step is the merge, and it is the only clever part of merge sort. Two sorted halves going in:</p><pre class="trace">left  : 2 5 9        right : 1 6 8
+
+compare      take     result so far
+2 vs 1        1       1
+2 vs 6        2       1 2
+5 vs 6        5       1 2 5
+9 vs 6        6       1 2 5 6
+9 vs 8        8       1 2 5 6 8
+left over     9       1 2 5 6 8 9</pre><p>Every number is copied exactly once, so merging two halves holding n numbers between them costs about n steps.</p><p>And if you have no friend? Split your half again, and again, until each pile holds one paper — a pile of one is already sorted. Eight papers split 8, 4, 2, 1: three rounds, and log2 of n rounds in general. Each round merges everything once, about n steps, so the whole sort is O(n log n). For a million numbers that is roughly 20 million steps, where the compare-everything-with-everything sorts of earlier modules would need a million million.</p><pre class="snip">void divide(int a[], int l, int r){
+    if(l &gt;= r) return;       // one element, already sorted
+    int mid = (l + r) / 2;
+    divide(a, l, mid);       // sort the left half
+    divide(a, mid+1, r);     // sort the right half
+    conquer(a, l, mid, r);   // merge the two sorted halves
+}</pre><p><strong>The second topic is a different animal.</strong> The word <code>cat</code> sits inside <code>cart</code> if you may skip letters: c, a, jump over r, then t. That is a subsequence. A substring would have to be a solid block, and <code>cat</code> is not a solid block of <code>cart</code>. The longest common subsequence of two strings is the longest skipping match they share.</p><p>Lay the two words out as a table, one down the side and one along the top. Each cell holds the answer for the two prefixes meeting there. If the two letters match, take the cell diagonally up-left and add 1. If they do not match, take the larger of the cell above and the cell to the left — that is &quot;drop a letter from one string or the other, and keep the better result&quot;.</p><pre class="trace">          &quot;&quot;   c   a   t
+   &quot;&quot;      0   0   0   0
+   c       0   1   1   1
+   a       0   1   2   2
+   r       0   1   2   2
+   t       0   1   2   3   &lt;- answer
+
+3 letters in common, and they spell &quot;cat&quot;</pre><p>Notice the row for <code>r</code>: it matches nothing, so it simply copies the row above. That is the skipped letter.</p><p><strong>The third topic joins villages with cable.</strong> You know the price of every possible cable and want every village connected for the least money. The rule is almost too simple: sort the cables cheapest first, and lay one only if the two villages it joins are not already connected through cables you have laid. If they are, that cable makes a loop — money spent, nothing new reached.</p><p>&quot;Already connected to each other&quot; is exactly the question Module 11 answered: <code>find(a) == find(b)</code> in a disjoint set union. Kruskal&#x27;s algorithm is nothing more than that DSU checking a sorted edge list as it goes past. Four villages:</p><pre class="trace">edge  cost  groups before      take it?
+1-2    1    {1}{2}{3}{4}       yes -&gt; {1,2}
+2-3    2    {1,2}{3}{4}        yes -&gt; {1,2,3}
+1-3    3    {1,2,3}{4}         no, same group
+3-4    4    {1,2,3}{4}         yes -&gt; {1,2,3,4}
+1-4    5    {1,2,3,4}          no, same group
+
+total cost = 1 + 2 + 4 = 7, using 3 edges</pre><p>Three edges for four nodes, and that is no accident: a tree that spans n nodes always has exactly n-1 edges. Taking the cheapest edge that is still safe, every time, gives the smallest possible total — which is why this one is called the minimum spanning tree.</p><p>The programs below show the splitting and the merging on their own before putting them together as merge sort, then the LCS table, then Kruskal with the DSU written out in full.</p></div></section>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-conquer"><span class="n">1</span>Merge two sorted arrays</a></li><li><a href="#p-divide"><span class="n">2</span>The divide step (splitting only)</a></li><li><a href="#p-merge-sort"><span class="n">3</span>Merge sort</a></li><li><a href="#p-lcs"><span class="n">4</span>Longest common subsequence (memoized)</a></li><li><a href="#p-mst-using-kruskal-algorithm"><span class="n">5</span>Minimum spanning tree with Kruskal</a></li><li><a href="#p-sort-an-array"><span class="n">6</span>Sort an Array (practice)</a></li><li><a href="#p-road-reparation"><span class="n">7</span>Road Reparation (practice)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Divide and conquer</h4><p>Break the problem into halves, solve each half recursively, then combine. For merge sort the combining step is the merge.</p></div><div class="concept"><h4>Merging two sorted arrays</h4><p>Keep one pointer in each array, copy the smaller front element, advance that pointer, and finally copy whatever is left.</p><pre class="snip">while (i &lt; n &amp;&amp; j &lt; m) c[k++] = (a[i] &lt; b[j]) ? a[i++] : b[j++];</pre></div><div class="concept"><h4>Merge sort cost</h4><p>log n levels of halving, and each level does O(n) merge work, so O(n log n) time with O(n) extra memory.</p></div><div class="concept"><h4>Substring vs subsequence</h4><p>A substring is a contiguous block of characters. A subsequence keeps the order but may skip characters. <code>ace</code> is a subsequence of <code>abcde</code>, not a substring.</p></div><div class="concept"><h4>LCS recurrence</h4><p>Compare the last characters: equal gives 1 + lcs of both shorter strings; different gives the better of dropping one character from either string.</p><pre class="snip">if (a[i] == b[j]) return 1 + lcs(i-1, j-1);
 return max(lcs(i-1, j), lcs(i, j-1));</pre></div><div class="concept"><h4>Minimum spanning tree</h4><p>A set of n-1 edges that connects all nodes with the smallest total weight and no cycle.</p></div><div class="concept"><h4>Kruskal&#x27;s algorithm</h4><p>Sort edges by weight. Walk through them and keep an edge only if its ends are in different DSU groups; then union them.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/sorting" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — sorting</b><span class="rnote">Every sort side by side, with the comparison count shown as it runs.</span></a></li><li class="r-visual"><a href="https://visualgo.net/en/mst" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — minimum spanning tree</b><span class="rnote">Watch Kruskal pick edges and skip the ones that would close a loop.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/Kruskal.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — Kruskal</b><span class="rnote">Edges taken in price order, with the rejected ones shown.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/graph/mst_kruskal.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — Kruskal&#x27;s MST</b><span class="rnote">Kruskal with union-find, the same pairing this module uses.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-conquer">
   <div class="prog-h">
@@ -783,6 +812,611 @@ ace</pre><p class="io-note">Two strings.</p></div><div class="io out"><div class
   <details class="how" open><summary>How it works, step by step</summary><ol><li>Read the edges into <code>edge_list</code> as <code>Edge(a, b, c)</code>.</li><li><code>sort</code> them with <code>cmp</code>, cheapest first.</li><li>For each edge, find the leaders of both ends.</li><li>Different leaders: <code>dsu_union</code> them and add the weight to <code>total_cost</code>.</li><li>Same leader: skip it, it would form a cycle.</li><li>Print <code>total_cost</code>.</li></ol></details>
   <div class="callout warn"><b>Watch out.</b> <code>dsu_union</code> is declared to return <code>int</code> but never returns anything. In C++ that is undefined behaviour, and here it makes the program crash on the first union. Make it <code>void dsu_union(...)</code>. Also, <code>memset(group_size, 1, ...)</code> fills bytes, not ints; set sizes with a loop. If the graph may be disconnected, also count kept edges and check that there are n-1. Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>.</div>
   <details class="check"><summary><span>✅ Check yourself:</span> Why is it safe to skip an edge whose ends already share a leader?</summary><div>Its ends are already connected by cheaper (or equal) edges, so adding it would only create a cycle and raise the cost.</div></details>
+</section>
+<section class="prog" id="p-sort-an-array">
+  <div class="prog-h">
+    <span class="num">6</span>
+    <div class="prog-t">
+      <h3>Sort an Array (practice)</h3>
+      <div class="meta"><code class="fname">sort_an_array.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(n log n) · Space O(n)</span><a class="prob" href="https://leetcode.com/problems/sort-an-array/" target="_blank" rel="noopener">↗ LeetCode 912 - Sort an Array</a></div>
+    </div>
+  </div>
+  <p class="what">Sorts an array without the built-in <code>sort</code>, which is exactly what this module&#x27;s merge sort is for. Same <code>divide</code> and <code>conquer</code> pair as <code>merge_sort.cpp</code>, moved into the judge&#x27;s <code>class Solution</code> and working on a <code>vector</code> instead of a raw array.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 120 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/sort_an_array.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Sort an Array   (LeetCode 912)</span>
+
+<span class="cm">Given an array of integers, return it sorted in increasing order. The</span>
+<span class="cm">built-in sort is not allowed, so this is the module&#39;s own merge sort:</span>
+<span class="cm">split the array in half, sort each half by the same routine, then merge</span>
+<span class="cm">the two sorted halves in one walk.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">    1 &lt;= nums.length &lt;= 5 * 10^4</span>
+<span class="cm">    -5 * 10^4 &lt;= nums[i] &lt;= 5 * 10^4</span>
+
+<span class="cm">Input (for the small driver below)</span>
+<span class="cm">    first line: n, the number of values</span>
+<span class="cm">    second line: the n values</span>
+
+<span class="cm">Output</span>
+<span class="cm">    sorted = the values in increasing order, separated by spaces</span>
+
+<span class="cm">Example 1</span>
+
+<span class="cm">input</span>
+<span class="cm">4</span>
+<span class="cm">5 2 3 1</span>
+
+<span class="cm">output</span>
+<span class="cm">sorted = 1 2 3 5</span>
+
+<span class="cm">Example 2</span>
+
+<span class="cm">input</span>
+<span class="cm">6</span>
+<span class="cm">5 1 1 2 0 0</span>
+
+<span class="cm">output</span>
+<span class="cm">sorted = 0 0 1 1 2 5</span>
+
+<span class="cm">    Equal values stay next to each other; merge sort keeps them in order</span>
+<span class="cm">    because the merge takes from the left half when the two fronts tie.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="c1">// Both halves a[l..mid] and a[mid+1..r] are already sorted.</span>
+<span class="w">    </span><span class="c1">// Copy them out and write the smaller front back into a, one at a time.</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">conquer</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">mid</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">left</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">right</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">curr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">l</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">left</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">right</span><span class="p">.</span><span class="n">size</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// &lt;= and not &lt;, so that equal values keep their original order.</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">left</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">right</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">a</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">                </span><span class="n">i</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">a</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">right</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+<span class="w">                </span><span class="n">j</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">// One side may still have leftovers; they are already in order.</span>
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">left</span><span class="p">.</span><span class="n">size</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">a</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">            </span><span class="n">i</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">right</span><span class="p">.</span><span class="n">size</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">a</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">right</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+<span class="w">            </span><span class="n">j</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="n">curr</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">divide</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// O(n log n)</span>
+<span class="w">        </span><span class="c1">// One value (or none) is already sorted, so there is nothing to do.</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">        </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="p">);</span><span class="w">          </span><span class="c1">// sort the left half</span>
+<span class="w">        </span><span class="n">divide</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">);</span><span class="w">      </span><span class="c1">// sort the right half</span>
+<span class="w">        </span><span class="n">conquer</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">);</span><span class="w">      </span><span class="c1">// merge the two sorted halves</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sortArray</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">divide</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">nums</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nums</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">Solution</span><span class="w"> </span><span class="n">sol</span><span class="p">;</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sol</span><span class="p">.</span><span class="n">sortArray</span><span class="p">(</span><span class="n">nums</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;sorted =&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">ans</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 120 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4
+5 2 3 1</pre><p class="io-note">n, then the n values. The first sample of the problem.</p></div><div class="io out"><div class="io-h">Output </div><pre>sorted = 1 2 3 5
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>sorted = 1 2 3 5</code>. On <code>6\n5 1 1 2 0 0\n</code> it prints <code>sorted = 0 0 1 1 2 5</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>divide(a, l, r)</code> stops when <code>l &gt;= r</code>: one value is already sorted.</li><li>Otherwise split at <code>mid = (l + r) / 2</code>, sort <code>l..mid</code> and <code>mid+1..r</code> by the same call, then merge them.</li><li><code>conquer</code> copies the two halves into <code>left</code> and <code>right</code>, then walks all three with one pointer each, always writing the smaller front value back into <code>a</code>.</li><li>When one side runs out, the rest of the other side is copied over: it is already in order.</li><li>The comparison is <code>left[i] &lt;= right[j]</code>, so equal values are taken from the left half first and keep their original order.</li><li><code>sortArray</code> just calls <code>divide</code> over the whole vector and returns it.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The left half is <code>mid - l + 1</code> values and the right half is <code>r - mid</code>, not the same count when the range has an odd length. Slicing with <code>a.begin() + l</code> to <code>a.begin() + mid + 1</code> gets both sizes right without any arithmetic.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why does merge sort cost O(n log n) rather than O(n^2)?</summary><div>Halving the range only takes log n levels, and each level merges every value exactly once, which is n work per level.</div></details>
+</section>
+<section class="prog" id="p-road-reparation">
+  <div class="prog-h">
+    <span class="num">7</span>
+    <div class="prog-t">
+      <h3>Road Reparation (practice)</h3>
+      <div class="meta"><code class="fname">road_reparation.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(m log m) for the sort, DSU is near constant per query · Space O(n + m)</span><a class="prob" href="https://cses.fi/problemset/task/1675" target="_blank" rel="noopener">↗ CSES 1675 - Road Reparation</a></div>
+    </div>
+  </div>
+  <p class="what">Finds the cheapest set of roads that keeps every city reachable from every other city, or prints IMPOSSIBLE. That set is a minimum spanning tree, so this is <code>mst_using_Kruskal_algorithm.cpp</code> with the two things the judge needs added: a long long total and a connectivity check.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 152 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2018/road_reparation.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Road Reparation   (CSES 1675)</span>
+
+<span class="cm">There are n cities and m roads. Repairing a road costs some amount, and a</span>
+<span class="cm">repaired road can be used in both directions. Repair the cheapest set of</span>
+<span class="cm">roads such that every city can be reached from every other city, and print</span>
+<span class="cm">what that costs. If no set of roads can join all the cities, print</span>
+<span class="cm">IMPOSSIBLE.</span>
+
+<span class="cm">Keeping every city reachable with the smallest total cost is exactly a</span>
+<span class="cm">minimum spanning tree, so this is Kruskal&#39;s algorithm from this module:</span>
+<span class="cm">sort the roads by cost and take a road whenever its two cities are still in</span>
+<span class="cm">different groups, using DSU to tell the groups apart.</span>
+
+<span class="cm">Constraints</span>
+<span class="cm">    1 &lt;= n &lt;= 10^5</span>
+<span class="cm">    1 &lt;= m &lt;= 2 * 10^5</span>
+<span class="cm">    1 &lt;= a, b &lt;= n</span>
+<span class="cm">    1 &lt;= c &lt;= 10^9</span>
+
+<span class="cm">Because 10^5 roads can each cost 10^9, the total does not fit in an int.</span>
+<span class="cm">Keep it in a long long.</span>
+
+<span class="cm">Input</span>
+<span class="cm">    first line: n and m</span>
+<span class="cm">    next m lines: a b c, a road between cities a and b costing c</span>
+
+<span class="cm">Output</span>
+<span class="cm">    the smallest total cost, or IMPOSSIBLE</span>
+
+<span class="cm">Example</span>
+
+<span class="cm">input</span>
+<span class="cm">5 6</span>
+<span class="cm">1 2 3</span>
+<span class="cm">2 3 5</span>
+<span class="cm">2 4 2</span>
+<span class="cm">3 4 8</span>
+<span class="cm">5 1 7</span>
+<span class="cm">5 4 4</span>
+
+<span class="cm">output</span>
+<span class="cm">14</span>
+
+<span class="cm">    Sorted by cost the roads are 2-4 (2), 1-2 (3), 5-4 (4), 2-3 (5),</span>
+<span class="cm">    5-1 (7), 3-4 (8). The first four are taken and already join all five</span>
+<span class="cm">    cities: 2 + 3 + 4 + 5 = 14. The last two would close a cycle, so they</span>
+<span class="cm">    are skipped.</span>
+
+<span class="cm">Example</span>
+
+<span class="cm">input</span>
+<span class="cm">3 1</span>
+<span class="cm">1 2 5</span>
+
+<span class="cm">output</span>
+<span class="cm">IMPOSSIBLE</span>
+
+<span class="cm">    City 3 has no road at all, so it can never be reached.</span>
+
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="p">;</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">group_size</span><span class="p">;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Edge</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Edge</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">            </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">bool</span><span class="w"> </span><span class="nf">cmp</span><span class="p">(</span><span class="n">Edge</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">Edge</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">l</span><span class="p">.</span><span class="n">c</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">c</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">node</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Point the node straight at its leader, so the next find is short.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]);</span>
+<span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">dsu_union</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node1</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">node2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">node1</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">node2</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Hang the smaller group under the bigger one to keep the tree flat.</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">par</span><span class="p">[</span><span class="n">leader2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader1</span><span class="p">;</span>
+<span class="w">        </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">par</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader2</span><span class="p">;</span>
+<span class="w">        </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">par</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+<span class="w">    </span><span class="n">group_size</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Edge</span><span class="o">&gt;</span><span class="w"> </span><span class="n">edge_list</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">        </span><span class="n">edge_list</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Edge</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Cheapest road first: that is the whole idea of Kruskal&#39;s algorithm.</span>
+<span class="w">    </span><span class="n">sort</span><span class="p">(</span><span class="n">edge_list</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">edge_list</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="n">cmp</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">total_cost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">taken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">edge_list</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">Edge</span><span class="w"> </span><span class="n">edge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge_list</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">parA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">edge</span><span class="p">.</span><span class="n">a</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">parB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">edge</span><span class="p">.</span><span class="n">b</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">// Same leader means the two cities are already joined, so this road</span>
+<span class="w">        </span><span class="c1">// would only close a cycle and add cost for nothing.</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">parA</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">parB</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">dsu_union</span><span class="p">(</span><span class="n">edge</span><span class="p">.</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">edge</span><span class="p">.</span><span class="n">b</span><span class="p">);</span>
+<span class="w">            </span><span class="n">total_cost</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">edge</span><span class="p">.</span><span class="n">c</span><span class="p">;</span>
+<span class="w">            </span><span class="n">taken</span><span class="o">++</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// A tree over n cities needs exactly n-1 roads. Fewer means the roads</span>
+<span class="w">    </span><span class="c1">// left the cities in two or more separate pieces.</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">taken</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;IMPOSSIBLE&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">total_cost</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 152 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 6
+1 2 3
+2 3 5
+2 4 2
+3 4 8
+5 1 7
+5 4 4</pre><p class="io-note">n and m, then m lines <code>a b c</code>: a road between cities a and b costing c.</p></div><div class="io out"><div class="io-h">Output </div><pre>14
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>14</code>. Sorted by cost the roads are 2-4 (2), 1-2 (3), 5-4 (4), 2-3 (5), 5-1 (7), 3-4 (8); the first four join all five cities and add up to 14, the last two would close cycles. On <code>3 1\n1 2 5\n</code> it prints <code>IMPOSSIBLE</code>, because city 3 has no road.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read the m roads into a <code>vector&lt;Edge&gt;</code> and sort them by cost with the <code>cmp</code> comparator.</li><li>DSU starts with <code>par</code> all -1 (every city is its own leader) and <code>group_size</code> all 1.</li><li>Walk the sorted roads. If <code>find(a) != find(b)</code> the two cities are still in different pieces, so take the road: union them, add the cost, and count it.</li><li>If the leaders are already the same, skip the road: it would only close a cycle and cost money for nothing.</li><li><code>find</code> sets <code>par[node] = leader</code> on the way back (path compression) and <code>dsu_union</code> hangs the smaller group under the bigger one, which keeps the trees flat.</li><li>At the end a tree over n cities must have exactly n-1 roads. If fewer were taken, the roads left the map in two or more pieces, so print IMPOSSIBLE.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Two traps the module&#x27;s file has. <code>total_cost</code> must be a long long: 10^5 roads at 10^9 each overflow an int. And the module&#x27;s file uses <code>memset(group_size, 1, sizeof(group_size))</code>, which fills each byte with 1, not each int; <code>assign(n + 1, 1)</code> says what was meant.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why is counting the taken roads enough to spot a disconnected map?</summary><div>Kruskal takes a road only when it joins two different pieces, so each taken road drops the number of pieces by one. Starting from n pieces, ending with one needs exactly n-1 of them.</div></details>
 </section></section>
   <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://leetcode.com/problems/longest-common-subsequence/" target="_blank" rel="noopener">Longest Common Subsequence</a><span class="site">LeetCode</span></li><li><a href="https://leetcode.com/problems/sort-an-array/" target="_blank" rel="noopener">Sort an Array</a><span class="site">LeetCode</span></li><li><a href="https://cses.fi/problemset/task/1675" target="_blank" rel="noopener">Road Reparation (MST)</a><span class="site">CSES</span></li></ul></section>
   <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>Merge sort = split in half, sort both halves, merge with two pointers: O(n log n).</li><li>Substring is contiguous; subsequence keeps order but may skip characters.</li><li>LCS: equal last characters add 1; otherwise take the better of dropping one side.</li><li>Kruskal = sort edges + DSU; keep an edge only when it joins two groups.</li><li>An MST of n nodes has exactly n-1 edges.</li></ul></section>
@@ -795,7 +1429,7 @@ ace</pre><p class="io-note">Two strings.</p></div><div class="io out"><div class
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

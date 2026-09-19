@@ -7,7 +7,7 @@
 <meta name="description" content="This module adds depth-first search, which goes as deep as possible before backing up, written with recursion. It then moves both BFS and DFS onto 2D grids, where each cell is a node, and uses DFS to count connected components and their sizes.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,13 +36,33 @@
     <p class="lead">This module adds depth-first search, which goes as deep as possible before backing up, written with recursion. It then moves both BFS and DFS onto 2D grids, where each cell is a node, and uses DFS to count connected components and their sizes.</p>
     <p class="chips"><span>9 programs</span><span>2 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%203" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Think about walking through an unfamiliar building. BFS was the careful way: check every room next to the entrance, then every room next to those. Depth-first search is the way a person actually does it. Take the first door you have not been through, walk into that room, take the first door there, and keep going until you reach a room with nothing new. Then step back one room and try its next door.</p><p>That is the whole algorithm, and it is <strong>recursion</strong>, which you already know: mark the room you are in, then call the same function on each unvisited neighbour. The call stack is what remembers the way back, so there is no queue at all.</p><p>It is also the tree traversal you have written before. Pre-order printed a node, then went all the way down the left branch before touching the right one. DFS on a graph is pre-order with <code>adj_list[src]</code> instead of <code>left</code> and <code>right</code>, plus the <code>vis</code> array, because a graph, unlike a tree, can lead you back to where you started.</p><pre class="snip">void dfs(int src){
+    cout &lt;&lt; src &lt;&lt; &quot; &quot;;
+    vis[src] = true;
+    for(int child : adj_list[src]){
+        if(!vis[child]) dfs(child);
+    }
+}</pre><p>Take the graph of the first program below: node 0 joins 1 and 2, node 1 joins 3 and 4, node 2 joins 5. Start <code>dfs(0)</code> and follow the calls, with each level of indentation being one call deeper:</p><pre class="trace">dfs(0)  print 0
+  dfs(1)  print 1
+    dfs(3)  print 3   nothing new, return
+    dfs(4)  print 4   nothing new, return
+  back in 1, done, return
+  dfs(2)  print 2
+    dfs(5)  print 5   return
+
+visit order:  0 1 3 4 2 5</pre><p>Compare that with BFS on the same graph, which would print <code>0 1 2 3 4 5</code>. DFS finished the whole branch under 1 before it even looked at 2. Same graph, same neighbours, different order, and that difference matters: BFS hands you the shortest distance, DFS does not. DFS finds *a* path to a node, not the shortest one.</p><p><strong>The second new idea is that a grid is a graph.</strong> A 2D array of characters does not look like dots and lines, but treat cell <code>(i, j)</code> as a node whose neighbours are the four cells up, down, left and right, and every program from the last module works on it unchanged. The four steps are kept in a small list of <code>{di, dj}</code> pairs, and each neighbour is checked with <code>valid(i, j)</code> first: a cell on the top row has no cell above it, and reading <code>grid[-1][j]</code> is a bug waiting to happen.</p><pre class="snip">vector&lt;pair&lt;int,int&gt;&gt; direction = {{0,1},{0,-1},{-1,0},{1,0}};
+int ci = si + direction[i].first;
+int cj = sj + direction[i].second;
+if(valid(ci, cj) &amp;&amp; !vis[ci][cj]) dfs(ci, cj);</pre><p>DFS on an open 2 by 3 grid, starting at the top-left with the directions tried in the order right, left, up, down, moves like a snake. The numbers show the order the cells are entered:</p><pre class="trace">grid          order entered
+ .  .  .       1   2   3
+ .  .  .       6   5   4</pre><p>It runs right until the edge of the grid stops it, drops down, then comes back along the bottom row. Change the order of the <code>direction</code> list and the picture changes, because DFS takes the first direction that works and commits to it.</p><p><strong>The third idea is counting the pieces.</strong> A graph can be in several disconnected parts, like islands with no bridge between them, and one DFS paints exactly one island: it reaches only what is joined to its starting node. So walk over all <code>n</code> nodes, and every time you find one still unvisited, start a DFS there and add one to a counter. With 9 nodes split into {0,1,2,3}, {4,5} and {6,7,8} the loop starts a DFS at 0, then at 4, then at 6, so the answer is 3. The loop must cover every node, because a node with no edges is still an island of its own. For the size of each piece, set a counter to 0 just before the call and add 1 inside <code>dfs</code> for every node it enters.</p><p>The programs below work through all of it: DFS on a graph, BFS and DFS on grids with and without walls, counting components, component sizes, and a flood fill that repaints a picture.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-dfs"><span class="n">1</span>DFS traversal</a></li><li><a href="#p-bfs-on-2d-grid"><span class="n">2</span>BFS on a 2D grid</a></li><li><a href="#p-bfs-on-grid-with-obstacles"><span class="n">3</span>BFS on a grid with walls</a></li><li><a href="#p-dfs-on-2d-grid"><span class="n">4</span>DFS on a 2D grid</a></li><li><a href="#p-number-of-components"><span class="n">5</span>Count connected components</a></li><li><a href="#p-practice-problem-1"><span class="n">6</span>How many nodes can N reach?</a></li><li><a href="#p-practice-problem-2"><span class="n">7</span>Number of components (practice)</a></li><li><a href="#p-practice-problem-3"><span class="n">8</span>Size of every component</a></li><li><a href="#p-practice-day-2-flood-fill"><span class="n">9</span>LeetCode 733 - Flood Fill</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>DFS with recursion</h4><p>Mark the node, then call <code>dfs</code> on each unvisited neighbour. The call stack remembers where to come back to.</p><pre class="snip">void dfs(int u){
   vis[u] = true;
   for(int v : adj[u]) if(!vis[v]) dfs(v);
 }</pre></div><div class="concept"><h4>Grid as a graph</h4><p>Cell <code>(i, j)</code> is a node. Its neighbours are the 4 cells up, down, left and right, taken from a <code>direction</code> list of <code>{di, dj}</code> pairs.</p></div><div class="concept"><h4>valid(i, j)</h4><p>Before touching a neighbour, check it is inside the grid: <code>0 &lt;= i &lt; n</code> and <code>0 &lt;= j &lt; m</code>. Then check it is not visited and not a wall.</p></div><div class="concept"><h4>Connected components</h4><p>Loop over every node; each time you find an unvisited one, start a DFS and add 1 to the count. Each DFS paints one whole piece.</p></div><div class="concept"><h4>Component size</h4><p>Reset a counter before each DFS and increment it inside <code>dfs</code>; after the call it holds that component&#x27;s size.</p></div><div class="concept"><h4>Flood fill</h4><p>DFS on a grid that changes cell values as it goes, e.g. recolour every connected pixel of the same colour.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/dfsbfs" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — BFS and DFS</b><span class="rnote">Run both on the same graph and compare the order the nodes are visited.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/DFS.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — depth-first search</b><span class="rnote">Watch it go deep and back up, which is the whole difference from BFS.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/ConnectedComponent.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — connected components</b><span class="rnote">The islands idea on a plain graph.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/graph/depth-first-search.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — DFS</b><span class="rnote">DFS with the edge classification that explains cycle detection.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-dfs">
   <div class="prog-h">
@@ -1688,7 +1708,7 @@ practice_problem_1.cpp:53:5: note:                 &#x27;int count&#x27;
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>

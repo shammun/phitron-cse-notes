@@ -7,7 +7,7 @@
 <meta name="description" content="When edges have weights, BFS levels are no longer shortest distances. Dijkstra&#x27;s algorithm fixes this by always expanding the node with the smallest known distance, using a min-priority queue. The module builds a naive queue version first, then the optimized priority-queue version, and practises it on GFG, CSES and LeetCode.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -36,10 +36,32 @@
     <p class="lead">When edges have weights, BFS levels are no longer shortest distances. Dijkstra&#x27;s algorithm fixes this by always expanding the node with the smallest known distance, using a min-priority queue. The module builds a naive queue version first, then the optimized priority-queue version, and practises it on GFG, CSES and LeetCode.</p>
     <p class="chips"><span>7 programs</span><span>3 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/4_Introduction%20to%20Algorithms/Module%207" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>In Module 2 BFS gave you shortest distances, and it was honest: every step cost the same, so the fewest steps really was the shortest way. Now look at a small map of villages where the roads have lengths in kilometres:</p><pre class="trace">0 -- 1    10 km
+0 -- 2     3 km
+2 -- 1     4 km
+1 -- 3     2 km
+2 -- 3     8 km</pre><p>You are at village 0 and want to reach village 1. There is a direct road and it is 10 km. BFS would stop there and say &quot;one road, done&quot;. But go 0 -&gt; 2 -&gt; 1 instead and you pay 3 + 4 = 7 km. Two roads, and still shorter.</p><p>That is the whole problem of this module. <strong>Until now a step cost 1, so counting steps was the same as measuring distance. Here each edge carries its own weight, and the cheapest route is often not the one with the fewest edges.</strong> BFS levels are simply the wrong answer.</p><p>The slow way out is to list every route from 0 to 1, add up the kilometres of each one, and keep the smallest. On a country with 100000 roads the number of routes is beyond counting, so that idea dies immediately.</p><p>Dijkstra&#x27;s answer is patient and simple. Keep one number per village: the cheapest distance you know so far, starting at 0 for home and &quot;unknown&quot; for everyone else. Then repeat one move: <strong>take the nearest village you have not finished yet, and for each road leaving it, check whether going through it makes a neighbour cheaper.</strong> That check is called relaxing the edge. Finish the nearest one first, every time.</p><p>Run it on the map above, starting at 0. A dash means &quot;no route known yet&quot;. Each row is the table after one village has been finished:</p><pre class="trace">village     0    1    2    3
+start       0    -    -    -
+finish 0    0   10    3    -
+finish 2    0    7    3   11
+finish 1    0    7    3    9
+finish 3    0    7    3    9</pre><p>Follow row three. Village 2 was the nearest unfinished one at 3 km, so it goes first, and its road to 1 costs 4. That gives 3 + 4 = 7, which beats the 10 already written down, so 10 is crossed out and 7 is written in. Village 3 improves twice in the same way: 11 through village 2, then 9 through village 1. Nothing later improves them, because every remaining village is already further away than they are.</p><p>The one tool you need is the min-priority queue from Data Structures Module 23. Push <code>{distance, node}</code> pairs; pairs compare by their first value, so the smallest distance is always on top, and &quot;the nearest unfinished village&quot; costs one <code>pq.top()</code>:</p><pre class="snip">dis[src] = 0;
+pq.push({0, src});
+while(!pq.empty()){
+    int d = pq.top().first, u = pq.top().second;
+    pq.pop();
+    for(auto ch : adj_list[u]){
+        int v = ch.first, w = ch.second;
+        if(d + w &lt; dis[v]){      // relax the edge
+            dis[v] = d + w;
+            pq.push({dis[v], v});
+        }
+    }
+}</pre><p><strong>A second example.</strong> Make every road 1 km long and Dijkstra gives exactly the BFS levels back: BFS is the special case where all weights are equal.</p><p><strong>A third example.</strong> In Network Delay Time a signal starts at one computer and each cable takes some milliseconds. Dijkstra gives the moment each computer hears it; the answer is the largest of those numbers, because you wait for the last one. Any computer still at infinity was never reached, and the answer is -1.</p><p><strong>Where it breaks.</strong> Dijkstra rests on one promise: once a village is the nearest unfinished one, its distance is final. That promise holds only while every weight is zero or more. <strong>A negative edge can make a finished village cheaper later, and then the promise is a lie</strong> - so Dijkstra is not allowed on graphs with negative weights. Module 9 handles that case.</p><p>With the priority queue the cost is O((V + E) log V), which is fast enough for the judges. The programs below build it twice: first with a plain queue, so you can see why re-processing hurts, then the real version, and then the same code on GFG, LeetCode and CSES.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-priority-queue-of-pairs"><span class="n">1</span>Min-heap of pairs</a></li><li><a href="#p-dijkstra-naive"><span class="n">2</span>Dijkstra with a plain queue</a></li><li><a href="#p-dijkstra-optimized"><span class="n">3</span>Dijkstra with a priority queue</a></li><li><a href="#p-problem-implement-dijkstra"><span class="n">4</span>GFG - Implementing Dijkstra</a></li><li><a href="#p-problem-network-delay-time"><span class="n">5</span>LeetCode 743 - Network Delay Time</a></li><li><a href="#p-gfg-undirected-graph-cycle-bfs"><span class="n">6</span>GFG - Detect cycle (BFS version)</a></li><li><a href="#p-problem-building-roads"><span class="n">7</span>CSES 1666 - Building Roads</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Distance array</h4><p><code>dis[v]</code> = best cost found so far from the source; start with <code>INT_MAX</code> (infinity) and <code>dis[src] = 0</code>.</p></div><div class="concept"><h4>Relaxation</h4><p>For an edge <code>u → v</code> with weight <code>w</code>: if <code>dis[u] + w &lt; dis[v]</code>, update <code>dis[v]</code> and push <code>v</code> again.</p><pre class="snip">if(d + w &lt; dis[v]){ dis[v] = d + w; pq.push({dis[v], v}); }</pre></div><div class="concept"><h4>Min-priority queue of pairs</h4><p><code>priority_queue&lt;pair&lt;int,int&gt;, vector&lt;pair&lt;int,int&gt;&gt;, greater&lt;pair&lt;int,int&gt;&gt;&gt;</code> pops the smallest pair; pairs compare by <code>first</code>, so store <code>{distance, node}</code>.</p></div><div class="concept"><h4>Naive vs optimized</h4><p>A plain queue works but may re-process nodes many times. The priority queue processes the closest node first, giving O((V + E) log V).</p></div><div class="concept"><h4>No negative edges</h4><p>Dijkstra assumes a node&#x27;s distance is final once popped as the smallest; a negative edge can break that. Use Bellman-Ford then.</p></div><div class="concept"><h4>Components again</h4><p>Building Roads: the number of new roads needed is (components − 1); connect one representative of each piece to the next.</p></div></div></section>
   
+  <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/sssp" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — shortest paths</b><span class="rnote">Dijkstra and Bellman-Ford animated, with the distance table updating.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/Dijkstra.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — Dijkstra</b><span class="rnote">The distance labels being lowered, one finished node at a time.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/graph/dijkstra.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — Dijkstra</b><span class="rnote">Both versions, and when the priority queue one is worth it.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>William Fiset — graph theory playlist</b><span class="rnote">Every graph algorithm of this course, drawn before it is coded.</span></a></li></ul></section>
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
 <section class="prog" id="p-priority-queue-of-pairs">
   <div class="prog-h">
@@ -1127,7 +1149,7 @@ gfg_undirected_graph_cycle_bfs.cpp:44:28: error: &#x27;V&#x27; was not declared 
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=5" defer></script>
-<script src="../assets/site.js?v=5" defer></script>
+<script src="../assets/search-index.js?v=6" defer></script>
+<script src="../assets/site.js?v=6" defer></script>
 </body>
 </html>
