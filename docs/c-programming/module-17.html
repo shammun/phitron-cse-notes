@@ -36,7 +36,50 @@
     <p class="lead">Module 17 splits programs into functions. It covers the four basic shapes (with or without parameters, with or without a return value), and then scope: which variables a function can see. The swap examples show why passing a plain value can&#x27;t change the caller&#x27;s variable, and how global variables or pointers work around that.</p>
     <p class="chips"><span>7 programs</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/1_Introduction%20to%20Programming%20Language/Module%2017_Functions" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Suppose a program has to read two numbers and print their sum three times, at three different points. Until now you had exactly one place to put code, <code>main</code>, so the only way was to copy the same lines twice:</p><pre class="snip">int main(){
+    int a, b;
+    scanf(&quot;%d %d&quot;, &amp;a, &amp;b);
+    printf(&quot;Sum: %d\n&quot;, a + b);
+
+    scanf(&quot;%d %d&quot;, &amp;a, &amp;b);      // same three lines
+    printf(&quot;Sum: %d\n&quot;, a + b);
+
+    scanf(&quot;%d %d&quot;, &amp;a, &amp;b);      // and again
+    printf(&quot;Sum: %d\n&quot;, a + b);
+    return 0;
+}</pre><p>That works, but it is fragile. The day you want <code>Total:</code> instead of <code>Sum:</code> you have to remember all three places, and if you miss one the program quietly prints two different things.</p><p>A <strong>function</strong> is the way out. You write the block once, give it a name, and after that you only write the name when you want the work done. The values it should work on go in brackets and are called parameters:</p><pre class="snip">void add(int a, int b){
+    printf(&quot;Sum: %d\n&quot;, a + b);
+}
+
+int main(){
+    add(3, 4);       // Sum: 7
+    add(10, 25);     // Sum: 35
+    return 0;
+}</pre><p>This is what is new in this module. So far a program was one straight run through <code>main</code>. Now the run can jump out to a named helper and come back to the very next line:</p><p><code>void</code> means the helper hands nothing back; it only prints. When you want the answer instead of a printed line, say which type comes back and use <code>return</code>. <code>return</code> also ends the function at once, so nothing after it runs.</p><pre class="snip">int add(int a, int b){
+    return a + b;            // hands the value back
+}
+
+int r = add(3, 4);           // r is 7
+printf(&quot;%d\n&quot;, add(10, 25)); // or use it straight away</pre><pre class="trace">main                    add
+----                    ---
+add(3, 4)  ------------&gt; runs the whole body
+                        prints Sum: 7
+next line  &lt;------------ comes back
+</pre><p>The second half of the module is about <strong>which variables a function can see</strong>. Every function keeps its own variables. An <code>a</code> inside <code>add</code> is not the <code>a</code> inside <code>main</code>, even though the name is the same; they sit at different addresses, and the programs below print those addresses so you can see it.</p><p>That leads to the classic trap. You write a helper that swaps two numbers, it looks perfectly correct, and after the call nothing has changed:</p><pre class="snip">void swap(int x, int y){
+    int t = x;  x = y;  y = t;
+}
+
+int a = 10, b = 20;
+swap(a, b);
+printf(&quot;%d %d\n&quot;, a, b);   // still 10 20</pre><pre class="trace">before call   main:  a = 10   b = 20
+on the call   swap:  x = 10   y = 20  (copies)
+inside swap   swap:  x = 20   y = 10  (swapped)
+after return  main:  a = 10   b = 20  (untouched)
+</pre><p>Read the trace slowly. C copies each argument into the parameter, so <code>swap</code> never touches <code>a</code> and <code>b</code> at all. It swaps its own two copies and then throws them away. Nothing is broken; the helper simply was never given the originals.</p><p>There are two ways round it, and the module shows both. One is to make <code>a</code> and <code>b</code> <strong>global</strong>, declared above every function, so there is only one pair of variables and every function works on them. It is easy but sloppy: once any function can change them, a bug can come from anywhere.</p><p>The other way uses what you already know from Module 15. Hand over the addresses instead of the values, and the helper can reach back into <code>main</code>:</p><p>The programs below walk through the four function shapes first, then print the addresses in both functions so you can watch the failed swap, the global swap and the pointer swap side by side.</p><pre class="snip">void swap(int *x, int *y){
+    int t = *x;  *x = *y;  *y = t;
+}
+
+swap(&amp;a, &amp;b);               // now a is 20 and b is 10</pre></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-no-return-no-parameter"><span class="n">1</span>void functions with no parameters</a></li><li><a href="#p-no-return-with-parameter"><span class="n">2</span>void functions with parameters</a></li><li><a href="#p-add-without-global-variable"><span class="n">3</span>Function that returns a value</a></li><li><a href="#p-add-global-variable"><span class="n">4</span>Using global variables</a></li><li><a href="#p-scope-swap-not-working"><span class="n">5</span>Why a naive swap fails</a></li><li><a href="#p-scope-global"><span class="n">6</span>Swapping global variables</a></li><li><a href="#p-swap-pointer"><span class="n">7</span>Swap that works: pass addresses</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Function shapes</h4><p>A <code>void</code> function returns nothing, and an <code>int</code> function hands back a value with <code>return</code>. Parameters are inputs passed in brackets. Any combination of the two is allowed.</p><pre class="snip">void greet();
 int add(int a, int b);</pre></div><div class="concept"><h4>Order of execution</h4><p>Code in <code>main</code> runs line by line. A call jumps into the function, runs all of it, and comes back to the next step in <code>main</code>.</p></div><div class="concept"><h4>Return value</h4><p><code>return sum;</code> sends a value back. The caller can store it (<code>int r = add();</code>) or use it directly inside <code>printf</code>.</p></div><div class="concept"><h4>Local scope</h4><p>Variables declared inside a function belong only to that function. Two functions can each have their own <code>a</code>, at different addresses.</p></div><div class="concept"><h4>Global variables</h4><p>Variables declared outside every function can be seen by all functions declared after them. They start at 0.</p></div><div class="concept"><h4>Pass by value</h4><p>C copies each argument into the parameter. Changing the parameter never changes the caller&#x27;s variable.</p></div><div class="concept"><h4>Pass the address instead</h4><p>To change the caller&#x27;s variable, pass <code>&amp;a</code> and change <code>*x</code> inside the function.</p><pre class="snip">void swap(int *x, int *y){ int t=*x; *x=*y; *y=t; }

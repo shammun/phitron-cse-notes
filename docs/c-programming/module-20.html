@@ -36,7 +36,33 @@
     <p class="lead">These are Shammunul&#x27;s final-exam answers for the Introduction to Programming course. They combine the whole course: matrix checks on both diagonals, swapping rows and columns through a pointer-based <code>swap</code>, <code>long long</code> arithmetic with divisibility, and comparing strings position by position.</p>
     <p class="chips"><span>5 programs</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/1_Introduction%20to%20Programming%20Language/Module%2020_Final%20Exam" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>A final exam page looks frightening, but nothing on it is new. Every answer here is built from the same small set of tools you have been using since Module 1. The only new part is that nobody tells you which tool to pick.</p><p>So before reading any code, it helps to have a map of the course. Most of it fits on one sheet: the shape of the problem on the left, the tool that fits it on the right.</p><pre class="trace">what you are given        the tool
+-----------------------   ----------------------
+one very large value      long long, printed %lld
+a list of numbers         an array and one loop
+a grid of numbers         two nested loops, i j
+a word                    a char array, walked
+&quot;how many of each&quot;        a frequency array
+the same job twice        write a function
+change the caller&#x27;s       pass the address, use *
+  variable</pre><p>Reading a question and finding its row in that table is the skill an exam actually tests. A question about one number that could reach 10^18 is a <code>long long</code> question, whatever story is wrapped around it. A question about a grid is a nested-loop question. A question where each position of a word can be decided without looking at the other positions is a single loop with a running total.</p><p>The shape this page leans on most is the grid. Once a matrix is read into <code>m[i][j]</code>, <code>i</code> is the row number and <code>j</code> is the column number, and every matrix question becomes the question &quot;which pairs <code>(i, j)</code> do I care about?&quot;.</p><p>Two answers to that come up again and again. A cell is on the main diagonal when <code>i == j</code>. A cell is on the other diagonal when <code>i + j == n - 1</code>, because for those cells the row and column numbers always add up to the last index. Here is a 4×4 grid with both marked:</p><pre class="trace">        j=0  j=1  j=2  j=3
+ i=0     *    .    .    *
+ i=1     .    *    *    .
+ i=2     .    *    *    .
+ i=3     *    .    .    *
+
+ i=1: i == j gives j=1, i+j == 3 gives j=2</pre><p>Walking a grid is always the same two loops, and the test goes inside them:</p><pre class="snip">for(int i = 0; i &lt; n; i++){
+    for(int j = 0; j &lt; n; j++){
+        if(i == j || i + j == n - 1){
+            // this cell is on a diagonal
+        }
+    }
+}</pre><p>Note <code>n - 1</code> and not <code>n</code>: with <code>n = 4</code> the last index is 3, so the second diagonal is (0,3), (1,2), (2,1), (3,0). Note also that the test only means anything on a square grid, which is why a check that the number of rows equals the number of columns comes first.</p><p><strong>Two habits worth keeping under time pressure.</strong> The first: when the question is &quot;does this satisfy all the rules?&quot;, do not carry a flag through the whole loop. Return 0 the moment a rule breaks and return 1 only if the loops finish. It is shorter, and it stops as soon as the answer is known.</p><p>The second: when you want to exchange two values that live somewhere else, such as two cells of a matrix, hand their addresses to one small function and let it do the work everywhere.</p><pre class="snip">void swap(int *a, int *b){
+    int t = *a;  *a = *b;  *b = t;
+}
+
+// inside main:
+swap(&amp;m[i][0], &amp;m[i][M-1]);   // ends of one row</pre><p><strong>What to watch for.</strong> A <code>long long</code> must be read and printed with <code>%lld</code>; <code>%d</code> on a 64-bit value quietly prints something wrong. Check <code>M % k == 0</code> before you divide, or an answer that does not exist will look like one that does. When a question asks for two operations one after the other, do them in the order given, because swapping columns then rows does not land the corners in the same places as rows then columns.</p><p>The programs below are the exam answers themselves, from the matrix checks in <code>jadu_matrix.c</code> and <code>swap_matrix.c</code> to the string counting in <code>same_same_but_different.c</code>. For each one, read the rules first, decide which row of the map above it belongs to, and only then read the code.</p></div></section>
   <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-jadu-matrix"><span class="n">1</span>Jadu matrix (both diagonals are 1)</a></li><li><a href="#p-swap-matrix"><span class="n">2</span>Swap first/last column, then first/last row</a></li><li><a href="#p-missing-number"><span class="n">3</span>Find the missing factor</a></li><li><a href="#p-same-same-but-different"><span class="n">4</span>Minimum changes to make 3 strings equal</a></li><li><a href="#p-max-number"><span class="n">5</span>Mountain rows 1..N..1 (header says Max Number)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Both diagonals at once</h4><p>A cell is on a diagonal if <code>i == j || i + j == n - 1</code>. Everything else is off-diagonal.</p></div><div class="concept"><h4>Checker function that returns early</h4><p>A function that returns 0 at the first broken rule and 1 at the end is cleaner than a flag.</p></div><div class="concept"><h4>Reusable <code>swap(int*, int*)</code></h4><p>Pass the addresses of any two cells, such as <code>&amp;m[i][0]</code> and <code>&amp;m[i][M-1]</code>, to exchange them.</p></div><div class="concept"><h4>Divisibility test</h4><p><code>M % P == 0</code> means <code>P</code> divides <code>M</code> exactly, and then the missing factor is <code>M / P</code>.</p></div><div class="concept"><h4><code>long long</code> and <code>%lld</code></h4><p>Values up to 10^18 need 64-bit integers, and scanf/printf must use <code>%lld</code>.</p></div><div class="concept"><h4>Per-position counting</h4><p>For three strings of equal length, each position can be fixed on its own. If all three letters differ, it costs 2 changes. If exactly one differs, it costs 1. If all match, it costs 0.</p></div></div></section>
   

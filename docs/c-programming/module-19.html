@@ -34,10 +34,42 @@
     <p class="eyebrow"><a href="index.html">Introduction to Programming</a> · Module 19</p>
     <h1>Passing arrays and strings to functions, and more recursion</h1>
     <p class="lead">Module 19 combines functions, pointers and recursion. Arrays and strings reach a function as the address of their first element, so the function can change the caller&#x27;s data. Pointer parameters let a function hand back more than one result, such as a min and a max. On the recursion side there are factorial, printing digits, and a two-ended palindrome check.</p>
-    <p class="chips"><span>11 programs</span><span>5 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
+    <p class="chips"><span>13 programs</span><span>5 practice links</span><a href="https://github.com/shammun/phitron-cse-notes/tree/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
-  
-  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-call-by-value-reference"><span class="n">1</span>Call by value vs call by reference</a></li><li><a href="#p-passing-array-in-function"><span class="n">2</span>Pass an array to a function</a></li><li><a href="#p-passing-string-in-function1"><span class="n">3</span>Pass a string: length</a></li><li><a href="#p-passing-string-in-function2"><span class="n">4</span>Change a string inside a function</a></li><li><a href="#p-pointer-as-parameter-of-array"><span class="n">5</span>Pointer parameters: arithmetic, changes and strcpy</a></li><li><a href="#p-factorial"><span class="n">6</span>Factorial by recursion</a></li><li><a href="#p-print-digits"><span class="n">7</span>Print the digits of a number</a></li><li><a href="#p-palindrome"><span class="n">8</span>Palindrome array by recursion</a></li><li><a href="#p-max-min"><span class="n">9</span>Max and Min (with a function)</a></li><li><a href="#p-shift-zeros"><span class="n">10</span>Shift Zeros</a></li><li><a href="#p-max-number"><span class="n">11</span>Mountain rows 1..N..1 (header says Max Number)</a></li></ol></details></nav>
+  <section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep"><p>Module 17 left you with a rule: a function gets <strong>copies</strong> of what you pass it. To let a helper change your <code>int</code> you had to hand over its address with <code>&amp;a</code> and write <code>*x</code> inside.</p><p>So ask the obvious next question. You have an array of 1000 numbers and you want a helper to add them up. Do you have to pass 1000 copies? And if you did, would the helper be able to change the array at all?</p><p>The answer is that an array behaves differently from a single <code>int</code>, and you already know why from Module 15: the name of an array is the address of its first element. So <code>fun(a, 10)</code> does not copy anything. One address travels into the helper, and the helper then reads and writes the caller&#x27;s own array.</p><p>Put the two side by side. This is the whole point of the module:</p><pre class="snip">void fun(int x, int *y){
+    x *= 10;                 // changes a copy
+    *y *= 10;                // changes the caller&#x27;s b
+}
+
+int a = 10, b = 20;
+fun(a, &amp;b);                  // a stays 10, b becomes 200</pre><pre class="trace">single int          array
+----------          -----
+main  x = 5         main  a[] = 7 8 9
+call: copy of 5     call: address of a[0]
+helper sets x = 99  helper sets x[0] = 99
+back: x is still 5  back: a[] = 99 8 9
+</pre><p>That is the new idea in one sentence: **you never need <code>&amp;</code> for an array, because the address is what you were holding all along**. A helper that sorts, shifts or cleans an array does not return anything; it edits the caller&#x27;s array in place and <code>main</code> simply prints it afterwards.</p><p>A string is a <code>char</code> array, so everything above applies to strings too. A helper that uppercases the first letter changes the caller&#x27;s word for good:</p><p>Two small consequences. First, <code>void fun(int x[], int n)</code> and <code>void fun(int *x, int n)</code> are the same parameter, and <code>x[i]</code> and <code>*(x+i)</code> are the same element, so you will see both spellings on this page. Second, the helper received only an address, so it cannot tell how long the array is. You must pass the length as well. Strings are the exception, because <code>&#x27;\0&#x27;</code> marks the end, which is how <code>strlen</code> works inside a helper that was given nothing but a <code>char *</code>.</p><pre class="snip">void makeFirstCharUpper(char x[]){
+    x[0] = x[0] - &#x27;a&#x27; + &#x27;A&#x27;;   // lowercase -&gt; uppercase
+}
+
+char a[] = &quot;programmer&quot;;
+makeFirstCharUpper(a);
+printf(&quot;%s
+&quot;, a);             // Programmer</pre><p>Pointers solve one more problem here. <code>return</code> hands back exactly one value, so a helper that must report both the smallest and the largest number seems impossible. Give it two addresses to fill in, and both answers come back:</p><p>The second half of the page is more recursion, now with a value returned rather than a line printed. Factorial is the plainest case: <code>5!</code> is <code>5 * 4!</code>, <code>4!</code> is <code>4 * 3!</code>, and <code>0!</code> is 1, which is the base case that stops it. Printing the digits of a number is the same trick with a twist you met in Module 18: take the last digit with <code>% 10</code>, recurse on <code>n / 10</code> first, and print afterwards, so 4071 comes out in the right order instead of backwards.</p><pre class="snip">void minMax(int arr[], int n, int *min, int *max){
+    *min = *max = arr[0];
+    for(int i = 1; i &lt; n; i++){
+        if(arr[i] &lt; *min) *min = arr[i];
+        if(arr[i] &gt; *max) *max = arr[i];
+    }
+}
+int mn, mx;
+minMax(arr, n, &amp;mn, &amp;mx);</pre><p>The last example joins both halves: an array, passed as a pointer, checked from both ends by recursion. To decide whether <code>3 1 4 1 3</code> is a palindrome, compare the two ends, then ask the same question about what is left inside. When the ends cross, everything matched:</p><p>Each step is one comparison plus a smaller copy of the same question, and the <code>1</code> from the base case travels back up through the <code>&amp;&amp;</code>, so the whole check is true only if every pair matched. Compare that with the two-pointer loop from Module 10: same idea, written as a shrinking question instead of a moving pair of indexes.</p><p>The programs below take this in order, from value against reference through arrays and strings, then factorial, digits and the palindrome check, with the practice problems at the end.</p><pre class="trace">a = 3 1 4 1 3
+isPal(0, 4): a[0]==a[4] (3==3) and isPal(1, 3)
+isPal(1, 3): a[1]==a[3] (1==1) and isPal(2, 2)
+isPal(2, 2): a[2]==a[2] (4==4) and isPal(3, 1)
+isPal(3, 1): i &gt; j, so return 1  &lt;-- base case
+result: 1 and 1 and 1 and 1  -&gt;  YES</pre></div></section>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-call-by-value-reference"><span class="n">1</span>Call by value vs call by reference</a></li><li><a href="#p-passing-array-in-function"><span class="n">2</span>Pass an array to a function</a></li><li><a href="#p-passing-string-in-function1"><span class="n">3</span>Pass a string: length</a></li><li><a href="#p-passing-string-in-function2"><span class="n">4</span>Change a string inside a function</a></li><li><a href="#p-pointer-as-parameter-of-array"><span class="n">5</span>Pointer parameters: arithmetic, changes and strcpy</a></li><li><a href="#p-factorial"><span class="n">6</span>Factorial by recursion</a></li><li><a href="#p-print-digits"><span class="n">7</span>Print the digits of a number</a></li><li><a href="#p-palindrome"><span class="n">8</span>Palindrome array by recursion</a></li><li><a href="#p-max-min"><span class="n">9</span>Max and Min (with a function)</a></li><li><a href="#p-shift-zeros"><span class="n">10</span>Shift Zeros</a></li><li><a href="#p-max-number"><span class="n">11</span>Mountain rows 1..N..1 (header says Max Number)</a></li><li><a href="#p-count-vowels"><span class="n">12</span>Count Vowels (recursion practice)</a></li><li><a href="#p-log2"><span class="n">13</span>Log2 (recursion practice)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Call by value vs by reference</h4><p>A plain <code>int</code> parameter is a copy. An <code>int*</code> parameter holds the caller&#x27;s address, so writing to <code>*y</code> changes the original.</p><pre class="snip">void fun(int x, int *y){ x *= 10; *y *= 10; }</pre></div><div class="concept"><h4>Arrays decay to pointers</h4><p><code>int x[]</code> and <code>int *x</code> mean the same thing in a parameter list. The function gets the address only, so the size must be passed as a separate argument.</p><pre class="snip">int sum(int x[], int n);</pre></div><div class="concept"><h4>Strings in functions</h4><p>A <code>char[]</code> string is passed the same way. Changes such as <code>x[0] = toupper(x[0])</code> show up in the caller, and <code>strlen</code> still works because of the <code>&#x27;\0&#x27;</code>.</p></div><div class="concept"><h4>Several results through pointers</h4><p><code>minMax(arr, n, &amp;mn, &amp;mx)</code> fills in two answers, because a function can return only one value.</p></div><div class="concept"><h4>Recursion with a return value</h4><p><code>factorial(n) = n * factorial(n-1)</code>, and <code>factorial(0) = 1</code>. Use <code>long long</code>, because factorials grow very fast.</p></div><div class="concept"><h4>Digits by recursion</h4><p><code>n % 10</code> is the last digit, and <code>n / 10</code> is the number without it. Recurse first and print afterwards to get the digits from left to right.</p></div><div class="concept"><h4>Two-ended recursion</h4><p>A palindrome check compares <code>a[i]</code> with <code>a[j]</code>, then recurses on <code>i+1</code> and <code>j-1</code>. It stops with true once <code>i &gt; j</code>.</p><pre class="snip">return a[i] == a[j] &amp;&amp; isPal(a, i+1, j-1);</pre></div></div></section>
   
   <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
@@ -1750,6 +1782,294 @@ apple
   <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>T</code>, then <code>T</code> numbers into <code>N[]</code>.</li><li>For each one, <code>firstPart(N[i])</code> prints 1 up to N.</li><li><code>secondPart(N[i])</code> prints N−1 down to 1.</li><li>Print a newline after each row.</li></ol></details>
   <div class="callout warn"><b>Watch out.</b> <strong>This doesn&#x27;t solve Max Number.</strong> It uses no recursion and ignores the array format. A recursive solution would be <code>int mx(int i){ if(i == n-1) return a[i]; int r = mx(i+1); return a[i] &gt; r ? a[i] : r; }</code>. The practice link is in the list below.</div>
   <details class="check"><summary><span>✅ Check yourself:</span> What row does this code print for N = 2?</summary><div><code>1 2 1</code>.</div></details>
+</section>
+<section class="prog" id="p-count-vowels">
+  <div class="prog-h">
+    <span class="num">12</span>
+    <div class="prog-t">
+      <h3>Count Vowels (recursion practice)</h3>
+      <div class="meta"><code class="fname">count_vowels.c</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(|S|) · Space O(|S|) for the calls</span><a class="prob" href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/I" target="_blank" rel="noopener">↗ Codeforces group - I. Count Vowels</a></div>
+    </div>
+  </div>
+  <p class="what">Counts the vowels of a line of text with recursion instead of a loop.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 66 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/count_vowels.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm">I. Count Vowels</span>
+<span class="cm">time limit per test 1 second</span>
+<span class="cm">memory limit per test 64 megabytes</span>
+
+<span class="cm">Given a string S, print how many vowels it contains. The vowels are</span>
+<span class="cm">a, e, i, o, u, in small letters or in capital letters. The string may</span>
+<span class="cm">contain spaces, so read the whole line.</span>
+
+<span class="cm">Note: Solve this problem using recursion.</span>
+
+<span class="cm">Input</span>
+<span class="cm">One line containing the string S (1 &lt;= |S| &lt;= 200).</span>
+
+<span class="cm">Output</span>
+<span class="cm">Print one number: how many vowels S contains.</span>
+
+<span class="cm">Example</span>
+<span class="cm">Input</span>
+<span class="cm">Data Structure Lab</span>
+<span class="cm">Output</span>
+<span class="cm">6</span>
+
+<span class="cm">Note</span>
+<span class="cm">The vowels are a, a, u, u, e and a.</span>
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="cm">/* Counts the vowels of s starting at index i.</span>
+
+<span class="cm">   The job &quot;count the vowels of the whole string&quot; contains a smaller copy of</span>
+<span class="cm">   itself: &quot;count the vowels from the next character onward&quot;. So the function</span>
+<span class="cm">   answers for position i by asking itself about position i + 1 and then adding</span>
+<span class="cm">   1 if the character sitting at i is a vowel.</span>
+
+<span class="cm">   Base case: when s[i] is the &#39;\0&#39; that ends the string there is nothing left</span>
+<span class="cm">   to count, so the answer is 0 and the calls start coming back. */</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">countVowels</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">s</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;\0&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* the answer for the rest of the string */</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countVowels</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;a&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;e&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;i&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;o&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;u&#39;</span><span class="w"> </span><span class="o">||</span>
+<span class="w">       </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;A&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;E&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;I&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;O&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;U&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">rest</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="cm">/* 200 characters, one slot for the newline that fgets keeps, and one for</span>
+<span class="cm">       the &#39;\0&#39;. scanf(&quot;%s&quot;) would stop at the first space, so it cannot be</span>
+<span class="cm">       used here. */</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="mi">205</span><span class="p">];</span>
+<span class="w">    </span><span class="n">fgets</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="mi">205</span><span class="p">,</span><span class="w"> </span><span class="n">stdin</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">countVowels</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">));</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 66 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>Data Structure Lab</pre><p class="io-note">One line of text, with spaces.</p></div><div class="io out"><div class="io-h">Output </div><pre>6
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>6</code>: the vowels are a, a, u, u, e and a.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>fgets(s, 205, stdin)</code> reads the whole line, spaces included. <code>scanf(&quot;%s&quot;, s)</code> would stop at the first space.</li><li><code>countVowels(s, i)</code> answers for the part of the string that starts at <code>i</code>.</li><li>Base case: when <code>s[i]</code> is <code>&#x27;\0&#x27;</code> there is nothing left, so it returns 0.</li><li>Otherwise it first asks itself about <code>i + 1</code>, keeps that answer in <code>rest</code>, and then adds 1 if the character at <code>i</code> is a vowel.</li><li><code>main</code> starts the chain at index 0 and prints the number that comes back.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Both cases are checked, so <code>A</code> counts as well as <code>a</code>. Without the <code>&#x27;\0&#x27;</code> base case the function would run past the end of the string.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Which part of the string does <code>countVowels(s, 3)</code> answer for?</summary><div>Everything from index 3 to the end. The characters before index 3 are not its business.</div></details>
+</section>
+<section class="prog" id="p-log2">
+  <div class="prog-h">
+    <span class="num">13</span>
+    <div class="prog-t">
+      <h3>Log2 (recursion practice)</h3>
+      <div class="meta"><code class="fname">log2.c</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(log n) · Space O(log n) for the calls</span><a class="prob" href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/P" target="_blank" rel="noopener">↗ Codeforces group - P. Log2</a></div>
+    </div>
+  </div>
+  <p class="what">Counts how many times a number can be halved before it reaches 1, written as a recursion.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 51 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2019_Recursion%20and%20Pointer/log2.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="cm">P. Log2</span>
+<span class="cm">time limit per test 1 second</span>
+<span class="cm">memory limit per test 64 megabytes</span>
+
+<span class="cm">Given a number N, print how many times you have to divide it by 2 before it</span>
+<span class="cm">becomes 1. Every division throws away the fraction, so 5 / 2 is 2.</span>
+
+<span class="cm">Note: Solve this problem using recursion.</span>
+
+<span class="cm">Input</span>
+<span class="cm">One line containing a number N (1 &lt;= N &lt;= 10^18).</span>
+
+<span class="cm">Output</span>
+<span class="cm">Print one number: how many divisions were needed.</span>
+
+<span class="cm">Example</span>
+<span class="cm">Input</span>
+<span class="cm">16</span>
+<span class="cm">Output</span>
+<span class="cm">4</span>
+
+<span class="cm">Note</span>
+<span class="cm">16 -&gt; 8 -&gt; 4 -&gt; 2 -&gt; 1, so four divisions.</span>
+<span class="cm">*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="cm">/* Dividing n by 2 until it reaches 1 is the same job as dividing n / 2 by 2</span>
+<span class="cm">   until it reaches 1, plus the one division just made. That smaller copy of</span>
+<span class="cm">   the same job is what recursion is for.</span>
+
+<span class="cm">   Base case: n is already 1, so no division is needed and the answer is 0. */</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">log2Steps</span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">log2Steps</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="cm">/* N can be 10^18, which does not fit in an int, so use long long and</span>
+<span class="cm">       read it with %lld. */</span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%lld&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">log2Steps</span><span class="p">(</span><span class="n">n</span><span class="p">));</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 51 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>16</pre><p class="io-note">One number.</p></div><div class="io out"><div class="io-h">Output </div><pre>4
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>4</code>, because 16 → 8 → 4 → 2 → 1 is four divisions.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>n</code> can be 10^18, so it is a <code>long long</code> read with <code>%lld</code>.</li><li><code>log2Steps(n)</code> returns 0 when <code>n</code> is 1 or less: no division is needed.</li><li>Otherwise the answer is <code>1 + log2Steps(n / 2)</code>, that is one division now plus however many the smaller number needs.</li><li>Integer division throws the fraction away, so 5 / 2 is 2.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Reading a 10^18 value into an <code>int</code> would overflow. The base case must be <code>n &lt;= 1</code>, not <code>n == 1</code>, so the function also stops for <code>n = 1</code>.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> What does the program print for 10, and why is it not 3.32?</summary><div>3. The divisions are 10 → 5 → 2 → 1, and integer division drops the fraction each time.</div></details>
 </section></section>
   <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://codeforces.com/group/MWSDmqGsZm/contest/223205/problem/N" target="_blank" rel="noopener">Shift Zeros (Function)</a><span class="site">Codeforces</span></li><li><a href="https://codeforces.com/group/MWSDmqGsZm/contest/223205/problem/G" target="_blank" rel="noopener">Max and Min (Function)</a><span class="site">Codeforces</span></li><li><a href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/K" target="_blank" rel="noopener">Max Number (Recursion)</a><span class="site">Codeforces</span></li><li><a href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/I" target="_blank" rel="noopener">Count Vowels (Recursion)</a><span class="site">Codeforces</span></li><li><a href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/P" target="_blank" rel="noopener">Log2 (Recursion)</a><span class="site">Codeforces</span></li></ul></section>
   <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>Plain parameters are copies. Pointer parameters reach the caller&#x27;s variables.</li><li>Arrays and strings are passed as addresses, so functions can change them. Pass the size of an array along with it.</li><li>Use pointer parameters when a function has more than one result.</li><li>Recursion with a return value: factorial, digits, palindrome.</li><li><code>n % 10</code> gives the last digit, and <code>n / 10</code> removes it.</li></ul></section>
