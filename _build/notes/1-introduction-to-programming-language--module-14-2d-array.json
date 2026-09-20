@@ -19,6 +19,11 @@
       "snippet": null
     },
     {
+      "term": "Printing an address: `&`, `%p` and `(void*)`",
+      "explain": "The first program below prints where each cell lives, not just what is in it, so three small things show up together. `&arr[i][j]` is **the address of** the cell — the same `&` you have written in `scanf(\"%d\", &a)` since Module 1, which is there to tell `scanf` where to put the number. `%p` is the placeholder for an address, the way `%d` is the placeholder for an int; it prints in hexadecimal, so you see `1041FDE0` rather than `272760288`. Never print an address with `%d`: an address is 8 bytes here and an `int` is 4, so `%d` would take half of it and the rest of the line would come out wrong. `(void*)` converts the address to the one type `%p` is defined to accept. `&arr[i][j]` is an `int*`, an address that also carries \"an int lives here\" — that note is what makes stepping to the next one move 4 bytes. `void*` is the same address with the note rubbed off: \"somewhere in memory, contents unspecified\". `printf` cannot look at the type of what you pass it, it only believes the format string, so the standard asks you to hand `%p` a `void*` exactly. **Do you have to write the cast?** No. On any ordinary compiler an `int*` and a `void*` are the same size and the same bits, so the line prints the same thing without it, and the pointer programs in Module 15 leave it off. The cast is the by-the-book version and it is what keeps `gcc -Wall` quiet. You will meet both forms, which is the reason to know what it is for.",
+      "snippet": "printf(\"%p\n\", (void*)&arr[i][j]);   // by the book\nprintf(\"%p\n\", &arr[i][j]);           // same output in practice"
+    },
+    {
       "term": "Primary diagonal",
       "explain": "The cells where `i == j`, running from top-left to bottom-right. Only a square matrix has diagonals.",
       "snippet": null
@@ -51,14 +56,14 @@
         "`int arr[3][5]` is filled with a brace list, one inner list per row: 1 to 5, then 6 to 10, then 11 to 15.",
         "The outer loop `i` goes over the 3 rows, and the inner loop `j` goes over the 5 columns, so the cells come out in memory order.",
         "For each cell it prints `i`, `j`, the address `&arr[i][j]` with `%p`, and the value `arr[i][j]` with `%d`.",
-        "`&arr[i][j]` is cast to `(void*)` because that is the type `%p` expects.",
+        "`&arr[i][j]` is the address of the cell, `%p` is the placeholder that prints an address, and `(void*)` hands `%p` the plain, type-free address it is defined to take. The program prints the same thing without that cast — see the concept above for why it is written anyway.",
         "A newline after each inner loop puts one row of the array on one line of the screen."
       ],
       "complexity": "Time O(rows×cols) · Space O(1)",
       "input": null,
       "input_note": null,
       "output_note": "Fifteen cells, five to a line. Read the address column down the page: `...FDE0`, `...FDE4`, `...FDE8` — 4 bytes apart, the size of one `int`. Now look at the jump from the end of row 0 (`...FDF0`, value 5) to the start of row 1 (`...FDF4`, value 6): still 4. There is no gap between the rows. The 15 cells are one straight strip of 60 bytes, and the `[i][j]` pair is just a convenient way to name a place in it. The addresses themselves will differ on your machine; only the steps of 4 matter.",
-      "watch_out": "The number of placeholders in the format string must match the number of values after it, in the same order. One `%d` too many and `printf` reads a value nobody passed — it prints rubbish, and gcc says nothing unless you compile with `-Wall`.",
+      "watch_out": "Two habits this line is worth keeping. **Match the placeholders to the values:** four of each, in the same order. One `%d` too many and `printf` reads a value nobody passed, which prints rubbish and says nothing unless you compile with `-Wall`. **Print addresses with `%p`, never `%d`:** an address is 8 bytes on this compiler and an `int` is 4.",
       "check": {
         "q": "If `arr[0][4]` is at address 1000, where is `arr[1][0]`, and why?",
         "a": "1004. Row 1 starts in the very next `int`, because the rows are stored one after another with nothing in between."
@@ -262,7 +267,8 @@
     "Main diagonal: `i == j`. Secondary diagonal: `i + j == n - 1`.",
     "A matrix is diagonal, scalar or unit depending on its off-diagonal zeros and diagonal values.",
     "Use a flag to record \"the rule broke somewhere\".",
-    "Rows are stored one after another, so input line breaks don't matter to `scanf`."
+    "Rows are stored one after another, so input line breaks don't matter to `scanf`.",
+    "Print an address with `%p`, not `%d`. `(void*)` is the cast that gives `%p` the plain address it officially wants; without it the output is the same, but `-Wall` complains."
   ],
   "check_yourself": [
     {
@@ -276,6 +282,10 @@
     {
       "q": "Is a unit matrix also a scalar matrix?",
       "a": "Yes. It is the scalar matrix whose diagonal value is 1."
+    },
+    {
+      "q": "`printf(\"%p\", &arr[0][0]);` prints the address fine on your machine. So what is `(void*)` for?",
+      "a": "`%p` is defined to take a `void*`, a plain address with no note about what is stored there, while `&arr[0][0]` is an `int*`. It works without the cast because on ordinary compilers both are the same size and the same bits, but the cast is what makes it correct by the standard and keeps `gcc -Wall` from warning."
     }
   ],
   "intro": [
