@@ -61,14 +61,22 @@ def md(s):
             out.append(f"<code>{esc(p[1:-1])}</code>")
         else:
             t = esc(p)
-            t = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", t)
             t = re.sub(r"(https?://[^\s<)]+)", r'<a href="\1" target="_blank" rel="noopener">\1</a>', t)
             out.append(t)
-    return "".join(out)
+    # Bold comes last, over the joined string. A **bold run** may hold a `code
+    # span`; splitting on backticks first puts the opening and closing ** in
+    # different pieces, so neither matches and both show on the page as
+    # literal asterisks.
+    return re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", "".join(out))
 
 
 def slug(s):
     return re.sub(r"[^a-z0-9]+", "-", str(s).lower()).strip("-") or "x"
+
+
+def plain(s):
+    """Markdown stripped back to words, for <meta> text nobody sees styled."""
+    return re.sub(r"[`*]", "", str(s or ""))
 
 
 def natural_key(s):
@@ -123,7 +131,7 @@ def page(title, body, depth, description="", crumbs=()):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(title)}</title>
-<meta name="description" content="{esc(description or SITE_TITLE)}">
+<meta name="description" content="{esc(plain(description) or SITE_TITLE)}">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
 <link rel="stylesheet" href="{p}assets/site.css?v={ASSET_V}">
