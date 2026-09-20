@@ -41,23 +41,24 @@
   ],
   "files": [
     {
-      "file": "basic.py",
-      "title": "2D array addresses (C code saved as .py)",
+      "file": "basic.c",
+      "title": "2D array addresses, and a printf that slips one place",
       "kind": "lesson",
       "same_as": null,
       "problem": null,
-      "what": "This is meant to be a C program. It prints every cell of a 3×5 array with its row, column, memory address and value, to show that the rows sit one after another in memory.",
+      "what": "Prints every cell of a 3×5 array with its row, column, memory address and value, to show that the rows sit one after another in memory. The file used to be saved as `basic.py` by mistake — it was always C, so it is `basic.c` now and compiles with gcc. One bug is still in it on purpose: the `printf` asks for five values but is given four, so the labels in the output are shifted by one.",
       "steps": [
         "`int arr[3][5]` is filled with a brace list, one inner list per row.",
         "The outer loop `i` goes over the 3 rows, and the inner loop `j` goes over the 5 columns.",
-        "For each cell it prints the indexes, `&arr[i][j]` with `%p`, and `arr[i][j]`.",
-        "The addresses go up by 4 (the size of an `int`) from one cell to the next, even across the end of a row."
+        "For each cell it means to print the indexes, `&arr[i][j]` with `%p`, and `arr[i][j]`.",
+        "The format string starts with `%i` where a plain letter `i` was meant, so it holds five placeholders while only four values are passed. Every column after the first shows the value belonging to the column before it.",
+        "The addresses — the numbers that come out under `j =` — go up by 4 (the size of an `int`) from one cell to the next, even across the end of a row. That part still shows what the program set out to show."
       ],
-      "complexity": "Time O(rows·cols) · Space O(1)",
+      "complexity": "Time O(rows×cols) · Space O(1)",
       "input": null,
       "input_note": null,
-      "output_note": "Running the file with Python fails with `SyntaxError: invalid decimal literal`, because Python can't read C code. You won't see any array output.",
-      "watch_out": "**Wrong file extension:** save the file as `basic.c` and compile it with gcc. Even then, the `printf` has 5 format specifiers but only 4 values. Change the start of the format to `\"i = %d, j = %d, ...\"` and pass `i, j, (void*)&arr[i][j], arr[i][j]`.",
+      "output_note": "Read the columns one place to the left of their labels. `0 = 0` is really `i = 0, j = 0`; the big number after `j =` is the address; the hex number after `address =` is the value (`...01`, `...02`, ... which is 1, 2, ...); and `value = 16` is left over memory, because that last `%d` was given nothing. Watch the addresses climb by 4 each time — 272760288, 272760292, 272760296 — and keep climbing by 4 when a new row starts. The rows are one long strip of memory.",
+      "watch_out": "**Too few values for the format string is undefined behaviour.** It compiles, it runs, and nothing warns you unless you use `-Wall`. Here it only garbles the labels, but reading a value that was never passed can just as easily crash. The fix is `\"i = %d, j = %d, address = %p, value = %d || \"` with `i, j, (void*)&arr[i][j], arr[i][j]`.",
       "check": {
         "q": "If `arr[0][4]` is at address 1000, where is `arr[1][0]`?",
         "a": "1004. It is the next `int` in memory, because row 1 starts right after row 0."
