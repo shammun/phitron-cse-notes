@@ -12,13 +12,13 @@ int main() {
      * - Second dimension (5) represents columns
      * The array is initialized with values in a structured format:
      * Row 1: 1,2,3,4,5
-     * Row 2: 6,7,8,9,10 
-     * Row 3: 11,12,14,14,15
+     * Row 2: 6,7,8,9,10
+     * Row 3: 11,12,13,14,15
      */
     int arr[3][5] = {
-        {1, 2, 3, 4, 5},    /* Row 0 values */
-        {6, 7, 8, 9, 10},   /* Row 1 values */
-        {11, 12, 14, 14, 15} /* Row 2 values - the third one is a typo for 13, left as it is */
+        {1, 2, 3, 4, 5},     /* Row 0 values */
+        {6, 7, 8, 9, 10},    /* Row 1 values */
+        {11, 12, 13, 14, 15} /* Row 2 values */
     };
 
     /* Using nested loops to iterate through the 2D array
@@ -27,38 +27,21 @@ int main() {
      */
     for(int i=0; i < 3; i++){
         for(int j=0; j<5; j++){
-            /* For each element, the plan is to print:
+            /* For each element, we print:
              * i = current row index
              * j = current column index
              * &arr[i][j] = memory address of current element
              * arr[i][j] = value stored at current element
-             * The %p formatter is for printing memory addresses
-             * The %d formatter is for printing integer values
+             * The %p formatter is used for printing memory addresses, and an
+             * address is cast to (void*) because that is the type %p expects
+             * The %d formatter is used for printing integer values
+             *
+             * Count the placeholders and count the values after the comma:
+             * there must be four of each, in the same order. Write one %d too
+             * many and printf reads a value nobody passed, which prints
+             * rubbish and does not even warn you unless you compile with -Wall.
              */
-            /* Careful - this line has a bug, and the output below shows it.
-             * The format string holds FIVE placeholders: %i, %d, %d, %p, %d.
-             * Only FOUR values are passed: i, j, &arr[i][j], arr[i][j].
-             * The intention was `"i = %d, ..."` - a plain letter i as a label -
-             * but it was typed as `%i`, which is another way of writing %d, so
-             * it eats the first value and everything after it shifts one place:
-             *   %i  gets i               -> right, but it is standing where the
-             *                               label "i" was meant to be
-             *   %d  after "= " gets j    -> so "0 = 0" is really i = 0, j = 0
-             *   %d  after "j = " gets the address, printed as a plain number
-             *   %p  after "address = " gets the value, printed as an address
-             *   %d  after "value = " gets nothing at all -> whatever happens to
-             *                               be left in memory, which is why the
-             *                               value column is the same 16 every time
-             * Passing fewer values than the format asks for is undefined
-             * behaviour: the program still compiles and runs, and nothing warns
-             * you unless you compile with -Wall.
-             * To fix it, write `"i = %d, j = %d, address = %p, value = %d || "`
-             * and pass `i, j, (void*)&arr[i][j], arr[i][j]`.
-             * Reading the numbers under "j =" is still worth it: they are the
-             * real addresses, and they go up by 4 (one int) every cell, straight
-             * across the end of each row. That is the point of the program.
-             */
-            printf("%i = %d, j = %d, address = %p, value = %d || ", i, j, &arr[i][j], arr[i][j]);
+            printf("i = %d, j = %d, address = %p, value = %d || ", i, j, (void*)&arr[i][j], arr[i][j]);
         }
         /* Print newline after each row for better formatting */
         printf("\n");
