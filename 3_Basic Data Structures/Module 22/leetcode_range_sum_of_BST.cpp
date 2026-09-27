@@ -32,21 +32,33 @@ Explanation: Nodes 6, 7, and 10 are in the range [6, 10]. 6 + 7 + 10 = 23.
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
  */
+/*
+ * Idea: use the BST rule to skip whole branches.
+ * - Node below the range (val < low): its left subtree is even smaller, so
+ *   only the right subtree can hold values in range.
+ * - Node above the range (val > high): only the left subtree can.
+ * - Otherwise the node is in range: count it and look at both sides.
+ */
 class Solution {
 public:
     int rangeSumBST(TreeNode* root, int low, int high) {
+        // Empty subtree adds nothing.
         if(root == NULL){
             return 0;
         }
 
+        // Node too small: skip it and its left side, go right.
         if(low > root->val){
             return rangeSumBST(root->right, low, high);
         }
 
+        // Node too big: skip it and its right side, go left.
         if(high < root->val){
             return rangeSumBST(root->left, low, high);
         }
 
+        // low <= val <= high: this value counts, plus whatever is in range
+        // on both sides.
         return root->val + rangeSumBST(root->left, low, high) + rangeSumBST(root->right, low, high);
     }
 };

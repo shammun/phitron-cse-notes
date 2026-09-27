@@ -52,15 +52,29 @@ Output
 #include <string>
 using namespace std;
 
+/*
+ * Prefix sum: prefixSum[i] = a[1] + a[2] + ... + a[i].
+ * Build it once with one loop (O(n)). Then the sum of a[l..r] is
+ * "everything up to r" minus "everything before l":
+ *     prefixSum[r] - prefixSum[l-1]
+ * which is one subtraction, O(1) per query.
+ *
+ * Example: a = 6 4 2 7 2 7 -> prefixSum = 6 10 12 19 21 28.
+ * Query 3 6: prefixSum[6] - prefixSum[2] = 28 - 10 = 18 (= 2+7+2+7).
+ */
 int main() {
     int n, q;
     cin >> n >> q;
+
+    // long long everywhere: the totals can reach 10^5 * 10^9 = 10^14.
+    // Values are stored from index 1 to match the 1-based queries.
     vector<long long int> a(n+1);
 
     for(int i=1; i<=n; i++){
         cin >> a[i];
     }
 
+    // Each total is the previous total plus the next value.
     vector<long long int> prefixSum(n + 1);
     prefixSum[1] = a[1];
 
@@ -68,14 +82,16 @@ int main() {
         prefixSum[i] = prefixSum[i - 1] + a[i];
     }
 
-    vector<long long int> results(q);
+    vector<long long int> results(q);   // not used: answers are printed at once
 
     while(q--){
         int l, r;
         cin >> l >> r;
         long long int sum = 0;
-        
-        int sum;
+
+        // When l is 1 there is nothing "before l" to subtract. (prefixSum[0]
+        // is 0 anyway, because a new vector is filled with 0, so the else
+        // branch alone would also work.)
         if(l==1){
             sum = prefixSum[r];
         } else{

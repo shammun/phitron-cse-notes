@@ -15,7 +15,7 @@ Then compare those 3 objects and print who got the highest math_marks and print 
 */
 
 #include <iostream> // Include the iostream library for input/output operations
-#include <string.h> // Include string.h for character array operations (not used in this code)
+#include <string.h> // Include string.h for strcpy(), used to put a name into a char array
 using namespace std; // Use the standard namespace to avoid prefixing 'std::'
 
 // Define a class named 'Student' to encapsulate the properties of a student
@@ -42,23 +42,25 @@ int main() {
     rahim.cls = 7; // Assign the class 7 to 'rahim'
 
     // Assign values to the attributes of the objects
-    strcpy(karim.name, "Karim"); // Copy the name "Rahim" to the 'name' attribute of 'rahim'
+    strcpy(karim.name, "Karim"); // Copy the name "Karim" to the 'name' attribute of 'karim'
     karim.roll = 2; // Assign the roll number 2 to 'karim'
     karim.section = 'A'; // Assign the section 'A' to 'karim'
     karim.math_marks = 94; // Assign the math marks 94 to 'karim'
     karim.cls = 7; // Assign the class 7 to 'karim'
 
     // Assign values to the attributes of the objects
-    strcpy(rafiq.name, "Rafiq"); // Copy the name "Rahim" to the 'name' attribute of 'rahim'
-    rafiq.roll = 3; // Assign the roll number 2 to 'rafiq'
+    strcpy(rafiq.name, "Rafiq"); // Copy the name "Rafiq" to the 'name' attribute of 'rafiq'
+    rafiq.roll = 3; // Assign the roll number 3 to 'rafiq'
     rafiq.section = 'A'; // Assign the section 'A' to 'rafiq'
-    rafiq.math_marks = 90; // Assign the math marks 94 to 'rafiq'
+    rafiq.math_marks = 90; // Assign the math marks 90 to 'rafiq'
     rafiq.cls = 7; // Assign the class 7 to 'rafiq'
 
-    // Compare the math marks of the objects and print the name of the student with the highest math marks
-    if(rahim.math_marks > karim.math_marks && rahim.math_marks > rafiq.math_marks) {
+    // Compare the math marks of the objects and print the name of the student with the highest math marks.
+    // >= (not >) so that a tie at the top still picks one of the tied students:
+    // with > and rahim == karim == 96, both tests would fail and rafiq would be printed.
+    if(rahim.math_marks >= karim.math_marks && rahim.math_marks >= rafiq.math_marks) {
         cout << rahim.name << endl; // Print the name of 'rahim' if he has the highest math marks
-    } else if(karim.math_marks > rahim.math_marks && karim.math_marks > rafiq.math_marks){
+    } else if(karim.math_marks >= rafiq.math_marks){ // rahim is not the top, so only karim vs rafiq is left
         cout << karim.name << endl; // Print the name of 'karim' if he has the highest math marks
     } else {
         cout << rafiq.name << endl; // Print the name of 'rafiq' if he has the highest math marks

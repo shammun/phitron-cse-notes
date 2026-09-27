@@ -92,6 +92,19 @@ Sample Output 2
 
 */
 
+/*
+ * A list that starts empty and changes with every query:
+ *   X = 0 -> insert V at the head
+ *   X = 1 -> insert V at the tail
+ *   X = 2 -> delete the node at index V, but only if that index exists
+ * and after every query the whole list is printed.
+ *
+ * The only tricky query is the delete. Valid indexes are 0..size-1, so any
+ * V >= size is ignored. Index 0 is the head (move head forward). Any other
+ * index: stand on the node one BEFORE it, bend its arrow past the victim,
+ * then free the victim. If the victim was the last node, tail moves back.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -109,6 +122,7 @@ class Node {
     }
 };
 
+// Count the nodes from head to NULL.
 int get_size(Node* head){
     int size = 0;
     Node* tmp = head;
@@ -119,6 +133,7 @@ int get_size(Node* head){
     return size;
 }
 
+// X = 0: the new node points at the old head and becomes the head.
 void insert_at_head(Node* &head, Node* &tail, int val){
     Node* newNode = new Node(val);
     if(head == NULL){
@@ -126,10 +141,12 @@ void insert_at_head(Node* &head, Node* &tail, int val){
         tail = newNode;
         return;
     }
+    // Non-empty list: link in front of the old head.
     newNode->next = head;
     head = newNode;
 }
 
+// X = 1: walk to the last node and hang the new node after it.
 void insert_at_tail(Node* &head, Node* &tail, int val){
     Node* newNode = new Node(val);
     if(head == NULL){
@@ -139,6 +156,7 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
     }
 
     Node* tmp = head;
+    // Walk to the last node (O(n); the `tail` pointer would make this O(1)).
     while(tmp->next != NULL){
         tmp = tmp->next;
     }
@@ -146,30 +164,37 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
     tail = newNode;
 }
 
+// X = 2: remove the node at index `idx` if it exists.
 void delete_at_any_position(Node* &head, Node* &tail, int idx){
-    if(head == NULL || idx > get_size(head)){
+    // Empty list, or an index past the last node: nothing to delete.
+    if(head == NULL || idx >= get_size(head)){
         return;
     }
 
+    // Deleting the head: the second node becomes the head.
     if(idx == 0){
         Node* deleteNode = head;
         head = head->next;
 
         if(head == NULL){
+            // The list is now empty, so there is no last node either.
             tail = NULL;
         }
         delete deleteNode;
         return;
     }
 
+    // Stop on the node just BEFORE the victim: idx-1 steps.
     Node* tmp = head;
     for(int i=1; i<idx; i++){
         tmp = tmp->next;
     }
 
+    // Hold the victim, bend the arrow past it, then free it.
     Node* deleteNode = tmp->next;
     tmp->next = tmp->next->next;
 
+    // We removed the last node: the node before it is the new tail.
     if(tmp->next == NULL){
         tail = tmp;
     }
@@ -193,6 +218,7 @@ int main(){
     Node* head = NULL;
     Node* tail = NULL;
 
+    // One query per round; print the list after each one.
     while(Q--){
         int X, V;
         cin >> X >> V;

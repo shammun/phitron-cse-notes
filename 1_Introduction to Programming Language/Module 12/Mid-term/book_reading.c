@@ -39,7 +39,10 @@ int main() {
 
     /* Enter your code here. Read input from STDIN. Print output to STDOUT */   
     int N;
+    /* T can be 10^9 and the running total of reading times can pass what an
+       int holds, so both totals are long long. */
     long long T;
+    /* A fixed array big enough for the largest N (10^5). */
     int times[100000];
     long long total_time = 0;
     int number_of_books = 0;
@@ -50,6 +53,12 @@ int main() {
         scanf("%d", &times[i]);
     }
     
+    /* The times come sorted from shortest to longest, so the best plan is
+       greedy: read the shortest books first. Add the books one by one to a
+       running total; as long as the total still fits into T, that book is
+       finished and counted. The first book that does not fit ends the
+       search - every later book is at least as long, so none of them could
+       fit either. */
     for(int i=0; i < N; i++){
         total_time += times[i];
         if(total_time <= T){

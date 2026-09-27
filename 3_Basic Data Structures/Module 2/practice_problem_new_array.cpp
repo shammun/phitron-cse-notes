@@ -47,14 +47,18 @@ int main() {
     for(int i=0; i<n; i++){
         cin >> b[i];
     }
+    // c starts empty; push_back() adds one value at the end and grows it.
+    // B must come first, so push all of b, then all of a.
+    // With a = 1 2 and b = 3 4: c becomes 3, 3 4, 3 4 1, 3 4 1 2.
     vector<int> c;
-    for(int i=-0; i<n; i++){
+    for(int i=0; i<n; i++){
         c.push_back(b[i]);
     }
     for(int i=0; i<n; i++){
         c.push_back(a[i]);
     }
 
+    // c.size() is now 2n.
     for(int i=0; i<c.size(); i++){
         cout << c[i] << " ";
     }

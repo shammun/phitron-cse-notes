@@ -46,9 +46,13 @@ T5 = T4 + T3 + T2 + T1 = 4 + 2 + 1 + 1 = 8
 
 */
 
+// Solution idea: the same sequence, but bottom-up (fibonacci_bottom_up_loop.cpp,
+// Module 14). Fill a table from the smallest index upwards; by the time we reach
+// tetra[i], the four values it needs are already sitting in the table.
+
 #include <iostream>
 #include <vector>
-#include <algorithm>    
+#include <algorithm>
 #include <string>
 
 using namespace std;
@@ -56,17 +60,24 @@ using namespace std;
 int main(){
     int n;
     cin >> n;
-    long long tetra[n+1];
+    // n goes up to 60 and T60 is far beyond int, so the table holds long long.
+    // The table has 65 boxes, not n+1: the four base values below are always
+    // written, and with n < 3 an array of size n+1 would be too small for them.
+    long long tetra[65];
 
+    // The four given starting values.
     tetra[0] = 0;
     tetra[1] = 1;
     tetra[2] = 1;
     tetra[3] = 2;
 
+    // Every later term is the sum of the four just before it.
+    // With n = 5: tetra[4] = 2+1+1+0 = 4, then tetra[5] = 4+2+1+1 = 8.
     for(int i=4; i<=n; i++){
         tetra[i] = tetra[i-1] + tetra[i-2] + tetra[i-3] + tetra[i-4];
     }
 
     cout << tetra[n] << endl;
+    // One pass over the table: O(n) time, O(n) memory, and no recursion at all.
     return 0;
 }

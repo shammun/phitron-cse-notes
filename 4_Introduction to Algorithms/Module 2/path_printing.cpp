@@ -71,6 +71,7 @@ int main(){
     cin >> src >> dest;
 
     bfs(src);
+    cout << endl;   // end the BFS-order line so each print gets its own line
 
     // Useful while learning: see who discovered each node.
     /*
@@ -89,6 +90,7 @@ int main(){
         cout << node << " ";
         node = parent[node];
     }
+    cout << endl;
 
     // Second way to print path -- prints in correct order
     // Same walk, but collect the nodes into a vector instead of printing them,
@@ -103,6 +105,7 @@ int main(){
     for(int x : path){
         cout << x << " ";
     }
+    cout << endl;
 
     // Both walks are printed one after the other, so the output shows the path
     // backwards and then forwards. In a real solution you would keep only one.

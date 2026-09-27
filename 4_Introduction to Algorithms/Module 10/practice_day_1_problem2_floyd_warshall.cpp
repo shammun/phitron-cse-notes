@@ -26,19 +26,27 @@ Constraints:
 
 */
 
+// Practice Day problem 2: floyd-warshall.cpp applied to the matrix the judge
+// hands over. The only twist is the judge's "no edge" mark, which is -1.
+// Floyd-Warshall would read -1 as a real (negative!) edge, so we translate
+// -1 into our own infinity first, run the triple loop, and translate back.
+
 #include <iostream>
 #include <queue>
 #include <cstring>
 #include <vector>
+#include <climits>      // INT_MAX
 
 using namespace std;
 
 // User function template for C++
 class Solution {
     public:
+        // mat is changed in place (it arrives by reference); nothing is returned.
         void shortestDistance(vector<vector<int>>& mat) {
             int n = mat.size();
 
+            // Step 1: "no edge" -1 becomes INT_MAX, meaning "no route known".
             for(int i=0; i<n; i++){
                 for(int j=0; j<n; j++){
                     if(mat[i][j] == -1){
@@ -47,10 +55,14 @@ class Solution {
                 }
             }
 
+            // Step 2: Floyd-Warshall. Round k allows node k as a stop in the
+            // middle: is going i -> k -> j cheaper than the best i -> j so far?
             for(int k=0; k<n; k++){
                 for(int i=0; i<n; i++){
                     for(int j=0; j<n; j++){
-                        if(mat[i][k] != INT_MAX && mat[k][j] != INT_MAX && 
+                        // Both halves must exist; INT_MAX + something would
+                        // overflow into a negative number.
+                        if(mat[i][k] != INT_MAX && mat[k][j] != INT_MAX &&
                         mat[i][k] + mat[k][j] < mat[i][j]){
                             mat[i][j] = mat[i][k] + mat[k][j];
                         }
@@ -58,6 +70,7 @@ class Solution {
                 }
             }
 
+            // Step 3: pairs still without a route go back to the judge's -1.
             for(int i=0; i<n; i++){
                 for(int j=0; j<n; j++){
                     if(mat[i][j] == INT_MAX){
@@ -65,11 +78,14 @@ class Solution {
                     }
                 }
             }
-        }    
+            // O(n^3) time, no extra memory.
+        }
 };
 
 
 // Driver Code Starts.
+// The judge's own harness: tc test cases, each an n x n matrix; it prints the
+// matrix after the call and a "~" line after each case.
 int main() {
     int tc;
     cin >> tc;

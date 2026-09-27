@@ -57,6 +57,7 @@ int main() {
     int n;
     scanf("%d", &n);
 
+    /* Top half, n rows: row i prints 1, 2, ..., i with no spaces between. */
     for(int i = 1; i <= n; i++) {
         for(int j = 1; j <= i; j ++) {
             printf("%d", j);
@@ -64,10 +65,15 @@ int main() {
         printf("\n");
     }
 
+    /* Bottom half, n - 1 rows (the longest row is not repeated).
+       Row i of this half is pushed right by i spaces and then counts
+       1 .. n - i, so each row loses one number on the right and gains one
+       space on the left. For n = 4: " 123", "  12", "   1". */
     for(int i = 1; i < n; i++) {
         for(int j = 0; j < i; j ++) {
             printf(" ");
         }
+        /* j < n - i + 1 is the same as j <= n - i. */
         for(int j = 1; j < n - i + 1; j++) {
             printf("%d", j);
         }

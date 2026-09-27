@@ -51,19 +51,27 @@ Output:
 
 */
 
+// Idea: the component loop of practice_problem_2.cpp, but instead of only
+// counting the pieces we measure each one. A counter is set to 0 before each
+// new DFS and dfs() adds 1 for every node it enters; when the DFS returns, the
+// counter is that piece's size. Collect the sizes, sort them, print them.
+//
+// Example 1: pieces {0,1,2,3} and {4,5} -> sizes 4 and 2 -> "2 4".
+
 #include <iostream>
 #include <vector>
-#include <algorithm>
+#include <algorithm>    // sort
+#include <cstring>      // memset
 
 using namespace std;
 
 vector<int> adj_list[1005];
 bool vis[1005];
-int component_size;
+int component_size;     // nodes entered by the CURRENT dfs
 
 void dfs(int src){
     vis[src] = true;
-    component_size++;
+    component_size++;   // this node belongs to the piece being measured
 
     for(int child : adj_list[src]){
         if(!vis[child]){
@@ -85,21 +93,22 @@ int main(){
 
     memset(vis, false, sizeof(vis));
 
-    vector<int> sizes;
+    vector<int> sizes;  // one entry per component
 
     for(int i=0; i<n; i++){
         if(!vis[i]){
-            component_size = 0;
+            component_size = 0;               // a new piece starts from zero
             dfs(i);
-            sizes.push_back(component_size);
+            sizes.push_back(component_size);  // its final size
         }
     }
 
-    sort(sizes.begin(), sizes.end());
+    sort(sizes.begin(), sizes.end());         // ascending, as asked
 
+    // Separate the numbers with a space, but put none after the last one.
     for(int i=0; i<sizes.size(); i++){
         cout << sizes[i];
-        // if(i < sizes.size() - 1) cout << " ";
+        if(i < sizes.size() - 1) cout << " ";
     }
     cout << endl;
 

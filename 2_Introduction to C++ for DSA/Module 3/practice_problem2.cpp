@@ -13,7 +13,7 @@ Note: At first try to do this, kohli=dhoni and see if it gives the correct outpu
 */
 
 #include <iostream> // Include the iostream library for input/output operations
-#include <cstring> // Include string for character array operations (not used in this code)
+#include <cstring> // Include cstring for strcpy(), used to copy the country name
 using namespace std; // Use the standard namespace to avoid prefixing 'std::'
 
 // Define a class named 'Cricketer' to encapsulate the properties of a cricketer
@@ -30,6 +30,9 @@ int main(){
     strcpy(dhoni->country, "India"); // Copy the country name "India" to the 'country' attribute of 'dhoni'
 
     // Create a dynamic object named 'kohli' of the 'Cricketer' class
+    // Why not just write kohli = dhoni? Both are pointers, so that copies only the
+    // address: kohli would point at dhoni's object, and after `delete dhoni` it would
+    // point at freed memory. We need a second object and a copy of each field.
     Cricketer* kohli = new Cricketer;
     kohli->jersey_no = dhoni->jersey_no; // Copy the jersey number of 'dhoni' to 'kohli'
     strcpy(kohli->country, dhoni->country); // Copy the country of 'dhoni' to 'kohli'

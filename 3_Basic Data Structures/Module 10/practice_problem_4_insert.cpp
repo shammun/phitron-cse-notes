@@ -17,21 +17,15 @@ query `X V` first ask whether X is a legal index and only then insert.
 inserting one step past the last element is exactly how a list grows at the
 end. On an empty list, therefore, only X = 0 is legal.
 
-This file does not compile: `insert_at_tail` is written out twice, once near
-the top and once again a few lines further down, word for word. C++ lets a
-function be *declared* as often as you like but defined only once, so the
-compiler reports "redefinition of 'void insert_at_tail(Node*&, Node*&, int)'"
-and points at both copies. Delete the second one.
+After each successful insert the list is printed twice: left to right from
+`head` along `next`, then right to left from `tail` along `prev`. The second
+line must be the exact mirror of the first; if it is not, a `prev` arrow was
+written wrong.
 
-Two more things to fix once it compiles:
-
-  * `int Q;` is never read. `while(Q--)` then tests whatever happened to be
-    lying in that memory, so the number of queries is anybody's guess. Add
-    `cin >> Q;` before the loop.
-  * the task asks for the list left-to-right *and* right-to-left, but only
-    `print_forward(head)` is called. `print_backward(tail)` is already written
-    below - it just has to be called too. (The `_p.cpp` copy of this file does
-    call it.)
+Three mistakes from the first version are fixed here (the `_p.cpp` copy still
+has the first two): `insert_at_tail` was defined twice, which C++ rejects
+("redefinition of ..."); `Q` was never read, so `while(Q--)` ran on garbage;
+and only the forward print was called.
 
 Input: Q, then Q lines of `X V`.
 
@@ -84,20 +78,6 @@ void insert_at_head(Node* &head, Node* &tail, int val){
     head = newNode;
 }
 
-// This second, identical copy of `insert_at_tail` is what stops the compiler.
-// One definition is all C++ allows. Delete this one.
-void insert_at_tail(Node* &head, Node* &tail, int val){
-    Node* newNode = new Node(val);
-    if(head==NULL){
-        head = newNode;
-        tail = newNode;
-        return;
-    }
-    tail->next = newNode;
-    newNode->prev = tail;
-    tail = newNode;
-}
-
 // Count the nodes by walking the whole list - O(n) every time it is called.
 // It is needed because the list keeps no size counter of its own.
 int get_size(Node* head){
@@ -130,8 +110,7 @@ void print_reverse(Node* temp){
     cout << temp->val << endl;
 }
 
-// Print right to left the easy way, following `prev` from the tail. This is
-// the function the task needs and `main` forgets to call.
+// Print right to left the easy way, following `prev` from the tail.
 void print_backward(Node* tail){
     Node* tmp = tail;
     while(tmp != NULL){
@@ -181,9 +160,8 @@ int main(){
     Node* tail = NULL;
 
     int Q;
-    // Bug: nothing was ever read into `Q`. `Q--` uses its value and then
-    // decreases it, so this loop runs an unpredictable number of times, or
-    // not at all. It needs `cin >> Q;` on the line above.
+    cin >> Q;   // without this, `while(Q--)` would test an uninitialised value
+    // `Q--` tests Q, then decreases it: the loop runs exactly Q times.
     while(Q--){
         int X, V;
         cin >> X >> V;
@@ -197,9 +175,9 @@ int main(){
         }
 
         insert_at_any_position(head, tail, X, V);
-        // Only half of what the task asks for: `print_backward(tail);`
-        // should follow, to show the list right to left as well.
+        // The task wants both directions.
         print_forward(head);
+        print_backward(tail);
     }
 }
 

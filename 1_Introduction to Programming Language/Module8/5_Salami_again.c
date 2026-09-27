@@ -43,8 +43,13 @@ int main() {
     scanf("%d", &n);
 
     int salami[n];
+
+    /* The largest amount seen so far. Every amount is positive, so any
+       negative start is beaten by the very first value. */
     int max = -10;
 
+    /* Walk 1: read the amounts and keep the maximum up to date. We cannot
+       print anything yet, because the maximum is only known at the end. */
     for(int i = 0; i < n; i++) {
         scanf("%d", &salami[i]);
         if (salami[i] > max) {
@@ -52,6 +57,9 @@ int main() {
         }
     }
 
+    /* Walk 2: now the maximum is final, so each cousin's shortfall is
+       max - salami[j]. The person with the most gets 0. This second walk is
+       why the amounts had to be kept in an array. */
     for (int j = 0; j < n; j++) {
         printf("%d ", max - salami[j]);
     }

@@ -41,6 +41,23 @@ NO
 
 */
 
+/*
+ * Idea
+ *
+ * A '1' eliminates a '0' standing right before it, together with itself.
+ * Unlike the "Is it valid?" problem, only this order counts: "01" vanishes,
+ * "10" does not. After a pair vanishes, its neighbours meet and may vanish
+ * too.
+ *
+ * Stack again: the top is the nearest surviving character to the left.
+ *   - new '1' and the top is '0' -> the pair is eliminated, pop
+ *   - anything else -> push
+ * The answer is YES when the stack ends up empty.
+ *
+ *   "0011":  0 | 00 | 1 kills a 0 -> 0 | 1 kills the 0 -> empty   -> YES
+ *   "10":    1 | 10 (a 0 after a 1 does nothing)                  -> NO
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>    
@@ -59,11 +76,14 @@ int main() {
         cin >> s;
         
         for(char c : s){
-            if(st.empty()){
+            // Nothing to the left: c survives for now.
+            // Everything eliminated -> YES.
+        if(st.empty()){
                 st.push(c);
                 continue;
             }
 
+            // Only a '0' followed by a '1' is eliminated.
             if(st.top() == '0' && c == '1'){
                 st.pop();
             } else {

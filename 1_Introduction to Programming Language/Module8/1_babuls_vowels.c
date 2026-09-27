@@ -35,13 +35,21 @@ Consonant
 # include <stdio.h>
 
 int main() {
+    /* One letter, so one char and %c. */
     char a;
     scanf("%c", &a);
     
+    /* There are only five vowels, so the simplest test is to compare with
+       each of them and join the five checks with ||: the whole condition is
+       true as soon as ONE comparison matches.
+       Each letter is written in single quotes: 'a' is the character a,
+       while a (no quotes) is the variable. */
     if(a == 'a' || a == 'e' || a == 'i' || a == 'o' || a == 'u'){
         printf("Vowel");
     }
     else {
+        /* Anything that is not one of the five is a consonant (the input is
+           promised to be a small letter). */
         printf("Consonant");
     }
 }

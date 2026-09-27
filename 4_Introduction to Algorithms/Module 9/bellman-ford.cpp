@@ -6,8 +6,6 @@
 using namespace std;
 // (Dijkstra cannot do that. The note at the end of this file explains why.)
 int dis[1005];            // dis[i] = cheapest cost known so far to node i
-vector<Edge> edge_list;
-// ^ the whole graph in one flat list - and a BUG: Edge is not yet known here.
 class Edge{
     public:
         int a, b, c;      // the edge a -> b costs c, and c may be negative
@@ -17,7 +15,9 @@ class Edge{
             this->c = c;
         }
 };
-// The fix: move this class Edge block above line 9, then the file compiles.
+// A class must be declared before vector<Edge> can mention it.
+vector<Edge> edge_list;
+// ^ the whole graph in one flat list of Edge objects.
 // Relax one edge a -> b of cost c: take the cheaper of dis[b] and dis[a] + c.
 void bellman_ford(int n){
     for(int i=0; i<n-1; i++){   // n-1 rounds; why n-1 is explained at the end

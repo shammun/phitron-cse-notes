@@ -46,15 +46,16 @@ Sample Output 1
 
 int main() {
 
-    /* Enter your code here. Read input from STDIN. Print output to STDOUT */    
+    /* The idea: two nested loops. The outer loop counts the N rows; for each
+     * row the inner loop prints 1 2 ... K, then a newline ends the row. */
     int N, K;
     scanf("%d %d", &N, &K);
     
-    for(int i=0; i<N; i++){
-        for(int j=1; j<=K; j++){
+    for(int i=0; i<N; i++){          /* N rows */
+        for(int j=1; j<=K; j++){     /* 1 to K on this row */
             printf("%d ", j);
         }
-        printf("\n");
+        printf("\n");               /* end of the row */
     }
     
     return 0;

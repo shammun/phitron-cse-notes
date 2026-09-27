@@ -16,6 +16,13 @@ YES
 
 */
 
+/*
+ * Values are at most 100, so we can keep one yes/no box per possible value:
+ * visited[v] says "have I already seen v?". Walk the list once. If the box of
+ * the current value is already ticked, this value appeared before - that is a
+ * duplicate. Otherwise tick it and move on. One pass, no second loop.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -40,22 +47,26 @@ void insert_at_tail(Node* &head, Node* &tail,int val){
         tail = newNode;
         return;
     }
-    tail->next = newNode;
-    tail = newNode;
+    tail->next = newNode; // link after the last node...
+    tail = newNode;       // ...and make the new node the last one
 }
 
 void has_duplicate(Node* head){
+    // Indexes 0..100, all false: no value has been seen yet.
+    // 101 boxes, because the value 100 needs index 100.
     bool visited[101] = {false};
 
     Node* tmp = head;
     while(tmp != NULL){
         if(visited[tmp->val]){
+            // Seen before: we found a duplicate, no need to look further.
             cout << "YES";
             return;
         }
-        visited[tmp->val] = true;
+        visited[tmp->val] = true; // first time: remember this value
         tmp = tmp->next;
     }
+    // Reached the end without a repeat.
     cout << "NO";
 }
 
@@ -63,6 +74,7 @@ int main(){
     Node* head = NULL;
     Node* tail = NULL;
 
+    // Read values until the stop sign -1 (not stored).
     int val;
     while(true){
         cin >> val;

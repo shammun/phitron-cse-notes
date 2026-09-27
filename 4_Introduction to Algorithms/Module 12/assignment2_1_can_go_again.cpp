@@ -108,12 +108,21 @@ Negative Cycle Detected
 
 */
 
+// Solution idea (Bellman-Ford, Module 9).
+// Edges are one-way and may be negative, so Dijkstra is out: it assumes a
+// settled node can never get cheaper, and a negative edge breaks that promise.
+// Bellman-Ford does not care about the sign. It relaxes every edge n-1 times,
+// then does one extra round: if anything still improves, a negative cycle is
+// reachable and no "minimum cost" exists, which is exactly the special message.
+
 #include <iostream>
 #include <vector>
-#include <climits>
+#include <climits>      // LLONG_MAX, our "infinity"
 
 using namespace std;
 
+// One directed edge a -> b with cost c, stored as an object (the edge list of
+// Module 1). Bellman-Ford only ever loops over edges, so a list is all it needs.
 class Edge{
     public:
     int a, b, c;
@@ -125,23 +134,33 @@ class Edge{
 };
 
 vector<Edge> edge_list;
-long long dis[1005];
+// long long, not int: a path can use up to 999 edges of cost up to 10^9 each,
+// which is far past the int limit of about 2.1 * 10^9.
+long long dis[1005];    // dis[x] = cheapest known cost from the source to x
 
+// Fills dis[] and returns true if a negative cycle is reachable from source.
 bool bellman_ford(int n, int source){
     dis[source] = 0;
 
-    for(int i=1; i<n-1; i++){
+    // n-1 rounds (i = 1 .. n-1). A cheapest path visits each node at most once,
+    // so it has at most n-1 edges, and every round fixes at least one more edge
+    // of it. After n-1 rounds every honest distance is final.
+    for(int i=1; i<n; i++){
         for(auto edge : edge_list){
             int a = edge.a;
             int b = edge.b;
             int c = edge.c;
 
+            // Relax a -> b. The LLONG_MAX guard matters twice: an unreached a
+            // has no route to extend, and LLONG_MAX + a positive c would overflow.
             if(dis[a] != LLONG_MAX && dis[a] + c < dis[b]){
                 dis[b] = dis[a] + c;
             }
         }
     }
 
+    // The extra round. Nothing honest can improve any more, so an improvement
+    // now means a loop whose total is negative: walk it again and it gets cheaper.
     for(auto edge : edge_list){
         int a = edge.a;
         int b = edge.b;
@@ -162,9 +181,10 @@ int main(){
     for(int i=0; i<e; i++){
         int a, b, c;
         cin >> a >> b >> c;
-        edge_list.push_back(Edge(a, b, c));
+        edge_list.push_back(Edge(a, b, c));   // one-way: only a -> b is stored
     }
 
+    // Nodes are numbered 1..n; every one starts "not reached yet".
     for(int i=1; i<=n;i++){
         dis[i] = LLONG_MAX;
     }
@@ -175,8 +195,11 @@ int main(){
     int t;
     cin >> t;
 
+    // One run from the source answers every query: only the destination changes.
     bool negative_cycle = bellman_ford(n, source);
 
+    // With a negative cycle the problem wants a single line and nothing else,
+    // so we stop before reading or answering any query.
     if(negative_cycle){
         cout << "Negative Cycle Detected" << endl;
         return 0;
@@ -187,15 +210,14 @@ int main(){
         cin >> dest;
 
         if(source == dest){
-            cout << 0 << endl; 
+            cout << 0 << endl;                 // staying put costs nothing
         } else if(dis[dest] == LLONG_MAX){
-            cout << "Not Possible" << endl;
+            cout << "Not Possible" << endl;    // never reached from the source
         } else {
             cout << dis[dest] << endl;
         }
     }
 
+    // Cost: O(n * E) for Bellman-Ford, then O(1) per query.
     return 0;
 }
-
-

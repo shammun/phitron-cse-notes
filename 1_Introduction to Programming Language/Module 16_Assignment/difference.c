@@ -29,10 +29,18 @@ int main(){
     /*
     int diff = A - B;
     */
+
+    /* The question asks for pointers, so the values are reached through
+       them: ptr1 holds the address of A, and *ptr1 reads the value stored
+       there (the same as A). */
     int *ptr1 = &A;
     int *ptr2 = &B;
 
     int diff = *ptr1 - *ptr2;
+
+    /* The difference must be positive: if A was the smaller number the
+       result is negative, and flipping its sign fixes that (6 - 10 = -4
+       becomes 4). */
     if(diff < 0){
         diff = -diff;
     }

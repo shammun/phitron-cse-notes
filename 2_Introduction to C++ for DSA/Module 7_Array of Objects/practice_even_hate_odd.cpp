@@ -39,16 +39,20 @@ Output
 #include <iostream> // Include the input/output stream library for using cout
 using namespace std; // Use the standard namespace to avoid writing "std::" repeatedly
 
+// The idea: one +1 or -1 turns an even number odd, or an odd number even.
+// So each operation moves exactly one element from one group to the other,
+// and the only question is how many elements have to move.
 int main(){
     int t;
     cin >> t;
-    int answers[10];
+    int answers[10]; // t is at most 10
 
     for(int test=0; test<t; test++){
         int n;
         cin >> n;
 
-        // If n is odd, it can't be done
+        // If n is odd, it can't be done: two equal groups need an even total.
+        // The numbers must still be read, or they would be taken as the next test case.
         if(n%2 != 0){
             for(int i=0; i<n; i++){
                 int x;
@@ -58,7 +62,7 @@ int main(){
             continue;
         }
 
-        int target = n/2;
+        int target = n/2; // each group must end up with exactly half
         int a[100001];
         int even_count = 0;
 
@@ -75,6 +79,8 @@ int main(){
             continue;
         }
 
+        // Every extra even number must become odd (or every missing one must
+        // come from an odd number): one operation each.
         if(even_count > target){
             answers[test] = even_count - target;
         } else{

@@ -36,25 +36,29 @@ YES
 #include <string>   // Include the string library for std::string
 using namespace std; // Use the standard namespace to avoid writing "std::" repeatedly
 
+// Two pointers: left starts at the first letter, right at the last.
+// They move towards each other, comparing one pair of letters per step.
+// With "mam": m == m, then left and right meet in the middle -> palindrome.
 bool isPalindrome(string s){
     int left = 0;
-    int right = s.size() - 1;
+    int right = s.size() - 1; // s.size() is the length, so the last index is size - 1
 
-    while(left < right){
+    while(left < right){ // stop when they meet or cross: every pair has been checked
         if(s[left] != s[right]){
-            return false;
+            return false; // one mismatch is enough
         }
         left++;
         right--;
     }
 
-    return true;
+    return true; // no mismatch found
 }
 
 int main(){
     string s;
     cin >> s;
 
+    // No reverse() and no extra copy of the string - just the pairwise check
     if(isPalindrome(s)){
         cout << "YES" << endl;
     } else {

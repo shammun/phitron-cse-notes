@@ -14,6 +14,14 @@ Output:
 
 */
 
+/*
+ * Selection sort on the list, but swapping only the VALUES, never the nodes.
+ * `i` walks the list; `j` walks every node after `i`. Whenever `j` holds a
+ * bigger value than `i`, the two values swap. When the inner walk ends, `i` holds
+ * the biggest value of the remaining part, so the list fills up in descending order
+ * from the front. The comparison sign is the only thing that decides the order.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -47,6 +55,7 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
     tail = newNode; // or tail = tail->next
 }
 
+// Print the values on one line, separated by spaces.
 void print_linked_list(Node* head){
     Node* tmp = head;
     while(tmp != NULL){
@@ -57,6 +66,7 @@ void print_linked_list(Node* head){
 
 void sort_descending(Node* head){
     for(Node* i=head; i->next!=NULL; i=i->next){
+        // BUG (kept on purpose): `j` is never declared - write `Node* j=i->next`.
         for(j=i->next; j!=NULL; j=j->next){
             if(i->val < j->val){
                 swap(i->val, j->val);
@@ -65,6 +75,8 @@ void sort_descending(Node* head){
     }
 }
 
+// Swap two ints through references, so the caller's values really change.
+// (Defined after the sort, so the sort actually calls std::swap - same effect.)
 void swap(int &a, int &b){
     int temp = b;
     b = a;
@@ -74,6 +86,7 @@ int main(){
     Node* head = NULL;
     Node* tail = NULL;
     
+    // Read values until the stop sign -1 (not stored).
     int val;
     while(true){
         cin >> val;

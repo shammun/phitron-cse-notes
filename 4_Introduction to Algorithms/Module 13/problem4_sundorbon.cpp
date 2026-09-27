@@ -56,23 +56,30 @@ Sample Output
 
 */
 
+// Solution idea (BFS on a grid, Module 3).
+// Every move costs the same (one step), so the fewest moves from S to E is a
+// BFS level: start BFS at S, walk onto any cell that is not a tree, and read
+// level[] at E. It is the lesson bfs_on_grid_with_obstacles, with 'T' as the wall.
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <string>
 #include <queue>
+#include <cstring>      // memset
 
 using namespace std;
 
-char grid[35][35];
-bool vis[35][35];
-int level[35][35];
+char grid[35][35];     // the map, at most 30 x 30
+bool vis[35][35];      // cell already queued?
+int level[35][35];     // fewest moves from S to this cell; -1 = unreachable
 
 // the below line is also correct -- some old compilers may not support it
 // vector<pair<int, int>> direction = {{0, 1}, {0, -1}, {-1, 0}, {1, 0}};
-vector<pair<int, int> > direction;
+vector<pair<int, int> > direction;   // right, left, up, down (filled in main)
 int n;
 
+// Is (i, j) inside the n x n map?
 bool valid(int i, int j){
     if(i < 0 || i >= n || j < 0 || j >= n){
         return false;
@@ -80,11 +87,13 @@ bool valid(int i, int j){
     return true;
 }
 
-void dfs(int si, int sj){
+// BFS from (si, sj). It has to be BFS, not DFS: only BFS reaches every cell
+// first along a shortest route, so the level it writes is the fewest moves.
+void bfs(int si, int sj){
     queue<pair<int, int>> q;
     q.push({si, sj});
     vis[si][sj] = true;
-    level[si][sj] = 0;
+    level[si][sj] = 0;   // S is zero moves from itself
 
     while(!q.empty()){
         pair<int, int> par = q.front();
@@ -92,14 +101,16 @@ void dfs(int si, int sj){
         int par_i = par.first;
         int par_j = par.second;
 
+        // Try the four neighbours.
         for(int i=0; i<4; i++){
             int ci = par_i + direction[i].first;
             int cj = par_j + direction[i].second;
 
+            // Inside the map, not a tree, not seen before. 'P' and 'E' both pass.
             if(valid(ci, cj) == true && grid[ci][cj] != 'T' && vis[ci][cj] == false){
                 q.push({ci, cj});
                 vis[ci][cj] = true;
-                level[ci][cj] = level[par_i][par_j] + 1;
+                level[ci][cj] = level[par_i][par_j] + 1;   // one move further than its parent
             }
         }
     }
@@ -110,12 +121,13 @@ int main(){
     direction.push_back({0, -1});
     direction.push_back({-1, 0});
     direction.push_back({1, 0});
-    int si, sj, di, dj;
+    int si, sj, di, dj;   // positions of S and E
 
+    // Input ends at EOF: keep reading maps while another n can be read.
     while(cin >> n){
         for(int i=0; i<n; i++){
             for(int j=0; j<n; j++){
-                cin >> grid[i][j];
+                cin >> grid[i][j];   // >> on a char skips the spaces between letters
                 if(grid[i][j] == 'S'){
                     si = i;
                     sj = j;
@@ -126,13 +138,15 @@ int main(){
                 }
             }
         }
-    
+
+        // Reset for every map, or the previous map's marks would leak in.
         memset(vis, false, sizeof(vis));
         memset(level, -1, sizeof(level));
-    
-        dfs(si, sj);
+
+        bfs(si, sj);
         cout << level[di][dj] << endl;
     }
-    
+
+    // Cost: O(n^2) per map, each cell is queued at most once.
     return 0;
 }

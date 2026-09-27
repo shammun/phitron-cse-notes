@@ -53,6 +53,12 @@ Output
 using namespace std;
 
 int main() {
+    /*
+     * Brute force: for every query add up a[l-1] .. a[r-1] with a loop.
+     * One query can cost up to n steps, so q queries cost O(n*q). With
+     * n = q = 10^5 that is 10^10 steps: Time Limit Exceeded. The practice
+     * sheet expects this; Module 3 fixes it with a prefix sum.
+     */
     int n, q;
     cin >> n >> q;
     vector<int> a(n);
@@ -61,14 +67,17 @@ int main() {
         cin >> a[i];
     }
 
-    vector<int> results(q);
+    // Each answer can reach 10^5 * 10^9 = 10^14, far above the int limit
+    // (about 2 * 10^9), so answers are stored as long long.
+    vector<long long> results(q);
 
     // Run loops for q times
     for(int i=0; i<q; i++){
         int l, r;
         cin >> l >> r;
 
-        int sum = 0;
+        // The judge counts from 1, the vector from 0: shift both ends by 1.
+        long long sum = 0;
         for(int j=l-1; j<= r-1; j++){
             sum += a[j];
         }
@@ -76,6 +85,7 @@ int main() {
         results[i] = sum;
     }
 
+    // Print all answers at the end, one per line.
     for(int i=0; i<q; i++){
         cout << results[i] << endl;
     }

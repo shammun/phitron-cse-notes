@@ -22,12 +22,15 @@ When to stop is the part worth thinking about:
 Both tests are needed. With only `i != j` an even-length list runs past the
 crossing point and swaps every pair back again, undoing the work.
 
-This file prints two empty lines and nothing else, because of a bug in `main`:
-the input loop is written `while(tail)`, and `tail` is still NULL at that
-moment, so the body never runs and no value is ever read. It should be
-`while(true)` with `break;` when -1 arrives. (`return;` inside `int main` is
-also what makes the compiler warn "return-statement with no value".) With
-that fixed you would see 10 20 30 40 and then 40 30 20 10.
+This is also the answer to Practice Day problem 2 (reverse a doubly linked
+list and print it). For `10 20 30 40 -1` it prints 10 20 30 40 and then
+40 30 20 10.
+
+Watch out when writing the input loop: it must be `while(true)` with `break;`
+when -1 arrives. The first version here had `while(tail)` - `tail` is still
+NULL before the first insert, so that loop never ran - and `return;`, which
+would have left `main` before anything was printed. The `_p.cpp` copy still
+has that mistake.
 
 Input: the values of the list, ended by -1.
 
@@ -213,25 +216,23 @@ int main(){
     Node* tail = NULL;
 
     int val;
-    // Bug: `tail` is NULL here, so this loop never runs even once and the
-    // list stays empty. It should be `while(true)`, with the -1 test below
-    // ending it - which is also why the two prints come out blank.
-    while(tail){
+    // Read until -1. `while(true)`, not `while(tail)`: `tail` is NULL before
+    // the first insert, so a `while(tail)` loop would never start.
+    while(true){
         cin >> val;
         if(val==-1){
-            // `return;` in a function declared `int main()` returns no
-            // value; the compiler lets it pass with a warning. `break;` is
-            // what was meant: leave the loop, then print.
-            return;
+            // `break;` leaves only the loop, so the prints below still run.
+            // (`return;` here would end the whole program.)
+            break;
         }
         insert_at_tail(head, tail, val);
     }
 
-    print_forward(head);   // would be 10 20 30 40 once the loop is fixed
+    print_forward(head);   // 10 20 30 40
 
     reverse_doubly(head, tail);
 
-    print_forward(head);   // would be 40 30 20 10
+    print_forward(head);   // 40 30 20 10
     
     return 0;
 }

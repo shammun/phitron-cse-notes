@@ -41,6 +41,14 @@ Output:
 
 */
 
+// Solution idea (DSU, Module 11).
+// Roads only ever get ADDED, which is exactly what DSU is good at. Keep two
+// running numbers instead of recounting after each day:
+//   cmp      = how many components there are (starts at n, one per city);
+//   max_size = the size of the biggest component (starts at 1).
+// A road inside one component changes nothing. A road between two components
+// merges them: one component fewer, and the merged size may be a new record.
+
 #include <iostream>
 #include <queue>
 #include <cstring>
@@ -48,10 +56,11 @@ Output:
 
 using namespace std;
 
-int par[100005];
-int group_size[100005];
-int cmp, max_size;
+int par[100005];          // par[x] = parent of x; -1 means x is a leader
+int group_size[100005];   // size of the group, kept at its leader
+int cmp, max_size;        // the two answers, updated as roads arrive
 
+// Leader of node's group, with path compression.
 int find(int node){
     if(par[node] == -1){
         return node;
@@ -65,10 +74,14 @@ void dsu_union(int node1, int node2){
     int leader1 = find(node1);
     int leader2 = find(node2);
 
+    // Same component already: the road adds no new connection, so both
+    // answers stay as they were.
     if(leader1 == leader2){
         return;
     }
 
+    // Union by size; the merged group's new size is the only size that grew,
+    // so it is the only one that can beat the current record.
     if(group_size[leader1] >= group_size[leader2]){
         par[leader2] = leader1;
         group_size[leader1] += group_size[leader2];
@@ -78,24 +91,29 @@ void dsu_union(int node1, int node2){
         group_size[leader2] += group_size[leader1];
         max_size = max(max_size, group_size[leader2]);
     }
-    cmp--;
+    cmp--;   // two components became one
 }
 
 int main(){
     int n, e;
     cin >> n >> e;
-    cmp = n;
+    cmp = n;        // day 0: no roads, every city alone
     max_size = 1;
 
+    // Cities are numbered 1..n: each starts as its own leader, size 1.
     for(int i=1; i<=n; i++){
         par[i] = -1;
         group_size[i] = 1;
     }
 
+    // One road per day, and one answer line per day.
     while(e--){
         int a, b;
         cin >> a >> b;
         dsu_union(a, b);
         cout << cmp << " " << max_size << endl;
     }
+
+    // Cost: about O(m * alpha(n)); recounting components with BFS every day
+    // would be O(m * (n + m)), far too slow for 2 * 10^5 roads.
 }

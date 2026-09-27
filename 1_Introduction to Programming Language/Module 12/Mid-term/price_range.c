@@ -41,7 +41,9 @@ int main() {
 
     /* Enter your code here. Read input from STDIN. Print output to STDOUT */    
     int N;
+    /* The answer: how many prices fall inside the range. Starts at 0. */
     int count = 0;
+    /* Prices and limits go up to 10^9; long long keeps them safe. */
     long long X, Y;
     long long prices[100000];
     
@@ -52,7 +54,8 @@ int main() {
         scanf("%lld", &prices[i]);
     }
     
-    // Main logic
+    // Main logic: a price is in range when it is at least X AND at most Y.
+    // Both ends are included, so >= and <=, not > and <.
     for(int i=0; i<N; i++){
         if (prices[i] >= X && prices[i] <= Y){
             count = count + 1;

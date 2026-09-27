@@ -20,6 +20,7 @@ Each call waits for the rest of the list to finish printing before it prints
 its own value, so the values come out last-first. Nothing is rewired and the
 list is left alone - which is the difference between *printing* in reverse and
 *reversing* the list. Module 10 does the second one.
+The working program is practice_problem_2_print_reverse.cpp.
 
 Input: the values of the list, ended by -1.
 

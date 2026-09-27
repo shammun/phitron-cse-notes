@@ -15,26 +15,23 @@
 #include <cstring>
 #include <vector>
 #include <algorithm>   // for min()
+#include <climits>     // LLONG_MAX
 
 using namespace std;
+
+// The distance chart. Cities are numbered 1..n (n <= 500), so the array needs
+// index n itself: size n+1 at least, and 505 leaves a little room. It lives
+// outside main because 505 x 505 long longs is about 2 MB, which is too much
+// for the stack of a function but fine for a global.
+long long int adj_mat[505][505];
 
 int main(){
     int n, e, q;       // cities, roads, questions
     cin >> n >> e >> q;
 
-    // BUG - this is why the program crashes before printing anything.
-    // adj_mat[n][n] has valid indices 0..n-1, but every loop below runs i from 1
-    // to n and writes adj_mat[n][n], one row past the end of the array. That is
-    // out-of-bounds memory, and here it kills the program (access violation).
-    // The fix is adj_mat[n+1][n+1], or better a global long long adj_mat[505][505]
-    // - a 500x500 long long array is 2 MB, which is a lot to put on the stack.
-    // The code is left exactly as it was written; only this note is new.
-    long long int adj_mat[n][n];
-
     // Same starting chart as before, but over 1..n because CSES numbers cities
     // from 1. LLONG_MAX is the long long version of INT_MAX and means "no route
-    // known yet"; like INT_MAX it comes from <climits>, which is not included and
-    // only arrives by accident through another header.
+    // known yet" (from <climits>).
     for(int i=1; i<=n; i++){
         for(int j=1; j<=n; j++){
             if(i == j){

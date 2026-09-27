@@ -27,6 +27,15 @@ https://www.naukri.com/code360/problems/code-find-a-node_5682?leftPanelTabValue=
 
 ************************************************************/
 
+/*
+ * Same problem as version 1, with a shorter ending: instead of three if
+ * statements, both answers are combined with ||.
+ *
+ * Difference to notice: here BOTH sides are always searched, even when the
+ * left side already found x, because both calls run before the ||.
+ * Writing `return isNodePresent(root->left, x) || isNodePresent(root->right, x);`
+ * would stop early, like version 1.
+ */
 bool isNodePresent(BinaryTreeNode<int> *root, int x) {
     // Write your code here
     if (root == NULL) {
@@ -49,6 +58,7 @@ bool isNodePresent(BinaryTreeNode<int> *root, int x) {
     
     return false;
     */
+   // x is present if either side has it.
    bool left = isNodePresent(root->left, x);
    bool right = isNodePresent(root->right, x);
    return left || right;

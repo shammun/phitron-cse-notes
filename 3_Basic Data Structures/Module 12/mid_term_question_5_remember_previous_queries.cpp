@@ -151,10 +151,23 @@ R -> 9
 
 */
 
+/*
+ * The idea: the STL `list` is a ready-made doubly linked list, so each query
+ * is one call:
+ *   0 V -> push_front(V)
+ *   1 V -> push_back(V)
+ *   2 V -> delete the element at index V, but only if 0 <= V < size.
+ *          A list has no l[V], so an iterator is stepped V times from
+ *          begin() and then erased.
+ * After every query (even an ignored delete) the list is printed forward
+ * and backward.
+ */
+
 #include <iostream>
 #include <list>
 using namespace std;
 
+// Front to back with an iterator.
 void print_forward(list<int> &l){
     cout << "L -> ";
     for(auto it=l.begin(); it!=l.end(); it++){
@@ -165,6 +178,7 @@ void print_forward(list<int> &l){
 
 void print_backward(list<int> &l){
     cout << "R -> ";
+    // Empty list: nothing to print, and size()-1 below would go wrong.
     if(l.empty()){
         cout << endl;
         return;
@@ -173,6 +187,7 @@ void print_backward(list<int> &l){
     // at the last element of the list
     auto it = next(l.begin(), l.size()-1);
 
+    // Print, stop if this was the first element, otherwise step back.
     while(true){
         cout << *it << " ";
         if(it == l.begin()){
@@ -185,14 +200,16 @@ void print_backward(list<int> &l){
 
 void different_queries(list<int> &l, int X, int V){
     if(X == 0){
-        l.push_front(V);
+        l.push_front(V);     // add V at the head
     }
     if(X == 1){
-        l.push_back(V);
+        l.push_back(V);      // add V at the tail
     }
     if(X == 2){
+        // Only a real index can be erased; otherwise the query does nothing.
         if(V >= 0 && V < l.size()){
             auto it = l.begin();
+            // Walk the iterator to index V.
             for(int i=0; i<V; i++){
                 it++;
             }

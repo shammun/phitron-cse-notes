@@ -33,6 +33,12 @@ Sample Output 0
 #include<stdio.h>
 #include<stdlib.h>
 
+/*
+stdlib.h is needed because it declares the three memory functions your program 
+uses: malloc, realloc, and free. stdio.h only covers input/output functions 
+like scanf and printf, so it doesn't include them.
+*/
+
 int main(){
     int N;
     scanf("%d", &N);
@@ -42,6 +48,28 @@ int main(){
     for(int i=0; i<N; i++){
         scanf("%d", &num_array[i]);
         arr = (int *)realloc(arr, (i+1)*sizeof(int));
+        /*
+        
+        realloc is not just "give me a new block." It is "resize my existing 
+        block, and keep what's inside." Copying the old values is part of its 
+        job.
+
+        What realloc(ptr, new_size) guarantees
+
+        It does one of two things:
+
+            Grow in place. If there's free memory right after the current block, it 
+            just extends the block. The address stays the same, and the values never 
+            move.
+
+            Move. If there isn't room, it:
+                allocates a new block of new_size bytes somewhere else,
+                copies the old contents into it (as many bytes as the old block had),
+                frees the old block,
+                returns the new address.
+
+        */
+
         arr[i] = num_array[i];
     }
 

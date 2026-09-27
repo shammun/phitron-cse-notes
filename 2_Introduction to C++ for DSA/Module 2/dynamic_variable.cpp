@@ -1,4 +1,4 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
 
 int main(){
@@ -8,6 +8,10 @@ int main(){
     // use new keyword to allocate memory in heap
     // use new to declare a variable in the heap
     // use new to declare a dynamic variable (in the heap)
+
+    // when returned from a function, static variable get deleted as it
+    // is defined in the stack. But, when dynamic variable is returned 
+    // from a function, it is not deleted as it is defined in heap.
     int *p = new int;
     *p = 100;
 

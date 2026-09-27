@@ -72,9 +72,15 @@ Sample Output 1
 
 */
 
+// Idea: "the nodes connected with X" are X's direct neighbours, which is
+// exactly X's adjacency list. So each query is: if the list is empty print -1,
+// otherwise sort that list largest-first and print it.
+//
+// Example: in sample 0, node 0 has edges to 4, 5, 2 and 1 -> "5 4 2 1".
+
 #include <iostream>
 #include <vector>
-#include <algorithm>
+#include <algorithm>    // sort, greater
 
 using namespace std;
 
@@ -84,6 +90,7 @@ int main(){
     int n, e;
     cin >> n >> e;
 
+    // Undirected: each edge goes into both endpoints' lists.
     for(int i=0; i<e; i++){
         int a, b;
         cin >> a >> b;
@@ -98,16 +105,19 @@ int main(){
         int x;
         cin >> x;
         if(adj_list[x].size() == 0){
-            cout << -1 << endl;
+            cout << -1 << endl;           // X touches no edge at all
         }
         else{
+            // Sort X's own list in descending order (greater<int>() flips the
+            // comparison). Sorting it in place is harmless: if X is asked
+            // again, the list is simply already sorted.
             sort(adj_list[x].begin(), adj_list[x].end(), greater<int>());
             for(int i=0; i<adj_list[x].size(); i++){
                 cout << adj_list[x][i] << " ";
             }
             cout << endl;
         }
-        
+
     }
 
     return 0;

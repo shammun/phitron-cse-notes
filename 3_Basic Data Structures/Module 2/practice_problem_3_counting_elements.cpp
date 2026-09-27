@@ -60,6 +60,11 @@ int main() {
     }
 
     /*
+    First try (kept for comparison): for every a[i], a second loop checks
+    every a[j] to see whether it equals a[i] + 1. Two nested loops: O(n^2).
+    It is also wrong with duplicates: it adds 1 for EVERY copy of a[i] + 1,
+    so 4 5 5 would give 2 instead of 1.
+
     int count = 0;
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
@@ -73,13 +78,18 @@ int main() {
     */
     
 
-    // Use count function
+    // Same idea with the built-in find() doing the inner search.
+    // find(begin, end, x) returns an iterator to the first x it meets,
+    // or a.end() when x is not in the vector at all.
+    // With 4 4 5: for each 4, find(5) succeeds -> count 2; for 5, find(6)
+    // fails. Answer 2. Duplicates are counted separately, as the task asks.
     int count2 = 0;
     for(int i=0; i<n; i++){
         if(find(a.begin(), a.end(), a[i] + 1) != a.end()){
-            count2++;
+            count2++;   // a[i] + 1 exists, so a[i] counts
         }
     }
+    // find() still walks the vector, so this is also O(n^2); fine for n <= 1000.
     cout << count2 << endl;
 
     return 0;

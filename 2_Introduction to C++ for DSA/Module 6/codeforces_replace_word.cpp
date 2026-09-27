@@ -32,17 +32,22 @@ int main(){
     string s;
     cin >> s;
 
+    // Build the answer in a new string, one piece at a time
     string result = "";
     string word = "EGYPT";
-    int target_length = 5;
-    int i = 0;
+    int target_length = 5; // length of "EGYPT"
+    int i = 0;             // current position in s
 
+    // A while loop, not a for loop, because i moves by different amounts:
+    // 5 steps after a match, 1 step otherwise.
     while(i < s.length()){
+        // s.substr(i, 5) is the 5 letters starting at i. The first check makes
+        // sure there are still 5 letters left before we look.
         if (i + target_length <= s.length() && s.substr(i, target_length) == word){
-            result += ' ';
-            i += target_length;
+            result += ' ';       // the whole word becomes one space
+            i += target_length;  // jump over the 5 letters just replaced
         } else {
-            result += s[i];
+            result += s[i];      // an ordinary letter is copied as it is
             i++;
         }
     }

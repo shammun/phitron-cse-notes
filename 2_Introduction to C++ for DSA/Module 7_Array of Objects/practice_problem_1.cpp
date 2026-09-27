@@ -56,11 +56,11 @@ class Student{
     int marks;
 }; // Define a class named Student
 
-/*************  ✨ Codeium Command ⭐  *************/
-// Comparator function to sort students in descending order based on marks.
-// If two students have the same marks, it sorts them in ascending order based on roll number.
-
-/******  3ca5df36-1515-457c-9670-8e79119c0330  *******/
+// Comparator for sort(): it is handed two students, l (left) and r (right),
+// and returns true when l should come BEFORE r in the sorted array.
+// - Different marks: the higher mark goes first (descending), so l.marks > r.marks.
+// - Same marks: the smaller roll goes first (ascending), so l.roll < r.roll.
+// sort() cannot compare two Student objects by itself, which is why this function is needed.
 bool dsc(Student l, Student r){
     if(l.marks == r.marks){
         return l.roll < r.roll;
@@ -72,12 +72,14 @@ bool dsc(Student l, Student r){
 int main(){
     int n;
     cin >> n;
-    Student a[n];
+    Student a[n]; // an array of n Student objects
 
     for(int i=0; i<n; i++){
-        cin >> a[i].name >> a[i].roll >> a[i].marks;
+        cin >> a[i].name >> a[i].roll >> a[i].marks; // names have no spaces, so cin >> is enough
     }
 
+    // Sort the whole array; the third argument is the comparator's name, and
+    // sort() calls it whenever it needs to know which of two students goes first
     sort(a, a+n, dsc);
 
     for(int i=0; i<n; i++){

@@ -50,10 +50,13 @@ int main() {
     int N, K;
     scanf("%d %d", &N, &K);
     
+    /* A loop inside a loop. The outer loop only counts the N repetitions
+       (its i is never printed); the inner loop prints one line 1 2 ... K. */
     for(int i=0; i<N; i++){
         for(int j=1; j<=K; j++){
             printf("%d ", j);
         }
+        /* The line is complete, so start the next one. */
         printf("\n");
     }
     

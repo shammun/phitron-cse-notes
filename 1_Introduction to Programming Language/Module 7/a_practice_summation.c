@@ -52,9 +52,13 @@ int main() {
     int n;
     scanf("%d", &n);
 
+    /* The running total starts at 0 and must be long long (see the overflow
+       note above). x holds one number at a time, so %lld reads it. */
     long long sum = 0;
     long long x;
 
+    /* No array needed: each number is added the moment it is read and never
+       looked at again. Negative numbers simply pull the total down. */
     for (int i = 0; i < n; i++) {
         scanf("%lld", &x);
         sum += x;

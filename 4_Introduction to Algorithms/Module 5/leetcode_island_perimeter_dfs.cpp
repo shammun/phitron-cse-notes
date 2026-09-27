@@ -29,13 +29,18 @@ Output: 4
 
 */
 
+// Idea: the same side-counting rule as leetcode_island_perimeter_bfs.cpp, with
+// DFS instead of BFS: every land cell adds 1 for each side that faces water or
+// the border. This version first searches for a land cell to start from, but
+// then its DFS still steps into water cells too (only land cells add sides).
+
 class Solution {
     public:
         bool vis[105][105];
         vector<pair<int, int>> direction = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
         int n, m;
         int perimeter = 0;
-    
+
         bool valid(int i, int j){
             if(i < 0 || i >= n || j < 0 || j >= m){
                 return false;
@@ -45,6 +50,7 @@ class Solution {
 
         void dfs(vector<vector<int>> &grid, int Ai, int Aj){
             vis[Ai][Aj] = true;
+            // Land cell: count its sides that touch water or the border.
             if(grid[Ai][Aj] == 1){
                 for(int i=0; i<4; i++){
                     int ci = Ai + direction[i].first;
@@ -55,6 +61,9 @@ class Solution {
                 }
             }
 
+            // Go deeper into every unvisited neighbour, water included. So one
+            // call ends up walking the whole grid, and the recursion can get as
+            // deep as n * m (V2 avoids that by walking land only).
             for(int i=0; i<4; i++){
                 int ci = Ai + direction[i].first;
                 int cj = Aj + direction[i].second;
@@ -63,16 +72,16 @@ class Solution {
                 }
             }
         }
-    
 
-        
-    
+
+
+
         int islandPerimeter(vector<vector<int>>& grid) {
             n = grid.size();
             m = grid[0].size();
             perimeter = 0;
             memset(vis, false, sizeof(vis));
-    
+
             // Start dfs from land -- that's why we are using for loop to find land
             for(int i=0; i<n; i++){
                 for(int j=0; j<m; j++){
@@ -82,7 +91,7 @@ class Solution {
                     }
                 }
             }
-    
-            return perimeter;
+
+            return perimeter;     // Cost: O(n * m)
         }
     };

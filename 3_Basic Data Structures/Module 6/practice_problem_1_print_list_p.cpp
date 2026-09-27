@@ -16,6 +16,11 @@ Output:
 
 */
 
+/*
+ * Re-typed copy of practice_problem_1_print_list.cpp: build the list from
+ * the input, then walk it once and count the nodes.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -40,10 +45,11 @@ void insert_at_tail(Node* &head, Node* &tail,int val){
         tail = newNode;
         return;
     }
-    tail->next = newNode;
-    tail = newNode;
+    tail->next = newNode; // link after the last node...
+    tail = newNode;       // ...and make the new node the last one
 }
 
+// Walk from head to NULL and add 1 for every node passed.
 int get_size(Node* head){
     int size = 0;
     Node* tmp = head;
@@ -58,6 +64,7 @@ int main(){
     Node* head = NULL;
     Node* tail = NULL;
 
+    // Read values until the stop sign -1 (not stored).
     int val;
     while(true){
         cin >> val;

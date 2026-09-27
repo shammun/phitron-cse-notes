@@ -101,8 +101,8 @@
       "complexity": "Time O(V + E) · Space O(V)",
       "input": "6 4\n0 1\n1 2\n0 3\n4 5\n0 2\n",
       "input_note": "`n e`, edges, then `src dest`. Here 0 and 2 are in the same piece; 4-5 is a separate piece.",
-      "output_note": "`0 1 3 2 YES << endl`: the BFS order and then the answer (with a stray ` << endl` in the text, see Watch out).",
-      "watch_out": "The quotes are misplaced: `cout << \"YES << endl\";` prints the text ` << endl` literally. Write `cout << \"YES\" << endl;`. Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
+      "output_note": "`0 1 3 2 YES`: the BFS order from 0, then the answer. Node 2 is in the same piece as 0, so it got visited.",
+      "watch_out": "Keep the quotes around the word only: `cout << \"YES\" << endl;`. Written as `\"YES << endl\"` the whole thing is text and prints ` << endl` literally. Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
       "prelude": null,
       "driver": null,
       "check": {
@@ -126,8 +126,8 @@
       "complexity": "Time O(V + E) · Space O(V)",
       "input": "6 6\n0 1\n0 2\n1 3\n2 4\n3 5\n4 5\n0 5\n",
       "input_note": "`n e`, edges, then `src dest` (here 0 and 5).",
-      "output_note": "Everything on one line: `0 1 2 3 4 5` (BFS order), `5 3 1 0` (reversed path), `0 1 3 5` (correct path).",
-      "watch_out": "The three prints have no line breaks between them, so add `cout << endl;` to read them easily. Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
+      "output_note": "Three lines: `0 1 2 3 4 5` (BFS order), `5 3 1 0` (the path walked backwards) and `0 1 3 5` (the same path reversed into the right order).",
+      "watch_out": "If `dest` was never reached, `parent[dest]` is -1 and the walk prints just `dest`, which looks like a path but is not. Check `visited[dest]` first. Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
       "prelude": null,
       "driver": null,
       "check": {
@@ -136,22 +136,55 @@
       }
     },
     {
+      "file": "practice_extra_shortest_distance_and_path.cpp",
+      "title": "Extra practice: distance 0→3 and path 0→2",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "Module 2 extra practice - BFS distance and shortest path on a 7-node graph",
+        "url": null
+      },
+      "what": "Answers the two extra-practice questions on the sheet's 7-node graph with one BFS per query that fills both `level` (the distance) and `parent` (to rebuild the path).",
+      "steps": [
+        "Build the undirected graph from the 8 edges.",
+        "For each query `src dest`, `bfs(src)` resets `visited`, `level` and `parent` with `memset`, then runs the usual BFS.",
+        "When a child is discovered it gets `level[child] = level[par] + 1` and `parent[child] = par`.",
+        "Print `level[dest]` as the distance.",
+        "If `dest` was visited, walk `parent` back from `dest` to -1, `reverse` the collected nodes and print the path."
+      ],
+      "complexity": "Time O(Q·(V + E)) · Space O(V + E)",
+      "input": "7 8\n0 5\n5 1\n1 4\n1 6\n4 6\n4 2\n2 3\n3 6\n2\n0 3\n0 2\n",
+      "input_note": "The sheet's graph (`7 8` and its edges), then 2 queries: `0 3` and `0 2`.",
+      "output_note": "`distance 0 -> 3 = 4` with path `0 5 1 6 3`, and `distance 0 -> 2 = 4` with path `0 5 1 4 2`. Node 0 has only one road (to 5), so every path starts `0 5 1`.",
+      "watch_out": "Going 0 -> 3 through 4 and 2 also works but costs 5 edges; BFS never picks it because 3 is first reached from 6 on the lower level.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why can BFS answer both questions in one run?",
+        "a": "The same discovery step writes the level (distance) and the parent (the previous node on a shortest path)."
+      }
+    },
+    {
       "file": "practice_problem_1.cpp",
       "title": "Many shortest-distance queries",
       "kind": "practice",
       "same_as": null,
-      "problem": null,
+      "problem": {
+        "name": "Module 2.5 practice day - shortest distance for Q queries",
+        "url": null
+      },
       "what": "For each query `(S, D)` it runs a fresh BFS from S and prints the level of D (or -1).",
       "steps": [
-        "Build the graph once.",
-        "For each query, `bfs(src)` first resets `visited` and `level` itself.",
-        "After the BFS, `level[dest]` is the answer (-1 if unreachable)."
+        "Build the undirected graph once.",
+        "For each query, `bfs(src)` first resets `visited` and `level` with `memset`, because the previous query left its own marks.",
+        "BFS fills `level[child] = level[par] + 1`, so afterwards `level[dest]` is the fewest edges from S.",
+        "Print `level[dest]`: it is -1 when D is in another piece (the reset value) and 0 when S == D."
       ],
       "complexity": "Time O(Q·(V + E)) · Space O(V)",
-      "input": "6 7\n0 1\n0 2\n1 2\n0 3\n4 2\n3 5\n4 3\n3\n0 5\n1 5\n0 0\n",
-      "input_note": "`n e`, edges, `Q`, then Q lines `S D`.",
-      "output_note": "Each line starts with the BFS order (a leftover debug print) and ends with the answer: `level of 5 = 2`, `level of 5 = 3`, `level of 0 = 0`. The judge expects only `2`, `3`, `0`.",
-      "watch_out": "For the judge, remove the `cout << par` debug line and print only `level[dest]`. Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
+      "input": "6 7\n0 1\n0 2\n1 2\n0 3\n4 2\n3 5\n4 3\n6\n0 5\n1 5\n2 5\n2 3\n1 4\n0 0\n",
+      "input_note": "`n e`, edges, `Q`, then Q lines `S D`. This is the sheet's first sample.",
+      "output_note": "`2 3 3 2 2 0`, one per line, exactly the expected sample output. For example `1 5` is 3: 1-0-3-5.",
+      "watch_out": "Forgetting the reset is the classic bug here: the second query would skip every node the first one visited and print stale distances.",
       "prelude": null,
       "driver": null,
       "check": {
@@ -164,18 +197,21 @@
       "title": "Nodes at level L",
       "kind": "practice",
       "same_as": null,
-      "problem": null,
+      "problem": {
+        "name": "Module 2.5 practice day - nodes at level L (descending)",
+        "url": null
+      },
       "what": "BFS from node 0 and collects every node whose level equals L, then prints them in descending order.",
       "steps": [
         "Run BFS from 0 while computing `level`.",
-        "When a node is popped, if `level[par] == l` push it into `nodes`.",
+        "When a node is popped its level is final, so if `level[par] == l` it is pushed into `nodes`.",
         "Sort `nodes` with `greater<int>()` and print."
       ],
       "complexity": "Time O(V + E + k log k) · Space O(V)",
-      "input": "6 7\n0 1\n0 2\n1 2\n0 3\n4 2\n3 5\n4 3\n1\n",
+      "input": "6 7\n0 1\n0 2\n1 2\n0 3\n4 2\n3 5\n4 3\n2\n",
       "input_note": "`n e`, edges, then `L`.",
-      "output_note": "`L = 1` prints `3 2 1`: the three neighbours of 0, largest first.",
-      "watch_out": "Tip: on some compilers you need `#include <cstring>` for `memset`; this file relies on another header bringing it in.",
+      "output_note": "`L = 2` prints `5 4`: 4 is reached through 2 (or 3) and 5 through 3, both two edges from 0. Matches the sheet's third sample.",
+      "watch_out": null,
       "prelude": null,
       "driver": null,
       "check": {
@@ -188,7 +224,10 @@
       "title": "Count direct neighbours",
       "kind": "practice",
       "same_as": null,
-      "problem": null,
+      "problem": {
+        "name": "Module 2.5 practice day - count direct neighbours of N",
+        "url": null
+      },
       "what": "No search needed: the number of nodes directly connected to N is the size of its adjacency list.",
       "steps": [
         "Build the adjacency list.",
@@ -238,7 +277,7 @@
     {
       "file": "message_route.cpp",
       "title": "CSES Message Route (BFS plus a parent array)",
-      "kind": "practice",
+      "kind": "problem",
       "same_as": null,
       "problem": {
         "name": "CSES 1667 - Message Route",
@@ -343,7 +382,7 @@
       "body": [
         "Two small additions make BFS answer two more questions. **Which towns can I reach at all?** After the run, `visited[x]` already says so, and a node in a separate piece of the graph keeps its `level` of -1.",
         "**Which roads do I actually take?** Store `parent[child] = par` at the moment the child is discovered, then walk backwards from the destination. On the trace above: 5 came from 3, 3 came from 1, 1 came from 0, and 0's parent is -1, so the walk stops. That gives `5 3 1 0`; reverse it and you have the path `0 1 3 5`.",
-        "The programs below are these pieces one at a time: plain BFS, BFS with levels, a reachability check, path printing, and three practice problems that reuse them. Watch the resetting: every new BFS from a new source must clear `visited` and `level` first, or the old marks will stop it."
+        "The lesson programs below are these pieces one at a time: plain BFS, BFS with levels, a reachability check and path printing. After them come the practice files that reuse them: the extra-practice sheet, the three practice-day questions, and the two judge problems. Watch the resetting: every new BFS from a new source must clear `visited` and `level` first, or the old marks will stop it."
       ],
       "snippet": null,
       "trace": null

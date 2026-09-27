@@ -42,8 +42,11 @@ using namespace std; // Use the standard namespace to avoid prefixing 'std::' be
 
 int main(){
     int a, b, c;
-    char s, q;
+    char s, q; // s is the operator (+, - or *), q just swallows the '=' sign
+    // "2 * 10 = 19" is read as a=2, s='*', b=10, q='=', c=19 (cin skips the spaces)
     cin >> a >> s >> b >> q >> c;
+
+    // First: is the written answer c correct for this operator?
     if(s == '+' && a + b == c){
         cout << "Yes";
     } else if(s == '-' && a - b == c){
@@ -51,6 +54,7 @@ int main(){
     } else if(s == '*' && a * b == c){
         cout << "Yes";
     } else {
+        // Wrong answer: print the correct result instead, worked out with the same operator
         if(s == '+'){
             cout << a + b;
         } else if(s == '-'){

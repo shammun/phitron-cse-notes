@@ -49,6 +49,11 @@ Output
 
 */
 
+// The practice-day copy of codeforces_knapsack.cpp: the same memoized 0-1
+// knapsack, re-typed. Only small things differ: the arrays are sized from the
+// constraints (N <= 20, W <= 100) instead of 1005, and the values live in
+// value[] instead of val[]. See codeforces_knapsack.cpp for the full walk-through.
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -56,24 +61,28 @@ Output
 
 using namespace std;
 
-int weight[25], value[25];
-int dp[25][105];
+int weight[25], value[25];   // N <= 20 items
+int dp[25][105];             // dp[i][w] = best value from items 0..i with w room; -1 = unknown
 
 int knapsack(int i, int max_weight){
+    // No items left or no room left: nothing more can be gained.
     if(i < 0 || max_weight <= 0){
         return 0;
     }
 
+    // Already solved this (item, room) state.
     if(dp[i][max_weight] != -1){
         return dp[i][max_weight];
     }
 
     if(weight[i] <= max_weight){
+        // Item i fits: try both choices and keep the better one.
         int op1 = knapsack(i-1, max_weight - weight[i]) + value[i]; // taking the current item
         int op2 = knapsack(i-1, max_weight); // not taking the current item
         dp[i][max_weight] = max(op1, op2);
         return dp[i][max_weight];
     } else{
+        // Too heavy: leaving it is the only option.
         dp[i][max_weight] = knapsack(i-1, max_weight);
         return dp[i][max_weight];
     }
@@ -84,9 +93,14 @@ int main(){
     cin >> n >> max_weight;
 
     for(int i=0; i<n; i++){
-        cin >> weight[i] >> value[i];
+        cin >> weight[i] >> value[i];   // judge order: weight, then value
     }
 
+    // Mark every state "not solved yet".
+    // BUG, the same one as in codeforces_knapsack.cpp and knapsack_using_dp.cpp:
+    // j < max_weight leaves the column j == max_weight at the global 0, so the
+    // first call knapsack(n-1, max_weight) thinks it is already solved and the
+    // program prints 0. The fix is j <= max_weight (done in Module 16).
     for(int i=0; i<n; i++){
         for(int j=0; j<max_weight; j++){
             dp[i][j] = -1;

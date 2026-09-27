@@ -32,6 +32,14 @@ Sample Output 1
 
 */
 
+/*
+ * max - min needs two numbers: the largest and the smallest value of the list.
+ * Each one is a single walk over the list, keeping the best value seen so far
+ * (the same running-max idea as with an array). Then subtract.
+ *
+ * With a single node, max and min are the same node, so the answer is 0.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -53,6 +61,7 @@ class Node {
         }
 };
 
+// O(1) append: `tail` remembers the last node, so there is no walk.
 void insert_at_tail(Node* &head, Node* &tail, int val){
     Node* newNode = new Node(val);
     if(head == NULL){
@@ -61,10 +70,13 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
         return;
     }
     
+    // Link the new node after the old last node, then move `tail` onto it.
     tail->next = newNode;
     tail = newNode; // or tail = tail->next
 }
 
+// Walk once, keep the biggest value seen. INT_MIN is below every value,
+// so the first node always replaces it.
 int find_max(Node* head){
     if(head == NULL){
         return -1;
@@ -81,6 +93,7 @@ int find_max(Node* head){
     return max;
 }
 
+// Mirror image: keep the smallest value, starting from INT_MAX.
 int find_min(Node* head){
     if(head == NULL){
         return -1;
@@ -102,6 +115,7 @@ int main(){
     Node* tail = NULL;
     
     int val;
+    // Read values until the stop sign -1 (it is not stored).
     while(true){
         cin >> val;
         if(val == -1){
@@ -110,10 +124,11 @@ int main(){
         insert_at_tail(head, tail, val);
     }
 
+    // Two separate walks over the same list: O(n) each.
     int max = find_max(head);
     int min = find_min(head);
 
-    int diff = max - min;
+    int diff = max - min; // at most 10^9 - (-10^9) = 2*10^9, still fits in an int
 
     cout << diff << endl;
 

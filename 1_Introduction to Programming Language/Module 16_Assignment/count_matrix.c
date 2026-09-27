@@ -40,8 +40,16 @@ int main(){
     scanf("%d %d %d", &N, &M, &X);
 
     int Numbers[N][M];
+
+    /* The frequency array from Module 13: freq[v] counts how often v is in
+       the matrix. Values go up to 1000, so 100005 boxes are more than
+       enough. = {0} starts every count at 0. */
     int freq[100005] = {0};
 
+    /* Read the matrix row by row with two nested loops, and count each
+       value the moment it is read. After this, every question "how many
+       times is v there?" is answered by freq[v], without walking the
+       matrix again. */
     for(int i=0; i<N; i++){
         for(int j=0; j<M; j++){
             scanf("%d", &Numbers[i][j]);
@@ -49,11 +57,14 @@ int main(){
         }
     }
 
+    /* Keep the X query numbers. They are stored from index 1 to X (not 0 to
+       X - 1); the +5 in the size leaves room for the extra box. */
     int numbers_to_check[X+5];
     for(int i=1; i<=X; i++){
         scanf("%d", &numbers_to_check[i]);
     }
 
+    /* Answer each query with one look-up. */
     for(int i=1; i<=X; i++){
         printf("%d\n", freq[numbers_to_check[i]]);
     }

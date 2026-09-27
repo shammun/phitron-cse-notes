@@ -32,28 +32,49 @@ YES
 
 */
 
+/*
+ * Idea
+ *
+ * "The same in the order of removing" means: pop everything out of both and
+ * write the values down in the order they come out. A stack gives back the
+ * LAST value typed first (LIFO); a queue gives back the FIRST value typed
+ * first (FIFO). So a stack filled with 10 20 30 40 50 comes out as
+ * 50 40 30 20 10, and it matches a queue only if the queue was filled in the
+ * opposite order: 50 40 30 20 10.
+ *
+ * The check is a walk: compare st.top() with q.front(), pop both, repeat.
+ */
+
 #include <iostream>
 #include <stack>
 #include <queue>
 using namespace std;
 
+// st and q are passed BY VALUE: the function works on copies, so popping
+// here does not empty the caller's stack and queue.
 bool compareStackQueue(stack<int> st, queue<int> q){
+    // Different counts can never give the same removal order. Checking it
+    // first also means the loop below never pops an empty queue.
     if(st.size() != q.size()){
         return false;
     }
 
+    // Next value out of the stack is top(); next out of the queue is front().
     while(!st.empty()){
         if(st.top() != q.front()){
-            return false;
+            return false;   // one mismatch is enough: stop right here
         }
+        // Both matched, so remove them and look at the next pair.
         st.pop();
         q.pop();
     }
 
+    // Every pair matched.
     return true;
 }
 
 int main(){
+    // n values pushed onto the stack: the last one typed ends up on top.
     int n;
     cin >> n;
     stack<int> st;
@@ -63,6 +84,7 @@ int main(){
         st.push(val);
     }
 
+    // m values pushed into the queue: the first one typed is at the front.
     int m;
     cin >> m;
     queue<int> q;

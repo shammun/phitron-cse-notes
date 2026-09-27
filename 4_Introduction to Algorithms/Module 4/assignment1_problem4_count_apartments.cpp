@@ -50,6 +50,14 @@ Sample Output 1
 
 */
 
+// Idea: an apartment is a connected group of '.' cells, i.e. a component of
+// the grid graph. Count components exactly as in number_of_components.cpp
+// (Module 3): scan every cell; an unvisited room cell starts a new apartment,
+// so count it and let a BFS mark all the rooms joined to it.
+//
+// Example: sample 0 has rooms {(1,1),(1,2)}, the big block on the right, and
+// {(3,1),(3,2)} -> 3 apartments.
+
 #include <iostream>
 #include <vector>
 #include <queue>
@@ -58,7 +66,7 @@ Sample Output 1
 using namespace std;
 
 char grid[1005][1005];
-bool vis[1005][1005];
+bool vis[1005][1005];    // global, so it starts all false
 vector<pair<int, int>> direction = {{0, 1}, {0, -1}, {-1, 0}, {1, 0}};
 int n, m;
 
@@ -69,6 +77,7 @@ bool valid(int i, int j){
     return true;
 }
 
+// Grid BFS from (Ai, Aj): marks every room cell of this apartment.
 void bfs(int Ai, int Aj){
     queue<pair<int, int>> q;
     q.push({Ai, Aj});
@@ -84,6 +93,7 @@ void bfs(int Ai, int Aj){
             int ci = par_i + direction[i].first;
             int cj = par_j + direction[i].second;
 
+            // Spread only into room cells ('.') inside the map, not yet seen.
             if(valid(ci, cj) && !vis[ci][cj] && grid[ci][cj] == '.'){
                 q.push({ci, cj});
                 vis[ci][cj] = true;
@@ -104,14 +114,15 @@ int main(){
     int count = 0;
     for(int i=0; i<n; i++){
         for(int j=0; j<m; j++){
+            // A room nobody has reached yet = the first cell of a new apartment.
             if(!vis[i][j] && grid[i][j] == '.'){
-                bfs(i, j);
-                count++;
+                bfs(i, j);     // swallow the whole apartment
+                count++;       // and count it once
             }
         }
     }
 
-    cout << count << endl;
+    cout << count << endl;     // Cost: O(N * M)
 
     return 0;
 }

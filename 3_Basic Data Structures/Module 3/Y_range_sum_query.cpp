@@ -52,21 +52,34 @@ Output
 #include <string>
 using namespace std;
 
+/*
+ * First answer: add up the range again for every query.
+ * It is correct, but one query can cost n additions, so q queries cost
+ * O(n*q). At the limits (10^5 each) that is 10^10 steps -> Time Limit
+ * Exceeded. range_sum_query_Prefix_Sum.cpp removes the inner loop.
+ */
 int main() {
     int n, q;
     cin >> n >> q;
+
+    // Size n+1 so the values can sit at indexes 1..n, the same numbering
+    // the queries use. Index 0 is simply left unused.
     vector<int> a(n+1);
 
     for(int i=1; i<=n; i++){
         cin >> a[i];
     }
 
+    // while(q--) runs exactly q times: it tests q, then decreases it.
     while(q--){
         int l, r;
         cin >> l >> r;
-        int sum = 0;
+
+        // Up to 10^5 values of up to 10^9 each: the sum can reach 10^14,
+        // so it needs long long (int stops near 2 * 10^9).
+        long long sum = 0;
         for(int i=l; i<=r; i++){
-            sum += a[i];
+            sum += a[i];      // the slow part: walk the whole range each time
         }
         cout << sum << endl;
     }

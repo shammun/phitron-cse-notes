@@ -45,6 +45,21 @@ NO
 
 */
 
+/*
+ * Idea
+ *
+ * Same question as problem 1, but without the STL: the stack and the queue
+ * are built by hand on a linked list, the way Modules 13 and 14 built them.
+ *
+ *  - myStack: a doubly linked list; push and pop both work at the TAIL, so
+ *    the tail is the top. `prev` lets pop step back in O(1).
+ *  - myQueue: push at the tail (the back), pop at the head (the front).
+ *
+ * The counters are called size1 and size2 (not `size`) so they do not
+ * clash with the size() methods. main() then compares them exactly like
+ * problem 1.
+ */
+
 
 #include <iostream>
 #include <vector>
@@ -65,20 +80,22 @@ class Node {
     }
 };
 
+// Stack on a doubly linked list. tail = top.
 class myStack{
     public:
-        Node* head = NULL;
-        Node* tail = NULL;
+        Node* head = NULL;   // bottom
+        Node* tail = NULL;   // top
         int size1 = 0;
 
         void push(int val){ // O(1)
             size1++;
             Node* newNode = new Node(val);
-            if(head == NULL){
+            if(head == NULL){       // first node is both bottom and top
                 head = newNode;
                 tail = newNode;
                 return;
             }
+            // Link the new node after the old top, both ways; it is the new top.
             tail->next = newNode;
             newNode->prev = tail;
             tail = newNode;
@@ -86,14 +103,15 @@ class myStack{
 
         void pop(){ // O(1)
             size1--;
+            // The node below the top becomes the new top.
             Node* deleteNode = tail;
             tail = tail->prev;
-            delete deleteNode; 
-            if(tail==NULL){
+            delete deleteNode;
+            if(tail==NULL){         // that was the last node: stack is empty
                 head=NULL;
                 return;
             }
-            tail->next = NULL;
+            tail->next = NULL;      // nothing above the new top
         }
 
         int top(){
@@ -110,10 +128,11 @@ class myStack{
         }
 };
 
+// Queue on a linked list. head = front (leave here), tail = back (join here).
 class myQueue{
     public:
-        Node* head = NULL;
-        Node* tail = NULL;
+        Node* head = NULL;   // front
+        Node* tail = NULL;   // back
         int size2 = 0;
 
         void push(int val){ // O(1)
@@ -124,16 +143,18 @@ class myQueue{
                 tail = newNode;
                 return;
             }
+            // Join at the back.
             tail->next = newNode;
             tail = newNode;
         }
 
         void pop(){ // O(1)
             size2--;
+            // Leave from the front: head moves to the next node.
             Node* deleteNode = head;
             head = head->next;
             delete deleteNode;
-            if(head==NULL){
+            if(head==NULL){         // queue is empty: tail must not point at freed memory
                 tail = NULL;
             }
         }
@@ -163,23 +184,29 @@ int main(){
     myStack st;
     myQueue q;
 
+    // The stack gets n values: the last one typed ends up on top.
     for(int i=0; i<n; i++){
         int val;
         cin >> val;
         st.push(val);
     }
 
+    // The queue gets m values: the first one typed is at the front.
     for(int i=0; i<m; i++){
         int val;
         cin >> val;
         q.push(val);
     }
 
+    // Different sizes can never give the same removal order. Checking this
+    // first also means the loop below never touches an empty queue.
     if(n != m){
         cout << "NO" << endl;
         return 0;
     }
 
+    // Remove from both side by side: the stack gives top(), the queue gives
+    // front(). The first pair that differs settles it.
     while(!st.empty()){
         if(st.top() != q.front()){
             cout << "NO" << endl;
@@ -189,6 +216,7 @@ int main(){
         q.pop();
     }
 
+    // Every pair matched.
     cout << "YES" << endl;
 
     return 0;

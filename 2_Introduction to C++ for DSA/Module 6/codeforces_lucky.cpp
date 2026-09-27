@@ -48,10 +48,13 @@ In the third test case, the sum of the first three digits is 0+4+5=9 and the sum
 #include <string>   // Include the string library for std::string
 using namespace std; // Use the standard namespace to avoid writing "std::" repeatedly
 
+// The ticket is read as a string, not an int: "045207" as a number would lose
+// its leading zero, but as a string every digit keeps its place.
+// A digit character minus '0' gives its value: '4' - '0' = 52 - 48 = 4.
 bool isLuckyTicket(string num){
     int first_half_sum = (num[0] - '0') + (num[1] - '0') + (num[2] - '0');
     int second_half_sum = (num[3] - '0') + (num[4] - '0') + (num[5] - '0');
-    return first_half_sum == second_half_sum;
+    return first_half_sum == second_half_sum; // true when both halves add up the same
 }
 
 int main() {
@@ -64,7 +67,7 @@ int main() {
     for(int i=0; i<n; i++){
         string ticket;
         cin >> ticket;
-        results[i] = isLuckyTicket(ticket) ? "YES" : "NO";
+        results[i] = isLuckyTicket(ticket) ? "YES" : "NO"; // ternary: a one-line if-else
     }
 
     // print results

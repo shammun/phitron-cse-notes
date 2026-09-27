@@ -41,9 +41,14 @@ int main(){
     string s;
     cin >> s;
 
+    // Make a copy (= copies a whole string in C++) and turn the copy around.
+    // reverse(begin, end) reverses everything between the two iterators,
+    // here the whole string. s itself stays as it was.
     string rev_s = s;
     reverse(rev_s.begin(), rev_s.end());
 
+    // A palindrome reads the same backwards, so it equals its own reverse.
+    // == compares two strings letter by letter.
     if (s == rev_s){
         cout << "YES" << endl;
     } else {

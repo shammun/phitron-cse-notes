@@ -53,13 +53,22 @@ Sample Output 0
 
 */
 
+// Solution idea: no searching is needed, only counting. The two lost numbers
+// must add up to S = (original sum) - (sum of what is left). How many ordered
+// pairs (x, y) of non-negative numbers have x + y = S? x can be 0, 1, ..., S
+// and then y = S - x is forced, so there are exactly S + 1 pairs.
+// In the example S = 15 - 11 = 4, and the pairs are (0,4) ... (4,0): 5 ways.
 
 #include <iostream>
 
 using namespace std;
 
+// Reads one test case (the n-2 remaining values and the original sum) and
+// returns the number of ways.
 long long possible_ways(int n){
     long long rest[n-2];
+    // Sum of the values still in the array. (The name says "deleted", but it
+    // is the total of the elements that were NOT deleted.)
     long long deleted_sum = 0;
 
     for(int i=0; i<n-2; i++){
@@ -67,25 +76,29 @@ long long possible_ways(int n){
         deleted_sum += rest[i];
     }
 
+    // Up to 10^18, so it needs long long.
     long long original_sum;
     cin >> original_sum;
 
+    // What the two lost numbers must add up to.
     long long sum_of_deleted_elements = original_sum - deleted_sum;
 
+    // x = 0, 1, ..., S gives S + 1 choices.
     return sum_of_deleted_elements + 1;
 }
 
 int main() {
     int t;
     cin >> t;
-    
+
     while (t--) {
         int n;
-        cin >> n;  
-        
+        cin >> n;
+
         long long result = possible_ways(n);
         cout << result << endl;
     }
-    
+
+    // O(n) per test case: one pass to add up the values.
     return 0;
 }

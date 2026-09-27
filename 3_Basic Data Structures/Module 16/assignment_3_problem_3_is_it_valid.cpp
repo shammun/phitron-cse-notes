@@ -48,6 +48,24 @@ YES
 
 */
 
+/*
+ * Idea
+ *
+ * Only '0' and '1' appear. A '0' deletes the nearest '1' still standing just
+ * before it (and itself), and a '1' deletes the nearest '0' before it. So
+ * any "01" or "10" pair of neighbours cancels, and removing a pair can bring
+ * two more characters next to each other.
+ *
+ * A stack handles this naturally: its top is the nearest character still
+ * standing on the left. For each new character:
+ *   - top is the opposite digit -> they cancel, pop the top
+ *   - otherwise (empty stack or same digit) -> push the character
+ * The string is valid when nothing is left.
+ *
+ *   "0110":  0 | 01 cancel -> empty | 1 | 10 cancel -> empty   -> YES
+ *   "0001":  0 | 00 | 000 | 1 cancels one 0 -> 00 left          -> NO
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>    
@@ -64,17 +82,21 @@ int main(){
         string s;
         cin >> s;
 
-        stack<char> st;
+        stack<char> st;   // characters still standing; top = nearest one on the left
 
         for(char c : s){
-            if(st.empty()){
+            // Valid means everything got deleted.
+        if(st.empty()){
+                // Nothing to delete: c stays.
                 st.push(c);
             } else{
+                // Opposite digits next to each other delete each other.
                 if(c == '0' && st.top() == '1'){
                     st.pop();
                 } else if(c == '1' && st.top() == '0'){
                     st.pop();
                 } else{
+                    // Same digit: no deletion, c stays.
                     st.push(c);
                 }
             }

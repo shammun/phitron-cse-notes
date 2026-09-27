@@ -54,3 +54,81 @@ The first test case was explained in the problem statement. For the second test 
 
 
 */
+
+// Solution idea: subset sum (Module 17) with one extra condition - the size.
+// Mina must get exactly k = N / 2 coins (Moni gets the rest). If Mina's coins
+// add up to s, Moni's add up to total - s, and the difference is
+// |total - 2s|. So we need to know every sum s that EXACTLY k coins can make,
+// and then pick the s that makes |total - 2s| smallest.
+//
+// The table reach[c][s] = "can some c of the coins seen so far add up to s?"
+// is built one coin at a time, like the "which totals are reachable" table of
+// Module 17: for each new coin, every old answer stays true (skip the coin),
+// and every old true at (c-1, s-v) makes (c, s) true (take the coin).
+//
+// Example 1 2 3 10: k = 2, total = 16. Two coins can make 3, 4, 5, 11, 12, 13.
+// s = 5 gives |16 - 10| = 6 and s = 11 gives |16 - 22| = 6, so the answer is 6.
+
+#include <iostream>
+#include <vector>
+#include <cstdlib>
+
+using namespace std;
+
+int main(){
+    int T;
+    cin >> T;
+
+    while(T--){
+        int n;
+        cin >> n;
+
+        vector<int> coin(n);
+        int total = 0;
+        for(int i = 0; i < n; i++){
+            cin >> coin[i];
+            total += coin[i];
+        }
+
+        int k = n / 2;   // Mina's share of coins; with n odd, Moni gets the extra one
+
+        // reach[c][s], c = 0..k coins, s = 0..total. Only 0 coins making 0
+        // is possible before any coin is looked at: the empty choice.
+        vector<vector<bool>> reach(k + 1, vector<bool>(total + 1, false));
+        reach[0][0] = true;
+
+        for(int i = 0; i < n; i++){
+            int v = coin[i];
+            // Build the next table from the current one.
+            // Start from a copy: every choice that skips coin i still works.
+            vector<vector<bool>> next = reach;
+            // Take coin i: from c-1 coins making s-v we get c coins making s.
+            // Reading from the OLD table (reach) guarantees coin i is used at
+            // most once.
+            for(int c = 1; c <= k; c++){
+                for(int s = v; s <= total; s++){
+                    if(reach[c-1][s-v]){
+                        next[c][s] = true;
+                    }
+                }
+            }
+            reach = next;
+        }
+
+        // Every sum exactly k coins can make is a possible share for Mina.
+        int best = total;   // the worst case: one side gets everything
+        for(int s = 0; s <= total; s++){
+            if(reach[k][s]){
+                int diff = abs(total - 2 * s);
+                if(diff < best){
+                    best = diff;
+                }
+            }
+        }
+
+        cout << best << endl;
+    }
+
+    // O(n * k * total) time per test case, O(k * total) memory.
+    return 0;
+}

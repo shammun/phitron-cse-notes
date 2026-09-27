@@ -2,6 +2,15 @@
 
 https://leetcode.com/problems/linked-list-cycle/
 
+Say whether a singly linked list loops back on itself (some node's `next`
+points to an earlier node). Example: 1 2 3 4 5 with 5 -> 3 has a cycle.
+
+The idea (Floyd's slow and fast pointers, from Module 10): `slow` moves one
+node per round, `fast` two. With no cycle, `fast` reaches the end (NULL). With
+a cycle there is no end, both pointers end up going round the loop, and
+`fast` gains exactly one node on `slow` every round, so it must land on the
+same node sooner or later. Meeting = cycle.
+
 */
 
 
@@ -25,11 +34,15 @@ public:
     bool hasCycle(ListNode *head) {
         ListNode* slow = head;
         ListNode* fast = head;
-        bool flag = false;
+        bool flag = false;   // no cycle, until the two pointers meet
 
+        // `fast` needs two more nodes to take its double step. If either is
+        // missing the list has an end, so there is no cycle.
         while(fast != NULL && fast->next != NULL){
-            slow = slow->next;
-            fast = fast->next->next;
+            slow = slow->next;           // one step
+            fast = fast->next->next;     // two steps
+            // Move first, then compare: at the start both are on head and
+            // would "meet" without proving anything.
             if(slow == fast){
                 flag = true;
                 break;

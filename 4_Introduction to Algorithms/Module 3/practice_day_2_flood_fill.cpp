@@ -55,11 +55,18 @@ n == image[i].length
 
 */
 
+// Idea: the picture is a grid, each pixel a node, and its neighbours are the 4
+// pixels sharing a side (DFS on a 2D grid, as in dfs_on_2d_grid.cpp). Start a
+// DFS at (sr, sc) and repaint every pixel it can reach through pixels of the
+// ORIGINAL colour. No vis array is needed: once a pixel is repainted it no
+// longer has the original colour, so the colour test itself stops a revisit.
 
 class Solution {
 public:
+    // The 4 moves: right, left, up, down, as {row change, column change}.
     vector<pair<int, int>> direction = {{0, 1}, {0, -1}, {-1, 0}, {1, 0}};
 
+    // Is (i, j) inside an n x m picture?
     bool valid(int i, int j, int n, int m){
         if(i < 0 || i >= n || j < 0 || j >= m){
             return false;
@@ -68,12 +75,16 @@ public:
     }
 
     void dfs(vector<vector<int>>& image, int row, int col, int origColor, int newColor){
-        image[row][col] =  newColor;
+        image[row][col] =  newColor;    // paint first: this doubles as "visited"
 
+        // Try each of the 4 sides.
         for(int i = 0; i < 4; i++){
             int newRow = row + direction[i].first;
             int newCol = col + direction[i].second;
 
+            // Only step onto pixels inside the picture that still carry the
+            // original colour; valid() is checked first so image[][] is never
+            // read out of range.
             if(valid(newRow, newCol, image.size(), image[0].size()) && image[newRow][newCol] == origColor){
                 dfs(image, newRow, newCol, origColor, newColor);
             }
@@ -81,9 +92,12 @@ public:
     }
 
     vector<vector<int>> floodFill(vector<vector<int>>& image, int sr, int sc, int color) {
+        // If the start pixel already has the new colour there is nothing to do.
+        // This check matters: with origColor == newColor a painted pixel would
+        // still "match", and the DFS would bounce between pixels forever.
         if(image[sr][sc] != color){
             dfs(image, sr, sc, image[sr][sc], color);
         }
-        return image;
+        return image;     // Cost: O(n * m), each pixel painted at most once
     }
 };

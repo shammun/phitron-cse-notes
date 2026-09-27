@@ -45,17 +45,24 @@ Senior candidate
 
 int main() {
 
-    /* Enter your code here. Read input from STDIN. Print output to STDOUT */    
+    /* The idea: read all N experiences, then put each one in its band with
+     * an if / else-if chain, checked from the smallest band up:
+     *   below 1 -> Entry-level,  1..3 -> Junior,  4..7 -> Mid-level,
+     *   above 7 -> Senior.
+     * Because each else-if is only reached when the tests above it failed,
+     * the last case needs no condition at all. */
     
     int N;
     scanf("%d", &N);
     
     int experiences[100000];
     
+    /* Read the N experiences. */
     for(int i=0; i<N; i++){
         scanf("%d", &experiences[i]);
     }
     
+    /* One line of output per candidate, in input order. */
     for(int i = 0; i < N; i++){
         if(experiences[i] < 1){
             printf("Entry-level candidate\n");

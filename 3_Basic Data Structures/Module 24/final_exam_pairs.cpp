@@ -4,12 +4,12 @@ Pairs
 
 Problem Statement
 
-You will be given a list  of type pairs. Each pair will contain one string S and 
-one unique integer I. The string will contain only English lowercase alphabets and 
+You will be given a list  of type pairs. Each pair will contain one string S and
+one unique integer I. The string will contain only English lowercase alphabets and
 no spaces.
 
-You need to sort the pairs according to the string values in ascending order. If 
-there are multiple pairs with the same string, you need to sort them according to 
+You need to sort the pairs according to the string values in ascending order. If
+there are multiple pairs with the same string, you need to sort them according to
 the integer value in descending order.
 
 Input Format
@@ -58,12 +58,28 @@ tasfia 2
 
 */
 
+// A re-typed copy of final_exam_question_2_Pairs.cpp (same logic, plus return 0).
+
 #include <bits/stdc++.h>
 
 using namespace std;
 
 
 
+/*
+ * Idea: a priority queue with our own compare class (custom_compare_class.cpp
+ * in Module 23). Push every pair, then pop them one by one; the compare
+ * class decides which pair comes out first:
+ *   - smaller name first (ascending by name);
+ *   - for the same name, bigger number first (descending by number).
+ *
+ * How to read cmp: operator()(l, r) returns true when l should come out
+ * AFTER r (l has lower priority). So:
+ *   l.name > r.name  -> true : the bigger name waits, smaller names go first.
+ *   l.val  < r.val   -> true : on a name tie, the smaller number waits.
+ */
+
+// One (name, number) item of the list.
 class Pair{
     public:
         string name;
@@ -79,21 +95,26 @@ class Pair{
 class cmp{
     public:
         bool operator()(Pair &l, Pair &r){
+            // Different names: the alphabetically bigger one comes out later.
             if(l.name > r.name){
                 return true;
             } else if(l.name < r.name){
                 return false;
             } else {
+                // Same name: the smaller number comes out later, so the
+                // bigger number is printed first.
                 return l.val < r.val;
-            } 
+            }
         }
 };
 
 int main(){
+    // priority_queue<type, container that stores it, compare class>
     priority_queue<Pair, vector<Pair>, cmp> pq;
     int N;
     cin >> N;
 
+    // Read every pair and push it; the heap keeps the "first to print" on top.
     for(int i=0; i<N; i++){
         string name;
         int val;
@@ -102,6 +123,8 @@ int main(){
         pq.push(obj);
     }
 
+    // Print the top and remove it, until nothing is left: that prints the
+    // whole list in the required order.
     while(!pq.empty()){
         cout << pq.top().name << " " << pq.top().val << endl;
         pq.pop();

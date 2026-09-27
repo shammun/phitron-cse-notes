@@ -27,7 +27,7 @@ NOTES = ROOT / "_build" / "notes"
 REPO = "shammun/phitron-cse-notes"
 SITE_TITLE = "CSE Fundamentals — Revision Notes"
 GITHUB_BLOB = f"https://github.com/{REPO}/blob/main/"
-ASSET_V = "7"
+ASSET_V = "8"
 
 COURSE_INFO = {
     "1_Introduction to Programming Language": ("c-programming", "Introduction to Programming", "C",
@@ -43,6 +43,26 @@ COURSE_INFO = {
 }
 KIND_LABEL = {"lesson": "Lesson", "practice": "Practice", "problem": "Problem", "exam": "Exam",
               "variant": "Re-typed practice", "setup": "Setup"}
+# Programs are shown in three groups, always in this order: the module's basics first,
+# then the practice-day / judge problems, then the exam or assignment questions.
+GROUPS = [("lesson", "📘 The basics", "The module's own lesson code: the ideas, one small program at a time."),
+          ("practice", "🏋️ Practice problems", "Practice-day and judge problems, solved with what the module has taught so far."),
+          ("exam", "📝 Exam &amp; assignment questions", "The graded questions, solved the same way.")]
+KIND_GROUP = {"lesson": "lesson", "setup": "lesson", "practice": "practice", "problem": "practice", "exam": "exam"}
+
+
+def grouped_files(files):
+    """Return the module's files sorted into GROUPS order (stable inside a group).
+    A re-typed variant stays in the group of the file it copies."""
+    by_name = {e["file"]: e for e in files}
+
+    def group(e):
+        if e.get("kind") == "variant":
+            src = by_name.get(e.get("same_as") or "")
+            return KIND_GROUP.get(src.get("kind"), "practice") if src else "practice"
+        return KIND_GROUP.get(e.get("kind", "lesson"), "lesson")
+    order = [g for g, _, _ in GROUPS]
+    return sorted(files, key=lambda e: order.index(group(e))), group
 
 
 # ---------------------------------------------------------------- helpers
@@ -301,13 +321,26 @@ def render_program(i, mod, e, res, page_depth):
 
 def render_module(mod, notes, results, prev_mod, next_mod, course_slug, course_title):
     depth = 1
-    files = notes.get("files", [])
+    files, group_of = grouped_files(notes.get("files", []))
     label = module_label(mod)
     title = notes.get("title") or label
-    toc = "".join(
-        f'<li><a href="#p-{slug(Path(e["file"]).stem)}"><span class="n">{i}</span>{md(e.get("title") or e["file"])}'
-        f'{" <em>(re-typed)</em>" if e.get("kind") == "variant" else ""}</a></li>'
-        for i, e in enumerate(files, 1))
+    present = [g for g in GROUPS if any(group_of(e) == g[0] for e in files)]
+    toc, progs, i = "", "", 0
+    for key, gtitle, glead in present:
+        members = [e for e in files if group_of(e) == key]
+        items, body = "", ""
+        for e in members:
+            i += 1
+            items += (f'<li><a href="#p-{slug(Path(e["file"]).stem)}"><span class="n">{i}</span>{md(e.get("title") or e["file"])}'
+                      f'{" <em>(re-typed)</em>" if e.get("kind") == "variant" else ""}</a></li>')
+            body += render_program(i, mod, e, results[(mod["id"], e["file"])], depth)
+        # A group heading is only worth showing when the page has more than one group.
+        if len(present) > 1:
+            toc += f'<p class="toc-g">{gtitle}</p><ol>{items}</ol>'
+            progs += f'<div class="pgroup" id="g-{key}"><h3>{gtitle}</h3><p>{glead}</p></div>' + body
+        else:
+            toc += f'<ol>{items}</ol>'
+            progs += body
     concepts = "".join(
         f'<div class="concept"><h4>{md(c.get("term"))}</h4><p>{md(c.get("explain"))}</p>'
         + (f'<pre class="snip">{esc(c["snippet"])}</pre>' if c.get("snippet") else "") + "</div>"
@@ -328,7 +361,6 @@ def render_module(mod, notes, results, prev_mod, next_mod, course_slug, course_t
                         + (f'<span class="rnote">{md(r["note"])}</span>' if r.get("note") else "")
                         + "</a></li>" for r in res if r.get("url"))
                     + "</ul></section>")
-    progs = "".join(render_program(i, mod, e, results[(mod["id"], e["file"])], depth) for i, e in enumerate(files, 1))
     links = notes.get("practice_links") or []
     links_html = ""
     if links:
@@ -356,7 +388,7 @@ def render_module(mod, notes, results, prev_mod, next_mod, course_slug, course_t
     <p class="chips"><span>{len(files)} program{"s" if len(files) != 1 else ""}</span>{f'<span>{len(links)} practice links</span>' if links else ''}<a href="{esc(gh_url(mod["rel"]).replace("/blob/", "/tree/"))}" target="_blank" rel="noopener">Folder on GitHub ↗</a></p>
   </header>
   {f'<section class="block intro" id="start"><h2>🧭 Start here</h2><div class="istep">{intro}</div></section>' if intro else ''}
-  {f'<nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol>{toc}</ol></details></nav>' if files else ''}
+  {f'<nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary>{toc}</details></nav>' if files else ''}
   {f'<section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts">{concepts}</div></section>' if concepts else ''}
   {f'<section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk">{walk}</div></section>' if walk else ''}
   {res_html}

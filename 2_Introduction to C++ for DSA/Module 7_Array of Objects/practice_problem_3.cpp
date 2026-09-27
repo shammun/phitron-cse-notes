@@ -18,18 +18,23 @@ Output:
 using namespace std; // Use the standard namespace to avoid writing "std::" repeatedly
 
 int main() {
-    string name;
-    cin >> name;
-    cin.ignore();
-    
+    // The sentence comes first. getline reads the whole line, spaces included.
     string words;
     getline(cin, words);
 
+    // Then the word to look for, on the next line. cin >> reads one word.
+    string name;
+    cin >> name;
+
     string word;
-    
+
+    // A stringstream reads the sentence one word at a time with >>, the same
+    // way cin reads words from the keyboard, skipping the spaces between them.
     stringstream ss3(words);
     int count = 0;
-    while(ss3 >> word){
+    while(ss3 >> word){ // stops when no words are left
+        // == compares whole words, letter by letter and case-sensitively:
+        // "john" matches only "john", not "John" or "johnny"
         if(word == name){
             count++;
         }

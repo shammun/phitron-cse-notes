@@ -25,11 +25,14 @@ int main(){
     int N;
     scanf("%d", &N);
 
+    /* A plain (variable-length) array of N ints. */
     int A[N];
     for(int i=0; i<N; i++){
         scanf("%d", &A[i]);
     }
 
+    /* Change the values in place. Zero matches neither test, so it is left
+       as it is - no third branch is needed. */
     for(int i=0; i<N; i++){
         if(A[i] > 0){
             A[i] = 1;
@@ -38,6 +41,7 @@ int main(){
         }
     }
 
+    /* Print the changed array, a space after each value. */
     for(int i = 0; i < N; i++){
         printf("%d ", A[i]);
     }

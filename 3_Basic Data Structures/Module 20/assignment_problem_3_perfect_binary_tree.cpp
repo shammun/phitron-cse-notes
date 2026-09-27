@@ -74,6 +74,7 @@ YES
 
 using namespace std;
 
+// A binary tree node: a value and two child pointers (NULL = no child).
 class Node {
     public:
         int val;     
@@ -88,9 +89,12 @@ class Node {
     }
 };
 
+// Reads the tree in level order, the Module 18 way: first the root, then for
+// every real node (in the order a queue hands them out) its left and right
+// child, with -1 meaning "no child".
 Node* input_tree(){
     int val;
-    cin >> val;
+    cin >> val;                  // the root (or -1 for an empty tree)
     Node* root;
     if(val == -1){
         root = NULL;
@@ -98,17 +102,18 @@ Node* input_tree(){
         root = new Node(val);
     }
 
+    // Nodes whose two children have not been read yet.
     queue<Node*> q;
     if(root){
         q.push(root);
     }
 
     while(!q.empty()){
-        Node* p = q.front();
+        Node* p = q.front();     // oldest node still waiting for its children
         q.pop();
 
         int l, r;
-        cin >> l >> r;
+        cin >> l >> r;           // its left and right child values
         Node* myLeft;
         Node* myRight;
         if(l == -1){
@@ -126,6 +131,7 @@ Node* input_tree(){
         p->left = myLeft;
         p->right = myRight;
 
+        // Only real children wait in the queue for their own pair of values.
         if(p->left){
             q.push(p->left);
         }
@@ -138,6 +144,18 @@ Node* input_tree(){
     return root;
 }
 
+/*
+ * Is the tree perfect? (Every level completely filled, all leaves on the
+ * bottom level.)
+ *
+ * The idea is the formula from the statement: a perfect tree of depth d has
+ * exactly 2^d - 1 nodes (1 + 2 + 4 + ... + 2^(d-1)). Any gap makes the real
+ * count smaller. So count the nodes, measure the depth, and compare.
+ * Example: 7 nodes, depth 3 -> 2^3 - 1 = 7 -> YES.
+ *          10 20 30 40 -1 60 ... : 5 nodes, depth 3 -> 5 != 7 -> NO.
+ */
+
+// Number of nodes = left count + right count + 1 (this node).
 int count_nodes(Node* root){
     if(root == NULL){
         return 0;
@@ -147,6 +165,7 @@ int count_nodes(Node* root){
     return l + r + 1;
 }
 
+// Depth counted in nodes: 1 + the deeper of the two sides (0 for NULL).
 int max_depth(Node* root){
     if(root == NULL){
         return 0;
@@ -162,11 +181,13 @@ bool is_perfect(Node* root){
     if(root == NULL){
         return true;
     }
-    int total_nodes = count_nodes(root);
-    int max_depth_of_tree = max_depth(root);
+    int total_nodes = count_nodes(root);        // how many nodes there are
+    int max_depth_of_tree = max_depth(root);    // how many levels there are
 
+    // How many nodes a perfect tree with that many levels must have.
     int total_nodes_for_perfect_tree = pow(2, max_depth_of_tree) - 1;
 
+    // Perfect exactly when nothing is missing.
     return total_nodes == total_nodes_for_perfect_tree;
 }
 

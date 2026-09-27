@@ -51,6 +51,7 @@ Sample Output 1
 #include <vector>
 using namespace std;
 
+// A binary tree node: a value and two child pointers (NULL = no child).
 class Node {
     public:
         int val;     
@@ -65,9 +66,12 @@ class Node {
     }
 };
 
+// Reads the tree in level order, the Module 18 way: first the root, then for
+// every real node (in the order a queue hands them out) its left and right
+// child, with -1 meaning "no child".
 Node* input_tree(){
     int val;
-    cin >> val;
+    cin >> val;                  // the root (or -1 for an empty tree)
     Node* root;
     if(val == -1){
         root = NULL;
@@ -75,17 +79,18 @@ Node* input_tree(){
         root = new Node(val);
     }
 
+    // Nodes whose two children have not been read yet.
     queue<Node*> q;
     if(root){
         q.push(root);
     }
 
     while(!q.empty()){
-        Node* p = q.front();
+        Node* p = q.front();     // oldest node still waiting for its children
         q.pop();
 
         int l, r;
-        cin >> l >> r;
+        cin >> l >> r;           // its left and right child values
         Node* myLeft;
         Node* myRight;
         if(l == -1){
@@ -103,6 +108,7 @@ Node* input_tree(){
         p->left = myLeft;
         p->right = myRight;
 
+        // Only real children wait in the queue for their own pair of values.
         if(p->left){
             q.push(p->left);
         }
@@ -115,6 +121,25 @@ Node* input_tree(){
     return root;
 }
 
+/*
+ * An earlier attempt at problem 5, kept to learn from. It does not work.
+ *
+ * The plan: collect every level with level_nodes() from problem 4, then print
+ * the first node of each level from the bottom up and the last node of each
+ * level from the top down.
+ *
+ * Why it fails:
+ *   1. It crashes. In print_outer_nodes the loop
+ *        for(size_t i = levels.size()-1; i >= 0; i--)
+ *      never ends: size_t is unsigned, so after i = 0 the i-- wraps round to
+ *      a huge number and levels[i] reads far outside the vector.
+ *   2. Even with `int i`, "first node of each level" is not the same as the
+ *      outer edge (100 is the first node of its level but is not on the edge).
+ *   3. main reads an extra number X that the problem never gives.
+ * The working solution is assignment_problem_5_print_order_tree_another.cpp.
+ */
+
+// Same as problem 4: the values on level X, or {-999} if there is no level X.
 vector<int> level_nodes(Node* root, int X) {
     vector<int> ans;
     queue<pair<Node*, int>> q;
@@ -148,6 +173,8 @@ vector<int> level_nodes(Node* root, int X) {
 }
 
 
+// Calls level_nodes for level 0, 1, 2, ... until a level is empty, and stores
+// each level as {level number, values}. (One BFS per level: O(n * h) time.)
 vector<pair<int, vector<int>>> all_nodes_at_all_levels(Node* root){
     vector<pair<int, vector<int>>> levels;
     int level = 0;
@@ -281,6 +308,8 @@ void print_outer_nodes(Node* root) {
     vector<int> leafLevel = levels[levels.size()-1].second;
     
     // Go bottom to top on left side
+    // BUG (see the top comment): size_t can never be negative, so i >= 0 is
+    // always true and this loop runs past index 0.
     for(size_t i = levels.size()-1; i >= 0; i--) {
         // Only add if it's a left boundary node (first in level)
         if(i == levels.size()-1) {

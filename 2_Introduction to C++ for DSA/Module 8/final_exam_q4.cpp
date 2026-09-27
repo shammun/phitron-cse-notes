@@ -40,6 +40,9 @@ class Student{
     int eng_marks;
 }; // Define a class named Student
 
+// Comparator for sort(): true when student l must come BEFORE student r.
+// First key: total marks (math + English), bigger first.
+// Tie on the total: smaller id first.
 bool dsc(Student l, Student r){
     if(l.math_marks + l.eng_marks > r.math_marks + r.eng_marks){
         return true;
@@ -54,12 +57,12 @@ int main(){
     int n;
     cin >> n;
 
-    Student a[n];
+    Student a[n]; // an array of n Student objects
     for(int i=0; i<n; i++){
         cin >> a[i].nm >> a[i].cls >> a[i].s >> a[i].id >> a[i].math_marks >> a[i].eng_marks;
     }
 
-    sort(a, a+n, dsc);
+    sort(a, a+n, dsc); // sort() asks dsc() which of two students goes first
 
     for(int i=0; i<n; i++){
         cout << a[i].nm << " " << a[i].cls << " " << a[i].s << " " << a[i].id << " " << a[i].math_marks << " " << a[i].eng_marks << endl;

@@ -49,6 +49,11 @@ int main(){
         cin >> A[i];
     }
 
+    // sort(start, end) sorts the boxes from A up to (not including) A+N, in
+    // ascending order. A is the address of the first box and A+N is one past
+    // the last, so this range is the whole array.
+    // (The judge suggests writing bubble sort by hand; the practice sheet asks
+    // for sort(), which is what this module teaches.)
     sort(A, A+N);
 
     for(int i=0; i<N; i++){

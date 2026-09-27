@@ -45,16 +45,22 @@ Sample Output 1
 
 */
 
+// Solution idea: the book codes are in no particular order, so the only safe
+// way is a linear search - look at every position from the left and stop at
+// the first match. (Binary search would need a sorted array.)
+
 #include <iostream>
 
 using namespace std;
 
+// Returns the 0-based index of target in arr[0..n-1], or -1 if it is absent.
 int lostBook(int arr[], int n, int target){
     for(int i=0; i<n; i++){
         if(arr[i] == target){
-            return i;
+            return i;   // found: stop at once, the rest does not matter
         }
     }
+    // The loop checked every book without a match.
     return -1;
 }
 
@@ -70,7 +76,9 @@ int main(){
     int target;
     cin >> target;
 
+    // 10 20 5 6 3 with target 3: the match is at index 4 (counting from 0).
     cout << lostBook(arr, n, target) << endl;
 
+    // O(n): at most one look at each book.
     return 0;
 }

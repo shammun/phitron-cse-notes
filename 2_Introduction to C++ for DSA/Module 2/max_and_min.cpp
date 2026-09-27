@@ -27,13 +27,15 @@ Output
 
 */
 
-#include <iostream>
-using namespace std;
+#include <iostream> // cin and cout
+using namespace std; // write cin/cout instead of std::cin/std::cout
 
 int main(){
     int a, b, c;
-    cin >> a >> b >> c;
+    cin >> a >> b >> c; // the three numbers, separated by spaces
 
+    // Minimum: assume a is the smallest, then let b and c challenge it.
+    // Each if replaces the champion only when the challenger is smaller.
     int min = a;
     if(b < min){
         min = b;
@@ -42,6 +44,7 @@ int main(){
         min = c;
     }
 
+    // Maximum: the same idea with > instead of <
     int max = a;
     if(b > max){
         max = b;
@@ -50,7 +53,7 @@ int main(){
         max = c;
     }
 
-    cout << min << " " << max << endl;
+    cout << min << " " << max << endl; // minimum, one space, maximum
 
-    return 0;
+    return 0; // the program ended fine
 }

@@ -1,7 +1,7 @@
 {
   "module_id": "4-introduction-to-algorithms--mock-contest",
   "title": "Mock contest: search, sets, number reasoning, greedy, partition DP",
-  "overview": "A practice contest before the final. The first three problems need simple tools: a linear search, a `set` for unique sorted letters, and a little number reasoning. The last two files hold only the problem statements, so the notes explain how to attack them: a sort-then-greedy idea and a subset DP with a size limit.",
+  "overview": "A practice contest before the final. The first three problems need simple tools: a linear search, a `set` for unique sorted letters, and a little number reasoning. The last two need one idea each: sort-then-greedy for the Genie's bags, and a subset-sum table with a second index for the number of coins for Mina and Moni. Two extra LeetCode problems practise the same two ideas.",
   "concepts": [
     {
       "term": "Linear search",
@@ -30,6 +30,65 @@
     }
   ],
   "files": [
+    {
+      "file": "practice_minimum_deletions_frequencies_unique.cpp",
+      "title": "Minimum Deletions to Make Character Frequencies Unique (LeetCode 1647)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "Minimum Deletions to Make Character Frequencies Unique",
+        "url": "https://leetcode.com/problems/minimum-deletions-to-make-character-frequencies-unique/"
+      },
+      "what": "Counts every letter, then deletes as few characters as possible so that no two letters are left with the same count. Same greedy shape as \"Here Comes the Genie\" in this contest: sort the counts from big to small and let each one fall to the first free value.",
+      "steps": [
+        "Count the letters in `int freq[26]`. Only 26 letters exist, so no map is needed.",
+        "Copy the counts that are above 0 into a vector; a letter that never appeared cannot clash with anything.",
+        "Sort that vector from big to small with `greater<int>()`.",
+        "Walk it with a cap called `allowed`. The first count keeps everything, so `allowed` starts at the largest count.",
+        "For each count, `keep = min(count, allowed)`, and `count - keep` characters are deleted.",
+        "Then `allowed = keep - 1`, clamped at 0, because the value `keep` is now taken and the next letter must land lower.",
+        "Zero is the floor on purpose: any number of letters may be deleted away completely and all sit at 0 together."
+      ],
+      "complexity": "Time O(|s| + 26 log 26) · Space O(26)",
+      "input": "aaabbbcc\n",
+      "input_note": "One lowercase string. Counts are a 3, b 3, c 2 - the smallest case where two letters really do clash.",
+      "output_note": "Prints `2`. The first 3 stays, the second 3 falls to 2 (one deletion), and c must then fall from 2 to 1 (one more), leaving counts 3, 2, 1. For `ceabaacb` the program also prints 2.",
+      "watch_out": "Do not stop the cap at 1. Letters are allowed to vanish, so the cap must be able to reach 0, otherwise a string like `aaabbbccc` is counted wrong.",
+      "check": {
+        "q": "The string `bbcebab` has counts b 4, c 1, e 1, a 1. How many deletions?",
+        "a": "2. Sorted 4, 1, 1, 1: the 4 stays, the first 1 stays, the next 1 falls to 0, and the last 1 falls to 0 as well."
+      }
+    },
+    {
+      "file": "practice_partition_minimize_sum_difference.cpp",
+      "title": "Partition Array Into Two Arrays to Minimize Sum Difference (LeetCode 2035)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "Partition Array Into Two Arrays to Minimize Sum Difference",
+        "url": "https://leetcode.com/problems/partition-array-into-two-arrays-to-minimize-sum-difference/"
+      },
+      "what": "Splits 2n numbers into two groups of exactly n and returns the smallest possible difference of the two sums. This is \"Mina and Moni\" with the hard version of the rules: the numbers may be negative, so the sum cannot be used as an array index, and the answer is found by meet-in-the-middle instead.",
+      "steps": [
+        "Cut the array in half: the first n numbers and the last n numbers.",
+        "Loop over all 2^n bit masks once. For each mask read off the sum it takes from the first half and the sum the same mask takes from the second half, and file both under `taken` = how many bits are set.",
+        "So `left[c]` holds every sum reachable by taking exactly c numbers from the first half, and `right[c]` the same for the second half.",
+        "Sort each `right[c]`, because the search below needs it in order.",
+        "The finished group takes k numbers from the first half and n - k from the second. Loop k from 0 to n.",
+        "If the group sums to S, the other side sums to `total - S`, so the difference is `|total - 2*S|`. With `sumLeft` fixed, the aim is a partner p whose `2*p` lands as close as possible to `target = total - 2*sumLeft`.",
+        "Binary-search `right[n-k]` for the first p with `2*p >= target`, then compare that p and the one just before it - the best partner is always one of those two.",
+        "Keep the smallest difference seen over every k and every subset."
+      ],
+      "complexity": "Time O(2^n · n + 2^n · log(2^n)) for n up to 15, about a million steps · Space O(2^n)",
+      "input": "4\n3 9 7 3\n",
+      "input_note": "First the count of numbers (always even, here 4 so n = 2), then the numbers. This is the problem's own first sample.",
+      "output_note": "Prints `2`: {3, 9} sums to 12 and {7, 3} sums to 10. Run with `6` and `2 -1 0 4 -2 -9` it prints `0`, because {0, -1, -2} and {2, 4, -9} both sum to -3. With 30 random values of size up to 10^7 it still answers instantly.",
+      "watch_out": "The Mina and Moni DP over (count, sum) does not work here, because the numbers can be negative and a sum cannot index an array. Also keep the `2 *` inside the binary search comparison rather than halving the target - halving an odd number would round and pick the wrong neighbour. Sums are held in `long long`; 15 values of 10^7 doubled is still safe in `int`, but `long long` costs nothing and removes the worry.",
+      "check": {
+        "q": "Why group the subsets by how many numbers they take, instead of just listing all 2^n sums?",
+        "a": "Because the two groups must have exactly n numbers each. A subset with a perfect sum but the wrong size is not a legal half, so the count has to be carried alongside the sum."
+      }
+    },
     {
       "file": "1_The Lost Book.cpp",
       "title": "The Lost Book (linear search)",
@@ -99,23 +158,23 @@
     },
     {
       "file": "4_Here Comes the Genie.cpp",
-      "title": "Here Comes the Genie (statement only)",
+      "title": "Here Comes the Genie",
       "kind": "exam",
       "same_as": null,
       "problem": null,
-      "what": "Take balls from bags so that the counts taken from different colours are all different (zeros may repeat), maximising the total. The file contains only the problem statement.",
+      "what": "Take balls from bags so that the amounts taken from different colours are all different (several zeros are fine), and collect as many as possible. Sort the bags from big to small and let each bag take as much as it can while staying below the bag before it.",
       "steps": [
-        "Sort the bag sizes from largest to smallest.",
-        "Take all balls from the largest bag: `cap = a[0]`.",
-        "For every next bag take `cap = min(a[i], cap - 1)`; once `cap` reaches 0, take 0 from the rest.",
-        "Add up the amounts in a `long long`.",
-        "Why it works: the biggest bags should get the biggest distinct counts, and each count should be as large as allowed."
+        "Read the bag sizes into a `vector<long long>` and sort them with `greater<long long>()`, biggest first.",
+        "`allowed = a[0]`: the biggest bag may give everything it has.",
+        "For each bag, `take = min(a[i], allowed)` and add it to `total`.",
+        "Then `allowed = max(take - 1, 0)`: the next bag must give strictly less, but never below 0, and many bags may give 0.",
+        "Why it works: the biggest bags can afford the biggest distinct amounts, and giving any bag less than allowed never lets a later bag give more."
       ],
-      "complexity": "Time O(n log n) · Space O(1) extra",
-      "input": null,
-      "input_note": "The file has no code, so nothing runs.",
-      "output_note": "No output. With the plan above, the samples work out: [1, 4, 5] -> 5 + 4 + 1 = 10, and [1, 1, 2, 1] -> 2 + 1 + 0 + 0 = 3.",
-      "watch_out": "Only the statement was saved; there is no solution in this file. Use `long long` for the total (up to 2x10^5 values of 10^9).",
+      "complexity": "Time O(n log n) · Space O(n)",
+      "input": "3\n1 4 5\n",
+      "input_note": "n, then the n bag sizes. The second sample.",
+      "output_note": "Prints `10`: sorted 5 4 1, the bags give 5, 4 and 1. The first sample `4\n1 1 2 1\n` prints `3` (2 + 1 + 0 + 0).",
+      "watch_out": "Use `long long` for the total: up to 2x10^5 bags of 10^9 balls. And do not stop the cap at 1 - once it reaches 0, every remaining bag gives 0.",
       "check": {
         "q": "Bags [5, 5, 5]: what is the maximum?",
         "a": "12 = 5 + 4 + 3."
@@ -123,85 +182,26 @@
     },
     {
       "file": "5_Mina_and_Moni.cpp",
-      "title": "Mina and Moni (statement only)",
+      "title": "Mina and Moni",
       "kind": "exam",
       "same_as": null,
       "problem": null,
-      "what": "Split n coins into two groups of sizes n/2 and n - n/2 so the difference of their sums is as small as possible. The file contains only the problem statement.",
+      "what": "Split N coins into two groups of N/2 and N - N/2 coins so the two sums are as close as possible. It is subset sum with a second index: `reach[c][s]` says whether exactly `c` coins can add up to `s`.",
       "steps": [
-        "Let `total` be the sum and `k = n / 2` the size of the smaller group.",
-        "Build `can[c][s]`: can exactly `c` coins sum to `s`? Start with `can[0][0] = true`.",
-        "For each coin, go through `c` from high to low and mark `can[c+1][s + coin]` from `can[c][s]` (0-1 knapsack style).",
-        "For every `s` with `can[k][s]`, the difference is `abs(total - 2*s)`; print the smallest.",
-        "Use a bitset per count if the sums are large."
+        "Read the coins, add them into `total`, and set `k = n / 2`, the size of Mina's group.",
+        "`reach` is a (k+1) x (total+1) table of `bool`; only `reach[0][0]` starts true (no coins make 0).",
+        "For each coin `v`, copy the table into `next` (skipping the coin keeps every old answer), then for every true `reach[c-1][s-v]` set `next[c][s]` (taking the coin). Reading from the old table means each coin is used at most once.",
+        "After all coins, every `s` with `reach[k][s]` is a possible sum for Mina, and Moni then has `total - s`.",
+        "The answer is the smallest `abs(total - 2 * s)` over those sums."
       ],
-      "complexity": "Time O(n·k·total) (faster with bitsets) · Space O(k·total)",
-      "input": null,
-      "input_note": "The file has no code, so nothing runs.",
-      "output_note": "No output. For coins 1 2 3 10 the best split is {1, 10} vs {2, 3}, difference 11 - 5 = 6, matching the sample.",
-      "watch_out": "Only the statement was saved; there is no solution in this file. Plain subset sum is not enough: the group sizes are fixed, so the DP must also track how many coins are used.",
+      "complexity": "Time O(n · k · total) · Space O(k · total)",
+      "input": "3\n8\n23 45 34 12 0 3 1 4\n5\n10 20 30 40 50\n4\n1 2 3 10\n",
+      "input_note": "T, then for each case N and the N coin values. The problem's own sample.",
+      "output_note": "Prints `0`, `10`, `6`, matching the sample. In the last case two coins can make 3, 4, 5, 11, 12 or 13; s = 5 or s = 11 gives |16 - 2s| = 6.",
+      "watch_out": "Plain subset sum is not enough: a subset with the right sum but the wrong number of coins is not a valid split, so the table needs the count as a second index.",
       "check": {
         "q": "Why must the DP track the number of coins, not only the sum?",
         "a": "Each sister must get exactly n/2 (or n/2 + 1) coins; a subset with the right sum but the wrong size is not allowed."
-      }
-    },
-    {
-      "file": "practice_minimum_deletions_frequencies_unique.cpp",
-      "title": "Minimum Deletions to Make Character Frequencies Unique (LeetCode 1647)",
-      "kind": "practice",
-      "same_as": null,
-      "problem": {
-        "name": "Minimum Deletions to Make Character Frequencies Unique",
-        "url": "https://leetcode.com/problems/minimum-deletions-to-make-character-frequencies-unique/"
-      },
-      "what": "Counts every letter, then deletes as few characters as possible so that no two letters are left with the same count. Same greedy shape as \"Here Comes the Genie\" above: sort the counts from big to small and let each one fall to the first free value.",
-      "steps": [
-        "Count the letters in `int freq[26]`. Only 26 letters exist, so no map is needed.",
-        "Copy the counts that are above 0 into a vector; a letter that never appeared cannot clash with anything.",
-        "Sort that vector from big to small with `greater<int>()`.",
-        "Walk it with a cap called `allowed`. The first count keeps everything, so `allowed` starts at the largest count.",
-        "For each count, `keep = min(count, allowed)`, and `count - keep` characters are deleted.",
-        "Then `allowed = keep - 1`, clamped at 0, because the value `keep` is now taken and the next letter must land lower.",
-        "Zero is the floor on purpose: any number of letters may be deleted away completely and all sit at 0 together."
-      ],
-      "complexity": "Time O(|s| + 26 log 26) · Space O(26)",
-      "input": "aaabbbcc\n",
-      "input_note": "One lowercase string. Counts are a 3, b 3, c 2 - the smallest case where two letters really do clash.",
-      "output_note": "Prints `2`. The first 3 stays, the second 3 falls to 2 (one deletion), and c must then fall from 2 to 1 (one more), leaving counts 3, 2, 1. For `ceabaacb` the program also prints 2.",
-      "watch_out": "Do not stop the cap at 1. Letters are allowed to vanish, so the cap must be able to reach 0, otherwise a string like `aaabbbccc` is counted wrong.",
-      "check": {
-        "q": "The string `bbcebab` has counts b 4, c 1, e 1, a 1. How many deletions?",
-        "a": "2. Sorted 4, 1, 1, 1: the 4 stays, the first 1 stays, the next 1 falls to 0, and the last 1 falls to 0 as well."
-      }
-    },
-    {
-      "file": "practice_partition_minimize_sum_difference.cpp",
-      "title": "Partition Array Into Two Arrays to Minimize Sum Difference (LeetCode 2035)",
-      "kind": "practice",
-      "same_as": null,
-      "problem": {
-        "name": "Partition Array Into Two Arrays to Minimize Sum Difference",
-        "url": "https://leetcode.com/problems/partition-array-into-two-arrays-to-minimize-sum-difference/"
-      },
-      "what": "Splits 2n numbers into two groups of exactly n and returns the smallest possible difference of the two sums. This is \"Mina and Moni\" with the hard version of the rules: the numbers may be negative, so the sum cannot be used as an array index, and the answer is found by meet-in-the-middle instead.",
-      "steps": [
-        "Cut the array in half: the first n numbers and the last n numbers.",
-        "Loop over all 2^n bit masks once. For each mask read off the sum it takes from the first half and the sum the same mask takes from the second half, and file both under `taken` = how many bits are set.",
-        "So `left[c]` holds every sum reachable by taking exactly c numbers from the first half, and `right[c]` the same for the second half.",
-        "Sort each `right[c]`, because the search below needs it in order.",
-        "The finished group takes k numbers from the first half and n - k from the second. Loop k from 0 to n.",
-        "If the group sums to S, the other side sums to `total - S`, so the difference is `|total - 2*S|`. With `sumLeft` fixed, the aim is a partner p whose `2*p` lands as close as possible to `target = total - 2*sumLeft`.",
-        "Binary-search `right[n-k]` for the first p with `2*p >= target`, then compare that p and the one just before it - the best partner is always one of those two.",
-        "Keep the smallest difference seen over every k and every subset."
-      ],
-      "complexity": "Time O(2^n · n + 2^n · log(2^n)) for n up to 15, about a million steps · Space O(2^n)",
-      "input": "4\n3 9 7 3\n",
-      "input_note": "First the count of numbers (always even, here 4 so n = 2), then the numbers. This is the problem's own first sample.",
-      "output_note": "Prints `2`: {3, 9} sums to 12 and {7, 3} sums to 10. Run with `6` and `2 -1 0 4 -2 -9` it prints `0`, because {0, -1, -2} and {2, 4, -9} both sum to -3. With 30 random values of size up to 10^7 it still answers instantly.",
-      "watch_out": "The Mina and Moni DP over (count, sum) does not work here, because the numbers can be negative and a sum cannot index an array. Also keep the `2 *` inside the binary search comparison rather than halving the target - halving an odd number would round and pick the wrong neighbour. Sums are held in `long long`; 15 values of 10^7 doubled is still safe in `int`, but `long long` costs nothing and removes the worry.",
-      "check": {
-        "q": "Why group the subsets by how many numbers they take, instead of just listing all 2^n sums?",
-        "a": "Because the two groups must have exactly n numbers each. A subset with a perfect sum but the wrong size is not a legal half, so the count has to be carried alongside the sum."
       }
     }
   ],
@@ -277,7 +277,7 @@
       "heading": null,
       "body": [
         "Three habits save more marks than any algorithm. Check the sample by hand before submitting. Ask whether any total can pass 2 x 10^9 and reach for `long long` if it can. And check whether the answer wants a 0-based or a 1-based index, which is the cheapest wrong answer there is.",
-        "The five entries below take the contest's problems one at a time: two short ones you should finish in minutes, one that is pure number reasoning, and two where only the statement was saved, so the notes describe the plan instead of the code."
+        "The entries below take the contest's five problems one at a time, after two practice problems that train the same ideas: two short ones you should finish in minutes, one that is pure number reasoning, one greedy after a sort, and one subset-sum table with a count."
       ],
       "snippet": null,
       "trace": null

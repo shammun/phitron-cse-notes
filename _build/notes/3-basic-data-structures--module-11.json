@@ -1,7 +1,7 @@
 {
   "module_id": "3-basic-data-structures--module-11",
   "title": "Linked list problems on LeetCode",
-  "overview": "This module takes the singly linked list you built by hand and uses it to solve classic LeetCode problems: find the middle, detect a cycle, remove duplicates, reverse, check a palindrome and delete a node you only have a pointer to. Each file wraps the LeetCode `class Solution` with a `ListNode` definition and a small `main`, so you can run it locally. These patterns (counting, two pointers, re-linking `next`) come back in almost every linked list question.",
+  "overview": "This module takes the singly linked list you built by hand and uses it to solve classic LeetCode problems: find the middle, detect a cycle, remove duplicates, reverse, check a palindrome and delete a node you only have a pointer to, plus the practice-day problems: intersection of two lists, swapping the k-th nodes, removing every node with a given value, removing the n-th node from the end and merging the numbers between zeros. Each file wraps the LeetCode `class Solution` with a `ListNode` definition and a small `main`, so you can run it locally. These patterns (counting, two pointers, re-linking `next`) come back in almost every linked list question.",
   "concepts": [
     {
       "term": "LeetCode's `ListNode`",
@@ -249,6 +249,92 @@
       "check": {
         "q": "For a list of length 7 and `k = 3`, how many steps does `backNode` take from the head?",
         "a": "`length - k = 4` steps, landing on the 5th node, which is the 3rd from the end."
+      }
+    },
+    {
+      "file": "practice_problem3_remove_linked_list_elements.cpp",
+      "title": "Remove every node with a given value",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 203 - Remove Linked List Elements",
+        "url": "https://leetcode.com/problems/remove-linked-list-elements/"
+      },
+      "what": "Deletes every node holding `val` in one walk: first the matching nodes at the front (they move the head), then every later match by pointing its previous node past it.",
+      "steps": [
+        "Part 1: `while(head != NULL && head->val == val)` moves `head` one step right and frees the old head; a loop, because the new head may match too.",
+        "Part 2: `tmp` starts on the (now safe) head and always looks at `tmp->next`.",
+        "If `tmp->next->val == val`, set `tmp->next = tmp->next->next` and `delete` the skipped node, but do not move `tmp`: the node that slid in must be checked as well.",
+        "Otherwise step `tmp` forward.",
+        "Return `head`; `main` stores it back, because it may be a different node or `NULL`."
+      ],
+      "complexity": "Time O(n) · Space O(1)",
+      "input": "6 6 1 6 6 2 -1\n6\n",
+      "input_note": "The list values ended by -1, then the value to remove.",
+      "output_note": "`Before: 6 6 1 6 6 2` then `After removing 6: 1 2`. Both kinds of match are here: two at the front (they change the head) and two side by side in the middle (why `tmp` must not step after a cut). Try `7 7 7 7 -1` and `7`: the list becomes `(empty)`.",
+      "watch_out": "Calling `sol.removeElements(head, val)` without `head = ...` keeps the old head pointer, which may now point to freed memory.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why is the head handled by a separate loop before the main walk?",
+        "a": "Deleting means pointing the previous node past the victim, and the head has no previous node. So matches at the front are removed by moving `head` itself."
+      }
+    },
+    {
+      "file": "practice_problem4_remove_nth_node_from_end_of_list.cpp",
+      "title": "Remove the n-th node from the end",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 19 - Remove Nth Node From End of List",
+        "url": "https://leetcode.com/problems/remove-nth-node-from-end-of-list/"
+      },
+      "what": "Turns \"n-th from the end\" into an index from the front (`size - n`) and then deletes the node at that index, the Module 7 way.",
+      "steps": [
+        "Walk the list once and count `size`.",
+        "The victim sits at 0-based index `idx = size - n` (in `1 2 3 4 5` with `n = 2`, index 3, the value 4).",
+        "If `idx == 0` the victim is the head: move `head` one step forward, free the old head and return the new one.",
+        "Otherwise walk `tmp` to index `idx - 1`, the node just before the victim.",
+        "Set `tmp->next = tmp->next->next`, `delete` the skipped node and return `head`."
+      ],
+      "complexity": "Time O(n) (two walks) · Space O(1)",
+      "input": "1 2 3 4 5 -1\n2\n",
+      "input_note": "The list values ended by -1, then `n` (LeetCode example 1).",
+      "output_note": "`Before: 1 2 3 4 5` then `After removing node 2 from the end: 1 2 3 5`, the expected answer. Try `1 -1` with `1`: the only node is the head, so the list becomes `(empty)`.",
+      "watch_out": "When `n == size` the node to remove is the head, and there is no node before it to stand on. Without the `idx == 0` case the loop would try to delete `head->next` instead. A one-walk version exists too: move a `fast` pointer `n` steps ahead, then move `fast` and `slow` together until `fast` reaches the end.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "In a list of 6 nodes, which 0-based index is the 2nd node from the end, and which node do you stand on to delete it?",
+        "a": "Index 6 - 2 = 4; you stand on index 3 and set its `next` past index 4."
+      }
+    },
+    {
+      "file": "practice_problem5_merge_nodes_in_between_zeros.cpp",
+      "title": "Merge the nodes between zeros",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 2181 - Merge Nodes in Between Zeros",
+        "url": "https://leetcode.com/problems/merge-nodes-in-between-zeros/"
+      },
+      "what": "Walks the list with a running `sum`; every 0 closes a group, so its sum is appended to a new answer list and the sum restarts.",
+      "steps": [
+        "Start `tmp` on `head->next`, skipping the opening 0 so it doesn't close an empty group.",
+        "A non-zero value is added to `sum`.",
+        "A 0 means the group is finished: create a node holding `sum`, append it with `newHead`/`newTail`, and reset `sum` to 0.",
+        "When the walk ends (after the closing 0) return `newHead`."
+      ],
+      "complexity": "Time O(n) · Space O(k) for the k new nodes",
+      "input": "0 3 1 0 4 5 2 0 -1\n",
+      "input_note": "The list values ended by -1 (LeetCode example 1).",
+      "output_note": "`After merging: 4 11`, as LeetCode expects: 3 + 1 = 4 and 4 + 5 + 2 = 11. Try `0 1 0 3 0 2 2 0 -1`: you get `1 3 4`.",
+      "watch_out": "Starting the walk on `head` instead of `head->next` makes the first 0 close an empty group, and the answer starts with an extra 0 node.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why is `sum` reset to 0 right after a new node is made?",
+        "a": "Each 0 ends one group and starts the next, so the next group's total must not include the numbers already used."
       }
     }
   ],

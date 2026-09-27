@@ -36,6 +36,10 @@ abn
 
 */
 
+// Solution idea: a set (Basic Data Structures course) does both jobs at once.
+// It keeps only one copy of each value, and it keeps its values sorted. So
+// pour every letter into a set<char> and print the set from start to end.
+
 #include <iostream>
 #include <string>
 #include <set>
@@ -48,15 +52,19 @@ int main(){
 
     set<char> unique_letters;
 
+    // Inserting a letter that is already there changes nothing,
+    // so "hello" leaves the set holding e, h, l, o.
     for(char c : S){
         unique_letters.insert(c);
     }
 
+    // Walking a set visits its values in increasing order, i.e. a..z.
     for(char c : unique_letters){
         cout << c;
     }
 
     cout << endl;
 
+    // Each insert is O(log 26), so the whole thing is O(|S|).
     return 0;
 }

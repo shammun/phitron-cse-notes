@@ -48,5 +48,48 @@ R = 9, it represents the values [1,1,2,2,2,3,3,3] which belongs from the positio
 
 */
 
+// Solution idea: prefix sums again (like 1_Magical_Forest_Fruits.cpp), but N
+// can be 10^9, so we cannot even store the sequence. We do not need to: the
+// sequence is so regular that "sum of the first p positions" has a formula.
+//
+// The first p positions hold k = p / 3 complete groups (1,1,1), (2,2,2), ...,
+// (k,k,k), plus r = p % 3 extra copies of the next value k + 1.
+//   complete groups: 3 * (1 + 2 + ... + k) = 3 * k * (k + 1) / 2
+//   leftovers      : r * (k + 1)
+// Then, exactly as with a prefix-sum array, sum(L..R) = prefix(R) - prefix(L-1).
 
+#include <iostream>
 
+using namespace std;
+
+// Sum of the first p numbers of 1,1,1,2,2,2,3,3,3,...
+// long long everywhere: k can be about 3 * 10^8, and k * (k + 1) is near 10^17.
+long long prefix(long long p){
+    long long k = p / 3;    // how many values appear all three times
+    long long r = p % 3;    // 0, 1 or 2 copies of the next value
+    // Example p = 7: k = 2, r = 1 -> 3*(1+2) + 1*3 = 9 + 3 = 12,
+    // and indeed 1+1+1+2+2+2+3 = 12.
+    return 3 * (k * (k + 1) / 2) + r * (k + 1);
+}
+
+int main(){
+    // Up to 2 * 10^5 queries: switch off the slow C/C++ stream syncing
+    // and print "\n" instead of endl (endl flushes the output every time).
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    long long N;
+    int Q;
+    cin >> N >> Q;   // N itself is not needed: every L..R already lies inside it
+
+    while(Q--){
+        long long L, R;
+        cin >> L >> R;
+        // Positions L..R = (first R positions) - (first L-1 positions).
+        // Query 2 9 on N = 9: prefix(9) - prefix(1) = 18 - 1 = 17.
+        cout << prefix(R) - prefix(L - 1) << "\n";
+    }
+
+    // O(1) per query, and no array at all.
+    return 0;
+}

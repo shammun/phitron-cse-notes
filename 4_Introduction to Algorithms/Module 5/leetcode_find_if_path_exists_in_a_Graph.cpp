@@ -31,34 +31,46 @@ Explanation: There is no path from vertex 0 to vertex 5.
 
 */
 
+// Idea: a plain graph (not a grid) given as an edge list. Build the adjacency
+// list from it (Module 1), run a DFS from source, and report whether the
+// destination got visited. The DFS stops going deeper once it has been found.
+//
+// Example 2: 0-1-2 and 3-5-4 are two separate pieces, so 0 cannot reach 5.
+
 class Solution {
     public:
+        // n can be 2 * 10^5, so the arrays are large (the test driver creates
+        // this object with new, because it is too big for the stack).
         vector<int> adj[200005];
         bool vis[200005];
-    
+
+        // found is passed by reference (&): every recursive call shares the
+        // same bool, so a find deep down is seen by everyone above.
         void dfs(int node, int destination, bool &found){
             vis[node] = true;
             if(node == destination){
                 found = true;
-                return;
+                return;           // no need to go any further from here
             }
-    
+
             for(int child : adj[node]){
                 if(!vis[child]){
                     dfs(child, destination, found);
                 }
             }
         }
-    
+
         bool validPath(int n, vector<vector<int>>& edges, int source, int destination) {
+            // Each edge is a 2-element vector {u, v}; the graph is undirected,
+            // so it goes into both lists.
             for(auto edge : edges){
                 adj[edge[0]].push_back(edge[1]);
                 adj[edge[1]].push_back(edge[0]);
             }
-    
+
             memset(vis, false, sizeof(vis));
             bool found = false;
             dfs(source, destination, found);
-            return found;
+            return found;         // same as asking vis[destination]; Cost O(n + E)
         }
     };

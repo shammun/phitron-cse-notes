@@ -37,24 +37,30 @@ IS SMALL
 
 */
 
-#include <iostream>
-using namespace std;
+#include <iostream> // cin and cout
+using namespace std; // write cin/cout instead of std::cin/std::cout
 
 int main(){
     char x;
-    cin >> x;
+    cin >> x; // cin reads one non-space character into a char - no %c needed
 
+    // A char is a small number (its ASCII code), and the digits, the capital
+    // letters and the small letters each sit in one unbroken run of codes.
+    // So "is it a digit?" is just "is it between '0' and '9'?".
     if(x >= '0' && x<= '9'){
         cout << "IS DIGIT" << endl;
     } else{
+        // Not a digit, so (by the problem's promise) it is a letter
         cout << "ALPHA" << endl;
     }
 
+    // Second question, only meaningful for letters: which run is it in?
+    // For a digit neither test is true, so nothing more is printed.
     if(x >= 'A' && x <= 'Z'){
         cout << "IS CAPITAL" << endl;
     } else if(x >= 'a' && x <= 'z'){
         cout << "IS SMALL" << endl;
     }
 
-    return 0;
+    return 0; // the program ended fine
 }

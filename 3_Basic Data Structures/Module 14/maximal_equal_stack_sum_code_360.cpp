@@ -55,9 +55,30 @@ Sample Output 1:
 
 */
 
+/* Re-typed copy of code360_maximum_equal_stack_sum.cpp; the code is the same. */
+
+/*
+ * Idea
+ *
+ * Only top values may be removed, and all values are positive, so removing
+ * a value always makes that stack's sum smaller. The answer is the largest
+ * sum all three stacks can share.
+ *
+ * Greedy: while the three sums differ, pop from the stack with the LARGEST
+ * sum. The biggest sum is the only one that is certainly too big (the
+ * common sum can never be above the smallest one), so shrinking it never
+ * throws away the best answer. Stop as soon as the sums are equal; if the
+ * stacks run out, all sums reach 0, which is equal too.
+ *
+ * Example: sums 16, 23, 8 -> pop from stack 2 until it is <= the others,
+ * then from stack 1, ... until all are 8.
+ */
+
 
 #include <bits/stdc++.h>
 
+// Adds up a stack. `st` is a copy (passed by value), so popping it here
+// does not empty the caller's stack.
 int getSum(stack<int> st) {
     int sum = 0;
     while (!st.empty()) {
@@ -73,10 +94,13 @@ int maxSum(stack<int> &st1, stack<int> &st2, stack<int> &st3) {
     int sum2 = getSum(st2);
     int sum3 = getSum(st3);
 
+    // Keep the three running sums up to date instead of re-adding the
+    // stacks after every pop: each pop just subtracts the removed top.
     while (true) {
         if (sum1 == sum2 && sum2 == sum3) {
             break;
         }
+        // Otherwise shrink the stack whose sum is the largest.
         if (sum1 >= sum2 && sum1 >= sum3) {
             sum1 -= st1.top();
             st1.pop();
@@ -89,5 +113,5 @@ int maxSum(stack<int> &st1, stack<int> &st2, stack<int> &st3) {
             st3.pop();
         }
     }
-    return sum1;
+    return sum1;   // all three sums are equal here
 }

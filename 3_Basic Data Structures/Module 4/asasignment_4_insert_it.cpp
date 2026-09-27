@@ -81,11 +81,21 @@ int main() {
     int X;
     cin >> X;
 
+    /*
+     * insert(position, value) puts one value in front of `position` and
+     * shifts everything after it one place right. A.begin() + X is the
+     * iterator for index X.
+     * B must stay in its own order, so after inserting B[i] at X we move X
+     * one step right; the next value then lands after it.
+     * A = 2 3 4 5 6, B = 10 20 30, X = 3:
+     *   2 3 4 10 5 6 -> 2 3 4 10 20 5 6 -> 2 3 4 10 20 30 5 6
+     */
     for(int i=0; i<M; i++){
         A.insert(A.begin() + X, B[i]);
-        X++;
+        X++;            // without this, B would come out reversed
     }
 
+    // A has grown to N + M elements.
     for(int i=0; i<N+M; i++){
         cout << A[i] << " ";
     }

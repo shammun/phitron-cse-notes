@@ -50,19 +50,28 @@ T5 = T4 + T3 + T2 + T1 = 4 + 2 + 1 + 1 = 8
 
 */
 
+// Solution idea: this is Fibonacci with four terms instead of two, so it is
+// solved exactly like fibonacci_with_memoization.cpp (Module 14): a recursive
+// function that stores every answer it works out in dp[], so each T(k) is
+// computed once instead of an exponential number of times.
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
-#include <vector>  
-#include <cstring>  
+#include <vector>
+#include <cstring>
 #include <string>
 
 using namespace std;
+// dp[k] = T(k) once it is known, -1 while it is still unknown.
+// n is at most 30, so 35 boxes are plenty.
 int dp[35];
 
 int tetranacci(int n){
+    // Base cases: the four starting values are given, not computed.
+    // T0 = 0 and T1 = 1 are just n itself, so one test covers both.
     if(n <= 1){ // or, we can also write if(n == 0 || n == 1)
         return n;
     }
@@ -72,18 +81,25 @@ int tetranacci(int n){
     if(n == 3){
         return 2;
     }
+    // Memo check: if T(n) was already worked out on another branch of the
+    // recursion, hand back the stored value and skip the whole subtree.
     if(dp[n] != -1){
         return dp[n];
     }
+    // Otherwise follow the rule T(n) = sum of the four terms before it,
+    // and write the result down before returning it.
     dp[n] = tetranacci(n-1) + tetranacci(n-2) + tetranacci(n-3) + tetranacci(n-4);
     return dp[n];
 }
 
 int main(){
+    // Mark every box "unknown". -1 is safe because no Tetranacci number is negative.
     memset(dp, -1, sizeof(dp));
     int n;
     cin >> n;
+    // With n = 5: T5 = T4 + T3 + T2 + T1 = 4 + 2 + 1 + 1 = 8.
     cout << tetranacci(n) << endl;
 
+    // Each T(k) is computed once and each call does O(1) work: O(n) time, O(n) memory.
     return 0;
 }

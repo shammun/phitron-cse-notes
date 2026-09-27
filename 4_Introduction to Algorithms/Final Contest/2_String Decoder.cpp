@@ -47,6 +47,10 @@ xzz
 
 */
 
+// Solution idea: the encoded string always comes in pairs - a letter, then one
+// digit. So walk it two characters at a time: s[i] is the letter, s[i+1] is how
+// many copies of it to write.
+
 #include <iostream>
 #include <string>
 
@@ -55,25 +59,32 @@ using namespace std;
 string decoder(string s){
     string ans = "";
 
+    // i jumps by 2, so it always lands on a letter, never on a digit.
     for(int i=0; i<s.size(); i+=2){
+        // A digit character is not its number: '3' is stored as 51. Subtracting
+        // '0' (48) turns the character '3' into the number 3.
         int freq = s[i+1] - '0';
+        // Append the letter freq times. A 0 means the loop never runs, which is
+        // exactly "remove this letter".
         for(int j=0; j<freq; j++){
             ans += s[i];
         }
     }
-    
+
+    // "a2b3c1" -> "aa" + "bbb" + "c" = "aabbbc".
     return ans;
 }
 
 int main(){
     int T;
     cin >> T;
-    
+
     while(T--){
         string S;
         cin >> S;
         cout << decoder(S) << endl;
     }
 
+    // Linear in the length of the decoded string.
     return 0;
 }

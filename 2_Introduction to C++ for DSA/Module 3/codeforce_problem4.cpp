@@ -63,17 +63,25 @@ int main(){
             cin >> a[i];
         }
 
-        int min_ai_minus_i = INT_MAX;
-        int smallest_sum = INT_MAX;
+        // Checking every pair (i, j) would work for N <= 100, but there is a
+        // neater way. Regroup the formula:
+        //     a[i] + a[j] + j - i  =  (a[i] - i)  +  (a[j] + j)
+        // For a fixed j, the best i is simply the one before j with the
+        // smallest a[i] - i. So one pass is enough: remember the smallest
+        // a[i] - i seen so far, and try it with every new j.
+        int min_ai_minus_i = INT_MAX; // smallest a[i] - i among indexes before j
+        int smallest_sum = INT_MAX;   // best answer so far (INT_MAX = "nothing yet")
 
         for(int j=0; j<N; j++){
-            if(j > 0){
+            if(j > 0){ // j needs at least one i before it
+                // min() keeps the smaller of the old best and this pair's value
                 smallest_sum = min(smallest_sum, min_ai_minus_i + a[j] + j);
             }
+            // now index j can itself act as an i for the later indexes
             min_ai_minus_i = min(min_ai_minus_i, a[j] - j);
         }
 
-        cout << smallest_sum << endl;
+        cout << smallest_sum << endl; // one answer per test case
     }
 
     return 0;

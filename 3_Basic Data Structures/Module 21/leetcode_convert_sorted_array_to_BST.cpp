@@ -36,21 +36,40 @@ Constraints:
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
  */
+/*
+ * Idea: the same trick as array_to_BST.cpp in the lesson.
+ *
+ * The array is sorted, so its middle value has as many smaller values on
+ * its left as bigger values on its right. Making that middle value the root
+ * splits the rest into two halves of (almost) equal size, so the tree comes
+ * out balanced. Each half is itself a sorted array, so we build its subtree
+ * the same way, with recursion.
+ *
+ * With [-10,-3,0,5,9]: the middle is 0 (the root), the left half [-10,-3]
+ * becomes the left subtree and the right half [5,9] the right subtree.
+ */
 class Solution {
 public:
+    // Builds a balanced BST from nums[start..end] and returns its root.
     TreeNode* array_to_BST(vector<int>& nums, int start, int end) {
+        // Base case: an empty range (start passed end) gives an empty subtree.
         if(start > end){
             return NULL;
         }
+        // The middle index of the current range; its value becomes the root.
         int mid = (start + end) / 2;
         TreeNode* root = new TreeNode(nums[mid]);
+        // Everything left of mid is smaller: it builds the left subtree.
         TreeNode* leftroot = array_to_BST(nums, start, mid-1);
+        // Everything right of mid is bigger: it builds the right subtree.
         TreeNode* rightroot = array_to_BST(nums, mid+1, end);
+        // Hang both subtrees under the root and hand the root back.
         root->left = leftroot;
         root->right = rightroot;
         return root;
     }
 
+    // LeetCode calls this one: build from the whole array, index 0 to n-1.
     TreeNode* sortedArrayToBST(vector<int>& nums) {
         TreeNode* root = array_to_BST(nums, 0, nums.size() - 1);
         return root;

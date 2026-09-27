@@ -41,36 +41,49 @@ All the values of rooms[i] are unique.
 
 */
 
+// Idea: this is a graph problem in disguise. Each room is a node, and a key for
+// room b lying in room a is a one-way edge a -> b. rooms[a] is therefore already
+// an adjacency list. "Can we visit every room?" becomes "does a BFS from room 0
+// reach every node?", the reachability check of this module.
+//
+// Example 2: from room 0 we get keys 1 and 3, from those rooms keys 0, 1 and 3
+// again. Nobody outside room 2 holds key 2, so room 2 is never visited -> false.
+
 class Solution {
 public:
-    bool vis[1005];
+    bool vis[1005];   // vis[r] = has room r been reached (n is at most 1000)
 
+    // Plain BFS from src, with rooms[par] playing the part of adj_list[par].
     void bfs(int src, vector<vector<int>>& rooms){
         queue<int> q;
         q.push(src);
         vis[src] = true;
 
         while(!q.empty()){
-            int par = q.front();
+            int par = q.front();   // the room we are standing in
             q.pop();
 
+            // Every key found here opens one room: that room is a "child".
             for(int key : rooms[par]){
                 if(!vis[key]){
                     q.push(key);
-                    vis[key] = true;
+                    vis[key] = true;   // mark when pushed, as always
                 }
             }
         }
     }
 
     bool canVisitAllRooms(vector<vector<int>>& rooms) {
+        // vis is a class member, not a global, so it is NOT zeroed for us:
+        // clear it before the search.
         memset(vis, false, sizeof(vis));
-        bfs(0, rooms);
+        bfs(0, rooms);          // room 0 is the only one open at the start
 
+        // Any room still unvisited was never unlocked.
         for(int i=0; i<rooms.size(); i++){
             if(!vis[i]) return false;
         }
 
-        return true;
+        return true;            // Cost: O(n + total number of keys)
     }
 };

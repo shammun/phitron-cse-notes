@@ -46,25 +46,33 @@ In the first test case, you can choose index 1 and 5 that can hold the most wate
 
 */
 
+// Solution idea: only height counts here, and a container is as tall as its
+// SHORTER wall. So the best pair is simply the two tallest lines. One pass
+// keeps the index of the tallest (max1) and of the second tallest (max2).
+
 #include <iostream>
 #include <vector>
-#include <algorithm>
+#include <algorithm>    // min, max
 
 using namespace std;
 
+// Returns {left index, right index} of the two tallest lines.
 vector<int> area(vector<int> &arr, int n){
-    int max1 = 0;
-    int max2 = -1;
+    int max1 = 0;    // start by assuming line 0 is the tallest
+    int max2 = -1;   // -1 = no second-tallest chosen yet
 
     for(int i=1; i<n; i++){
         if(arr[i] > arr[max1]){
+            // A new tallest: the old tallest slides down to second place.
             max2 = max1;
             max1 = i;
         } else if(max2 == -1 || arr[i] > arr[max2]){
+            // Not the tallest, but beats the current second (or fills it).
             max2 = i;
         }
     }
 
+    // The answer must list the left index first, whatever order we found them in.
     int leftIndex = min(max1, max2);
     int rightIndex = max(max1, max2);
 
@@ -90,5 +98,6 @@ int main(){
         cout << indices[0] << " " << indices[1] << endl;
     }
 
+    // Cost: O(N) per test case, one pass, no sorting.
     return 0;
 }

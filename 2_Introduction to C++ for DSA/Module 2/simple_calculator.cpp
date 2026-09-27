@@ -27,16 +27,21 @@ Be careful with spaces.
 
 */
 
-#include <iostream>
-using namespace std;
+#include <iostream> // cin and cout
+using namespace std; // write cin/cout instead of std::cin/std::cout
 
 int main(){
-    int x, y;
-    cin >> x >> y;
+    // X and Y go up to 10^5, so X * Y can reach 10^10. An int stops at about
+    // 2.1 * 10^9 and would overflow, so both are long long (up to about 9 * 10^18).
+    long long x, y;
+    cin >> x >> y; // one cin reads both numbers, in order
 
+    // cout prints the pieces one after another: the number, the text " + ",
+    // the other number, " = ", then the result. The spaces live inside the
+    // quoted text, and they must match the judge's format exactly.
     cout << x << " + " << y << " = " << x + y << endl;
     cout << x << " * " << y << " = " << x * y << endl;
-    cout << x << " - " << y << " = " << x - y << endl;
+    cout << x << " - " << y << " = " << x - y << endl; // can be negative, that is fine
 
-    return 0;
+    return 0; // the program ended fine
 }

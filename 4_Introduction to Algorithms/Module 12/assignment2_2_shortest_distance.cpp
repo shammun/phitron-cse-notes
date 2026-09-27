@@ -81,16 +81,28 @@ Sample Output 1
 
 */
 
+// Solution idea (Floyd-Warshall, Module 10).
+// Many (X, Y) questions about the same small graph (N <= 100): instead of
+// running a single-source algorithm per query, compute the cheapest cost
+// between EVERY pair once, then each query is a table lookup.
+
 #include <iostream>
 #include <vector>
-#include <climits>
+#include <climits>      // LLONG_MAX marks "no path known"
 
 using namespace std;
 
+// adj_mat[i][j] starts as the direct edge cost and ends as the cheapest cost
+// from i to j. The array is changed in place (arrays are passed by address).
 void floyd_warshall(long long adj_mat[105][105], int n){
+    // k = the node we now allow as a stop in the middle of a route.
+    // After round k, adj_mat[i][j] is the best route whose middle stops are
+    // only from 1..k. When k reaches n, every route is allowed.
     for(int k=1; k<=n; k++){
         for(int i=1; i<=n; i++){
             for(int j=1; j<=n; j++){
+                // Is "i to k, then k to j" cheaper than what we have for i to j?
+                // Both halves must exist; adding to LLONG_MAX would overflow.
                 if(adj_mat[i][k] != LLONG_MAX && adj_mat[k][j] != LLONG_MAX && adj_mat[i][k] + adj_mat[k][j] < adj_mat[i][j]){
                     adj_mat[i][j] = adj_mat[i][k] + adj_mat[k][j];
                 }
@@ -103,8 +115,9 @@ int main(){
     int n, e;
     cin >> n >> e;
 
-    long long adj_mat[105][105];
+    long long adj_mat[105][105];   // adjacency matrix (Module 1), 1-based
 
+    // Start: 0 from a node to itself, "infinity" everywhere else.
     for(int i=1; i<=n; i++){
         for(int j=1; j<=n; j++){
             if(i==j){
@@ -119,7 +132,10 @@ int main(){
         int a, b;
         long long c;
         cin >> a >> b >> c;
-        adj_mat[a][b] = min(adj_mat[a][b], c);
+        // The same pair can be given twice (the sample has 1 -> 2 with cost 4
+        // and with cost 10). Keep only the cheaper edge; a plain assignment
+        // would let the later, dearer one overwrite it.
+        adj_mat[a][b] = min(adj_mat[a][b], c);   // directed: a -> b only
     }
 
     floyd_warshall(adj_mat, n);
@@ -127,16 +143,18 @@ int main(){
     int q;
     cin >> q;
 
+    // Every question is now just a look-up in the finished table.
     while(q--){
         int X, Y;
         cin >> X >> Y;
 
         if(adj_mat[X][Y] == LLONG_MAX){
-            cout << -1 << endl;
+            cout << -1 << endl;        // still "infinity": no route at all
         } else{
             cout << adj_mat[X][Y] << endl;
         }
     }
 
+    // Cost: O(N^3) once (10^6 steps for N = 100), then O(1) per query.
     return 0;
 }

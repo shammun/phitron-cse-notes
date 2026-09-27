@@ -26,16 +26,20 @@ Sample Output 0
 
 */
 
-#include <iostream>
-#include <algorithm>
-using namespace std;
+#include <iostream>  // cin and cout
+#include <algorithm> // sort()
+using namespace std; // write cin/cout/sort instead of std::cin/...
 
+// A second way to solve the same question, in the shape of Module 2:
+// the function builds the array on the heap, reads it, sorts it ascending
+// and returns its address. A local `int a[n]` could not be returned - it
+// would die when the function ends - but a `new` array lives on.
 int* sort_it(int n){
     int* a = new int[n];
     for(int i=0; i<n; i++){
         cin >> a[i];
     }
-    sort(a, a+n);
+    sort(a, a+n); // ascending: small to big
     return a;
 }
 
@@ -43,7 +47,7 @@ int main(){
 
     int n;
     cin >> n;
-    int* sorted_array = sort_it(n);
+    int* sorted_array = sort_it(n); // receive the heap array from the function
 
     // Print the sorted array in ascending order
     for(int i=0; i<n; i++){
@@ -51,13 +55,14 @@ int main(){
     }
     cout << endl;
 
-    // Print the sorted array in descending order
+    // Print the sorted array in descending order.
+    // No second sort is needed: an ascending array read from the back IS descending.
     for(int i=n-1; i>=0; i--){
         cout << sorted_array[i] << " ";
     }
     cout << endl;
 
-    delete[] sorted_array;
+    delete[] sorted_array; // the array came from new[], so give it back with delete[]
 
     return 0;
 }

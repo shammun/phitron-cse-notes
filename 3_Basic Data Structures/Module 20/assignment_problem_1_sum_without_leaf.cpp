@@ -42,6 +42,7 @@ Sample Output 0
 
 using namespace std;
 
+// A binary tree node: a value and two child pointers (NULL = no child).
 class Node {
     public:
         int val;     
@@ -56,9 +57,12 @@ class Node {
     }
 };
 
+// Reads the tree in level order, the Module 18 way: first the root, then for
+// every real node (in the order a queue hands them out) its left and right
+// child, with -1 meaning "no child".
 Node* input_tree(){
     int val;
-    cin >> val;
+    cin >> val;                  // the root (or -1 for an empty tree)
     Node* root;
     if(val == -1){
         root = NULL;
@@ -66,17 +70,18 @@ Node* input_tree(){
         root = new Node(val);
     }
 
+    // Nodes whose two children have not been read yet.
     queue<Node*> q;
     if(root){
         q.push(root);
     }
 
     while(!q.empty()){
-        Node* p = q.front();
+        Node* p = q.front();     // oldest node still waiting for its children
         q.pop();
 
         int l, r;
-        cin >> l >> r;
+        cin >> l >> r;           // its left and right child values
         Node* myLeft;
         Node* myRight;
         if(l == -1){
@@ -94,6 +99,7 @@ Node* input_tree(){
         p->left = myLeft;
         p->right = myRight;
 
+        // Only real children wait in the queue for their own pair of values.
         if(p->left){
             q.push(p->left);
         }
@@ -106,8 +112,16 @@ Node* input_tree(){
     return root;
 }
 
+/*
+ * Sum without leaf: add up every node that has at least one child.
+ *
+ * The idea: visit every node once with a level-order walk (queue). A node is
+ * NOT a leaf when it has a left child or a right child, so only then is its
+ * value added. Example (sample): 10, 20 and 30 have children, 40 50 60 do not,
+ * so the answer is 10 + 20 + 30 = 60.
+ */
 int sum_without_leaf(Node* root){
-    if(!root){
+    if(!root){                   // empty tree: the sum is 0
         return 0;
     }
     
@@ -119,10 +133,12 @@ int sum_without_leaf(Node* root){
         Node* parent = q.front();
         q.pop();
 
+        // At least one child -> not a leaf -> count it.
         if(parent->left || parent->right){
             sum += parent->val;
         }
 
+        // Queue the children so every node gets checked.
         if(parent->left){
             q.push(parent->left);
         }
@@ -138,6 +154,6 @@ int main()
 {
     // Write your code here
     Node* root = input_tree(); 
-    cout << sum_without_leaf(root) << endl;
+    cout << sum_without_leaf(root) << endl;    // print the answer
     return 0;
 }

@@ -51,6 +51,9 @@ int main() {
     // to store the frequency of each letter
     vector<int> freq(26, 0);
 
+    // Use the vector as a frequency array: slot 0 is 'a', slot 1 is 'b', ...
+    // ch - 'a' turns a letter into its slot number ('c' - 'a' = 2).
+    // With aaabbc: freq[0] becomes 3, freq[1] becomes 2, freq[2] becomes 1.
     for(char ch: s){
         freq[ch - 'a']++;
     }
@@ -59,7 +62,7 @@ int main() {
     // if the frequency is greater than 0
     for(int i=0; i<26; i++){
         if(freq[i] > 0){
-            char ch = 'a' + i;
+            char ch = 'a' + i;   // turn the slot number back into its letter
             cout << ch << " : " << freq[i] << endl;
         }
     }

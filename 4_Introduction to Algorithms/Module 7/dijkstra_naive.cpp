@@ -84,13 +84,11 @@ int main(){
 
     dijkstra(0);
 
-    // A copy-paste slip: this loop was meant to PRINT the answers, but it repeats
-    // the initialisation instead and wipes them. That is why the program prints
-    // nothing at all. It should be the line from dijkstra_optimized.cpp:
-    //     cout << i << "->" << dis[i] << endl;
-    // The distances it worked out, and then threw away, are 0, 7, 3, 9.
+    // Print the answer: the cheapest cost from node 0 to every node.
+    // (Watch out: this loop is easy to paste as a second copy of the INT_MAX
+    // loop above, which silently wipes the answers and prints nothing.)
     for(int i=0; i<n; i++){
-        dis[i] = INT_MAX;
+        cout << i << "->" << dis[i] << endl;
     }
 
     return 0;

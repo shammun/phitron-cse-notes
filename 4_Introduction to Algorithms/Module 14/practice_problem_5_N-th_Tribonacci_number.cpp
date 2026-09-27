@@ -32,24 +32,31 @@ The answer is guaranteed to fit within a 32-bit integer, ie. answer <= 2^31 - 1.
 
 */
 
+// Solution idea (bottom-up DP): Fibonacci with THREE previous terms.
+// T(0) = 0, T(1) = 1, T(2) = 1, and each later term is the sum of the three
+// before it. Fill the table from the bottom so those three are always ready.
+
 class Solution {
     public:
         int tribonacci(int n) {
+            // The three given starting values.
             if(n == 0){
                 return 0;
             }
             if(n == 1 || n == 2){
                 return 1;
             }
-    
-            int dp[40] = {0};
+
+            int dp[40] = {0};   // n <= 37; "= {0}" zeroes the whole array
             dp[0] = 0;
             dp[1] = 1;
             dp[2] = 1;
-            
+
+            // Each term looks back three places.
             for(int i=3; i<=n; i++){
                 dp[i] = dp[i-1] + dp[i-2] + dp[i-3];
             }
             return dp[n];
+            // Cost: O(n) time and memory. (Three variables would do in O(1) memory.)
         }
     };

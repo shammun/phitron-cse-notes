@@ -50,16 +50,31 @@ Sample Output 2:
 
 */
 
+/*
+ * Idea
+ *
+ * A queue keeps order, a stack reverses it. So pass the values through a
+ * stack: dequeue all of them into the stack (the last value ends on top),
+ * then pop the stack back into the same queue. The last value comes out
+ * first and becomes the new front.
+ *
+ *   q = 10 6 8 12 3  ->  stack top 3 12 8 6 10  ->  q = 3 12 8 6 10
+ *
+ * O(n) time, O(n) extra space for the stack.
+ */
+
 #include <bits/stdc++.h> 
 queue<int> reverseQueue(queue<int> q)
 {
     // Write your code here.
+    // Move every value from the front of q onto the stack.
     stack<int> st;
     while(!q.empty()){
         st.push(q.front());
         q.pop();
     }
 
+    // Pop the stack back into q: the order is now reversed.
     while(!st.empty()){
         q.push(st.top());
         st.pop();

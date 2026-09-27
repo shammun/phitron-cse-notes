@@ -2,6 +2,16 @@
 
 https://leetcode.com/problems/middle-of-the-linked-list/description/
 
+Return the middle node of a singly linked list. When there are two middle
+nodes (even length), return the second one.
+Example: 1 2 3 4 5 -> 3,   1 2 3 4 5 6 -> 4.
+
+The idea: a linked list cannot jump to an index, so find the middle in two
+walks. Walk 1 counts the nodes. The middle is then at index size/2 (counting
+from 0): for 5 nodes that is index 2 (value 3), for 6 nodes index 3 (value
+4) - integer division picks the *second* middle by itself. Walk 2 takes
+exactly size/2 steps from the head.
+
 */
 
 #include <iostream>
@@ -20,6 +30,7 @@ struct ListNode{
 
 class Solution {
     public:
+        // Walk 1: count every node until we fall off the end.
         int get_size(ListNode* head){
             int size = 0;
             ListNode* temp = head;
@@ -32,8 +43,9 @@ class Solution {
 
         ListNode* middleNode(ListNode* head){
             int size = get_size(head);
-            int idx = size / 2;
+            int idx = size / 2;          // 0-based index of the (second) middle
             ListNode* temp = head;
+            // Walk 2: idx steps from the head land on the middle node.
             for(int i=0; i<idx; i++){
                 temp = temp->next;
             }

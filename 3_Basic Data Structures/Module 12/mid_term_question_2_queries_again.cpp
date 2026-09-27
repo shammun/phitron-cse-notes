@@ -80,6 +80,21 @@ R -> 20 70 80 10 40 90 30 100 60
 
 */
 
+/*
+ * The idea: this is Module 9's "insert at any position" in a doubly linked
+ * list, plus one check before it.
+ *
+ *   * A legal index is 0..size. `size` itself is allowed because inserting
+ *     just after the last node is how a list grows; anything else is Invalid.
+ *   * pos == 0     -> insert_at_head
+ *     pos == size  -> insert_at_tail
+ *     otherwise    -> walk to the node just before `pos` and write the four
+ *                     arrows of a middle insert.
+ *   * After every successful insert, print left-to-right from `head` along
+ *     `next`, then right-to-left from `tail` along `prev`. The R line must be
+ *     the exact mirror of the L line; if it is not, a `prev` arrow is wrong.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -99,6 +114,7 @@ class Node {
     }
 };
 
+// Left to right, following `next` from the head.
 void print_forward(Node* head){
     cout << "L -> ";
     Node* tmp = head;
@@ -109,6 +125,7 @@ void print_forward(Node* head){
     cout << endl;
 }
 
+// Right to left, following `prev` from the tail.
 void print_backward(Node* tail){
     cout << "R -> ";
     Node* tmp = tail;
@@ -119,6 +136,7 @@ void print_backward(Node* tail){
     cout << endl;
 }
 
+// Count the nodes; needed to know which indexes are legal.
 int get_size(Node* head){
     int size = 0;
     Node* tmp = head;
@@ -129,6 +147,7 @@ int get_size(Node* head){
     return size;
 }
 
+// New first node: two arrows between it and the old head.
 void insert_at_head(Node* &head, Node* &tail, int val){
     Node* newNode = new Node(val);
     if(head==NULL){
@@ -141,6 +160,7 @@ void insert_at_head(Node* &head, Node* &tail, int val){
     head = newNode;
 }
 
+// New last node: two arrows between the old tail and it.
 void insert_at_tail(Node* &head, Node* &tail, int val){
     Node* newNode = new Node(val);
     if(head==NULL){
@@ -155,35 +175,39 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
 
 void insert_at_any_position(Node* &head, Node* &tail, int pos, int val){
     int size = get_size(head);
+    // Reject the index before touching the list.
     if(pos > size || pos < 0){
         cout << "Invalid" << endl;
         return;
     }
 
     if(pos==0){
-        insert_at_head(head, tail, val);
+        insert_at_head(head, tail, val);   // new first node
         print_forward(head);
         print_backward(tail);
         return;
     }
 
     if(pos == size){
-        insert_at_tail(head, tail, val);
+        insert_at_tail(head, tail, val);   // new last node
         print_forward(head);
         print_backward(tail);
         return;
     }
 
     Node* tmp = head;
+    // Stop one node early: tmp ends on index pos-1, the node before the gap.
     for(int i=1; i<pos; i++){
         tmp = tmp->next;
     }
     
     Node* newNode = new Node(val);
-    newNode->next = tmp->next;
-    tmp->next->prev = newNode;
-    tmp->next = newNode;
-    newNode->prev = tmp;
+    // Four arrows. The new node's own two first, while tmp->next still
+    // points at the right-hand neighbour.
+    newNode->next = tmp->next;         // new -> right neighbour
+    tmp->next->prev = newNode;         // right neighbour -> new
+    tmp->next = newNode;               // left neighbour (tmp) -> new
+    newNode->prev = tmp;               // new -> left neighbour
     print_forward(head);
     print_backward(tail);
 }
@@ -198,7 +222,7 @@ int main(){
 
     while(Q--){
         int X, V;
-        cin >> X >> V;
+        cin >> X >> V;     // insert value V at index X
         insert_at_any_position(head, tail, X, V);
     }
 

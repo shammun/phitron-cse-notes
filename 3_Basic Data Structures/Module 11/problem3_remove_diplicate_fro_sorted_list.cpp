@@ -2,6 +2,13 @@
 
 https://leetcode.com/problems/remove-duplicates-from-sorted-list/description/
 
+The list is sorted. Delete the repeated values so each value appears once,
+and return the head. Example: 1 1 2 3 3 -> 1 2 3.
+
+The idea: in a sorted list, equal values sit next to each other. So one walk
+is enough: stand on a node and look at its neighbour. Same value? Skip the
+neighbour by pointing past it. Different value? Only then move on.
+
 */
 
 #include <iostream>
@@ -23,10 +30,14 @@ class Solution {
 public:
     ListNode* deleteDuplicates(ListNode* head) {
         ListNode* temp = head;
+        // We compare temp with temp->next, so both must exist.
         while(temp!=NULL && temp->next !=NULL){
             if(temp->val == temp->next->val){
+                // Duplicate: unhook the neighbour. Do NOT move temp yet -
+                // the new neighbour may be another copy (1 1 1).
                 temp->next = temp->next->next;
             } else{
+                // Different value: temp's value is now unique, move on.
                 temp = temp->next;
             }
         }

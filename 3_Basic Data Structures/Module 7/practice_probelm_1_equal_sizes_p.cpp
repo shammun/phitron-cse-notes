@@ -19,6 +19,12 @@ NO
 
 */
 
+/*
+ * Two lists have the same size when they hold the same number of nodes; the
+ * values do not matter. So: read the first list until -1, count it; read the
+ * second list the same way, count it; compare the two counts.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -32,7 +38,7 @@ class Node{
 
         Node(int val){
             this->val = val;
-            this->next = next;
+            this->next = next; // BUG (kept on purpose): should be NULL, see the note
         }
 };
 
@@ -44,10 +50,11 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
         tail = newNode;
         return;
     }
-    tail->next = newNode;
-    tail = newNode;
+    tail->next = newNode; // link after the last node...
+    tail = newNode;       // ...and make the new node the last one
 }
 
+// Walk from head to NULL and add 1 for every node passed.
 int get_size(Node* head){
     int size = 0;
     Node* tmp = head;
@@ -64,6 +71,7 @@ int main(){
     Node* head2 = NULL;
     Node* tail2 = NULL;
 
+    // First list: values until the stop sign -1 (not stored).
     int val;
     while(true){
         cin >> val;
@@ -83,6 +91,7 @@ int main(){
     }
     int size_2 = get_size(head2);
 
+    // Only the counts are compared, never the values.
     if(size_1 == size_2){
         cout << "YES" << endl;
     } else{

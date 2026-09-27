@@ -63,6 +63,12 @@ int main() {
             r = mid - 1;
         }
     }
+    if(flag2 == 1){
+        cout << "found (binary search)" << endl;
+    }
+    else{
+        cout << "not found (binary search)" << endl;
+    }
 
 
     return 0;

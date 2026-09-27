@@ -86,6 +86,30 @@ y
 
 */
 
+/*
+ * The idea: keep the addresses in a `list<string>` and remember where we are
+ * with `curr`, the address we are on now. `curr` is passed as a pointer
+ * (`string* curr`) so that the function can change the caller's variable.
+ *
+ * Each query is one whole line, so it is read with getline and then split
+ * with a stringstream: the first word is the command, and for `visit` the
+ * second word is the address.
+ *
+ *   visit A : walk the list looking for A. Found -> it becomes `curr`.
+ *             Not found -> print Not Available and stay put.
+ *   next    : walk until we pass `curr`; the element after it is the answer.
+ *             If `curr` was the last element, the loop ends: Not Available.
+ *   prev    : if `curr` is the first element there is nothing before it.
+ *             Otherwise walk while remembering the element just seen in
+ *             `prev`; when we reach `curr`, `prev` is the one before it.
+ *
+ * The addresses are unique, so "find the element equal to curr" always finds
+ * our own position. Every command walks the list: O(n) per query.
+ */
+
+// Practice copy of mid_term_question_4_web_address.cpp; the list is called
+// `web` here. One line is missing in the `prev` branch (see the note there).
+
 #include <iostream>
 #include <string>
 #include <list>
@@ -94,6 +118,7 @@ y
 using namespace std;
 
 void browse_history(list<string> &web, string* curr){
+    // Read the whole command line, then split it into words.
     string line;
     getline(cin, line);
     stringstream ss(line);
@@ -103,7 +128,7 @@ void browse_history(list<string> &web, string* curr){
     if(command == "visit"){
         string address;
         ss >> address;
-        bool found = false;
+        bool found = false;   // stays false if the address is not in the list
 
         for(string s : web){
             if(s == address){
@@ -113,6 +138,7 @@ void browse_history(list<string> &web, string* curr){
             }
         }
 
+        // Print the new position, or refuse and stay where we were.
         if(found){
             cout << *curr << endl;
         } else{
@@ -122,24 +148,30 @@ void browse_history(list<string> &web, string* curr){
         bool previous_word_found = false;
 
         for(string s : web){
+            // The element right after `curr` is the next address.
             if(previous_word_found){
                 *curr = s;
                 cout << *curr << endl;
                 return;
             }
 
+            // Found our position: the element in the next round is the answer.
             if(s == *curr){
                 previous_word_found = true;
             }
         }
         cout << "Not Available" << endl;
     } else if(command == "prev"){
+        // Already on the first address: there is no previous one.
         string prev = web.front();
         if(*curr == prev){
             cout << "Not Available" << endl;
+            // Bug in this copy: a `return;` is missing here, so the loop below
+            // still runs and prints the first address as well.
         } 
 
         for(string s : web){
+            // Not our position yet: remember it as the candidate `prev`.
             if(s != *curr){
                 prev = s;
             } else {
@@ -155,6 +187,7 @@ int main(){
     list<string> web;
     string s;
 
+    // Read addresses until the word "end".
     while(cin >> s){
         if(s == "end"){
             break;
@@ -164,8 +197,10 @@ int main(){
 
     int Q;
     cin >> Q;
+    // Skip the newline after Q, or the first getline would read an empty line.
     cin.ignore();
 
+    // We start on the first address (the head).
     string curr = web.front();
 
     while(Q--){

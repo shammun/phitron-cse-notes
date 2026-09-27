@@ -19,18 +19,24 @@ public:
     // 'head' is passed by reference so that it can be updated when we reach the last node.
     // 'tmp' is the current node in the recursion.
     void reverse(ListNode* &head, ListNode* tmp){
+        // Base case: the last node. It becomes the new head.
         if(tmp->next == NULL){
             head = tmp;
             return;
         }
+        // First reverse everything after tmp...
         reverse(head, tmp->next);
+        // ...then, on the way back, turn one arrow: the node after tmp now
+        // points back to tmp (1->2 becomes 2->1)...
         tmp->next->next = tmp;
+        // ...and tmp's own forward arrow is cut. If tmp is the old head, this
+        // is what makes it the new tail.
         tmp->next = NULL;
     }
     
     // Main function to reverse a linked list.
     ListNode* reverseList(ListNode* head) {
-        if(head == NULL){
+        if(head == NULL){    // empty list: nothing to reverse (and tmp->next would crash)
             return head;
         }
         reverse(head, head);

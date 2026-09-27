@@ -45,8 +45,8 @@ int main(){
     // Declare two integer variables to store input numbers
     int x, y;
     
-    // Prompt user to enter two numbers
-    printf("Enter two numbers: ");
+    // No "Enter two numbers" prompt: an online judge compares the output
+    // character by character, so any extra text makes the answer wrong.
     
     // Read two integers from user using scanf
     // %d is format specifier for integer

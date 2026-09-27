@@ -52,3 +52,55 @@ Sample Output 2
 10
 
 */
+
+// Solution idea: sort, then be greedy.
+// Sort the bags from biggest to smallest. The biggest bag may give everything
+// it has. Each next bag must give a SMALLER amount than the bag before it
+// (the amounts have to be different, and going down keeps them different), so
+// it gives the smaller of "what it has" and "one less than the previous
+// amount". Once the allowed amount reaches 0, every remaining bag gives 0,
+// which is allowed.
+// Why biggest first: a big bag can always afford a big amount, so letting it
+// take the top value wastes nothing, and it leaves the smaller values free for
+// the smaller bags.
+//
+// Example 1 4 5 -> sorted 5 4 1 -> take 5, then 4, then 1 -> 10.
+// Example 1 1 2 1 -> sorted 2 1 1 1 -> take 2, 1, then 0, 0 -> 3.
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+int main(){
+    int n;
+    cin >> n;
+
+    vector<long long> a(n);
+    for(int i = 0; i < n; i++){
+        cin >> a[i];
+    }
+
+    // greater<long long>() sorts from big to small.
+    sort(a.begin(), a.end(), greater<long long>());
+
+    // total can reach about 2*10^5 values of 10^9, far beyond int: long long.
+    long long total = 0;
+    long long allowed = a[0];   // the most the current bag may give
+
+    for(int i = 0; i < n; i++){
+        // Give as much as the bag has, but never more than allowed.
+        long long take = min(a[i], allowed);
+        total += take;
+
+        // The value `take` is now used, so the next bag must give less.
+        // 0 is the floor: many bags may give 0 together.
+        allowed = max(take - 1, 0LL);
+    }
+
+    cout << total << endl;
+
+    // Sorting dominates: O(n log n).
+    return 0;
+}

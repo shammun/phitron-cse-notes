@@ -19,15 +19,16 @@ int main(){
     long long a, b, c, d;
     scanf("%lld %lld %lld %lld", &a, &b, &c, &d);
 
-    // BUG, left here on purpose: the list below is meant to hold all nine
-    // combinations, but `a - b * c == d` is written twice and
-    // `a * b * c == d` is missing altogether. So an input such as
-    // `2 3 4 24` prints NO even though 2 * 3 * 4 = 24.
-    // The fix is to replace the repeated test with `a * b * c == d`.
+    // The nine checks, one line per first operator (+, - and *). Keep an
+    // eye on the last line: it must end with `a * b * c`, the "multiply,
+    // multiply" case. An earlier version repeated `a - b * c` there and
+    // never tried `a * b * c`, so `2 3 4 24` printed NO even though
+    // 2 * 3 * 4 = 24. Listing the cases in a fixed order (+ + , + - , + *,
+    // then - ..., then * ...) is the easy way to see that none is missing.
 
     if(a + b + c == d || a + b - c == d || a + b * c == d || 
     a - b + c == d || a - b - c == d || a - b * c == d ||
-    a * b + c == d || a * b - c == d || a - b * c == d) {
+    a * b + c == d || a * b - c == d || a * b * c == d) {
         printf("YES");
     } else {
         printf("NO");

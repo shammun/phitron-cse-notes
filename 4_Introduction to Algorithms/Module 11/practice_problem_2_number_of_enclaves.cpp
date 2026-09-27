@@ -30,22 +30,31 @@ grid[i][j] is either 0 or 1.
 
 */
 
+// Practice Day problem 2. A land cell can "walk off" the grid exactly when it is
+// connected to a land cell on the border. So turn the question around: start a
+// DFS from every border land cell and mark everything it reaches. Those cells
+// can escape. The land cells still unmarked afterwards are the enclaves.
+// (The practice day lists it under DSU, but a grid flood fill from Module 3 is
+// the simpler tool here.)
+
 class Solution {
     public:
-        vector<pair<int, int>> directions = {{-1,0},{1,0},{0,-1},{0,1}};
+        vector<pair<int, int>> directions = {{-1,0},{1,0},{0,-1},{0,1}};   // up, down, left, right
         int rows, cols;
-        bool vis[505][505];
-    
+        bool vis[505][505];   // grid is at most 500 x 500
+
+        // Is (i, j) inside the grid?
         bool valid(int i, int j){
             if(i < 0 || i >= rows || j < 0 || j >= cols){
                 return false;
             }
             return true;
         }
-    
+
+        // Mark every land cell connected to (si, sj).
         void dfs(vector<vector<int>>& grid, int si, int sj){
             vis[si][sj] = true;
-    
+
             for(int i=0; i<4; i++){
                 int ci = si + directions[i].first;
                 int cj = sj + directions[i].second;
@@ -54,14 +63,15 @@ class Solution {
                 }
             }
         }
-    
+
         int numEnclaves(vector<vector<int>>& grid) {
             rows = grid.size();
             cols = grid[0].size();
-    
+
             memset(vis, false, sizeof(vis));
-    
+
             // Check first and last row
+            // Any land here touches the edge: flood its whole island as "escapes".
             for(int j=0; j<cols; j++){
                 if(grid[0][j] == 1 && !vis[0][j]){
                     dfs(grid, 0, j);
@@ -70,7 +80,7 @@ class Solution {
                     dfs(grid, rows-1, j);
                 }
             }
-    
+
             // Check first and last column
             for(int i=0; i<rows; i++){
                 if(grid[i][0] == 1 && !vis[i][0]){
@@ -80,8 +90,9 @@ class Solution {
                     dfs(grid, i, cols-1);
                 }
             }
-            
+
             // count unvisited land cells
+            // No border flood reached them, so they are trapped.
             int enclaves = 0;
             for(int i=0; i<rows; i++){
                 for(int j=0; j<cols; j++){
@@ -90,7 +101,7 @@ class Solution {
                     }
                 }
             }
-    
-            return enclaves;
+
+            return enclaves;   // O(rows * cols)
         }
     };

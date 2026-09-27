@@ -39,16 +39,23 @@ Output
 
 */
 
+// Solution idea (a choice at every cell, like knapsack's take-or-leave).
+// maxPathSum(i, j) = the best sum of a path from cell (i, j) to the bottom-right
+// corner. From (i, j) you step down or right, so
+//     best(i, j) = A[i][j] + max(best(i+1, j), best(i, j+1)).
+// The same cell is reached along many routes, so dp[i][j] stores each answer.
+
 #include <iostream>
 #include <algorithm>
 
 using namespace std;
 
 int n, m;
-int matrix[11][11];
-int dp[11][11];
+int matrix[11][11];   // N, M <= 10
+int dp[11][11];       // dp[i][j] = maxPathSum(i, j); -1 = not computed
 
 int maxPathSum(int i, int j){
+    // Base case: at the goal, the path is just this one cell.
     if(i == n-1 && j == m-1){
         return matrix[i][j];
     }
@@ -57,14 +64,18 @@ int maxPathSum(int i, int j){
         return dp[i][j];
     }
 
+    // On the last row you can only go right...
     if(i == n-1){
         return matrix[i][j] + maxPathSum(i, j+1);
     }
 
+    // ...and on the last column you can only go down. (These two edge cases
+    // are cheap chains, so they are not stored in dp.)
     if(j == m-1){
         return matrix[i][j] + maxPathSum(i+1, j);
     }
 
+    // Two real choices: go down, or go right. Keep the better one.
     int op1 = matrix[i][j] + maxPathSum(i+1, j);
     int op2 = matrix[i][j] + maxPathSum(i, j+1);
 
@@ -81,13 +92,15 @@ int main(){
         }
     }
 
+    // Every cell starts "not computed".
     for(int i=0; i<n; i++){
         for(int j=0; j<m; j++){
             dp[i][j] = -1;
         }
     }
 
-    cout << maxPathSum(0, 0) << endl;
+    cout << maxPathSum(0, 0) << endl;   // best path from the top-left corner
 
+    // Cost: O(N * M), each cell solved once.
     return 0;
 }

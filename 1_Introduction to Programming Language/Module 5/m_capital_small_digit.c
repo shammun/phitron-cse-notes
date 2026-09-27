@@ -42,15 +42,22 @@ ALPHA
 
 int main()
 {
+    /* A char holds one character; %c reads exactly one. */
     char ch;
     scanf("%c", &ch);
 
+    /* A character is stored as its ASCII number, and the digits, the capital
+       letters and the small letters each sit in one unbroken block of
+       numbers ('0'..'9' is 48..57, 'A'..'Z' is 65..90, 'a'..'z' is 97..122).
+       So "is it a digit?" is just "does it lie between '0' and '9'?".
+       Writing '0' instead of 48 means we never have to remember the codes. */
     if (ch >= '0' && ch <= '9')
     {
         printf("IS DIGIT");
     }
     else if (ch >= 'A' && ch <= 'Z')
     {
+        /* \n puts the second word on its own line, as the output asks. */
         printf("ALPHA\nIS CAPITAL");
     }
     else if (ch >= 'a' && ch <= 'z')

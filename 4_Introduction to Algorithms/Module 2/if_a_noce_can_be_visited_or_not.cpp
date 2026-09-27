@@ -59,16 +59,14 @@ int main(){
 
     bfs(src);   // this fills visited[] for the whole piece that holds src
 
-    // Careful, this does not print what it looks like. The closing quote is in
-    // the wrong place: the string is "YES << endl", so the program prints the
-    // words YES << endl and never ends the line. It should be:
-    //     cout << "YES" << endl;
-    // The same slip is in the else branch. The code is left as it is on purpose,
-    // so you can see how a misplaced quote turns code into text.
+    // visited[dest] is the whole answer: BFS from src marked every node in the
+    // same piece of the graph, so a marked dest is reachable, an unmarked one not.
+    // (Keep the quotes around the word only: "YES" << endl. Writing "YES << endl"
+    // would print the text  << endl  instead of ending the line.)
     if(visited[dest]){
-        cout << "YES << endl";
+        cout << "YES" << endl;
     } else {
-        cout << "NO << endl";
+        cout << "NO" << endl;
     }
 
     return 0;

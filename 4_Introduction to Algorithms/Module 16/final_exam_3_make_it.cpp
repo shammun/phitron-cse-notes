@@ -43,20 +43,26 @@ YES
 
 */
 
+// Solution idea: treat every number as a node of a graph. From a node x there
+// are two edges: to x + 3 and to x * 2. "Can we reach N from 1?" is then the
+// question Module 2 answered with BFS: start the queue at 1 and see whether N
+// is ever visited. Both moves only make the number bigger, so any value above
+// N is a dead end and is never pushed, which keeps the graph at most N nodes.
+
 #include <iostream>
 #include <vector>
-#include <algorithm>    
+#include <algorithm>
 #include <string>
 #include <stack>
 #include <queue>
 
 using namespace std;
 
-bool vis[100005];
+bool vis[100005];   // vis[x] = has x already been put in the queue? (N <= 10^5)
 
 bool make_it(int n){
     queue<int> q;
-    q.push(1);
+    q.push(1);          // every attempt starts from the value 1
 
     vis[1] = true;
 
@@ -64,13 +70,17 @@ bool make_it(int n){
         int par = q.front();
         q.pop();
 
+        // We have produced n: it is reachable.
         if(par == n){
             return true;
         }
 
+        // The two "children" of par, one per allowed move.
         int option1 = par + 3;
         int option2 = par * 2;
 
+        // Push a child only if it does not overshoot n (both moves grow the
+        // value, so an overshoot can never come back down) and it is new.
         if(option1 <= n && vis[option1] == false){
             q.push(option1);
             vis[option1] = true;
@@ -82,6 +92,8 @@ bool make_it(int n){
         }
     }
 
+    // The queue ran dry without meeting n: no sequence of moves gives n.
+    // Example: 3 is impossible, because 1 leads to 4 or 2, and both only grow.
     return false;
 }
 
@@ -92,6 +104,8 @@ int main(){
     while(t--){
         int n;
         cin >> n;
+        // Fresh visited marks for every test case, or the previous case's marks
+        // would block numbers this case still needs to explore.
         memset(vis, false, sizeof(vis));
 
         if(make_it(n)){
@@ -102,6 +116,7 @@ int main(){
         }
     }
 
+    // Each value 1..N is pushed at most once: O(N) per test case.
     return 0;
 
 }

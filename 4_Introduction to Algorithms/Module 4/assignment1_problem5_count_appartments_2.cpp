@@ -53,58 +53,17 @@ Sample Output 1
 
 */
 
-/*
-
-Problem Statement
-
-You are given an  sized 2D matrix that represents a map of a building. Each cell represents a wall or a room. The connected rooms are called apartments. Your task is to count the number of apartments in that building. You can walk left, right, up, and down through the room cells. You can't pass through walls.
-
-Input Format
-
-The first input line has two integers  and : the height and width of the map.
-Then there are  lines of  characters describing the map. Each character is either .(room) or #(wall).
-
-Constraints
-
-1. 1 <= N, M <= 1000
-
-Output Format
-
-Output the number of apartments
-
-Sample Input 0
-
-5 8
-########
-#..#...#
-####.#.#
-#..#...#
-########
-
-Sample Output 0
-
-3
-
-Sample Input 1
-
-6 8
-.#.#####
-.#.###..
-#..#...#
-#.##....
-..##.###
-#.#.##.#
-
-Sample Output 1
-
-5
-
-*/
+// Idea: the same component scan as assignment1_problem4_count_apartments.cpp,
+// but now each BFS also counts the cells it queues, which is the size of that
+// apartment. Collect the sizes, sort them ascending and print them; if the map
+// has no room at all the list stays empty and the answer is 0.
+//
+// Example: sample 0 has apartments of 2, 8 and 2 rooms -> "2 2 8".
 
 #include <iostream>
 #include <vector>
 #include <queue>
-#include <algorithm>
+#include <algorithm>    // sort
 
 using namespace std;
 
@@ -120,11 +79,12 @@ bool valid(int i, int j){
     return true;
 }
 
+// Grid BFS that returns how many rooms this apartment has.
 int bfs(int Ai, int Aj){
     queue<pair<int, int>> q;
     q.push({Ai, Aj});
     vis[Ai][Aj] = true;
-    int room_count = 1;
+    int room_count = 1;         // the starting room itself
 
     while(!q.empty()){
         pair<int, int> par = q.front();
@@ -139,7 +99,7 @@ int bfs(int Ai, int Aj){
             if(valid(ci, cj) && !vis[ci][cj] && grid[ci][cj] == '.'){
                 q.push({ci, cj});
                 vis[ci][cj] = true;
-                room_count++;
+                room_count++;   // each cell is queued exactly once, so count it here
             }
         }
     }
@@ -155,7 +115,7 @@ int main(){
         }
     }
 
-    vector<int> apartments;
+    vector<int> apartments;     // one size per apartment
     for(int i=0; i<n; i++){
         for(int j=0; j<m; j++){
             if(!vis[i][j] && grid[i][j] == '.'){
@@ -165,10 +125,10 @@ int main(){
         }
     }
 
-    sort(apartments.begin(), apartments.end());
+    sort(apartments.begin(), apartments.end());   // smallest first
 
     if(apartments.size() == 0){
-        cout << 0 << endl;
+        cout << 0 << endl;      // all walls: no apartment at all
     } else {
         for(int i = 0; i<apartments.size(); i++){
             cout << apartments[i] << " ";

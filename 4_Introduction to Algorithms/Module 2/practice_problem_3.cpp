@@ -43,6 +43,11 @@ Sample Output
 
 */
 
+// Idea: "directly connected to N" means one edge away, i.e. N's neighbours.
+// The adjacency list already stores exactly those, one entry per edge that
+// touches N, so no search is needed at all: the answer is adj_list[N].size(),
+// which graph books call the DEGREE of N.
+
 #include <iostream>
 #include <vector>
 #include <algorithm>    
@@ -52,12 +57,14 @@ Sample Output
 
 using namespace std;
 
-vector<int> adj_list[1005];
+vector<int> adj_list[1005];   // adj_list[x] = the neighbours of x
 
 int main(){
     int n, e;
     cin >> n >> e;
 
+    // Each undirected edge a-b is stored in both lists, so it counts once
+    // towards the degree of a and once towards the degree of b.
     while(e--){
         int a, b;
         cin >> a >> b;
@@ -68,6 +75,8 @@ int main(){
     int node;
     cin >> node;
 
+    // size() of N's list = how many edges touch N = how many direct neighbours.
+    // (This assumes no edge is given twice; a repeated edge would be counted twice.)
     cout << adj_list[node].size() << endl;
 
     return 0;

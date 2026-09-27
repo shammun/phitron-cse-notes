@@ -36,9 +36,17 @@ int main() {
         cin >> a[i];
     }
 
+    /*
+     * Same problem, solved with a prefix array instead of a running total.
+     * prefixSum[i] = a[0] + ... + a[i].
+     *   sum left of i  = prefixSum[i-1]            (nothing when i = 0)
+     *   sum right of i = prefixSum[n-1] - prefixSum[i]
+     * For -7 1 5 2 -4 3 0: prefixSum = -7 -6 -1 1 -3 0 0.
+     * At i = 3: left = prefixSum[2] = -1, right = 0 - 1 = -1 -> answer 3.
+     */
     vector<int> prefixSum(n);
-    prefixSum[0] = 0;
-    for(int i=1; i<<n; i++){
+    prefixSum[0] = a[0];
+    for(int i=1; i<n; i++){
         prefixSum[i] = prefixSum[i-1] + a[i];
     }
 
@@ -46,10 +54,12 @@ int main() {
         int leftSum = 0;
         int rightSum = 0;
 
+        // Index 0 has nothing on its left, and prefixSum[-1] does not exist.
         if(i > 0){
             leftSum = prefixSum[i-1];
         }
 
+        // The whole total minus everything up to and including i.
         rightSum = prefixSum[n-1] - prefixSum[i];
 
         if(leftSum == rightSum){

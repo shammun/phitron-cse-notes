@@ -32,52 +32,59 @@ Explanation: The fisher can start at cells (0,0) or (3,3) and collect a single f
 
 */
 
-
+// Idea: Max Area of Island again, but each water cell holds some fish and
+// "land" is now any cell with fish (> 0). While flooding one connected region,
+// add the cell's VALUE instead of 1. The region with the largest total wins.
+//
+// Example: a pond of cells 3 and 4 side by side holds 7 fish; if no other pond
+// holds more, the answer is 7.
 
 class Solution {
     public:
         bool vis[55][55];
-            vector<pair<int, int>> d = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
-            int n, m, total, mx;
-        
-            bool valid(int i, int j){
-                if(i<0 || i >= n || j<0 || j >= m){
-                    return false;
-                } else{
-                    return true;
+        vector<pair<int, int>> d = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
+        int n, m, total, mx;      // total = fish in the current pond, mx = best so far
+
+        bool valid(int i, int j){
+            if(i<0 || i >= n || j<0 || j >= m){
+                return false;
+            } else{
+                return true;
+            }
+        }
+
+        void dfs(int si, int sj, vector<vector<int>> &grid){
+            vis[si][sj] = true;
+            total = total + grid[si][sj];    // catch every fish in this cell
+
+            for(int i=0; i<4; i++){
+                int ci = si + d[i].first;
+                int cj = sj + d[i].second;
+                // A 0 cell is land (no fish): it blocks the flood like a wall.
+                if(valid(ci, cj) && !vis[ci][cj] && grid[ci][cj] > 0){
+                    dfs(ci, cj, grid);
                 }
             }
-        
-            void dfs(int si, int sj, vector<vector<int>> &grid){
-                vis[si][sj] = true;
-                total = total + grid[si][sj];
-        
-                for(int i=0; i<4; i++){
-                    int ci = si + d[i].first;
-                    int cj = sj + d[i].second;
-                    if(valid(ci, cj) && !vis[ci][cj] && grid[ci][cj] > 0){
-                        dfs(ci, cj, grid);
-                    }
-                }
-            }
-    
+        }
+
         int findMaxFish(vector<vector<int>>& grid) {
             n = grid.size();
-                m = grid[0].size();
-                mx = 0;
-        
-                memset(vis, false, sizeof(vis));
-        
-                for(int i=0; i<n; i++){
-                    for(int j=0; j<m; j++){
-                        if(!vis[i][j] && grid[i][j] > 0){
-                            total = 0;
-                            dfs(i, j, grid);
-                            mx = max(total, mx);
-                        }
+            m = grid[0].size();
+            mx = 0;               // no water anywhere -> 0 fish
+
+            memset(vis, false, sizeof(vis));
+
+            for(int i=0; i<n; i++){
+                for(int j=0; j<m; j++){
+                    // An unvisited fishy cell starts a new pond.
+                    if(!vis[i][j] && grid[i][j] > 0){
+                        total = 0;
+                        dfs(i, j, grid);
+                        mx = max(total, mx);
                     }
                 }
-        
-                return mx;
+            }
+
+            return mx;            // Cost: O(n * m)
         }
     };

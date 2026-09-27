@@ -34,25 +34,37 @@ sub-islands.
 
 */
 
+// Idea: flood each island of grid2 with the usual template, and while flooding
+// check grid1 underneath: if ANY cell of this grid2 island is water in grid1,
+// the island is not a sub-island. A bool flag starts true for each island and
+// is switched off by the first bad cell; after the flood, count the island
+// only if the flag survived.
+//
+// Example 1 from LeetCode: 3 of grid2's islands lie completely on grid1 land.
+
 class Solution {
     public:
         bool vis[505][505];
         vector<pair<int, int>> d = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
         int n, m;
-        bool flag; 
-    
+        bool flag;                // still a sub-island? (for the island being flooded)
+
         bool valid(int i, int j){
             if(i<0 || i >= n || j<0 || j>=m){
                 return false;
             }
             return true;
         }
-    
+
         void dfs(vector<vector<int>>& grid1, vector<vector<int>>& grid2, int si, int sj){
             vis[si][sj] = true;
+            // This cell is land in grid2; is it land in grid1 as well?
             if(grid1[si][sj] == 0){
-                flag = false;
+                flag = false;     // no -> the whole island fails
             }
+            // Keep flooding anyway, even after a failure: if we stopped here,
+            // the rest of this island would stay unvisited and later be taken
+            // for a separate island.
             for(int i=0; i<4; i++){
                 int ci = si + d[i].first;
                 int cj = sj + d[i].second;
@@ -61,24 +73,25 @@ class Solution {
                 }
             }
         }
-    
+
         int countSubIslands(vector<vector<int>>& grid1, vector<vector<int>>& grid2) {
             int cnt = 0;
             n = grid1.size();
             m = grid1[0].size();
             memset(vis, false, sizeof(vis));
-    
+
             for(int i=0; i<n; i++){
                 for(int j=0; j<m; j++){
+                    // A new island of grid2.
                     if(!vis[i][j] && grid2[i][j]==1){
-                        flag = true;
+                        flag = true;                 // innocent until a cell fails
                         dfs(grid1, grid2, i, j);
                         if(flag==true){
-                            cnt++;
+                            cnt++;                   // every cell sat on grid1 land
                         }
                     }
                 }
             }
-            return cnt;
+            return cnt;           // Cost: O(n * m)
         }
     };

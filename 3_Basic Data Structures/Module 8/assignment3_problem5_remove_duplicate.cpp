@@ -48,6 +48,18 @@ Sample Output 3
 */
 
 
+/*
+ * Keep the first copy of every value, delete every later copy - exactly as the
+ * statement describes: for each node `outer`, walk the rest of the list and
+ * delete every node whose value equals outer->val.
+ *
+ * The walker `inner` always stands one node BEFORE the node it is checking
+ * (it looks at inner->next). That is what a deletion in a singly list needs:
+ * the node before the victim, so its arrow can be bent past the victim.
+ * After a deletion `inner` stays put, because its new `next` is a node that
+ * has not been checked yet. Two nested walks: O(n^2), fine for n <= 1000.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -65,6 +77,7 @@ class Node {
     }
 };
 
+// Count the nodes from head to NULL.
 int get_size(Node* head){
     int size = 0;
     Node* tmp = head;
@@ -75,6 +88,7 @@ int get_size(Node* head){
     return size;
 }
 
+// Append at the end by walking to the last node (O(n) per value).
 void insert_at_tail(Node* &head, Node* &tail,int val){
     Node* newNode = new Node(val);
     if(head == NULL){
@@ -100,20 +114,25 @@ void print_linked_list(Node* head){
     cout << endl;
 }
 
+// Delete every later copy of each value, keeping the first one.
 void remove_duplicate(Node* &head){
     Node* outer = head;
 
     while(outer != NULL){
+        // `inner` starts on `outer` and inspects the node after it.
         Node* inner = outer;
         while(inner->next != NULL){
             if(outer->val != inner->next->val){
+                // Not a copy of outer->val: step forward.
                 inner = inner->next;
             } else{
+                // A copy: bend inner's arrow past it and free it. `inner` does not move.
                 Node* duplicate = inner->next;
                 inner->next = inner->next->next;
                 delete duplicate;
             }
         }
+        // All later copies of outer->val are gone; move to the next value.
         outer = outer->next;
     }
 }
@@ -123,6 +142,7 @@ int main(){
     Node* tail = NULL;
     
     int val;
+    // Read values until -1.
     while(true){
         cin >> val;
         if(val == -1){

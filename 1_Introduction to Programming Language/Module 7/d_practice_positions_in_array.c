@@ -52,12 +52,17 @@ int main() {
     int n;
     scanf("%d", &n);
 
+    /* One box per number, read with the usual loop. */
     int a[n];
 
     for (int i = 0; i < n; i++) {
         scanf("%d", &a[i]);
     }
 
+    /* Walk the array and print only the boxes that pass the test. i is the
+       position (counted from 0, as the judge wants) and a[i] the value
+       stored there. The text "A[" and "] = " is printed literally around
+       the two %d placeholders. */
     for (int i = 0; i < n; i++) {
         if (a[i] <= 10) {
             printf("A[%d] = %d\n", i, a[i]);

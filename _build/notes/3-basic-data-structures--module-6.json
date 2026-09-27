@@ -1,7 +1,7 @@
 {
   "module_id": "3-basic-data-structures--module-6",
   "title": "Singly linked list: insertion, input & recursion",
-  "overview": "This module turns the hand-built list into real operations: insert at the head, at the tail (slow and O(1) versions), and at any index, plus reading a list from input until `-1`. It explains why `head` must be passed as a reference to a pointer, and uses recursion to print a list backwards. The practice day applies these to size, duplicates, the middle element, indexed inserts and a sorted check.",
+  "overview": "This module turns the hand-built list into real operations: insert at the head, at the tail (slow and O(1) versions), and at any index, plus reading a list from input until `-1`. It explains why `head` must be passed as a reference to a pointer, and uses recursion to print a list backwards. The practice day applies these to size, duplicates, the middle element, indexed inserts and a sorted check, and an extra-practice program puts all the operations together.",
   "intro": [
     {
       "heading": null,
@@ -43,7 +43,7 @@
         "Swap those two lines and the list is destroyed. Doing `tmp->next = newNode` first overwrites the only copy of the address of `30`, and the tail of the list floats away with nothing pointing at it. Attach the new box to what comes after, then redirect what comes before — always in that order.",
         "Finally, recursion comes back. Printing a list forwards is the same shape as counting 1 to n: print, then call yourself on the rest. Printing it backwards is the shape you met as counting n down to 1: call yourself on the rest first, and print on the way out, after the call returns. A singly linked list has no backward arrows, so this is the only way to print it in reverse without building anything extra:",
         "The last call to reach `NULL` returns immediately, and the values are printed as the calls unwind, deepest box first.",
-        "The programs below work through each insertion on its own, then read a list from input until `-1` arrives, and the practice day uses all of it to count the size, look for duplicates, find the middle and check whether the list is sorted."
+        "The programs below work through each insertion on its own, then read a list from input until `-1` arrives, and the practice day uses all of it to count the size, look for duplicates, find the middle, insert by index and check whether the list is sorted. The last program gathers every operation into one command-driven list."
       ],
       "snippet": "void print_reverse(Node* tmp){\n    if(tmp == NULL){\n        return;\n    }\n    print_reverse(tmp->next);   // go to the end first\n    cout << tmp->val << endl;   // print on the way back\n}",
       "trace": null
@@ -469,15 +469,15 @@
       "kind": "variant",
       "same_as": "practice_problem_2_has_duplicate.cpp",
       "problem": null,
-      "what": "A re-typed copy, except `has_duplicate` is declared `bool` while still printing and using a bare `return;`.",
+      "what": "A re-typed copy of `practice_problem_2_has_duplicate.cpp`. It first declared `has_duplicate` as `bool` while never returning a value; that slip is now fixed to `void`, so the two files match.",
       "steps": [
         "Same visited-array logic."
       ],
       "complexity": "Time O(n) · Space O(101)",
       "input": "2 4 5 6 7 4 -1\n",
       "input_note": "Values ending with -1.",
-      "output_note": "`YES`, same as the original.",
-      "watch_out": "A `bool` function must return a value. It only compiles here because of the `-fpermissive` flag; a normal compiler rejects `return;`. Either make it `void` or return `true`/`false` and print in `main`.",
+      "output_note": "`YES`, same as the original: the second 4 is found already marked.",
+      "watch_out": "A function declared `bool` must `return true;` or `return false;`. A bare `return;` in a `bool` function is an error on a normal compiler; if a function only prints, declare it `void`.",
       "check": {
         "q": "How would you rewrite it to return a bool properly?",
         "a": "Return `true` when a repeat is found and `false` at the end; `main` prints YES or NO based on the result."
@@ -491,15 +491,15 @@
       "problem": null,
       "what": "Finds the size first, then walks to the middle. For an even size it prints both middle values.",
       "steps": [
-        "Build the list and compute `size` with `get_size`.",
-        "Even size: walk `size/2 - 1` steps and print `tmp->val` and `tmp->next->val`.",
+        "Build the list and compute `size` with `get_size` (first pass).",
+        "Even size: walk `size/2 - 1` steps and print `tmp->val` and `tmp->next->val` (the two middles).",
         "Odd size: walk `size/2` steps and print `tmp->val`."
       ],
       "complexity": "Time O(n) · Space O(n)",
       "input": "1 2 3 4 5 6 -1\n",
       "input_note": "Values ending with -1.",
-      "output_note": "First line `6` is the size (a debug print), then `3 4`, the two middle values of an even-length list.",
-      "watch_out": "The extra `cout << size` line would fail a judge that expects only the middle values; remove it. An empty list would crash on `tmp->val`.",
+      "output_note": "`3 4`: the list has 6 nodes (even), so both middle values, at index 2 and 3, are printed.",
+      "watch_out": "An empty list would crash on `tmp->val`, because there is no middle node at all. The judge's lists always have at least one value.",
       "check": {
         "q": "For `2 4 6 8 10`, how many steps does `tmp` take and what is printed?",
         "a": "2 steps (size/2), printing 6."
@@ -511,19 +511,19 @@
       "kind": "practice",
       "same_as": null,
       "problem": null,
-      "what": "Intended to read a list, then for each `(index, value)` query insert at head, tail or middle (or print Invalid) and print the list. As written it never finishes.",
+      "what": "Reads a list, then for each `(index, value)` query inserts at the head, the tail or in the middle and prints the list; an index outside `0..size` prints `Invalid`.",
       "steps": [
-        "Read the list until `-1` (intended).",
-        "For each query, get the current `size`.",
-        "Index below 0 or above `size`: print `Invalid`.",
-        "Index 0: insert at head. Index equal to `size`: insert at tail. Otherwise insert in the middle.",
-        "Print the list (intended after every query)."
+        "Read the starting list with `while (cin >> val && val != -1)`.",
+        "For each query, compute the current `size`; the valid indexes are `0..size`.",
+        "Outside that range: print `Invalid` and `continue` without touching the list.",
+        "Index 0: `insert_at_head` (and set `tail` if the list was empty). Index `size`: `insert_at_tail`. Otherwise `insert_at_any_index`, which walks `idx-1` steps and hooks the node in.",
+        "Print the whole list on one line after every valid query."
       ],
       "complexity": "Time O(n) per query · Space O(n)",
-      "input": "10 20 30 -1\n1 40\n5 50\n0 100\n",
-      "input_note": "List values ending with -1, then lines of `index value`.",
-      "output_note": "No output: the program runs until the time limit.",
-      "watch_out": "The first loop never reads input (`cin >> val` is missing), so it checks an uninitialised `val` and inserts forever. Fix: `while (cin >> val && val != -1)`. Also, the list is printed only once at the end (it should print after each valid query), each value goes on its own line, and on an empty list index 0 would insert twice (both `idx == 0` and `idx == size` match); use `else if`.",
+      "input": "10 20 30 -1\n1 40\n5 50\n4 50\n0 100\n7 40\n1 110\n7 40\n",
+      "input_note": "The practice day's own sample: the list ending with -1, then one `index value` query per line.",
+      "output_note": "Seven lines, one per query, matching the expected output exactly: `5 50` and the first `7 40` are `Invalid` because those indexes are past the end at that moment; the last `7 40` is valid because the list has grown to 7 nodes.",
+      "watch_out": "Use `else if` for the three insert cases. On an empty list index 0 is both the head case and the `size` case, and separate `if`s would insert the value twice. (An earlier version of this file also forgot `cin >> val` in the first loop and printed only once at the end; both are fixed.)",
       "check": {
         "q": "Which index values are valid for a list of size 3?",
         "a": "0, 1, 2 and 3 (0 = head, 3 = tail)."
@@ -538,18 +538,45 @@
       "what": "Despite the file name, this checks whether the list is in ascending order by comparing each node with the next one.",
       "steps": [
         "Read values with `while (cin >> val)` and stop on `-1`.",
-        "`ascending_sort_check` looks at each node `tmp` and its `tmp->next`.",
+        "`ascending_sort_check` stands on each node `tmp` and compares it with `tmp->next`.",
         "If the next value is smaller, print `NO` and return.",
-        "If the walk finishes, print `YES`."
+        "Otherwise move on with `tmp = tmp->next`.",
+        "If the walk reaches the last node, print `YES`."
       ],
       "complexity": "Time O(n) · Space O(n)",
-      "input": "5 2 6 8 -1\n",
-      "input_note": "Values ending with -1. This input breaks the order at the very first pair, the only kind of input the buggy loop can finish on.",
-      "output_note": "`NO`, because 2 is smaller than 5.",
-      "watch_out": "The loop never moves `tmp` forward (`tmp = tmp->next;` is missing), so whenever the first pair is in order it loops forever. Add `tmp = tmp->next;` at the end of the loop body. An empty list would also crash on `tmp->next`.",
+      "input": "2 4 6 5 8 4 -1\n",
+      "input_note": "Values ending with -1.",
+      "output_note": "`NO`: the pair 6 then 5 breaks the ascending order. With `1 5 6 8 9 -1` it prints `YES`.",
+      "watch_out": "Forgetting `tmp = tmp->next;` inside the loop keeps `tmp` on the first node forever, so any list whose first pair is in order loops endlessly (this file had exactly that bug; it is fixed now). An empty list would still crash on `tmp->next`.",
       "check": {
-        "q": "After fixing the bug, what does `1 5 6 8 9 -1` print?",
-        "a": "YES."
+        "q": "Does `1 1 2 -1` count as ascending here?",
+        "a": "Yes. Only a strictly smaller next value prints NO, so equal neighbours are allowed."
+      }
+    },
+    {
+      "file": "extra_practice_singly_linked_list_operations.cpp",
+      "title": "Extra practice: all six list operations in one program",
+      "kind": "practice",
+      "same_as": null,
+      "problem": null,
+      "what": "The module's extra-practice task: create a list from input, then answer commands to insert at the head, the tail or any index, print the size and display the list. Every function is one of this module's lesson moves.",
+      "steps": [
+        "Create: read values until `-1` and append each with the O(1) `insert_at_tail`.",
+        "Command `1 v`: `insert_at_head` points the new node at the old head and moves `head` (and sets `tail` if the list was empty).",
+        "Command `2 v`: `insert_at_tail` hangs the node after `tail` and moves `tail`.",
+        "Command `3 i v`: if `i` is outside `0..size` print `Invalid`; `0` and `size` reuse the head and tail inserts, otherwise walk `i-1` steps and link the node in.",
+        "Command `4` prints `get_size(head)`; command `5` prints the list with `print_linked_list`."
+      ],
+      "complexity": "Head/tail insert O(1) · Index insert, size, display O(n)",
+      "input": "10 20 30 -1\n5\n1 5\n2 40\n3 2 15\n3 9 99\n5\n4\n",
+      "input_note": "The starting list ending with -1, then one command per line (`1 v`, `2 v`, `3 i v`, `4`, `5`).",
+      "output_note": "`10 20 30` is the first display. The inserts print nothing; `3 9 99` prints `Invalid` because the list only has 6 nodes. The final display is `5 10 15 20 30 40` and the size is `6`.",
+      "watch_out": "The functions take `Node* &head` and `Node* &tail`. Without the `&`, an insert at the head (or the first insert into an empty list) would change only a copy, and `main` would never see the new node.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why can `insert_at_any_index` hand index `size` over to `insert_at_tail`?",
+        "a": "Index `size` means \"after the last node\", which is exactly the tail insert, and it keeps `tail` correct in O(1)."
       }
     }
   ],

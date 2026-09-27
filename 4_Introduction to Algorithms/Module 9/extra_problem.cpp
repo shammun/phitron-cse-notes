@@ -71,13 +71,11 @@ class Solution {
 
 // Below this line is the judge's own test harness, not part of the solution.
 int main() {
-    // BUG: t is declared and never given a value, so it holds whatever was in
-    // that memory. The line should be cin >> t; instead, cin.ignore() throws
-    // away a single character. On this run t happened to be 0 or negative, the
-    // while loop did not run once, and the program printed nothing at all.
-    // The Solution class above is fine; only the driver is broken.
+    // How many test cases follow. (The copy first pasted here had
+    // cin.ignore() in place of cin >> t, which left t holding garbage and
+    // printed nothing; reading t is all the driver needs.)
     int t;
-    cin.ignore();
+    cin >> t;
     while (t--) {
         int N, m;
         cin >> N >> m;   // nodes and edges for this test case

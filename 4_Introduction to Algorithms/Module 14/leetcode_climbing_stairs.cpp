@@ -34,22 +34,36 @@ Constraints:
 
 */
 
+// Solution idea (memoized recursion, this module).
+// To stand on step n, the LAST move was either a 1-step (from n-1) or a
+// 2-step (from n-2). So ways(n) = ways(n-1) + ways(n-2): the Fibonacci rule,
+// with a different start: ways(1) = 1, ways(2) = 2.
+// Plain recursion would recompute the same steps again and again (like
+// fibonacci_recursion.cpp); the dp[] table remembers each answer once found.
+
 class Solution {
     public:
-        int dp[50];
+        int dp[50];   // dp[i] = ways to reach step i; -1 = not worked out yet
         int fibo(int n){
+            // Base cases: 1 way to reach step 1, 2 ways to reach step 2
+            // (1+1 or 2). The test n < 3 covers both, since the answer is n.
             if(n<3){
                 return n;
             }
+            // Already solved? Hand back the stored answer, no recursion.
             if(dp[n] != -1){
                 return dp[n];
             }
+            // Solve once, store it, then return it.
             dp[n] = fibo(n-1) + fibo(n-2);
             return dp[n];
         }
         int climbStairs(int n) {
+            // LeetCode may reuse the same object for several tests, so clear
+            // the table at the start of every call.
             memset(dp, -1, sizeof(dp));
             int ans = fibo(n);
             return ans;
         }
+        // Cost: O(n) time, each step is solved once; O(n) memory for dp and the call stack.
     };

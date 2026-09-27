@@ -32,21 +32,24 @@ Output
 
  */
 
-#include <iostream>
-using namespace std;
+#include <iostream> // cin and cout
+using namespace std; // write cin/cout instead of std::cin/std::cout
 
 int main(){
     int n;
     cin >> n;
 
-    int arr[n];
+    int arr[n]; // n boxes, numbered 0 to n-1
     for(int i=0; i<n; i++){
         cin >> arr[i];
     }
 
+    // The array itself is not changed: we simply walk it from the last box
+    // (index n-1) down to the first (index 0) and print as we go.
+    // reversing_using_swap.cpp turns the array around instead, with swap().
     for(int i=n-1; i>=0; i--){
         cout << arr[i] << " ";
     }
 
-    return 0;
+    return 0; // the program ended fine
 }

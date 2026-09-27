@@ -45,8 +45,16 @@ Sample Output 1
 using namespace std;
 
 int main() {
+    /*
+     * Build the prefix sum array (each entry = previous entry + next value),
+     * then print it from the last index down to the first.
+     * 2 4 1 5 3 -> prefix 2 6 7 12 15 -> printed 15 12 7 6 2.
+     */
     int n;
     cin >> n;
+
+    // long long: up to 10^5 values of 10^9 add up to 10^14, too big for int
+    // (the second sample already needs 3000000000).
     vector<long long> nums(n);
 
     for(int i=0; i<n; i++){
@@ -54,12 +62,13 @@ int main() {
     }
 
     vector<long long>runningSum(n);
-    runningSum[0] = nums[0];
+    runningSum[0] = nums[0];            // the first prefix is the first value
 
     for(int i=1; i<n; i++){
         runningSum[i] = runningSum[i-1] + nums[i];
     }
 
+    // Reverse order: walk the indexes backwards instead of reversing the vector.
     for(int i=n-1; i>=0; i--){
         cout << runningSum[i] << " ";
     }

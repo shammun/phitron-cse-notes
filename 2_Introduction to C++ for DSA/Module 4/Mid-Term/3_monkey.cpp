@@ -31,17 +31,27 @@ eefilloorvw
 using namespace std;
 
 int main() {
-    char current_line[200010];
-    int line_starting_position[1000000];
-    int total_number_of_chars_in_a_line[1000000];
-    char all_lines_content[3000001];
-    int total_number_of_characters = 0;
-    int line_number = 0;
+    // Plan: for each line, drop the spaces, sort the letters, print them.
+    // This solution first stores every line's letters one after another in one
+    // big char array, remembers where each line starts and how long it is,
+    // and prints everything at the end.
+    char current_line[200010];                    // the line being read right now
+    int line_starting_position[1000000];          // where line k starts inside all_lines_content
+    int total_number_of_chars_in_a_line[1000000]; // how many letters line k kept
+    char all_lines_content[3000001];              // the letters of all lines, back to back
+    int total_number_of_characters = 0;           // letters stored so far = next free position
+    int line_number = 0;                          // how many lines have been read
 
-    while(cin.getline(current_line, 100000)){
-        line_starting_position[line_number] = total_number_of_characters;
+    // Input ends at EOF, so keep reading while getline succeeds.
+    // cin.getline reads the whole line, spaces included (plain cin >> would stop
+    // at the first space). The limit is the buffer size, so a line of 10^5
+    // letters plus its '\0' still fits.
+    while(cin.getline(current_line, 200010)){
+        line_starting_position[line_number] = total_number_of_characters; // this line starts here
         int number_of_chars_in_present_line = 0;
 
+        // Copy the letters, skipping every space (there may be several in a row,
+        // and spaces at the end of the line too)
         for(int i=0; current_line[i] != '\0'; i++){
             if(current_line[i] != ' '){
                 all_lines_content[total_number_of_characters] = current_line[i];
@@ -50,6 +60,9 @@ int main() {
             }
         }
 
+        // Sort only this line's part of the big array: from where it starts up to
+        // the end of what has been stored. Letters are chars, and chars compare
+        // by ASCII code, so 'a' < 'b' < ... < 'z' - exactly alphabetical order.
         sort(all_lines_content + line_starting_position[line_number], all_lines_content + total_number_of_characters);
         total_number_of_chars_in_a_line[line_number] = number_of_chars_in_present_line;
         line_number++;
@@ -57,6 +70,7 @@ int main() {
 
     }
 
+    // Print each line's sorted letters on its own line
     for(int i=0; i<line_number; i++){
         for(int j=0; j<total_number_of_chars_in_a_line[i]; j++){
             cout << all_lines_content[line_starting_position[i] + j];

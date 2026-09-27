@@ -48,21 +48,40 @@ Methods pop, top and getMin operations will always be called on non-empty stacks
 At most 3 * 104 calls will be made to push, pop, top, and getMin.
 
 */
+/*
+ * Idea
+ *
+ * Finding the minimum by scanning the stack would be O(n). Instead keep a
+ * second stack `min_st` whose top is always the minimum of everything in `st`.
+ *
+ *  - push(val): val goes on `st`. If val is a new minimum (or ties the current
+ *    one), it also goes on `min_st`.
+ *  - pop(): if the value leaving `st` is the current minimum, it leaves
+ *    `min_st` too, and the older minimum underneath becomes the answer again.
+ *
+ *   push -2, 0, -3   st: -2 0 -3   min_st: -2 -3   getMin = -3
+ *   pop              st: -2 0      min_st: -2      getMin = -2
+ *
+ * Every operation is O(1).
+ */
 class MinStack {
 public:
-    stack<int> st, min_st;
+    stack<int> st, min_st;   // st = all values; min_st = the minimums, newest on top
     MinStack() {
         
     }
     
     void push(int val) {
         st.push(val);
+        // `>=` and not `>`: a value equal to the minimum is pushed again, so
+        // popping one copy still leaves the other copy as the minimum.
         if(min_st.empty() || min_st.top() >= val){
             min_st.push(val);
         }
     }
     
     void pop() {
+        // The value leaving is the current minimum: drop it from min_st too.
         if(st.top() == min_st.top()){
             min_st.pop();
         }
@@ -73,6 +92,7 @@ public:
         return st.top();
     }
     
+    // The top of min_st is the smallest value still in the stack.
     int getMin() {
         return min_st.top();
     }

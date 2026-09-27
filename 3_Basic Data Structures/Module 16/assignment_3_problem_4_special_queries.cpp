@@ -65,6 +65,18 @@ messi
 
 */
 
+/*
+ * Idea
+ *
+ * This is a ticket line: people join at the back (command 0 name) and the
+ * person at the front is served and leaves (command 1). First come, first
+ * served is exactly a queue. Duplicate names are no problem, because the
+ * queue stores each arrival separately.
+ *
+ * For command 1 on an empty line, print "Invalid" instead of popping
+ * (front() or pop() on an empty queue would crash).
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>    
@@ -76,16 +88,18 @@ using namespace std;
 int main() {
     int n;
     cin >> n;
-    queue<string> q;
+    queue<string> q;   // the line: front = next to be served
 
     while(n--){
         int x;;
         cin >> x;
         if(x == 0){
+            // Command 0: a person joins the back of the line.
             string s;
             cin >> s;
             q.push(s);
         } else if(x == 1){
+            // Command 1: serve the front person, if there is one.
             if(q.empty()){
                 cout << "Invalid" << endl;
             } else{

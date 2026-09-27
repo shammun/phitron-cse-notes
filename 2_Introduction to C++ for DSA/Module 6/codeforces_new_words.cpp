@@ -35,13 +35,16 @@ int main(){
     string s;
     cin >> s;
 
-    // Convert the string to lowercase
+    // Case does not matter, so first make every letter lowercase.
+    // A capital letter minus 'A' is its place in the alphabet (0..25);
+    // adding 'a' moves it to the same place among the small letters.
     for(int i=0; i<s.size(); i++){
         if (s[i] >= 'A' && s[i] <= 'Z'){
-            s[i] = char(s[i]) - 'A' + 'a';
+            s[i] = char(s[i]) - 'A' + 'a'; // s[i] can be changed in place, a string is editable
         }
     }
 
+    // Count only the five letters that EGYPT needs
     int cnt_e = 0, cnt_g = 0, cnt_y = 0, cnt_p = 0, cnt_t = 0;
 
     for(int i=0; i<s.size(); i++){
@@ -58,6 +61,8 @@ int main(){
         }
     }
 
+    // Each EGYPT uses one of each letter, so the rarest of the five letters
+    // decides how many words can be made: the answer is the smallest count.
     int ans = cnt_e;
     if(cnt_g < ans){
         ans = cnt_g;

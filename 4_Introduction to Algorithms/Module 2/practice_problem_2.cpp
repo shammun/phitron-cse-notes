@@ -43,19 +43,25 @@ Sample Output
 
 */
 
+// Idea: a BFS from 0 already hands every node its level (its distance from 0).
+// So run one BFS, and as each node leaves the queue, keep it if its level is L.
+// The problem wants those nodes largest first, so sort the collected nodes in
+// descending order at the end.
+
 #include <iostream>
 #include <vector>
-#include <algorithm>    
+#include <algorithm>    // sort, greater
 #include <string>
 #include <stack>
 #include <queue>
+#include <cstring>      // memset
 
 using namespace std;
 
 vector<int> adj_list[1005];
 bool visited[1005];
 int level[1005];
-vector<int> nodes;
+vector<int> nodes;          // the nodes found at level L
 
 void bfs(int src, int l){
     queue<int> q;
@@ -67,6 +73,8 @@ void bfs(int src, int l){
         int par = q.front();
         q.pop();
 
+        // By the time par leaves the queue its level is final (BFS finds each
+        // node by the fewest edges first), so it is safe to test it here.
         if(level[par] ==l){
             nodes.push_back(par);
         } 
@@ -96,10 +104,12 @@ int main(){
     memset(level, -1, sizeof(level));
 
     int l;
-    cin >> l;
+    cin >> l;          // the level we are asked about
 
-    bfs(0, l);
+    bfs(0, l);         // the source is always node 0
 
+    // Nodes join `nodes` in BFS order, which is not sorted. greater<int>()
+    // flips sort's comparison, so the biggest number comes first.
     sort(nodes.begin(), nodes.end(), greater<int>());
 
     for(int node : nodes){
@@ -107,6 +117,8 @@ int main(){
     }
 
     cout << endl;
+
+    // Cost: O(V + E) for the BFS plus O(k log k) to sort the k nodes found.
 
     return 0;
 }

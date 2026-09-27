@@ -73,19 +73,24 @@ because they solved the problem, an an additional one because they are the first
 #include <string> // Include the string library for std::string
 using namespace std; // Use the standard namespace to avoid writing "std::" repeatedly
 
+// Works out the balloons for one test case. Every letter of s is one solve,
+// worth 1 balloon, plus 1 extra the first time that letter appears.
 int calculate_balloons(int n, string s){
-    bool first_time[26] = {false};
+    // One flag per problem A..Z: has anyone solved it yet?
+    // In the name first_time, true means "its first solve has already happened".
+    bool first_time[26] = {false}; // = {false} starts all 26 flags as false
     int total_balloons = 0;
 
     // count the number of balloons
     for(int i=0; i<n; i++){
+        // Turn the letter into 0..25: 'A' - 'A' = 0, 'B' - 'A' = 1, ... (ASCII codes are consecutive)
         int problem_index = s[i] - 'A';
 
-        total_balloons += 1;
+        total_balloons += 1; // the balloon every solve earns
 
         if(!first_time[problem_index]){
-            total_balloons += 1;
-            first_time[problem_index] = true;
+            total_balloons += 1; // bonus: the first team to solve this problem
+            first_time[problem_index] = true; // later solves of it get no bonus
         }
 
     }
@@ -97,12 +102,12 @@ int main(){
     int t;
     cin >> t;
 
-    int results[100];
+    int results[100]; // t is at most 100: store all answers, print them at the end
 
     for(int i=0; i<t; i++){
         int n;
         string s;
-        cin >> n >> s;
+        cin >> n >> s; // cin >> reads the whole word of letters into the string
         results[i] = calculate_balloons(n, s);
     }
 

@@ -1,10 +1,17 @@
-#include <iostream> // Include the iostream library for input and output operations
+#include <bits/stdc++.h> 
 using namespace std; // Use the standard namespace to avoid prefixing std:: before standard functions
 
 int main(){
     // First we create a static array 'a' of size 3
     // Static arrays are allocated on the stack and have a fixed size
     int a[3];
+    // Static arrays can not be deleted and it will be in the memory
+    // and will rest in the memory even after the function returns
+    // This will waste the memory
+
+    // Dynamic arrays can be deleted and it will not be in the memory
+
+
     cout << "Enter the elements of the static array: " << endl;
     // Use a for loop to take input for each element of the static array 'a'
     for(int i=0; i<3; i++){
@@ -60,7 +67,8 @@ int main(){
     }
 
     // Free the dynamically allocated memory to avoid memory leaks
-    delete[] p;
+    delete[] p; // use [] to delete an array
+    // delete[] q; // use [] to indicate that this is an array
 
     return 0; // Return 0 to indicate successful execution of the program
 }

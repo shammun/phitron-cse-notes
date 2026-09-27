@@ -51,6 +51,7 @@ Sample Output 1
 #include <vector>
 using namespace std;
 
+// A binary tree node: a value and two child pointers (NULL = no child).
 class Node {
     public:
         int val;     
@@ -65,9 +66,12 @@ class Node {
     }
 };
 
+// Reads the tree in level order, the Module 18 way: first the root, then for
+// every real node (in the order a queue hands them out) its left and right
+// child, with -1 meaning "no child".
 Node* input_tree(){
     int val;
-    cin >> val;
+    cin >> val;                  // the root (or -1 for an empty tree)
     Node* root;
     if(val == -1){
         root = NULL;
@@ -75,17 +79,18 @@ Node* input_tree(){
         root = new Node(val);
     }
 
+    // Nodes whose two children have not been read yet.
     queue<Node*> q;
     if(root){
         q.push(root);
     }
 
     while(!q.empty()){
-        Node* p = q.front();
+        Node* p = q.front();     // oldest node still waiting for its children
         q.pop();
 
         int l, r;
-        cin >> l >> r;
+        cin >> l >> r;           // its left and right child values
         Node* myLeft;
         Node* myRight;
         if(l == -1){
@@ -103,6 +108,7 @@ Node* input_tree(){
         p->left = myLeft;
         p->right = myRight;
 
+        // Only real children wait in the queue for their own pair of values.
         if(p->left){
             q.push(p->left);
         }
@@ -114,6 +120,17 @@ Node* input_tree(){
 
     return root;
 }
+
+/*
+ * An attempt at problem 5 using the textbook "boundary traversal": left edge,
+ * then EVERY leaf, then right edge. That is a different problem: this
+ * assignment only wants the two outer edges, so inner leaves such as 110,
+ * 70 and 100 must not be printed. The right edge is also printed in the
+ * wrong order (50 30 instead of 30 50).
+ * Sample 0 prints 60 100 70 110 90 40 20 10 50 30, but the expected answer is
+ * 90 40 20 10 30 50 60. The working solution is
+ * assignment_problem_5_print_order_tree_another.cpp.
+ */
 
 // Helper function to check if node is leaf
 bool isLeaf(Node* node) {

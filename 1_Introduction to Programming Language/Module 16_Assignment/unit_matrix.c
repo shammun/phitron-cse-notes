@@ -45,6 +45,9 @@ int main(){
     scanf("%d", &N);
 
     int values[N][N];
+
+    /* flag = 1 means "still looks like a unit matrix". One wrong cell is
+       enough to switch it to 0 for good. */
     int flag = 1;
 
     for(int i=0; i<N; i++){
@@ -53,6 +56,9 @@ int main(){
         }
     }
 
+    /* Check every cell. A cell is on the main diagonal when its row number
+       equals its column number (i == j); there it must be 1. Everywhere else
+       it must be 0. */
     for(int i=0; i<N; i++){
         for(int j=0; j<N; j++){
             if(i==j){
@@ -67,6 +73,9 @@ int main(){
                 }
             }
         }
+        /* break only leaves the inner loop, so the outer loop still visits
+           the remaining rows. That does not change the answer (flag stays
+           0); it only costs a little time. */
     }
 
     if(flag == 1){

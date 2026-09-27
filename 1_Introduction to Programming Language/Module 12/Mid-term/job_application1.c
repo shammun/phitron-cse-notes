@@ -50,12 +50,18 @@ int main() {
     int N;
     scanf("%d", &N);
     
+    /* Room for the largest N allowed (10^5). */
     int experiences[100000];
     
+    /* First read every experience... */
     for(int i=0; i<N; i++){
         scanf("%d", &experiences[i]);
     }
     
+    /* ...then label each one with an if-else ladder. The ranges do not
+       overlap and together cover every number, so exactly one branch runs
+       for each candidate. The last case needs no test: anything that is not
+       below 1, not 1..3 and not 4..7 must be above 7. */
     for(int i = 0; i < N; i++){
         if(experiences[i] < 1){
             printf("Entry-level candidate\n");

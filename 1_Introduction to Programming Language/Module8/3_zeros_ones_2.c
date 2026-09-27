@@ -55,10 +55,17 @@ int main() {
         scanf("%d", &numbers[i]);
     }
 
+    /* X is given counting from 1 (the first value is "1st"). */
     scanf("%d", &position);
 
+    /* Two small tricks on one line:
+       - position - 1 turns the 1-based X into a 0-based array index, so
+         X = 1 means numbers[0].
+       - 1 - value toggles a 0/1 value without any if: 1 - 0 = 1 and
+         1 - 1 = 0. */
     numbers[position - 1] = 1 - numbers[position - 1];
     
+    /* Print the whole array, one space after each value. */
     for(int i = 0; i < n; i++){
         printf("%d ", numbers[i]);
     }

@@ -42,29 +42,35 @@ NO
 
 */
 
-#include <iostream>
-#include <string>
-using namespace std;
+#include <iostream> // cin and cout
+#include <string>   // std::string and getline
+using namespace std; // write cin/cout/string instead of std::cin/...
 
 int main(){
     string s;
-    getline(cin, s);
+    getline(cin, s); // the names are separated by spaces, so read the whole line
 
-    bool flag = false;
-    string word = "";
+    bool flag = false; // becomes true once the exact word "Jessica" is seen
+    string word = "";  // the word being built, one letter at a time
 
+    // Cut the line into words by hand: letters are added to `word`; a space
+    // means the word is complete, so check it and start a new one.
+    // Comparing whole words matters: "Jessicarvai" contains Jessica but is
+    // not the word Jessica, and == on strings is case-sensitive, so
+    // "jessica" does not count either.
     for(int i=0; i<s.size(); i++){
         if(s[i] != ' '){
             word += s[i];
         } else{
             if(word == "Jessica"){
                 flag = true;
-                break;
+                break; // found it, no need to read further
             }
-            word = "";
+            word = ""; // start collecting the next word
         }
     }
 
+    // The last word has no space after it, so the loop never checked it
     if(word == "Jessica"){
         flag = true;
     }

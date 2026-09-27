@@ -54,12 +54,16 @@ int main(){
         cin >> a[i];
     }
 
+    // Assume it is a palindrome until a mismatch proves otherwise
     bool is_palindrome = true;
 
+    // Two pointers: i walks in from the left, n-i-1 walks in from the right.
+    // Only the first half needs checking - each step compares one pair.
+    // With 1 3 2 3 1: a[0]=a[4] (1,1), a[1]=a[3] (3,3), the middle 2 has no partner.
     for(int i=0; i<n/2; i++){
-        if(a[i] != a[n-i-1]){
+        if(a[i] != a[n-i-1]){ // one mismatched pair is enough to say NO
             is_palindrome = false;
-            break;
+            break; // no need to look further
         }
     }
 

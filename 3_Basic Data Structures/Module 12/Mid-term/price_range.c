@@ -39,7 +39,9 @@ Sample Output 0
 
 int main() {
 
-    /* Enter your code here. Read input from STDIN. Print output to STDOUT */    
+    /* The idea: count the prices p with X <= p <= Y. One pass over the list
+     * with a counter is enough; the order of the prices does not matter.
+     * Prices go up to 10^9, so they are stored as long long to be safe. */
     int N;
     int count = 0;
     long long X, Y;
@@ -54,6 +56,7 @@ int main() {
     
     // Main logic
     for(int i=0; i<N; i++){
+        /* Inside the range, both ends included? Then count it. */
         if (prices[i] >= X && prices[i] <= Y){
             count = count + 1;
         }

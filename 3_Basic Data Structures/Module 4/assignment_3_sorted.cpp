@@ -47,19 +47,26 @@ int main() {
     int T;
     cin >> T;
 
+    // Each round of this loop handles one whole test case.
     for(int i=0; i<T; i++){
         int N;
         cin >> N;
+        // A fresh vector for every test case, sized for this case's N.
         vector<int> A(N);
         for(int j=0; j<N; j++){
             cin >> A[j];
         }
 
-        bool flag = true;
+        /*
+         * An array is sorted in ascending order when no element is smaller
+         * than the one before it. Equal neighbours are allowed
+         * (120 120 is fine). One "going down" step is enough to say NO.
+         */
+        bool flag = true;               // assume sorted until proven wrong
         for(int j=1; j<N; j++){
             if(A[j] < A[j-1]){
-                flag = false;
-                break;
+                flag = false;           // found a step down: 100 1 ...
+                break;                  // no need to look further
             }
         }
 

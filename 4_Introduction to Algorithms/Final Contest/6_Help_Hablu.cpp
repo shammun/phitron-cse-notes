@@ -62,36 +62,50 @@ So, the string t = abc appears 6 times as a subsequence in the string s = ababcc
 
 */
 
+// Solution idea: a counting DP table over the two strings, the same shape as
+// the LCS table of Module 18 but with + where LCS takes a max.
+//   arr[i][j] = in how many ways the first j letters of t can be picked out of
+//               the first i letters of s (as a subsequence).
+// t has exactly 3 letters, so the table is only 4 columns wide.
+
 #include <iostream>
 #include <string>
+#include <vector>
 
 using namespace std;
 
 long long subsequences(string s, string t) {
     int n = s.length();
 
-    long long arr[n+1][4];
+    // (n+1) rows x 4 columns, all starting at 0. A vector keeps the table on
+    // the heap: as a local array long long arr[n+1][4] it would take about
+    // 9.6 MB of stack when |s| = 3 * 10^5, enough to crash the program.
+    // Counts go up to about (10^5)^3, so they need long long.
+    vector<vector<long long>> arr(n + 1, vector<long long>(4, 0));
 
-    for(int i = 0; i <= n; i++) {
-        for(int j = 0; j < 4; j++) {
-            arr[i][j] = 0;
-        }
-    }
-
+    // Column 0: the empty part of t can be picked out of any prefix of s in
+    // exactly one way - pick nothing.
     for(int i = 0; i <= n; i++) {
         arr[i][0] = 1;
     }
 
     for(int i=1; i <= n; i++) {
         for(int j=1; j <= 3; j++) {
+            // Way 1: do not use the letter s[i-1]. Every way that already
+            // worked with the first i-1 letters still works.
             arr[i][j] = arr[i-1][j];
 
+            // Way 2: if s[i-1] equals t[j-1], use it as the j-th letter of t;
+            // the first j-1 letters of t must then come from the first i-1
+            // letters of s. These ways use a different position, so we add.
             if(s[i-1] == t[j-1]) {
                 arr[i][j] += arr[i-1][j-1];
             }
         }
     }
 
+    // All n letters of s used as the pool, all 3 letters of t built.
+    // For s = "ababcc", t = "abc" this is 6.
     return arr[n][3];
 }
 
@@ -106,5 +120,6 @@ int main() {
         cout << subsequences(s, t) << endl;
     }
 
+    // O(|s| * 3) time per test case.
     return 0;
 }

@@ -64,4 +64,77 @@ it is greater than 10. After printing 12, remove ⌊4/2⌋ = 2 means erase 2 occ
 
 */
 
+// Solution idea: two containers from the Basic Data Structures course.
+//   * map<int,int> cnt   : how many times each value is in the array now.
+//   * set<pair<int,int>> : one pair {count, value} for every value present.
+// A set keeps its pairs sorted, first by count, then by value. So its LAST
+// pair is the value with the highest count, and among equal counts the
+// largest value - exactly the one query 2 asks for, found in O(log n).
+// Whenever a count changes, the old pair is erased and the new pair inserted,
+// so the set always agrees with the map.
 
+#include <iostream>
+#include <map>
+#include <set>
+
+using namespace std;
+
+int main(){
+    // The input is large: fast I/O, and "\n" instead of endl.
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int Q;
+    cin >> Q;
+
+    map<int, int> cnt;          // cnt[x] = occurrences of x in the array
+    set<pair<int, int>> order;  // {cnt[x], x} for every x with cnt[x] > 0
+
+    while(Q--){
+        int type;
+        cin >> type;
+
+        if(type == 1){
+            int x;
+            cin >> x;
+            // x's count goes up by one: take out its old pair (if it had one)
+            // and put in the new one.
+            if(cnt[x] > 0){
+                order.erase({cnt[x], x});
+            }
+            cnt[x]++;
+            order.insert({cnt[x], x});
+        }
+        else{
+            if(order.empty()){
+                cout << "empty" << "\n";
+                continue;
+            }
+
+            // prev(order.end()) is the last, i.e. biggest, pair.
+            // In the sample: {4, 10} and {4, 12} tie on count, and {4, 12}
+            // comes later because 12 > 10, so 12 is printed.
+            pair<int, int> top = *prev(order.end());
+            int c = top.first;
+            int x = top.second;
+            cout << x << "\n";
+
+            // Remove max(1, c / 2) copies: with 4 copies, 2 go; with 1 copy,
+            // 1 goes (c / 2 would be 0, hence the max with 1).
+            int remove = max(1, c / 2);
+            order.erase(top);
+            cnt[x] -= remove;
+            // Put x back only if some copies are left; a value with count 0
+            // is no longer in the array.
+            if(cnt[x] > 0){
+                order.insert({cnt[x], x});
+            }
+            else{
+                cnt.erase(x);
+            }
+        }
+    }
+
+    // Each query does a constant number of map/set operations: O(log n) each.
+    return 0;
+}

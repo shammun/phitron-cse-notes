@@ -13,11 +13,25 @@ Output
 
 */
 
+/*
+ * Idea
+ *
+ * Printing a stack means popping it, and popping gives the values back
+ * newest-first: 50 40 30 20 10. But every time values are poured from one
+ * stack into another, their order flips: the value that was on top goes in
+ * first and ends up at the bottom.
+ *
+ * So pour st1 into st2 ONCE. Now 10 (the first value typed) is on top of st2,
+ * and popping st2 prints 10 20 30 40 50 -- the order they were inserted.
+ * (Pouring a second time would flip them back and print 50 first again.)
+ */
+
 #include <iostream>
 #include <stack>
 using namespace std;
 
 int main() {
+    // Read n values into st1. The last value typed sits on top.
     stack<int> st1;
     int n;
     cin >> n;
@@ -27,21 +41,18 @@ int main() {
         st1.push(val);
     }
 
-    stack<int> st2; 
+    // Pour st1 into st2: take the top of st1, push it on st2, pop it from st1.
+    // 50 goes in first (bottom of st2), 10 goes in last (top of st2).
+    stack<int> st2;
     while(!st1.empty()){
         st2.push(st1.top());
         st1.pop();
     }
 
-    stack<int> st3; 
+    // Popping st2 now gives the values oldest-first: 10 20 30 40 50.
     while(!st2.empty()){
-        st3.push(st2.top());
+        cout << st2.top() << " ";
         st2.pop();
-    }
-
-    while(!st3.empty()){
-        cout << st3.top() << " ";
-        st3.pop();
     }
 
     cout << endl;

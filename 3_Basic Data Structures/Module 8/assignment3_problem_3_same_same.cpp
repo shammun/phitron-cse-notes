@@ -44,6 +44,14 @@ NO
 
 */
 
+/*
+ * Two lists are "the same" when they have the same length AND the same value
+ * at every position. So first compare the sizes: different sizes can never be
+ * the same list, and it also guarantees the next step is safe. Then walk both
+ * lists side by side with two pointers, one step each per round, and compare
+ * the values under them. The first mismatch means NO; no mismatch means YES.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -64,6 +72,7 @@ class Node {
     }
 };
 
+// O(1) append: `tail` remembers the last node, so there is no walk.
 void insert_at_tail(Node* &head, Node* &tail, int val){
     Node* newNode = new Node(val);
     if(head == NULL){
@@ -72,10 +81,12 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
         return;
     }
     
+    // Link the new node after the old last node, then move `tail` onto it.
     tail->next = newNode;
     tail = newNode; // or tail = tail->next
 }
 
+// Count the nodes from head to NULL.
 int get_size(Node* head){
     int size = 0;
     Node* tmp = head;
@@ -86,15 +97,18 @@ int get_size(Node* head){
     return size;
 }
 
+// Prints YES when both lists hold the same values in the same order.
 void is_similar(Node* head1, Node* head2){
     int size1 = get_size(head1);
     int size2 = get_size(head2);
 
+    // Different lengths: they cannot be equal.
     if(size1 != size2){
         cout << "NO" << endl;
         return;
     }
 
+    // Equal lengths, so both pointers reach NULL together: walk them in step.
     Node* temp1 = head1;
     Node* temp2 = head2;
 
@@ -105,9 +119,11 @@ void is_similar(Node* head1, Node* head2){
             cout << "NO" << endl;
             return;
         }
+        // Both pointers move one node forward.
         temp1 = temp1->next;
         temp2 = temp2->next;
     }
+    // Every position matched.
     cout << "YES" << endl;
 }
 
@@ -117,6 +133,7 @@ int main(){
     Node* tail1 = NULL;
     
     int val;
+    // First list: values until -1.
     while(true){
         cin >> val;
         if(val == -1){
@@ -125,6 +142,7 @@ int main(){
         insert_at_tail(head1, tail1, val);
     }
 
+    // Second list, read the same way into its own head/tail.
     Node* head2 = NULL;
     Node* tail2 = NULL;
 

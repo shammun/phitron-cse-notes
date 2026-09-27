@@ -48,15 +48,15 @@ In the third case, it is possible to make 6 by using three different indexed val
 
 */
 
-#include <iostream>
-#include <string.h>
-using namespace std;
+#include <iostream> // cin and cout
+#include <string.h> // (string itself comes in with iostream on this compiler)
+using namespace std; // write cin/cout instead of std::cin/std::cout
 
 int main() {
     int T;
     cin >> T;
 
-    string results[100000];
+    string results[100000]; // "YES" or "NO" for each test case, printed at the end
 
     for(int i=0; i<T; i++){
         int N, S;
@@ -67,11 +67,17 @@ int main() {
             cin >> A[i];
         }
 
+        // Assume NO until three values that add up to S are found
         string answer = "NO";
 
+        // Try every choice of three positions i, j, k. N is at most 100, so
+        // 100 * 100 * 100 = 10^6 checks per test case is fast enough.
+        // (These loops reuse the name i; inside them it hides the outer i.)
         for(int i=0; i<N; i++){
             for(int j=0; j<N; j++){
                 for(int k=0; k<N; k++){
+                    // "three distinct indexed values": the positions must differ,
+                    // the values may be equal (2 2 2 can make 6)
                     if(i != j && i != k && j != k){
                         if(A[i] + A[j] + A[k] == S){
                             answer = "YES";
@@ -81,7 +87,7 @@ int main() {
             }
         }
 
-        results[i] = answer;
+        results[i] = answer; // the inner loops are over, so this i is the test-case number again
     }
 
     for(int i=0; i<T; i++){

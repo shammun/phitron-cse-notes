@@ -136,6 +136,64 @@
       "driver": null
     },
     {
+      "file": "shortest_route_2.cpp",
+      "title": "CSES Shortest Routes II (Floyd-Warshall with queries)",
+      "kind": "practice",
+      "same_as": null,
+      "problem": {
+        "name": "CSES 1672 - Shortest Routes II",
+        "url": "https://cses.fi/problemset/task/1672"
+      },
+      "what": "Undirected graph with possibly repeated roads. Run Floyd-Warshall once with `long long` distances, then answer each query `s d` in O(1), printing -1 when unreachable.",
+      "steps": [
+        "Fill the matrix for nodes 1..n: 0 on the diagonal, `LLONG_MAX` elsewhere.",
+        "For every road keep the cheapest one: `adj_mat[a][b] = min(adj_mat[a][b], c)` and the same for `[b][a]`.",
+        "Run the triple loop once; this is the expensive O(n^3) part.",
+        "For each query just look up `adj_mat[s][d]`; print -1 if it is still `LLONG_MAX`."
+      ],
+      "complexity": "Time O(n^3 + q) · Space O(n^2)",
+      "input": "4 3 3\n1 2 5\n2 3 2\n1 3 10\n1 3\n3 1\n1 4\n",
+      "input_note": "`n e q`, then e roads `a b c`, then q questions `s d`.",
+      "output_note": "Prints `7`, `7` and `-1`: 1->2->3 (5 + 2) beats the direct road of 10, the roads are two-way, and city 4 has no road at all.",
+      "watch_out": "Cities are 1..n, so the table needs index n: declare it one bigger than n. And a 500 x 500 `long long` table is about 2 MB, too much for a local array, so it is global (`adj_mat[505][505]`). The first copy used a local `adj_mat[n][n]` and crashed; it is fixed.",
+      "check": {
+        "q": "Why read all roads with `min(...)` instead of plain assignment?",
+        "a": "There can be several roads between the same two cities. A later, more expensive road must not overwrite a cheaper one that was read earlier."
+      },
+      "prelude": null,
+      "driver": null
+    },
+    {
+      "file": "cses_shortest_routes_2.cpp",
+      "title": "CSES Shortest Routes II (the version that runs)",
+      "kind": "variant",
+      "same_as": "shortest_route_2.cpp",
+      "problem": {
+        "name": "CSES 1672 - Shortest Routes II",
+        "url": "https://cses.fi/problemset/task/1672"
+      },
+      "what": "A second write-up of the same problem as `shortest_route_2.cpp`, with the table as a `vector` of size (n+1) x (n+1), `INF = 1e18 / 4`, and a skip of rows where `dist[i][k]` is infinite.",
+      "steps": [
+        "Build the table as `vector<vector<long long>> dist(n + 1, vector<long long>(n + 1, INF))` - (n+1) by (n+1), so cities keep their own numbers 1..n and nothing falls off the end.",
+        "Put 0 on the diagonal: staying in the same city costs nothing.",
+        "Read each road with `min`, in both directions, because two cities can be joined by several roads and a later expensive one must not overwrite a cheaper one.",
+        "Run the triple loop `k, i, j`; each k asks 'is going through city k shorter?'.",
+        "Skip the row early when `dist[i][k] == INF`: if k cannot be reached from i, no route through k exists.",
+        "Answer each query by reading `dist[s][d]`, printing -1 when it is still INF."
+      ],
+      "complexity": "Time O(n^3 + q) · Space O(n^2)",
+      "input": "4 3 3\n1 2 5\n2 3 2\n1 3 10\n1 3\n3 1\n1 4\n",
+      "input_note": "`n m q`, then m roads `a b c`, then q queries `s d`. Cities are numbered from 1.",
+      "output_note": "Prints `7`, `7`, `-1`. Going 1 -> 2 -> 3 costs 5 + 2 = 7 and beats the direct road of 10; the roads are two-way so 3 -> 1 is the same; city 4 has no road at all.",
+      "watch_out": "`INF` is `1e18 / 4`, not `LLONG_MAX`. The inner line adds two table entries together, and `LLONG_MAX + something` overflows into a negative number, which then looks like a wonderfully short route. Also print with `\"\\n\"` instead of `endl` - there can be a hundred thousand queries and `endl` flushes after every one.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why is one Floyd-Warshall run better here than one BFS or Dijkstra per query?",
+        "a": "The n^3 work is paid once and every query afterwards is a single array read. With many queries that beats running a fresh search for each one."
+      }
+    },
+    {
       "file": "practice_day_1_problem1_bellman_ford.cpp",
       "title": "GfG: Distance from the source (Bellman-Ford)",
       "kind": "practice",
@@ -165,6 +223,36 @@
       "driver": "int main() {\n    int V, E;\n    cin >> V >> E;\n    vector<vector<int>> edges(E, vector<int>(3));\n    for (auto &e : edges) cin >> e[0] >> e[1] >> e[2];\n    int src;\n    cin >> src;\n    vector<int> dist = Solution().bellmanFord(V, edges, src);\n    cout << \"dist =\";\n    for (int x : dist) cout << \" \" << x;\n    cout << endl;\n    return 0;\n}"
     },
     {
+      "file": "gfg_distance_from_the_source_bellman_ford.cpp",
+      "title": "GfG: Distance from the source, with a main to run it",
+      "kind": "variant",
+      "same_as": "practice_day_1_problem1_bellman_ford.cpp",
+      "problem": {
+        "name": "GeeksforGeeks - Distance from the Source (Bellman-Ford)",
+        "url": "https://www.geeksforgeeks.org/problems/distance-from-the-source-bellman-ford-algorithm/1"
+      },
+      "what": "The same judge function as `practice_day_1_problem1_bellman_ford.cpp`, but this file carries its own `main`, so it compiles and runs on its own. Shortest distance from `src` to every vertex when weights may be negative; 10^8 for unreachable, `{-1}` when a reachable negative cycle makes the question meaningless.",
+      "steps": [
+        "Keep the judge's `Solution` class exactly as it is typed into GeeksforGeeks - that is the part the reader submits.",
+        "`dist(V, 100000000)` is the judge's 'infinity'; set `dist[src] = 0`.",
+        "Relax every edge, V-1 times over: a shortest path that repeats no vertex has at most V-1 edges, and one full pass fixes at least one more edge of it.",
+        "Guard every relaxation with `dist[u] != INF`, so a negative weight cannot shrink the fake infinity and make an unreachable vertex look reachable.",
+        "Do one extra pass. Anything that still improves can improve forever, which means a negative cycle, so return `{-1}`.",
+        "`main` reads V, E, the E edges and the source, calls the function and prints the vector."
+      ],
+      "complexity": "Time O(V * E) · Space O(V)",
+      "input": "3 4\n0 1 5\n1 0 3\n1 2 -1\n2 0 1\n2\n",
+      "input_note": "`V E`, then E lines `u v w`, then the source. Vertices are numbered from 0. This is the judge's second example.",
+      "output_note": "Prints `dist = 1 6 0`, which matches the judge's expected `[1, 6, 0]`: vertex 2 is the source, the edge 2 -> 0 costs 1, and 2 -> 0 -> 1 costs 1 + 5 = 6. If a negative cycle could be reached you would see `dist = -1` instead.",
+      "watch_out": "Bellman-Ford, not Dijkstra, because of the negative edge `1 -> 2` of weight -1. Dijkstra fixes a vertex the moment it leaves the priority queue, and a negative edge found later would make that fixed value wrong.",
+      "prelude": null,
+      "driver": null,
+      "check": {
+        "q": "Why does one more pass after the V-1 passes prove a negative cycle?",
+        "a": "After V-1 passes every real shortest path is already found. Another improvement can only come from going round a loop that makes the total smaller, and that loop can be repeated without end."
+      }
+    },
+    {
       "file": "practice_day_1_problem2_floyd_warshall.cpp",
       "title": "GfG: Implementing Floyd-Warshall",
       "kind": "practice",
@@ -191,94 +279,6 @@
       },
       "prelude": null,
       "driver": null
-    },
-    {
-      "file": "shortest_route_2.cpp",
-      "title": "CSES Shortest Routes II (Floyd-Warshall with queries)",
-      "kind": "practice",
-      "same_as": null,
-      "problem": {
-        "name": "CSES 1672 - Shortest Routes II",
-        "url": "https://cses.fi/problemset/task/1672"
-      },
-      "what": "Undirected graph with possibly repeated roads. Run Floyd-Warshall once with `long long` distances, then answer each query `s d` in O(1), printing -1 when unreachable.",
-      "steps": [
-        "Fill the matrix for nodes 1..n: 0 on the diagonal, `LLONG_MAX` elsewhere.",
-        "For every road keep the cheapest one: `adj_mat[a][b] = min(adj_mat[a][b], c)` and the same for `[b][a]`.",
-        "Run the triple loop once; this is the expensive O(n^3) part.",
-        "For each query just look up `adj_mat[s][d]`; print -1 if it is still `LLONG_MAX`."
-      ],
-      "complexity": "Time O(n^3 + q) · Space O(n^2)",
-      "input": "4 3\n1 2 5\n2 3 2\n1 3 10\n3\n1 3\n3 1\n1 4\n",
-      "input_note": "n m q, m roads `a b c`, then q queries `s d`. Nodes are 1-based.",
-      "output_note": "The program crashes (access violation) before printing anything. Once fixed it would print 7, 7 and -1 (1->2->3 beats the direct road of 10; node 4 has no roads).",
-      "watch_out": "The matrix is declared `long long adj_mat[n][n]` but the loops use indices 1..n, so index n is outside the array and the program crashes. Fix: declare `adj_mat[n+1][n+1]` (or a global `[505][505]`). Also, a 500x500 local `long long` array is 2 MB; making it global is safer.",
-      "check": {
-        "q": "Why read all roads with `min(...)` instead of plain assignment?",
-        "a": "There can be several roads between the same two cities. A later, more expensive road must not overwrite a cheaper one that was read earlier."
-      },
-      "prelude": null,
-      "driver": null
-    },
-    {
-      "file": "cses_shortest_routes_2.cpp",
-      "title": "CSES Shortest Routes II (the version that runs)",
-      "kind": "practice",
-      "same_as": "shortest_route_2.cpp",
-      "problem": {
-        "name": "CSES 1672 - Shortest Routes II",
-        "url": "https://cses.fi/problemset/task/1672"
-      },
-      "what": "The same problem as `shortest_route_2.cpp` above, written so that it actually runs: one Floyd-Warshall table for all pairs of cities, then every query is a single lookup.",
-      "steps": [
-        "Build the table as `vector<vector<long long>> dist(n + 1, vector<long long>(n + 1, INF))` - (n+1) by (n+1), so cities keep their own numbers 1..n and nothing falls off the end.",
-        "Put 0 on the diagonal: staying in the same city costs nothing.",
-        "Read each road with `min`, in both directions, because two cities can be joined by several roads and a later expensive one must not overwrite a cheaper one.",
-        "Run the triple loop `k, i, j`; each k asks 'is going through city k shorter?'.",
-        "Skip the row early when `dist[i][k] == INF`: if k cannot be reached from i, no route through k exists.",
-        "Answer each query by reading `dist[s][d]`, printing -1 when it is still INF."
-      ],
-      "complexity": "Time O(n^3 + q) · Space O(n^2)",
-      "input": "4 3 3\n1 2 5\n2 3 2\n1 3 10\n1 3\n3 1\n1 4\n",
-      "input_note": "`n m q`, then m roads `a b c`, then q queries `s d`. Cities are numbered from 1.",
-      "output_note": "Prints `7`, `7`, `-1`. Going 1 -> 2 -> 3 costs 5 + 2 = 7 and beats the direct road of 10; the roads are two-way so 3 -> 1 is the same; city 4 has no road at all.",
-      "watch_out": "`INF` is `1e18 / 4`, not `LLONG_MAX`. The inner line adds two table entries together, and `LLONG_MAX + something` overflows into a negative number, which then looks like a wonderfully short route. Also print with `\"\\n\"` instead of `endl` - there can be a hundred thousand queries and `endl` flushes after every one.",
-      "prelude": null,
-      "driver": null,
-      "check": {
-        "q": "Why is one Floyd-Warshall run better here than one BFS or Dijkstra per query?",
-        "a": "The n^3 work is paid once and every query afterwards is a single array read. With many queries that beats running a fresh search for each one."
-      }
-    },
-    {
-      "file": "gfg_distance_from_the_source_bellman_ford.cpp",
-      "title": "GfG: Distance from the source, with a main to run it",
-      "kind": "practice",
-      "same_as": "practice_day_1_problem1_bellman_ford.cpp",
-      "problem": {
-        "name": "GeeksforGeeks - Distance from the Source (Bellman-Ford)",
-        "url": "https://www.geeksforgeeks.org/problems/distance-from-the-source-bellman-ford-algorithm/1"
-      },
-      "what": "The same judge function as `practice_day_1_problem1_bellman_ford.cpp`, but this file carries its own `main`, so it compiles and runs on its own. Shortest distance from `src` to every vertex when weights may be negative; 10^8 for unreachable, `{-1}` when a reachable negative cycle makes the question meaningless.",
-      "steps": [
-        "Keep the judge's `Solution` class exactly as it is typed into GeeksforGeeks - that is the part the reader submits.",
-        "`dist(V, 100000000)` is the judge's 'infinity'; set `dist[src] = 0`.",
-        "Relax every edge, V-1 times over: a shortest path that repeats no vertex has at most V-1 edges, and one full pass fixes at least one more edge of it.",
-        "Guard every relaxation with `dist[u] != INF`, so a negative weight cannot shrink the fake infinity and make an unreachable vertex look reachable.",
-        "Do one extra pass. Anything that still improves can improve forever, which means a negative cycle, so return `{-1}`.",
-        "`main` reads V, E, the E edges and the source, calls the function and prints the vector."
-      ],
-      "complexity": "Time O(V * E) · Space O(V)",
-      "input": "3 4\n0 1 5\n1 0 3\n1 2 -1\n2 0 1\n2\n",
-      "input_note": "`V E`, then E lines `u v w`, then the source. Vertices are numbered from 0. This is the judge's second example.",
-      "output_note": "Prints `dist = 1 6 0`, which matches the judge's expected `[1, 6, 0]`: vertex 2 is the source, the edge 2 -> 0 costs 1, and 2 -> 0 -> 1 costs 1 + 5 = 6. If a negative cycle could be reached you would see `dist = -1` instead.",
-      "watch_out": "Bellman-Ford, not Dijkstra, because of the negative edge `1 -> 2` of weight -1. Dijkstra fixes a vertex the moment it leaves the priority queue, and a negative edge found later would make that fixed value wrong.",
-      "prelude": null,
-      "driver": null,
-      "check": {
-        "q": "Why does one more pass after the V-1 passes prove a negative cycle?",
-        "a": "After V-1 passes every real shortest path is already found. Another improvement can only come from going round a loop that makes the total smaller, and that loop can be repeated without end."
-      }
     },
     {
       "file": "codeforces_20c_dijkstra.cpp",
@@ -313,6 +313,11 @@
   ],
   "practice_links": [
     {
+      "name": "Shortest Routes II",
+      "url": "https://cses.fi/problemset/task/1672",
+      "site": "CSES"
+    },
+    {
       "name": "Bellman-Ford (Distance from the Source)",
       "url": "https://www.geeksforgeeks.org/problems/distance-from-the-source-bellman-ford-algorithm/1",
       "site": "GeeksforGeeks"
@@ -326,11 +331,6 @@
       "name": "Dijkstra? (20C)",
       "url": "https://codeforces.com/problemset/problem/20/C",
       "site": "Codeforces"
-    },
-    {
-      "name": "Shortest Routes II",
-      "url": "https://cses.fi/problemset/task/1672",
-      "site": "CSES"
     }
   ],
   "recap": [

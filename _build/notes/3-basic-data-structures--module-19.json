@@ -52,13 +52,13 @@
         "`p2 = {2, 3}` does the same with brace syntax, which is shorter.",
         "`p3` shows the two parts can have different types: `pair<string, int>`.",
         "A `vector<pair<int,int>>` gets two pairs with `push_back` and is printed with a loop.",
-        "Finally it reads `n` and wants to fill a vector of `n` pairs with `cin >> v[i].first >> v[i].second`."
+        "Finally it reads `n` and fills a new vector `v2` of `n` pairs with `cin >> v2[i].first >> v2[i].second`."
       ],
       "complexity": "Time O(n) · Space O(n)",
       "input": "2\n1 2\n3 4\n",
-      "input_note": "n, then n lines of two integers (the program never gets this far because it does not compile).",
-      "output_note": "You will see a compile error instead of output: the name `v` is declared twice in `main`.",
-      "watch_out": "`vector<pair<int, int>> v(n);` redeclares `v`, which already exists above, so the file does not compile. Fix: give the second vector another name, e.g. `vector<pair<int,int>> v2(n);`, and use `v2` in the input loop.",
+      "input_note": "n, then n lines of two integers.",
+      "output_note": "`2 3`, `2 3`, `Hello 3`, then the two pushed pairs `1 2` and `3 4`. The pairs read at the end are stored in `v2` but not printed.",
+      "watch_out": "The second vector is called `v2` because `v` already exists in `main`; declaring `v` twice is a compile error (this was a typo in the original file, now fixed).",
       "check": {
         "q": "How do you read the second value of a pair `p`?",
         "a": "`p.second`."
@@ -161,109 +161,25 @@
         "name": "Code360 - Left View Of a Binary Tree",
         "url": "https://www.naukri.com/code360/problems/left-view-of-a-binary-tree_920519"
       },
-      "what": "Meant to print the first node of each level as seen from the left. The file actually contains the LeetCode **right** side view code (same as `leetcode_binary_tree_right_side_view.cpp`).",
+      "what": "Returns the first node of every level, as seen from the left. A BFS carries `{node, level}` pairs and pushes the **left child first**, so the first node popped on each level is the leftmost one.",
       "steps": [
-        "BFS with `{node, level}` pairs, starting at level 1.",
-        "A `bool freq[105]` array remembers which levels already gave an answer.",
-        "The first node popped on a new level is added to `ans` and the level is marked.",
-        "Children are pushed **right first, then left**, so the first node on each level is the rightmost one."
+        "Push `{root, 1}` if the tree is not empty.",
+        "Pop a pair; `node` is the tree node and `level` its depth.",
+        "If `ans.size() < level`, no node of this level has been taken yet, so this one (the leftmost) goes into `ans`.",
+        "Push `node->left` before `node->right`, both with `level + 1`.",
+        "When the queue is empty, `ans` holds one value per level, top to bottom."
       ],
       "complexity": "Time O(n) · Space O(n)",
       "input": "1 2 3 -1 5 -1 4 -1 -1 -1 -1\n",
-      "input_note": "The tree [1,2,3,null,5,null,4] in level order: 1; 2 3; 2 has only a right child 5; 3 has only a right child 4. The file has only `rightSideView`, so the driver calls that.",
-      "output_note": "Prints `[1,3,4]`, which is the **right** view. The real left view of this tree is `[1,2,5]`, so this file gives the wrong answer for the left-view problem.",
-      "watch_out": "This is the right-view code pasted into the left-view file (LeetCode's `Solution`/`TreeNode` shape, not Code360's function). For the left view, push `node->left` before `node->right` and use Code360's function name and node type. Also `freq[105]` only works if the tree has at most 104 levels.",
+      "input_note": "The tree [1,2,3,null,5,null,4] in level order: 1; 2 3; 2 has only a right child 5; 3 has only a right child 4.",
+      "output_note": "Prints `left view = [1,2,5]`: 1 on level 1, 2 on level 2, and 5, the only node on level 3 seen from the left (the right view of the same tree would be `[1,3,4]`).",
+      "watch_out": "Right view and left view differ only in which child is pushed first. This file used to hold the right-view code by mistake and was corrected to push `node->left` first. Using `ans.size() < level` instead of a fixed `bool freq[105]` also works for trees of any height.",
       "check": {
-        "q": "Which single change turns a right-view BFS into a left-view BFS?",
-        "a": "Push the left child before the right child, so the leftmost node on each level is popped first."
+        "q": "Which single change turns a left-view BFS into a right-view BFS?",
+        "a": "Push the right child before the left child, so the rightmost node on each level is popped first."
       },
-      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
-      "driver": "int main() {\n    TreeNode* root = readTree<TreeNode>();\n    Solution s;\n    vector<int> ans = s.rightSideView(root);\n    cout << \"view printed by this file = [\";\n    for (int i = 0; i < (int)ans.size(); i++) cout << (i ? \",\" : \"\") << ans[i];\n    cout << \"]\" << endl;\n    return 0;\n}"
-    },
-    {
-      "file": "leetcode_binary_tree_right_side_view.cpp",
-      "title": "Binary tree right side view",
-      "kind": "problem",
-      "same_as": null,
-      "problem": {
-        "name": "LeetCode 199 - Binary Tree Right Side View",
-        "url": "https://leetcode.com/problems/binary-tree-right-side-view/"
-      },
-      "what": "Returns the values you would see standing on the right of the tree: the rightmost node of each level. BFS pushes the right child first, so the first node met on a level is the rightmost.",
-      "steps": [
-        "If `root` exists, push `{root, 1}`.",
-        "Pop a pair; `node = parent.first`, `level = parent.second`.",
-        "If `freq[level]` is still false, this is the first node of that level: add `node->val` and set `freq[level] = true`.",
-        "Push `node->right` then `node->left`, each with `level + 1`.",
-        "Return `ans` when the queue is empty."
-      ],
-      "complexity": "Time O(n) · Space O(n)",
-      "input": "1 2 3 -1 5 -1 4 -1 -1 -1 -1\n",
-      "input_note": "LeetCode example 1, [1,2,3,null,5,null,4], in level order with -1 for missing children.",
-      "output_note": "Prints `rightSideView = [1,3,4]`, the same as LeetCode's expected answer: 1 on level 1, 3 on level 2, 4 on level 3 (5 is hidden behind 4).",
-      "watch_out": "LeetCode allows up to 100 nodes, so `freq[105]` is enough there; for bigger trees use a `vector<bool>` or compare `level` with `ans.size()` instead.",
-      "check": {
-        "q": "Why is the `freq` array needed?",
-        "a": "Several nodes share a level; the array makes sure only the first one popped on each level is recorded."
-      },
-      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
-      "driver": "int main() {\n    TreeNode* root = readTree<TreeNode>();\n    Solution s;\n    vector<int> ans = s.rightSideView(root);\n    cout << \"rightSideView = [\";\n    for (int i = 0; i < (int)ans.size(); i++) cout << (i ? \",\" : \"\") << ans[i];\n    cout << \"]\" << endl;\n    return 0;\n}"
-    },
-    {
-      "file": "code360_reverse_level_order_traversal.cpp",
-      "title": "Reverse level order traversal",
-      "kind": "problem",
-      "same_as": null,
-      "problem": {
-        "name": "Code360 - Reverse Level Order Traversal",
-        "url": "https://www.naukri.com/code360/problems/reverse-level-order-traversal_764339"
-      },
-      "what": "Does a normal level order traversal into a vector and then reverses the whole vector.",
-      "steps": [
-        "Push the root (if any) into a queue.",
-        "Pop a node, append its `val` to `v`, push its left then right child.",
-        "After the loop, `reverse(v.begin(), v.end())`.",
-        "Return `v`."
-      ],
-      "complexity": "Time O(n) · Space O(n)",
-      "input": "1 2 3 4 5 -1 -1 -1 -1 -1 -1\n",
-      "input_note": "Tree in level order: 1; 2 3; 4 5 under 2; then -1 pairs for the leaves.",
-      "output_note": "Prints `[5,4,3,2,1]`: normal level order is 1 2 3 4 5, and the whole list is reversed.",
-      "watch_out": "Reversing the whole list also reverses the order inside each level (right to left). That is exactly what this Code360 problem expects; some other versions want each level left to right, which needs pushing right child first before reversing.",
-      "check": {
-        "q": "What does this function return for a tree with only the root 7?",
-        "a": "`[7]`."
-      },
-      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <typename T> class TreeNode {\npublic:\n    T val;\n    TreeNode<T> *left, *right;\n    TreeNode(T val) { this->val = val; left = right = NULL; }\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
-      "driver": "int main() {\n    TreeNode<int>* root = readTree<TreeNode<int>>();\n    vector<int> ans = reverseLevelOrder(root);\n    cout << \"reverseLevelOrder = [\";\n    for (int i = 0; i < (int)ans.size(); i++) cout << (i ? \",\" : \"\") << ans[i];\n    cout << \"]\" << endl;\n    return 0;\n}"
-    },
-    {
-      "file": "code360_special_binary_tree.cpp",
-      "title": "Special (full) binary tree check",
-      "kind": "problem",
-      "same_as": null,
-      "problem": {
-        "name": "Code360 - Special Binary Tree",
-        "url": "https://www.naukri.com/code360/problems/special-binary-tree_920502"
-      },
-      "what": "A tree is special when every node has either 0 or 2 children. The function checks each node recursively.",
-      "steps": [
-        "An empty tree counts as special: return `true`.",
-        "If exactly one child is missing (left NULL but right present, or the other way), return `false`.",
-        "Otherwise check both subtrees recursively.",
-        "Return `l && r`: all nodes must pass."
-      ],
-      "complexity": "Time O(n) · Space O(h)",
-      "input": "2\n1 2 3 4 5 -1 -1 -1 -1 -1 -1\n1 2 3 4 -1 -1 -1 -1 -1\n",
-      "input_note": "First the number of trees (2), then each tree in level order. Tree 1: 1; 2 3; 4 5 under 2. Tree 2: 1; 2 3; only a left child 4 under 2.",
-      "output_note": "One line per tree: `true` for the first (every node has 0 or 2 children) and `false` for the second (node 2 has only one child).",
-      "watch_out": null,
-      "check": {
-        "q": "Is a single leaf node a special binary tree?",
-        "a": "Yes, it has 0 children."
-      },
-      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <typename T> class BinaryTreeNode {\npublic:\n    T data;\n    BinaryTreeNode<T> *left, *right;\n    BinaryTreeNode(T data) { this->data = data; left = right = NULL; }\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
-      "driver": "int main() {\n    int t; cin >> t;\n    while (t--) {\n        BinaryTreeNode<int>* root = readTree<BinaryTreeNode<int>>();\n        cout << \"isSpecialBinaryTree = \" << (isSpecialBinaryTree(root) ? \"true\" : \"false\") << endl;\n    }\n    return 0;\n}"
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <typename T> class TreeNode {\npublic:\n    T data;\n    TreeNode<T> *left, *right;\n    TreeNode(T data) { this->data = data; left = right = NULL; }\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    TreeNode<int>* root = readTree<TreeNode<int>>();\n    vector<int> ans = getLeftView(root);\n    cout << \"left view = [\";\n    for (int i = 0; i < (int)ans.size(); i++) cout << (i ? \",\" : \"\") << ans[i];\n    cout << \"]\" << endl;\n    return 0;\n}"
     },
     {
       "file": "code360_diameter_of_binary_tree.cpp",
@@ -321,6 +237,62 @@
       },
       "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
       "driver": "int main() {\n    TreeNode* root = readTree<TreeNode>();\n    Solution s;\n    cout << \"diameterOfBinaryTree = \" << s.diameterOfBinaryTree(root) << endl;\n    return 0;\n}"
+    },
+    {
+      "file": "code360_special_binary_tree.cpp",
+      "title": "Special (full) binary tree check",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "Code360 - Special Binary Tree",
+        "url": "https://www.naukri.com/code360/problems/special-binary-tree_920502"
+      },
+      "what": "A tree is special when every node has either 0 or 2 children. The function checks each node recursively.",
+      "steps": [
+        "An empty tree counts as special: return `true`.",
+        "If exactly one child is missing (left NULL but right present, or the other way), return `false`.",
+        "Otherwise check both subtrees recursively.",
+        "Return `l && r`: all nodes must pass."
+      ],
+      "complexity": "Time O(n) · Space O(h)",
+      "input": "2\n1 2 3 4 5 -1 -1 -1 -1 -1 -1\n1 2 3 4 -1 -1 -1 -1 -1\n",
+      "input_note": "First the number of trees (2), then each tree in level order. Tree 1: 1; 2 3; 4 5 under 2. Tree 2: 1; 2 3; only a left child 4 under 2.",
+      "output_note": "One line per tree: `true` for the first (every node has 0 or 2 children) and `false` for the second (node 2 has only one child).",
+      "watch_out": null,
+      "check": {
+        "q": "Is a single leaf node a special binary tree?",
+        "a": "Yes, it has 0 children."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <typename T> class BinaryTreeNode {\npublic:\n    T data;\n    BinaryTreeNode<T> *left, *right;\n    BinaryTreeNode(T data) { this->data = data; left = right = NULL; }\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    int t; cin >> t;\n    while (t--) {\n        BinaryTreeNode<int>* root = readTree<BinaryTreeNode<int>>();\n        cout << \"isSpecialBinaryTree = \" << (isSpecialBinaryTree(root) ? \"true\" : \"false\") << endl;\n    }\n    return 0;\n}"
+    },
+    {
+      "file": "code360_reverse_level_order_traversal.cpp",
+      "title": "Reverse level order traversal",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "Code360 - Reverse Level Order Traversal",
+        "url": "https://www.naukri.com/code360/problems/reverse-level-order-traversal_764339"
+      },
+      "what": "Does a normal level order traversal into a vector and then reverses the whole vector.",
+      "steps": [
+        "Push the root (if any) into a queue.",
+        "Pop a node, append its `val` to `v`, push its left then right child.",
+        "After the loop, `reverse(v.begin(), v.end())`.",
+        "Return `v`."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "1 2 3 4 5 -1 -1 -1 -1 -1 -1\n",
+      "input_note": "Tree in level order: 1; 2 3; 4 5 under 2; then -1 pairs for the leaves.",
+      "output_note": "Prints `[5,4,3,2,1]`: normal level order is 1 2 3 4 5, and the whole list is reversed.",
+      "watch_out": "Reversing the whole list also reverses the order inside each level (right to left). That is exactly what this Code360 problem expects; some other versions want each level left to right, which needs pushing right child first before reversing.",
+      "check": {
+        "q": "What does this function return for a tree with only the root 7?",
+        "a": "`[7]`."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\ntemplate <typename T> class TreeNode {\npublic:\n    T val;\n    TreeNode<T> *left, *right;\n    TreeNode(T val) { this->val = val; left = right = NULL; }\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    TreeNode<int>* root = readTree<TreeNode<int>>();\n    vector<int> ans = reverseLevelOrder(root);\n    cout << \"reverseLevelOrder = [\";\n    for (int i = 0; i < (int)ans.size(); i++) cout << (i ? \",\" : \"\") << ans[i];\n    cout << \"]\" << endl;\n    return 0;\n}"
     },
     {
       "file": "leetcode_root_equals_sum_of_children.cpp",
@@ -406,23 +378,24 @@
     },
     {
       "file": "leetcode_same_tree.cpp",
-      "title": "Same tree (empty placeholder)",
-      "kind": "setup",
+      "title": "Same tree (the problem statement)",
+      "kind": "problem",
       "same_as": null,
       "problem": {
         "name": "LeetCode 100 - Same Tree",
         "url": "https://leetcode.com/problems/same-tree/"
       },
-      "what": "Only a comment with the problem link; the actual solutions are in the version1 and version2 files.",
+      "what": "The problem statement in my own words, with three small examples. The code is in the two files that follow: version1 compares the trees as lists, version2 compares them node by node.",
       "steps": [
-        "The file holds just the link to the problem.",
-        "See `leetcode_same_tree_version1.cpp` (compare traversals) and `leetcode_same_tree_version2.cpp` (compare recursively)."
+        "Two trees are the same when they have the same shape **and** the same value in every matching position.",
+        "`[1,2]` and `[1,null,2]` hold the same values but differ in shape, so they are not the same.",
+        "See `leetcode_same_tree_version1.cpp` (compare traversals with NULL markers) and `leetcode_same_tree_version2.cpp` (compare recursively)."
       ],
       "complexity": null,
       "input": null,
       "input_note": null,
-      "output_note": "This file holds only the problem link, so there is nothing to test and no harness. Building it fails with a linker error about a missing `main` (`WinMain`). The real solutions are in version1 and version2.",
-      "watch_out": "This file only holds the problem link, not code, so it cannot be built on its own (the linker error above just means there is no `main`). Open the version1 and version2 files for the solutions.",
+      "output_note": "This file holds only the problem statement, so there is nothing to run: building it fails with a linker error about a missing `main` (`WinMain`). The runnable solutions are version1 and version2 right below.",
+      "watch_out": null,
       "check": {
         "q": "What two things must match for two trees to be the same?",
         "a": "Their shape and the value at every position."
@@ -485,6 +458,35 @@
       },
       "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
       "driver": "int main() {\n    int t; cin >> t;\n    Solution s;\n    while (t--) {\n        TreeNode* p = readTree<TreeNode>();\n        TreeNode* q = readTree<TreeNode>();\n        cout << \"isSameTree = \" << (s.isSameTree(p, q) ? \"true\" : \"false\") << endl;\n    }\n    return 0;\n}"
+    },
+    {
+      "file": "leetcode_binary_tree_right_side_view.cpp",
+      "title": "Binary tree right side view",
+      "kind": "problem",
+      "same_as": null,
+      "problem": {
+        "name": "LeetCode 199 - Binary Tree Right Side View",
+        "url": "https://leetcode.com/problems/binary-tree-right-side-view/"
+      },
+      "what": "Returns the values you would see standing on the right of the tree: the rightmost node of each level. BFS pushes the right child first, so the first node met on a level is the rightmost.",
+      "steps": [
+        "If `root` exists, push `{root, 1}`.",
+        "Pop a pair; `node = parent.first`, `level = parent.second`.",
+        "If `freq[level]` is still false, this is the first node of that level: add `node->val` and set `freq[level] = true`.",
+        "Push `node->right` then `node->left`, each with `level + 1`.",
+        "Return `ans` when the queue is empty."
+      ],
+      "complexity": "Time O(n) · Space O(n)",
+      "input": "1 2 3 -1 5 -1 4 -1 -1 -1 -1\n",
+      "input_note": "LeetCode example 1, [1,2,3,null,5,null,4], in level order with -1 for missing children.",
+      "output_note": "Prints `rightSideView = [1,3,4]`, the same as LeetCode's expected answer: 1 on level 1, 3 on level 2, 4 on level 3 (5 is hidden behind 4).",
+      "watch_out": "LeetCode allows up to 100 nodes, so `freq[105]` is enough there; for bigger trees use a `vector<bool>` or compare `level` with `ans.size()` instead.",
+      "check": {
+        "q": "Why is the `freq` array needed?",
+        "a": "Several nodes share a level; the array makes sure only the first one popped on each level is recorded."
+      },
+      "prelude": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\n// Read a tree in level order (-1 = no child)\ntemplate <class N> N* readTree() {\n    int v; cin >> v;\n    if (v == -1) return NULL;\n    N* root = new N(v);\n    queue<N*> q; q.push(root);\n    while (!q.empty()) {\n        N* p = q.front(); q.pop();\n        int l, r; cin >> l >> r;\n        if (l != -1) { p->left = new N(l); q.push(p->left); }\n        if (r != -1) { p->right = new N(r); q.push(p->right); }\n    }\n    return root;\n}\n",
+      "driver": "int main() {\n    TreeNode* root = readTree<TreeNode>();\n    Solution s;\n    vector<int> ans = s.rightSideView(root);\n    cout << \"rightSideView = [\";\n    for (int i = 0; i < (int)ans.size(); i++) cout << (i ? \",\" : \"\") << ans[i];\n    cout << \"]\" << endl;\n    return 0;\n}"
     }
   ],
   "practice_links": [
@@ -618,7 +620,7 @@
       "heading": null,
       "body": [
         "What to watch for on judges. The node class is not the `Node` you wrote at home: Code360 uses `TreeNode<int>`, LeetCode uses `TreeNode`, and these files have no `main`, so to run one locally you add a node class, a builder and a `main` yourself. Check `root == NULL` at the top of every function, because an empty tree is a legal input.",
-        "Once you can name the shape in one sentence, these problems become six or eight lines each. The programs below go through both shapes several times, including one file that answers the right view where the left view was asked for, a good reminder to check which child you push first."
+        "Once you can name the shape in one sentence, these problems become six or eight lines each. The programs below go through both shapes several times, including the left view and the right view side by side: the only difference is which child you push first."
       ],
       "snippet": null,
       "trace": null

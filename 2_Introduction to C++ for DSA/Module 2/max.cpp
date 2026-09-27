@@ -22,26 +22,29 @@ Output
 
 */
 
-#include <iostream>
-using namespace std;
+#include <iostream> // cin and cout
+using namespace std; // write cin/cout instead of std::cin/std::cout
 
 int main(){
     int n;
     cin >> n;
 
+    // Read the n numbers into an array (values up to 10^9 still fit in an int)
     int arr[n];
     for(int i=0; i<n; i++){
         cin >> arr[i];
     }
 
+    // Keep "the biggest seen so far". Start with the first number, not 0,
+    // so the idea would still work if the numbers could be negative.
     int max = arr[0];
     for(int i=1; i<n; i++){
         if(arr[i] > max){
-            max = arr[i];
+            max = arr[i]; // found a bigger one - remember it instead
         }
     }
 
     cout << max << endl;
 
-    return 0;
+    return 0; // the program ended fine
 }

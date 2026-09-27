@@ -44,6 +44,21 @@ NO
 
 */
 
+/*
+ * The idea: a doubly linked list can be read from both ends at once. Put `i`
+ * on the head and `j` on the tail, compare their values, then move `i`
+ * forward and `j` backward. One different pair means NO.
+ *
+ * When to stop:
+ *   odd length  (1 2 3 2 1): the two pointers land on the same middle node,
+ *                            `i == j`, and a node always equals itself;
+ *   even length (1 2 2 1)  : they never land on the same node - they cross,
+ *                            and right after crossing `i->prev == j`.
+ * Without the second test an even list would walk right off both ends.
+ */
+
+// Practice copy of mid_term_question_3_palindrome.cpp: the same code.
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -64,6 +79,7 @@ class Node {
 };
 
 
+// Append at the end in O(1), because `tail` is remembered.
 void insert_at_tail(Node* &head, Node* &tail, int val){
     Node* newNode = new Node(val);
     if(head==NULL){
@@ -77,10 +93,11 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
 }
 
 bool is_palindrome(Node* head, Node* tail){
-    bool flag = true;
+    bool flag = true;   // a palindrome until a mismatch is found
     for(Node *i=head, *j=tail; i!=j && i->prev != j; i=i->next, j=j->prev){
+        // Compare the two mirror positions.
         if(i->val != j->val){
-            flag = false;
+            flag = false;   // one mismatch is enough
             break;
         }
     }
@@ -92,6 +109,7 @@ int main(){
     Node* tail1 = NULL;
 
     int val;
+    // Read values until -1.
     while(true){
         cin >> val;
         if(val==-1){

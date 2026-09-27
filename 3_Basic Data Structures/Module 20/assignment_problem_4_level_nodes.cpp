@@ -65,6 +65,7 @@ Invalid
 #include <vector>
 using namespace std;
 
+// A binary tree node: a value and two child pointers (NULL = no child).
 class Node {
     public:
         int val;     
@@ -79,9 +80,12 @@ class Node {
     }
 };
 
+// Reads the tree in level order, the Module 18 way: first the root, then for
+// every real node (in the order a queue hands them out) its left and right
+// child, with -1 meaning "no child".
 Node* input_tree(){
     int val;
-    cin >> val;
+    cin >> val;                  // the root (or -1 for an empty tree)
     Node* root;
     if(val == -1){
         root = NULL;
@@ -89,17 +93,18 @@ Node* input_tree(){
         root = new Node(val);
     }
 
+    // Nodes whose two children have not been read yet.
     queue<Node*> q;
     if(root){
         q.push(root);
     }
 
     while(!q.empty()){
-        Node* p = q.front();
+        Node* p = q.front();     // oldest node still waiting for its children
         q.pop();
 
         int l, r;
-        cin >> l >> r;
+        cin >> l >> r;           // its left and right child values
         Node* myLeft;
         Node* myRight;
         if(l == -1){
@@ -117,6 +122,7 @@ Node* input_tree(){
         p->left = myLeft;
         p->right = myRight;
 
+        // Only real children wait in the queue for their own pair of values.
         if(p->left){
             q.push(p->left);
         }
@@ -129,11 +135,22 @@ Node* input_tree(){
     return root;
 }
 
+/*
+ * Level nodes: print the values on level X, left to right (the root is
+ * level 0 in this problem), or "Invalid" if the tree has no level X.
+ *
+ * The idea: a level-order walk where each node travels with its level as a
+ * pair {node, level}; children get level + 1. Every node whose level equals X
+ * is collected. The queue hands out each level left to right, so the values
+ * come out in the right order.
+ * If nothing was collected, the special value -999 is returned as a signal
+ * for "no such level" (safe, because real values are at least 1).
+ */
 vector<int> level_nodes(Node* root, int X) {
     vector<int> ans;
     queue<pair<Node*, int>> q;
     if(root){
-        q.push({root, 0});
+        q.push({root, 0});       // the root is on level 0
     }
 
     while(!q.empty()){
@@ -143,10 +160,12 @@ vector<int> level_nodes(Node* root, int X) {
         Node* node = parent.first;
         int level = parent.second;
 
+        // On the wanted level: keep it.
         if(level == X){
             ans.push_back(node->val);
         }
 
+        // Children are one level deeper.
         if(node->left){
             q.push({node->left, level + 1});
         }
@@ -155,6 +174,7 @@ vector<int> level_nodes(Node* root, int X) {
             q.push({node->right, level + 1});
         } 
     }
+    // No node on level X: send back the "invalid" signal.
     if(ans.empty()){
         ans.push_back(-999);
     }
@@ -171,6 +191,7 @@ int main()
 
     vector<int> ans = level_nodes(root, X);
 
+    // The signal value means level X does not exist.
     if(ans.size() == 1 && ans[0] == -999){
         cout << "Invalid" << endl;
     } else {

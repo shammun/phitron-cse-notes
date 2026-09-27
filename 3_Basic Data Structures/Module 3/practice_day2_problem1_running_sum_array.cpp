@@ -42,10 +42,16 @@ int main() {
         cin >> nums[i];
     }
 
+    /*
+     * A running sum is a prefix sum: each answer is the previous answer
+     * plus one more number, so we never add the same numbers twice.
+     * 1 2 3 4 -> 1, 1+2 = 3, 3+3 = 6, 6+4 = 10. One pass: O(n).
+     */
     vector<int>runningSum(n);
-    runningSum[0] = nums[0];
+    runningSum[0] = nums[0];            // the first sum is just the first value
 
     for(int i=1; i<n; i++){
+        // sum of nums[0..i] = sum of nums[0..i-1] + nums[i]
         runningSum[i] = runningSum[i-1] + nums[i];
     }
 

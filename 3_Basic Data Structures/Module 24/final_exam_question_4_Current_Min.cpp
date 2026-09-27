@@ -4,16 +4,16 @@ Give Current Min
 
 Problem Statement
 
-You will be given a list A of size N. Then you will be given Q queries, for each 
+You will be given a list A of size N. Then you will be given Q queries, for each
 query there will be some commands. Commands are given below -
 
-1. 0 X -> Insert X into the list. Then print the current minimum value from the 
+1. 0 X -> Insert X into the list. Then print the current minimum value from the
 list.
 2. 1 -> Print the current minimum value from the list.
-3. 2 -> Delete the current minimum value from the list and print the minimum value 
+3. 2 -> Delete the current minimum value from the list and print the minimum value
 from the list after deletion.
 
-Note: If the list is empty and you can't print anything then you should print 
+Note: If the list is empty and you can't print anything then you should print
 "Empty".
 
 Input Format
@@ -60,7 +60,7 @@ Empty
 
 Sample Input 1
 6
-45 -30 83 -99 19 75 
+45 -30 83 -99 19 75
 9
 1
 2
@@ -91,48 +91,64 @@ using namespace std;
 
 
 
+/*
+ * Idea: keep the numbers in a min-heap (a priority_queue with greater<int>).
+ * Its top() is always the current smallest value, whatever has been added
+ * or removed, and push/pop cost only O(log n). No re-sorting is needed.
+ *
+ * The one trap: before every top() or pop() the heap may be empty, and the
+ * question wants "Empty" printed then. A delete (command 2) must check twice:
+ * before popping, and again before printing the new minimum.
+ */
 int main()
 {
-    // Write your code here
     int N;
     cin >> N;
-    
+
+    // greater<int> turns the default max-heap into a min-heap.
     priority_queue<int, vector<int>, greater<int>> pq;
-    
+
+    // The starting list goes straight into the heap.
     for(int i=0; i<N; i++){
         int x;
         cin >> x;
         pq.push(x);
     }
-    
+
     int Q;
     cin >> Q;
-    
+
     while(Q--){
+        // x is the command number: 0, 1 or 2.
         int x;
         cin >> x;
-        
+
         if(x == 0){
+            // 0 X: insert X, then show the minimum. The heap cannot be empty
+            // right after a push, so no check is needed.
             int val;
             cin >> val;
             pq.push(val);
             cout << pq.top() << endl;
         } else if(x == 1){
+            // 1: just show the minimum (or Empty).
             if(pq.empty()){
                 cout << "Empty" << endl;
                 continue;
             }
             cout << pq.top() <<endl;
         } else if(x == 2){
+            // 2: delete the minimum. Nothing to delete -> Empty.
             if(pq.empty()){
                 cout << "Empty" << endl;
                 continue;
             }
             pq.pop();
+            // Show the new minimum; the pop may have removed the last value.
             if(pq.empty()){
                 cout << "Empty" << endl;
             } else {
-                cout << pq.top() << endl;   
+                cout << pq.top() << endl;
             }
         }
     }

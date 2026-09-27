@@ -37,15 +37,24 @@ Output:
 
 */
 
+// Building Roads, as it turned up on the Dijkstra practice day. No weights are
+// involved, so no Dijkstra is needed: it is a components question (Module 3).
+// Each group of cities that can already reach each other is one component.
+// Joining the components in a chain (first to second, second to third, ...)
+// connects everything, and fewer than (components - 1) roads can never do it.
+// So: find one city in every component, then link neighbours in that list.
+
 
 #include <iostream>
 #include <vector>
-#include <algorithm>    
+#include <algorithm>
 #include <string>
 #include <stack>
 #include <queue>
 using namespace std;
 
+// Mark every city reachable from node. adj and vis are passed by reference
+// (&), so the function works on main's vectors instead of copies.
 void dfs(int node, vector<vector<int>> &adj, vector<bool> &vis){
     vis[node] = true;
     for(int child : adj[node]){
@@ -59,31 +68,37 @@ int main(){
     int n, m;
     cin >> n >> m;
 
-    vector<vector<int>> adj(n);
+    // Cities are numbered 1..n, so the vectors need n + 1 slots: index n must
+    // exist, and index 0 is simply never used.
+    vector<vector<int>> adj(n + 1);
 
     for(int i=0; i<m; i++){
         int a, b;
         cin >> a >> b;
-        adj[a].push_back(b);
+        adj[a].push_back(b);   // roads go both ways
         adj[b].push_back(a);
     }
 
-    vector<bool> vis(n, false);
-    vector<int> components;
+    vector<bool> vis(n + 1, false);
+    vector<int> components;   // one representative city per component
 
-    for(int i=0; i<n; i++){
+    // A city that no earlier DFS reached starts a new component: remember it,
+    // then flood its whole component.
+    for(int i=1; i<=n; i++){
         if(!vis[i]){
-            components.push_back(i+1);
+            components.push_back(i);
             dfs(i, adj, vis);
         }
     }
 
-    int k = components.size() - 1;
+    int k = components.size() - 1;   // roads needed
     cout << k << endl;
 
+    // Link each representative to the next one: a chain through every piece.
     for(int i=0; i<k; i++){
         cout << components[i] << " " << components[i+1] << endl;
     }
 
+    // O(n + m) time and memory.
     return 0;
 }

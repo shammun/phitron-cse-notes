@@ -37,7 +37,15 @@ Sample Output 0
 
 int main() {
 
-    /* Enter your code here. Read input from STDIN. Print output to STDOUT */   
+    /* The idea: the times are already sorted from shortest to longest, so
+     * reading the short books first finishes as many as possible. Add the
+     * times one by one; as long as the running total fits in T, that book
+     * is finished. The first book that does not fit ends it - every book
+     * after it is even longer.
+     * Sample: 1+3+4+6+8+10 = 32 <= 33, adding 12 gives 44 > 33 -> 6 books.
+     *
+     * total_time is a long long: up to 10^5 books can add up to far more
+     * than an int holds. */
     int N;
     long long T;
     int times[100000];
@@ -46,15 +54,17 @@ int main() {
     
     scanf("%d %lld", &N, &T);
     
+    /* Read the N reading times. */
     for(int i=0; i < N; i++){
         scanf("%d", &times[i]);
     }
     
     for(int i=0; i < N; i++){
-        total_time += times[i];
+        total_time += times[i];      /* time needed to finish books 0..i */
         if(total_time <= T){
-            number_of_books = number_of_books + 1;
+            number_of_books = number_of_books + 1;   /* this one fits too */
         } else{
+            /* Out of time: the remaining books are longer still. */
             break;
         }
     }

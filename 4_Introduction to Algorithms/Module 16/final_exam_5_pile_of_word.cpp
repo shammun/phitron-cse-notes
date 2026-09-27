@@ -41,20 +41,30 @@ YES
 
 */
 
+// Solution idea: two words are rearrangements of each other exactly when they
+// contain the same letters the same number of times. Sorting both words puts
+// their letters in one fixed order, so after sorting they must be identical.
+// ("tea" and "eat" both sort to "aet".)
+
 #include <iostream>
 #include <string>
 #include <algorithm>
 
 using namespace std;
 
+// s1 and s2 are taken by value (copies), so sorting them here does not
+// disturb the caller's strings.
 bool pileOfWord(string s1, string s2){
     sort(s1.begin(), s1.end());
     sort(s2.begin(), s2.end());
 
+    // Different lengths can never use "all the letters exactly once".
+    // ("ball" has 4 letters, "all" only 3.)
     if(s1.length() != s2.length()){
         return false;
     }
 
+    // Compare the sorted words letter by letter; one mismatch is enough to say no.
     for(int i = 0; i < s1.length(); i++){
         if(s1[i] != s2[i]){
             return false;
@@ -70,7 +80,7 @@ int main(){
 
     while(t--){
         string s1, s2;
-        cin >> s1 >> s2;
+        cin >> s1 >> s2;   // the two words sit on one line, split by a space
 
         if(pileOfWord(s1, s2)){
             cout << "YES" << endl;
@@ -79,5 +89,6 @@ int main(){
         }
     }
 
+    // Sorting dominates: O(L log L) per test case, L = word length.
     return 0;
 }

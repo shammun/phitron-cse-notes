@@ -6,8 +6,6 @@
 using namespace std;
 // Everything down to line 35 is that file unchanged; the new part starts at 37.
 int dis[1005];            // cheapest cost known so far from the source to node i
-vector<Edge> edge_list;
-// ^ the same BUG as in bellman-ford.cpp: Edge is used before the class exists.
 class Edge{
     public:
         int a, b, c;      // the edge a -> b costs c, and c may be negative
@@ -17,7 +15,9 @@ class Edge{
             this->c = c;
         }
 };
-// The fix is the same too: move this class Edge block above line 9.
+// A class must be declared before vector<Edge> can mention it.
+vector<Edge> edge_list;
+// ^ the graph as one flat list of edges, as in bellman-ford.cpp.
 // A negative cycle is a loop whose weights add up to less than zero.
 void bellman_ford(int n){
     for(int i=0; i<n-1; i++){   // the n-1 settling rounds, as before

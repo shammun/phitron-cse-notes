@@ -15,19 +15,33 @@ https://leetcode.com/problems/binary-tree-postorder-traversal/description/
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
  */
+/*
+ * Postorder traversal (Left, Right, Root), returned as a vector instead of printed.
+ *
+ * The idea: the same recursive function as Module 17, with `cout` replaced by
+ * `result.push_back(...)`. The vector is passed by reference (&result) so every
+ * recursive call adds to the SAME vector; passing it by value would give each
+ * call its own copy and the answer would be lost.
+ *
+ * Example: root 1, right child 2, and 2 has a left child 3 (LeetCode's sample).
+ *   preorder = [1, 2, 3], inorder = [1, 3, 2], postorder = [3, 2, 1].
+ */
 class Solution {
 public:
     vector<int> postorderTraversal(TreeNode* root) {
         vector<int> result;
+        // Fill the vector with a helper, then hand it back.
         postorder(root, result);
         return result;
     }
 
 public:
     void postorder(TreeNode* node, vector<int> &result){
-        if(node == NULL){
+        if(node == NULL){   // empty subtree: nothing to add
             return;
         }
+        // The value is pushed after the two calls -- that is the only
+        // difference between pre-, in- and post-order.
         postorder(node->left, result);
         postorder(node->right, result);
         result.push_back(node->val);

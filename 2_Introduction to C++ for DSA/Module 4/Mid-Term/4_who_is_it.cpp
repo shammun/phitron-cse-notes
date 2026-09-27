@@ -38,10 +38,11 @@ Sample Output 0
 
 */
 
-#include <iostream>
-#include <string.h>
-using namespace std;
+#include <iostream> // cin and cout
+#include <string.h> // strcpy(), to copy a name into a char array
+using namespace std; // write cin/cout instead of std::cin/std::cout
 
+// One object holds everything about one student
 class Student{
     public:
     int id;
@@ -49,6 +50,8 @@ class Student{
     char section;
     int marks;
 
+    // Constructor: fills a new object in one line, e.g. Student s1(1, "sakib", 'A', 50).
+    // this->id is the object's member; plain id is the parameter with the same name.
     Student(int id, char* name, char section, int marks){
         this->id = id;
         strcpy(this->name, name);
@@ -60,7 +63,9 @@ class Student{
 int main(){
     int T;
     cin >> T;
-    Student* students[100];
+    // One answer per test case is stored here and printed at the end.
+    // T can be up to 1000, so the array needs 1000 slots.
+    Student* students[1000];
     for(int i=0; i<T; i++){
         int id1, marks1;
         char name1[100], section1;
@@ -74,10 +79,14 @@ int main(){
         char name3[100], section3;
         cin >> id3 >> name3 >> section3 >> marks3;
 
+        // Build three objects from what was read
         Student s1(id1, name1, section1, marks1);
         Student s2(id2, name2, section2, marks2);
         Student s3(id3, name3, section3, marks3);
         
+        // Start with s1 as the best and let s2 and s3 challenge it.
+        // A challenger wins with more marks, or with equal marks and a smaller ID
+        // (the tie rule from the question). `best = s2` copies the whole object.
         Student best = s1;
 
         if(s2.marks > best.marks || (s2.marks == best.marks && s2.id < best.id)){
@@ -87,12 +96,14 @@ int main(){
             best = s3;
         }
 
+        // Keep a heap copy of the winner so it is still there after this loop step
         students[i] = new Student(best.id, best.name, best.section, best.marks); 
     }
 
+    // Print every stored winner; -> reaches a member through a pointer
     for(int i=0; i<T; i++){
         cout << students[i]->id << " " << students[i]->name << " " << students[i]->section << " " << students[i]->marks << endl;
-        delete students[i]; 
+        delete students[i]; // each new needs its delete
     }
 
     return 0;

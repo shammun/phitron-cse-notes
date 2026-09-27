@@ -48,15 +48,24 @@ int main() {
         cin >> A[i];
     }
 
+    /*
+     * Idea: after sorting, equal values sit right next to each other.
+     * So one look at every neighbouring pair is enough.
+     * 2 1 3 5 2 1 sorted is 1 1 2 2 3 5: A[1] == A[0] -> YES.
+     * Comparing every pair with two loops would be O(n^2) = 10^10 for
+     * n = 10^5; sorting first costs only O(n log n).
+     */
     sort(A.begin(), A.end());
 
     for(int i=1; i<n; i++){
+        // Start at 1 so that A[i-1] is always a real element.
         if(A[i] == A[i-1]){
             cout << "YES" << endl;
-            return 0;
+            return 0;        // one duplicate is enough, stop here
         }
     }
 
+    // No two neighbours were equal, so every value is different.
     cout << "NO" << endl;
     return 0;
 }

@@ -2,6 +2,15 @@
 
 https://leetcode.com/problems/intersection-of-two-linked-lists/
 
+Two singly lists may merge into one shared tail (from some node on, they use
+the very same nodes). Return the first shared node, or NULL if they never
+meet. Example: A = 4 1 [8 4 5], B = 5 6 1 [8 4 5] -> the node holding 8.
+
+The idea (brute force, fine for the sizes in this course): for every node of
+A, walk the whole of B and ask "is this the same node?". We compare the
+*addresses* (tempA == tempB), not the values - two different nodes can hold
+the same number, like the two 1s above. Time O(n*m), no extra memory.
+
 */
 
 #include <iostream>
@@ -24,8 +33,11 @@ public:
     ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
         ListNode* tempA = headA;
         while(tempA != NULL){
+            // For this node of A, start again at the head of B.
             ListNode* tempB = headB;
             while(tempB != NULL){
+                // Same address = the same node = the lists meet here. The
+                // outer loop goes through A in order, so this is the first one.
                 if(tempA == tempB){
                     return tempA;
                 }
@@ -33,7 +45,7 @@ public:
             }
             tempA = tempA->next;
         }
-        return NULL;
+        return NULL;   // no node of A appears in B
     }
 };
 

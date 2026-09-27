@@ -27,6 +27,16 @@ Invalid
 
 */
 
+/*
+ * Every query is "put value v at index idx". For a list of `size` nodes the
+ * valid indexes are 0..size:
+ *   idx == 0          -> the new node becomes the head   (insert_at_head)
+ *   idx == size       -> the new node goes after the tail (insert_at_tail)
+ *   0 < idx < size    -> walk to the node at idx-1 and hook the new node in
+ *   anything else     -> "Invalid", the list is not touched
+ * After every valid query the whole list is printed on one line.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -44,12 +54,14 @@ class Node{
     }
 };
 
+// The new node points at the old head, then becomes the head. O(1).
 void insert_at_head(Node* &head, int val){
     Node* newNode = new Node(val);
     newNode->next = head;
     head = newNode;
 }
 
+// O(1) append using the remembered last node.
 void insert_at_tail(Node* &head, Node* &tail,int val){
     Node* newNode = new Node(val);
     if(head==NULL){
@@ -61,15 +73,17 @@ void insert_at_tail(Node* &head, Node* &tail,int val){
     tail = newNode;
 }
 
+// Insert strictly inside the list (0 < idx < size).
 void insert_at_any_index(Node* &head, int idx, int val){
     Node* newNode = new Node(val);
     Node* tmp = head;
 
+    // Stop one node BEFORE the target index: idx-1 steps from the head.
     for(int i=1; i<idx; i++){
         tmp = tmp->next;
     }
-    newNode->next = tmp->next;
-    tmp->next = newNode;
+    newNode->next = tmp->next; // first grab the rest of the list...
+    tmp->next = newNode;       // ...then hang the new node after tmp
 }
 
 int get_size(Node* head){
@@ -82,45 +96,48 @@ int get_size(Node* head){
     return size;
 }
 
+// Print the list on one line, values separated by spaces.
 void print_linked_list(Node* head){
     Node* tmp = head;
     while(tmp != NULL){
-        cout << tmp->val << " " << endl;
+        cout << tmp->val << " ";
         tmp = tmp->next;
     }
+    cout << endl;
 }
 
 int main(){
     Node* head = NULL;
     Node* tail = NULL;
 
+    // Read the starting list until the stop sign -1.
     int val;
-    while(true){
-        if(val == -1){
-            break;
-        }
+    while(cin >> val && val != -1){
         insert_at_tail(head, tail, val);
     }
 
+    // The queries run until the input ends.
     int idx;
     while(cin >> idx >> val){
-        int size = get_size(head);
+        int size = get_size(head);  // the valid range depends on the current size
         if(idx < 0 || idx > size){
             cout << "Invalid" << endl;
+            continue;               // nothing inserted, nothing printed
         }
+        // Exactly one branch runs ("else if"): on an empty list idx 0 is
+        // both "head" and "size", and it must be inserted only once.
         if(idx == 0){
             insert_at_head(head, val);
-        }
-        if(idx == size){
+            if(tail == NULL){
+                tail = head;        // the first node is also the last one
+            }
+        } else if(idx == size){
             insert_at_tail(head, tail, val);
-        }
-        if(idx > 0 && idx < size){
+        } else{
             insert_at_any_index(head, idx, val);
         }
+        print_linked_list(head);
     }
 
-    print_linked_list(head);
-
     return 0;
-}    
-    
+}

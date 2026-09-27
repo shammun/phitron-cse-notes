@@ -29,6 +29,12 @@ Constraints:
 
 */
 
+// Practice Day problem 1: Bellman-Ford as a judge function (the same GFG task
+// as Module 9's extra_problem.cpp). The judge hands us an edge list, where each
+// edge is a small vector {u, v, w}, and wants every distance back in a vector.
+// Unreachable vertices keep 10^8, and a reachable negative cycle turns the
+// whole answer into {-1}.
+
 #include <iostream>
 #include <queue>
 #include <cstring>
@@ -46,20 +52,28 @@ class Solution {
        */
       vector<int> bellmanFord(int V, vector<vector<int>>& edges, int src) {
           // Code here
+          // 10^8 is the judge's "infinity": far above any real distance, and
+          // far enough below the int limit that adding a weight cannot overflow.
           vector<int> dist(V, 100000000);
           dist[src] = 0;
-          
+
+          // V-1 rounds. A shortest path uses at most V-1 edges, and each round
+          // over all edges settles at least one more edge of every such path.
           for(int i=0; i< V-1; i++){
               for(auto edge : edges){
-                  int u = edge[0];
-                  int v = edge[1];
-                  int w = edge[2];
+                  int u = edge[0];   // from
+                  int v = edge[1];   // to
+                  int w = edge[2];   // weight, may be negative
+                  // Relax. The dist[u] check skips vertices not reached yet:
+                  // "infinity" plus a negative weight must not look like a route.
                   if(dist[u] != 100000000 && dist[u] + w < dist[v]){
                       dist[v] = dist[u] + w;
                   }
               }
           }
-          
+
+          // One more round. After V-1 rounds every honest distance is final;
+          // if something can still get smaller, a negative cycle is feeding it.
           for(auto edge : edges){
               int u = edge[0];
               int v = edge[1];
@@ -68,6 +82,6 @@ class Solution {
                   return {-1};
               }
           }
-          return dist;
+          return dist;   // O(V * E)
       }
   };

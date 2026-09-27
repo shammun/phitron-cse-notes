@@ -13,6 +13,14 @@ Output:
 40
 
 */
+
+/*
+ * The maximum of a list is found in one walk, the same way as in an array:
+ * keep the biggest value seen so far in `max` and compare every node with it.
+ * `max` starts at INT_MIN (the smallest int there is), so the very first
+ * node always replaces it - even when every value is negative.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -48,24 +56,25 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
 
 int find_max(Node* head){
     if(head == NULL){
-        return -1;
+        return -1;       // empty list: no maximum, -1 is just a marker
     }
     Node* tmp = head;
-    int max = INT_MIN;
+    int max = INT_MIN;   // smaller than any value the list can hold
 
     while(tmp!=NULL){
         if(tmp->val > max){
-            max = tmp->val;
+            max = tmp->val;  // a new biggest value: remember it
         }
         tmp = tmp->next;
     }
-    return max;
+    return max;          // after the walk, max is the largest of all
 }
 
 int main(){
     Node* head = NULL;
     Node* tail = NULL;
     
+    // Read values until the stop sign -1 (not stored).
     int val;
     while(true){
         cin >> val;

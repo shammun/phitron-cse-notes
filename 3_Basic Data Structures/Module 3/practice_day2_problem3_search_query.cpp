@@ -31,22 +31,31 @@ NO
 using namespace std;
 
 
+/*
+ * Many "is x in the array?" questions: sort once, then answer each one with
+ * binary search in O(log n) instead of scanning all n values.
+ */
+
+// Returns true when target is in the SORTED vector arr.
+// Note: arr is passed by value, so every call copies the whole vector
+// (O(n)). Writing `const vector<int>& arr` would avoid the copy.
 bool binarySearch(vector<int> arr, int target){
+    // The answer, if it exists, is somewhere in arr[left..right].
     int left = 0;
     int right = arr.size() - 1;
 
-    while(left <= right){
+    while(left <= right){               // at least one value left to check
         int mid = (left + right) / 2;
 
         if(arr[mid] == target){
-            return true;
+            return true;                // found it
         } else if(arr[mid] < target){
-            left = mid + 1;
+            left = mid + 1;             // mid and everything left of it are too small
         } else{
-            right = mid - 1;
+            right = mid - 1;            // mid and everything right of it are too big
         }
     }
-    return false;
+    return false;                       // the window became empty
 }
 
 int main() {
@@ -58,6 +67,8 @@ int main() {
         cin >> arr[i];
     }
 
+    // Binary search only works on sorted data, so sort once, before the queries.
+    // 6 3 2 1 8 becomes 1 2 3 6 8.
     sort(arr.begin(), arr.end());
 
     int q;

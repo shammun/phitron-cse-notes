@@ -25,24 +25,28 @@ Sample Output 0
 
 */
 
-#include <iostream>
-#include <algorithm>
-using namespace std;
+#include <iostream>  // cin and cout
+#include <algorithm> // sort() and greater<int>()
+using namespace std; // write cin/cout/sort instead of std::cin/...
 
+// The question insists that the array is read and sorted inside sort_it()
+// and then returned to main. Returning an array means returning its address,
+// and that only works for an array made with new: it lives on the heap, so
+// it survives the end of the function (a local `int a[n]` would not).
 int* sort_it(int n){
     int* a = new int[n];
     for(int i=0; i<n; i++){
         cin >> a[i];
     }
-    sort(a, a+n, greater<int>());
-    return a;
+    sort(a, a+n, greater<int>()); // greater<int>() puts the bigger value first -> descending
+    return a; // hand the address back to main
 }
 
 int main(){
 
     int n;
     cin >> n;
-    int* sorted_array = sort_it(n);
+    int* sorted_array = sort_it(n); // n is read here in main and passed in, as asked
 
     // Print the sorted array (it is already sorted in descending order)
     for(int i=0; i<n; i++){
@@ -50,7 +54,7 @@ int main(){
     }
     cout << endl;
 
-    delete[] sorted_array;
+    delete[] sorted_array; // new[] in the function, delete[] once main is done with it
 
     return 0;
 }

@@ -26,20 +26,20 @@ Sample Output 0
 
 */
 
-#include <iostream>
-#include <algorithm>
-using namespace std;
+#include <iostream>  // cin and cout
+#include <algorithm> // sort() and greater<int>()
+using namespace std; // write cin/cout/sort instead of std::cin/...
 
 int main(){
     int n;
     cin >> n;
-    int a[n];
+    int a[n]; // a plain array is enough here: everything happens inside main
 
     for(int i=0; i<n; i++){
         cin >> a[i];
     }
 
-    // ascending order
+    // ascending order: sort(first, one-past-last) sorts the whole array small to big
     sort(a, a+n);
 
     for(int i=0; i<n; i++){
@@ -47,7 +47,8 @@ int main(){
     }
     cout << endl;
 
-    // descending order
+    // descending order: the third argument says how to compare.
+    // greater<int>() means "the bigger one goes first", so the order flips.
     sort(a, a+n, greater<int>());
     for(int i=0; i<n; i++){
         cout << a[i] << " ";

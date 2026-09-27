@@ -42,14 +42,20 @@ int main() {
     scanf("%d", &n);
 
     int numbers[n];
+
+    /* The trick: every value is 0 or 1, so ADDING them up counts the ones.
+       A 1 adds one to the total and a 0 adds nothing. The counter must start
+       at 0, or the count would begin from leftover rubbish. */
     int number_of_ones = 0;
     int number_of_zeros;
 
+    /* Read and count in the same loop. */
     for(int i = 0; i < n; i++){
         scanf("%d", &numbers[i]);
         number_of_ones += numbers[i];
     }
 
+    /* Whatever is not a one is a zero, so no second count is needed. */
     number_of_zeros = n - number_of_ones;
     printf("%d %d", number_of_zeros, number_of_ones);
 

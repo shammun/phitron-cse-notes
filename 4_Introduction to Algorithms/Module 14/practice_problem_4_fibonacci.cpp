@@ -39,26 +39,35 @@ Constraints:
 
 */
 
+// Solution idea (bottom-up DP, like fibonacci_bottom_up_loop.cpp).
+// Fill a table from the smallest case upward: dp[0] and dp[1] are given, and
+// every later cell is the sum of the two cells just before it. No recursion,
+// and each value is computed exactly once.
+
 class Solution {
     public:
         int fib(int n) {
+            // Answer the two base cases directly.
             if(n == 0){
                 return 0;
             }
             if(n == 1){
                 return 1;
             }
-    
-            int dp[31];
+
+            int dp[31];   // n <= 30, so 31 cells are enough
+            // Not strictly needed: every cell up to n is written before it is read.
             memset(dp, -1, sizeof(dp));
-    
+
             dp[0] = 0;
             dp[1] = 1;
-    
+
+            // Build upward: when we compute dp[i], dp[i-1] and dp[i-2] are ready.
             for(int i=2; i<=n; i++){
                 dp[i] = dp[i-1] + dp[i-2];
             }
-    
+
             return dp[n];
+            // Cost: O(n) time, O(n) memory.
         }
     };

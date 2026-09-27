@@ -44,6 +44,19 @@ Sample Output 3
 
 */
 
+/*
+ * The idea: the STL `list` already knows how to do both jobs.
+ *   sort()   puts equal values next to each other (and in ascending order),
+ *   unique() then deletes every value that equals the one right before it.
+ * The order of the two calls matters: unique() only looks at neighbours, so
+ * on the unsorted list 1 2 1 it would remove nothing.
+ * For 5 5 1 1 2 4 2 4 1 3 5 0:  sort -> 0 1 1 1 2 2 3 4 4 5 5 5
+ *                               unique -> 0 1 2 3 4 5
+ */
+
+// Practice copy of mid_term_question_1_remove_duplicate.cpp: the same code,
+// only the list is called `myList`.
+
 #include <iostream>
 #include <list>
 using namespace std;
@@ -51,6 +64,7 @@ using namespace std;
 int main(){
     list<int> myList;
     int val;
+    // Read values until -1 and append each one at the back.
     while(true){
         cin >> val;
         if(val==-1){
@@ -59,9 +73,10 @@ int main(){
         myList.push_back(val);
     }
 
-    myList.sort();
-    myList.unique();
+    myList.sort();     // equal values become neighbours, smallest first
+    myList.unique();   // drop every value equal to the one before it
 
+    // Range-for walks the list from front to back.
     for(int val : myList){
         cout << val << " ";
     }

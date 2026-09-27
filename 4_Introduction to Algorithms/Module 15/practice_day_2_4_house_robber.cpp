@@ -35,6 +35,12 @@ Constraints:
 
 */
 
+// Solution idea (bottom-up DP, take-or-leave like knapsack).
+// dp[i] = the most money from houses 0..i. For house i there are two choices:
+//   rob it   -> nums[i] + dp[i-2]  (house i-1 must then be left alone)
+//   skip it  -> dp[i-1]
+// Keep the bigger one.
+
 #include <iostream>
 #include <algorithm>
 #include <cstring>
@@ -50,34 +56,38 @@ class Solution {
                 return 0;
             }
             if(n==1){
-                return nums[0];
+                return nums[0];   // a single house: rob it
             }
 
-            int dp[105];
+            int dp[105];   // at most 100 houses
             memset(dp, 0, sizeof(dp));
 
-            dp[0] = nums[0];
-            dp[1] = max(nums[0], nums[1]);
+            // The first two cells have no i-2, so fill them by hand.
+            dp[0] = nums[0];                  // only house 0 exists
+            dp[1] = max(nums[0], nums[1]);    // neighbours: pick the richer one
 
             for(int i=2; i <n; i++){
-                dp[i] = max(nums[i] + dp[i-2], dp[i-1]);
+                dp[i] = max(nums[i] + dp[i-2], dp[i-1]);   // rob i, or skip i
             }
 
-            return dp[n-1];
+            return dp[n-1];   // best over all houses
+            // Cost: O(n) time, O(n) memory.
         }
 };
 
     // Test the solution
+    // This file brings its own main, with LeetCode's two examples built in,
+    // so it reads no input.
 int main() {
     // Test case 1
     std::vector<int> nums1 = {1, 2, 3, 1};
     Solution sol1;
     std::cout << "Example 1 output: " << sol1.rob(nums1) << std::endl; // Expected: 4
-    
+
     // Test case 2
     std::vector<int> nums2 = {2, 7, 9, 3, 1};
     Solution sol2;
     std::cout << "Example 2 output: " << sol2.rob(nums2) << std::endl; // Expected: 12
-    
+
     return 0;
 }

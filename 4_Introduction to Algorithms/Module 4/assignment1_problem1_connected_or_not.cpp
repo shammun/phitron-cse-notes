@@ -61,29 +61,40 @@ YES
 
 */
 
+// Idea: "directly, without using any other node" means ONE edge, so no search
+// is needed. Store the directed graph as an adjacency list (Module 1) and, for
+// a query (A, B), look through A's list for B. The sample also treats A == B as
+// YES (a node can always "reach" itself), so that case is answered first.
+//
+// Example: edge 1 -> 2 exists, so "1 2" is YES, but "2 1" is NO because the
+// graph is directed and nobody stored 2 -> 1.
+
 #include <iostream>
 #include <vector>
 
 using namespace std;
 
-vector<int> adj_list[1005];
+vector<int> adj_list[1005];   // adj_list[a] = nodes with an arrow a -> them
 
+// Is there an arrow from -> to (or are they the same node)?
 bool direct_edge(int from, int to){
     if(from == to){
-        return true;
+        return true;          // same node: the sample expects YES
     }
+    // Scan the neighbours of "from", looking for "to".
     for(int child : adj_list[from]){
         if(child == to){
             return true;
         }
     }
-    return false;
+    return false;             // walked the whole list, no arrow to "to"
 }
 
 int main(){
     int n, e;
     cin >> n >> e;
 
+    // Directed: store only a -> b, never b -> a.
     for(int i=0; i<e; i++){
         int a, b;
         cin >> a >> b;
@@ -102,6 +113,9 @@ int main(){
             cout << "NO" << endl;
         }
     }
+
+    // Another way: an N x N adjacency matrix (N <= 1000 fits) answers each
+    // query in O(1) with adj_mat[A][B]. The list costs O(degree of A) per query.
 
     return 0;
 }

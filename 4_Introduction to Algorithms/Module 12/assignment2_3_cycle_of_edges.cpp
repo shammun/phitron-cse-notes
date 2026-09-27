@@ -47,16 +47,23 @@ Sample Output 1
 
 */
 
+// Solution idea (DSU, Module 11).
+// Add the edges one by one. If both ends already share a leader, they were
+// connected before this edge arrived, so the edge closes a cycle: count it.
+// Otherwise the edge joins two separate groups: union them.
+
 #include <iostream>
 #include <queue>
-#include <cstring>
+#include <cstring>      // memset
 #include <vector>
 
 using namespace std;
 
-int par[100005];
-int group_size[100005];
+int par[100005];          // par[x] = x's parent in its group's tree; -1 = x is a leader
+int group_size[100005];   // group_size[leader] = how many nodes that group holds
 
+// Walk up to the leader, and on the way back point every node straight at it
+// (path compression), so the next find() on these nodes takes one step.
 int find(int node){
     if(par[node]==-1){
         return node;
@@ -66,6 +73,8 @@ int find(int node){
     return leader;
 }
 
+// Union by size: hang the smaller tree under the bigger one's leader, so the
+// trees stay shallow.
 void dsu_union(int node1, int node2){
     int leader1 = find(node1);
     int leader2 = find(node2);
@@ -80,13 +89,17 @@ void dsu_union(int node1, int node2){
 }
 
 int main(){
-    memset(par, -1, sizeof(par));
-    memset(group_size, 1, sizeof(group_size));
+    memset(par, -1, sizeof(par));   // everyone starts as the leader of a group of one
+    // Every group starts with size 1. This must be a loop: memset fills BYTES,
+    // so memset(group_size, 1, ...) would make each int 0x01010101 = 16843009.
+    for(int i=0; i<100005; i++){
+        group_size[i] = 1;
+    }
 
     int n, e;
     cin >> n >> e;
 
-    int edges = 0;
+    int edges = 0;   // edges that closed a cycle
 
     while(e--){
         int a, b;
@@ -94,13 +107,14 @@ int main(){
         int leader1 = find(a);
         int leader2 = find(b);
         if(leader1==leader2){
-            edges++;
+            edges++;           // a and b were already connected: this edge is extra
         } else{
-            dsu_union(a, b);
+            dsu_union(a, b);   // first link between the two groups
         }
     }
 
     cout << edges << endl;
 
+    // Cost: about O(E * alpha(N)), practically linear.
     return 0;
 }

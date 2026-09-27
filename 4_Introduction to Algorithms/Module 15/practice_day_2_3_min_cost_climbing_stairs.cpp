@@ -42,24 +42,34 @@ Constraints:
 
 */
 
+// Solution idea (bottom-up DP with two variables).
+// Let best(i) = the cheapest cost to stand on step i ("the top" is step n).
+// You arrive at i either from i-1 (paying cost[i-1]) or from i-2 (paying
+// cost[i-2]), so best(i) = min(best(i-2) + cost[i-2], best(i-1) + cost[i-1]).
+// Steps 0 and 1 are free starting points: best(0) = best(1) = 0.
+// Each value only needs the two before it, so two variables replace the table.
+
 class Solution {
     public:
         int minCostClimbingStairs(vector<int>& cost) {
             int n = cost.size();
-            
-            // Edge cases
+
+            // Edge cases (LeetCode promises n >= 2, so these never fire there)
             if(n==0) return 0;
             if(n==1) return cost[0];
-            
-            int first = 0;
-            int second = 0;
-            
+
+            int first = 0;    // best(i-2)
+            int second = 0;   // best(i-1)
+
             for(int i=2; i<=n; i++){
+                // Two ways onto step i; keep the cheaper.
                 int current = min(first + cost[i-2], second + cost[i-1]);
+                // Slide the window one step up.
                 first = second;
                 second = current;
             }
-            
-            return second;
+
+            return second;   // best(n): standing on the top
+            // Cost: O(n) time, O(1) memory.
         }
     };

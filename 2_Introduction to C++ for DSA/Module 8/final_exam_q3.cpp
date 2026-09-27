@@ -1,39 +1,32 @@
 /*
 
-Replace Word
+Final exam question 3 - reverse the sections
 
-Problem Statement
+(The statement was not saved with this file; this is what the code solves.)
+Read N students, each with a name (nm), a class (cls), a section letter (s)
+and an id. Everything stays where it is except the sections: the section
+column is reversed, so the first student gets the last student's section,
+the second gets the second-last one's, and so on. Print the students in the
+original order with their new sections.
 
-You will be given two strings S and X. You need to replace all X from string S with a '#' sign.
-
-Input Format
-
-First line will contain T, the number of test cases.
-Next T lines will contain a line with S and X.
-Constraints
-
-1 <= T <= 1000
-1 <= |S|, |X| <= 1000
-|X| <= |S|
-Output Format
-
-For each test cases output the modified string S.
-Sample Input 0
-
-2
-rahimisagoodguy good
-canyoutellmewhereicanfindheriwillbegreatefultoyouifyoutellmetheanswer you
-Sample Output 0
-
-rahimisa#guy
-can#tellmewhereicanfindheriwillbegreatefulto#if#tellmetheanswer
+Example (made up to show the idea)
+Input
+3
+rahim 5 A 11
+karim 6 B 12
+jodu 7 C 13
+Output
+rahim 5 C 11
+karim 6 B 12
+jodu 7 A 13
 
 */
 
-#include <iostream>
-#include <string>
-using namespace std;
+#include <iostream> // cin and cout
+#include <string>   // std::string
+using namespace std; // write cin/cout/string instead of std::cin/...
 
+// One object holds one student's data
 class Student{
     public:
     string nm;
@@ -46,7 +39,7 @@ int main(){
     int n;
     cin >> n;
 
-    Student a[n];
+    Student a[n]; // an array of n Student objects
 
     for(int i=0; i<n; i++){
         cin >> a[i].nm;
@@ -55,7 +48,10 @@ int main(){
         cin >> a[i].id;
     }
 
-    // reverse section by swapping the first half with the second half
+    // reverse section by swapping the first half with the second half.
+    // Only the member .s moves; names, classes and ids stay in place.
+    // Student i pairs with student n-1-i; stop at the middle, or each pair
+    // would be swapped twice and nothing would change.
     for(int i=0; i<n/2; i++){
         char temp = a[i].s;
         a[i].s = a[n-i-1].s;

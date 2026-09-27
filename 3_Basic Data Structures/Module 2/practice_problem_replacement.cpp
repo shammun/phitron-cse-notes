@@ -41,11 +41,14 @@ int main() {
         cin >> a[i];
     }
 
+    // Change the vector in place. Zero is neither positive nor negative,
+    // so it matches neither branch and stays 0.
+    // 1 -2 0 3 4 becomes 1 2 0 1 1.
     for(int i=0; i<n; i++){
         if(a[i] > 0){
-            a[i] = 1;
+            a[i] = 1;           // positive -> 1
         } else if(a[i] < 0){
-            a[i] = 2 ;
+            a[i] = 2 ;          // negative -> 2
         }
     }
 

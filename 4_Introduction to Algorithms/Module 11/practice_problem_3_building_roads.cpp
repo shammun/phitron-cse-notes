@@ -40,33 +40,42 @@ Output:
 
 */
 
+// Practice Day problem 3: Building Roads again (Module 7 solved it with DFS),
+// this time with DSU as the practice day asks. Every existing road is a union.
+// When all roads are in, each group has exactly one leader (par == -1), and
+// each group is one component. Linking the leaders in a chain connects
+// everything with (number of leaders - 1) new roads.
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <cstring>
 using namespace std;
 
-int par[100005];
-int group_size[100005];
+int par[100005];          // par[x] = x's parent in its group; -1 = x is a leader
+int group_size[100005];   // group_size[L] = members in leader L's group
 
+// Leader of node's group, with path compression (find_optimized.cpp).
 int find(int node){
     if(par[node] == -1){
         return node;
     }
     int leader = find(par[node]);
-    par[node] = leader;
+    par[node] = leader;   // point straight at the leader next time
     return leader;
 }
 
+// Join the groups of node1 and node2, smaller group under the bigger one
+// (union by size, as in union.cpp).
 void dsu_union(int node1, int node2){
     int leader1 = find(node1);
     int leader2 = find(node2);
 
     if(leader1 == leader2){
-        return;
+        return;   // already connected: this road changes nothing
     }
 
-    if(group_size[leader1] >= group_size[leader1]){
+    if(group_size[leader1] >= group_size[leader2]){
         par[leader2] = leader1;
         group_size[leader1] += group_size[leader2];
     } else{
@@ -77,20 +86,22 @@ void dsu_union(int node1, int node2){
 
 int main(){
     int n, m;
-    ccin >> n >> m;
+    cin >> n >> m;
 
-    memset(par, -1, sizeof(par));
+    memset(par, -1, sizeof(par));   // everyone starts alone, as a leader
 
     for(int i=1; i<=n; i++){
         group_size[i] = 1;
     }
 
+    // Each existing road merges the groups of its two cities.
     for(int i=0; i<m; i++){
         int a, b;
         cin >> a >> b;
         dsu_union(a, b);
     }
 
+    // One leader per component.
     vector<int> component_leaders;
     for(int i=1; i<=n; i++){
         if(par[i] == -1){
@@ -101,17 +112,19 @@ int main(){
     int new_roads = component_leaders.size() - 1;
     cout << new_roads << endl;
 
+    // Chain: leader 0 - leader 1 - leader 2 - ...
     for(int i=0; i <component_leaders.size() - 1; i++){
         cout << component_leaders[i] << " " << component_leaders[i + 1] << endl;
     }
 
+    // Another valid answer: a star, joining every leader to the first one.
     /*
     // Star topology
     for(int i = 0; i < new_roads; i++){
         cout << component_leaders[0] << " " << component_leaders[i + 1] << endl;
     }
     */
-    
 
+    // About O(n + m): each find is almost constant thanks to both tricks.
     return 0;
 }

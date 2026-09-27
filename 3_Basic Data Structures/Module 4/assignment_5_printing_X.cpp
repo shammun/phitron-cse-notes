@@ -65,39 +65,52 @@ int main() {
     int N;
     cin >> N;
 
+    /*
+     * The X has three parts for N = 5:
+     *   top half (N/2 rows):     \   /     row i: i spaces, \, gap, /, i spaces
+     *                             \ /      the gap starts at N-2 and shrinks by 2
+     *   middle row:                X       N/2 spaces, then X
+     *   bottom half (N/2 rows):   / \      the mirror image: outer spaces shrink,
+     *                            /   \     the gap grows by 2 each row
+     */
+
+    // N = 1 has no arms at all, only the centre.
     if(N == 1){
         cout << "X" << endl;
         return 0;
     }
 
-    int spaces = N - 2;
+    int spaces = N - 2;         // gap between \ and / on the first row
 
+    // Top half.
     for(int i=0; i < N/2; i++){
-        for(int j=0; j <i; j++){
+        for(int j=0; j <i; j++){            // i spaces on the left
             cout << " ";
         }
-        cout << "\\";
+        cout << "\\";                       // "\\" in C++ prints one backslash
 
-        for(int j=0; j< spaces; j++){
+        for(int j=0; j< spaces; j++){       // the gap
             cout << " ";
         }
         cout << "/";
 
-        for(int k=0; k<i; k++){
+        for(int k=0; k<i; k++){             // i spaces on the right
             cout << " ";
         }
         cout << endl;
 
-        spaces -= 2;
+        spaces -= 2;                        // the arms move one step closer
     }
 
+    // Middle row: the crossing point sits exactly N/2 spaces in.
     for(int i=0; i<N/2; i++){
         cout << " ";
     }
     cout << "X" << endl;
 
-    int space_before_after = N/2 - 1;
-    int space_between = 1;
+    // Bottom half: start close to the centre and open up.
+    int space_before_after = N/2 - 1;       // outer spaces on the first bottom row
+    int space_between = 1;                  // gap between / and \ on that row
     for(int i=N/2 + 1; i < N; i++){
         for(int j=0; j<space_before_after; j++){
             cout << " ";
@@ -113,8 +126,8 @@ int main() {
             cout << " ";
         }
         cout << endl;
-        space_before_after--;
-        space_between += 2;
+        space_before_after--;               // arms move outwards...
+        space_between += 2;                 // ...so the gap grows by 2
     }
 
     return 0;

@@ -55,15 +55,24 @@ Output:
 
 */
 
+// Idea: a component is one piece of the graph. Loop over every node; whenever
+// a node is still unvisited, it must belong to a piece we have not seen yet, so
+// count one component and let a DFS mark that whole piece. The next unvisited
+// node found by the loop is then in yet another piece.
+//
+// Example 4: 10 nodes, pieces {1,2,3} {0,4} {5,6} and the lonely 7, 8, 9 -> 6.
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <cstring>      // memset
 
 using namespace std;
 
 vector<int> adj_list[1005];
 bool vis[1005];
 
+// Plain recursive DFS: marks every node of src's piece.
 void dfs(int src){
     vis[src] = true;
 
@@ -88,14 +97,16 @@ int main(){
     memset(vis, false, sizeof(vis));
 
     int count = 0;
+    // Go over ALL n nodes, not only the ones named in edges: a node with no
+    // edges at all is still a component of size 1.
     for(int i = 0; i<n; i++){
         if(!vis[i]){
-            dfs(i);
-            count++;
+            dfs(i);      // swallow i's whole piece
+            count++;     // ...and count that piece once
         }
     }
 
-    cout << count << endl;
+    cout << count << endl;   // Cost: O(V + E), every node and edge seen once
 
     return 0;
 }

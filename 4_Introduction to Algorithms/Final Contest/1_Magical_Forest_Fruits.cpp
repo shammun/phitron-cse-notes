@@ -45,22 +45,32 @@ Query (4,4): Tree 4 alone → 5
 
 */
 
+// Solution idea: prefix sums. Adding up trees L..R afresh for every query
+// would be up to 10^6 steps times 10^5 queries - far too slow. Instead add
+// everything up once: sum[i] = fruits on trees 1..i. Then the fruits on trees
+// L..R are "everything up to R" minus "everything before L", one subtraction.
 
 #include <iostream>
 using namespace std;
 
 int fruits[1000005];
+// sum[i] = fruits[1] + ... + fruits[i]. It is global for two reasons: a global
+// array starts at all zeros, so sum[0] = 0 as the formula needs, and 8 MB is
+// too big to sit safely on the stack inside main.
+// long long, because 10^6 trees can add up to more than an int holds.
+long long sum[1000005];
 
 int main(){
     int N, Q;
     cin >> N >> Q;
 
+    // 1-based on purpose: tree i sits at fruits[i], matching the query numbers.
     for(int i=1; i<=N; i++){
         cin >> fruits[i];
     }
 
-    long long sum[1000005];
-
+    // Each running total is the previous one plus one more tree.
+    // For 2 4 1 5 3: sum = 0, 2, 6, 7, 12, 15.
     for(int i=1; i<=N; i++){
         sum[i] = sum[i-1] + fruits[i];
     }
@@ -69,8 +79,11 @@ int main(){
         int L, R;
         cin >> L >> R;
 
+        // Trees L..R = (trees 1..R) - (trees 1..L-1).
+        // Query 2 5: sum[5] - sum[1] = 15 - 2 = 13. With L = 1 it uses sum[0] = 0.
         cout << sum[R] - sum[L-1] << endl;
     }
 
+    // O(N) once to build, then O(1) per query.
     return 0;
 }

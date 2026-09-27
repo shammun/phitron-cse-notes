@@ -31,6 +31,7 @@ int main(){
     int N;
     scanf("%d", &N);
 
+    /* One counter per possible value (values go up to 10^5). */
     int freq[100005] = {0};
 
     int numbers[N+5];
@@ -39,10 +40,14 @@ int main(){
         scanf("%d", &numbers[i]);
     }
 
+    /* Pass 1: count every value. */
     for(int i=0; i<N; i++){
         freq[numbers[i]]++;
     }
 
+    /* Pass 2: walk the numbers again and count those whose value appeared
+       exactly once. A value that appears once is met exactly once in this
+       walk, so it adds exactly 1; values seen 2 or more times add nothing. */
     int count = 0;
     for(int i=0; i<N; i++){
         if(freq[numbers[i]] == 1){

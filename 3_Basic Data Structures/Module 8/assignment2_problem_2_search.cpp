@@ -45,6 +45,16 @@ Sample Output 0
 */
 
 
+/*
+ * Search in a list = walk from the head and count the steps. The counter
+ * `index` starts at 0 (the head's index) and goes up by one for every node we
+ * pass. The first node whose value equals X gives the answer, and we return at
+ * once so a later copy of X cannot overwrite it. If the walk falls off the
+ * end, X is not in the list: -1.
+ *
+ * There are T test cases, so every case starts a brand-new empty list.
+ */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -66,6 +76,7 @@ class Node {
         }
 };
 
+// O(1) append: `tail` remembers the last node, so there is no walk.
 void insert_at_tail(Node* &head, Node* &tail, int val){
     Node* newNode = new Node(val);
     if(head == NULL){
@@ -74,12 +85,15 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
         return;
     }
     
+    // Link the new node after the old last node, then move `tail` onto it.
     tail->next = newNode;
     tail = newNode; // or tail = tail->next
 }
 
+// Return the first index holding `val`, or -1 if it is not there.
 int find_index(Node* head, int val){
     if(head == NULL){
+        // Empty list: nothing can match.
         return -1;
     }
     Node* temp = head;
@@ -87,6 +101,7 @@ int find_index(Node* head, int val){
 
     while(temp != NULL){
         if(temp->val == val){
+            // First match: stop here, this is the leftmost position.
             return index;
         }
         temp = temp->next;
@@ -100,11 +115,13 @@ int main(){
     int T;
     cin >> T;
 
+    // One test case per round; a fresh head/tail makes a new empty list.
     while(T--){
         Node* head = NULL;
         Node* tail = NULL;
         
         int V;
+        // Read this case's values until -1.
         while(true){
             cin >> V;
             if(V == -1){

@@ -35,9 +35,11 @@ int main(){
     // Take input from user to create vector of pairs of integers of the size n
     int n;
     cin >> n;
-    vector<pair<int, int>> v(n);
+    // A new name (v2): `v` already exists above, and declaring it twice
+    // would not compile. v2(n) makes n pairs of (0, 0) ready to be filled.
+    vector<pair<int, int>> v2(n);
     for(int i=0; i<n; i++){
-        cin >> v[i].first >> v[i].second;
+        cin >> v2[i].first >> v2[i].second;
     }
 
     return 0;

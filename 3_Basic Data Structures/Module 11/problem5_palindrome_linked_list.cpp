@@ -2,6 +2,13 @@
 
 https://leetcode.com/problems/palindrome-linked-list/
 
+Say whether a singly linked list reads the same forwards and backwards.
+Example: 1 2 2 1 -> true,  1 2 -> false.
+
+The idea: a singly list cannot be walked backwards, so make a reversed copy
+and walk the original and the copy side by side. If every pair matches, the
+list is a palindrome. Costs O(n) extra memory for the copy.
+
 */
 
 #include <iostream>
@@ -26,13 +33,13 @@ public:
     // we can update the original head pointer.
     // 'tmp' is used to traverse the list.
     void reverse(ListNode* &head, ListNode* tmp){
-        if(tmp->next == NULL){
+        if(tmp->next == NULL){       // last node: the new head
             head = tmp;
             return;
         }
-        reverse(head, tmp->next);
-        tmp->next->next = tmp;
-        tmp->next = NULL;
+        reverse(head, tmp->next);    // reverse the rest first
+        tmp->next->next = tmp;       // turn the arrow back to tmp
+        tmp->next = NULL;            // cut tmp's old forward arrow
     }
 
     // Inserts a new node with value 'val' at the tail of the list.

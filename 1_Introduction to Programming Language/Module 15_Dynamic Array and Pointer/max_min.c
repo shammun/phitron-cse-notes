@@ -28,8 +28,13 @@ int main(){
     int A, B, C;
     scanf("%d %d %d", &A, &B, &C);
 
+    /* Start both answers at A, then let B and C challenge them. This is the
+       "best so far" idea from the array lessons, written out for three
+       values instead of a loop. */
     int min = A, max = A;
 
+    /* Each value gets two separate ifs (not if/else): one value could be
+       both the new minimum and the new maximum. */
     if(B < min){
         min = B;
     }
@@ -47,4 +52,3 @@ int main(){
 
     return 0;
 }
-
