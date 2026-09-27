@@ -7,7 +7,7 @@
 <meta name="description" content="A problem-solving module that applies earlier graph tools to judge problems. DSU tracks components while roads are added, and helps rebuild a road network. Dijkstra is extended to print the actual path, and BFS on a grid finds the fewest moves. The main skill is spotting which tool a story is really asking for.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=7">
+<link rel="stylesheet" href="../assets/site.css?v=8">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -72,7 +72,7 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
   <p class="what">After each new road, print the number of components and the size of the largest one. DSU with union by size keeps both numbers up to date.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 102 lines</span>
+      <span>CPP · 120 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2013/problem1_road_construction.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -179,7 +179,25 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 <span class="normal"> 98</span>
 <span class="normal"> 99</span>
 <span class="normal">100</span>
-<span class="normal">101</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://cses.fi/problemset/task/1676/</span>
 
@@ -222,6 +240,14 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 
 <span class="cm">*/</span>
 
+<span class="c1">// Solution idea (DSU, Module 11).</span>
+<span class="c1">// Roads only ever get ADDED, which is exactly what DSU is good at. Keep two</span>
+<span class="c1">// running numbers instead of recounting after each day:</span>
+<span class="c1">//   cmp      = how many components there are (starts at n, one per city);</span>
+<span class="c1">//   max_size = the size of the biggest component (starts at 1).</span>
+<span class="c1">// A road inside one component changes nothing. A road between two components</span>
+<span class="c1">// merges them: one component fewer, and the merged size may be a new record.</span>
+
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
@@ -229,10 +255,11 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">cmp</span><span class="p">,</span><span class="w"> </span><span class="n">max_size</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span><span class="w">          </span><span class="c1">// par[x] = parent of x; -1 means x is a leader</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span><span class="w">   </span><span class="c1">// size of the group, kept at its leader</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">cmp</span><span class="p">,</span><span class="w"> </span><span class="n">max_size</span><span class="p">;</span><span class="w">        </span><span class="c1">// the two answers, updated as roads arrive</span>
 
+<span class="c1">// Leader of node&#39;s group, with path compression.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">node</span><span class="p">;</span>
@@ -246,10 +273,14 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">node1</span><span class="p">);</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">node2</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// Same component already: the road adds no new connection, so both</span>
+<span class="w">    </span><span class="c1">// answers stay as they were.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">leader1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">leader2</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Union by size; the merged group&#39;s new size is the only size that grew,</span>
+<span class="w">    </span><span class="c1">// so it is the only one that can beat the current record.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">]){</span>
 <span class="w">        </span><span class="n">par</span><span class="p">[</span><span class="n">leader2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader1</span><span class="p">;</span>
 <span class="w">        </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">];</span>
@@ -259,30 +290,35 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 <span class="w">        </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">];</span>
 <span class="w">        </span><span class="n">max_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">max_size</span><span class="p">,</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">]);</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">cmp</span><span class="o">--</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cmp</span><span class="o">--</span><span class="p">;</span><span class="w">   </span><span class="c1">// two components became one</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w">        </span><span class="c1">// day 0: no roads, every city alone</span>
 <span class="w">    </span><span class="n">max_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Cities are numbered 1..n: each starts as its own leader, size 1.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">par</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
 <span class="w">        </span><span class="n">group_size</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// One road per day, and one answer line per day.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="n">dsu_union</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cmp</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">max_size</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Cost: about O(m * alpha(n)); recounting components with BFS every day</span>
+<span class="w">    </span><span class="c1">// would be O(m * (n + m)), far too slow for 2 * 10^5 roads.</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 102 lines ▾</button>
+    <button type="button" class="expand">Show all 120 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 4
@@ -310,7 +346,7 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
   <p class="what">There are n-1 roads. Every road that closes a cycle is wasted, and each wasted road can be moved to connect two components. Close the wasted roads and link every component to city 1.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 110 lines</span>
+      <span>CPP · 128 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2013/problem2_roads_not_only_in_Berland.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -425,7 +461,25 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 <span class="normal">106</span>
 <span class="normal">107</span>
 <span class="normal">108</span>
-<span class="normal">109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://codeforces.com/problemset/problem/25/D</span>
 
@@ -451,6 +505,16 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 
 <span class="cm">*/</span>
 
+<span class="c1">// Solution idea (DSU, Module 11).</span>
+<span class="c1">// n cities and n-1 roads: if they were all useful, the map would already be</span>
+<span class="c1">// one connected tree. Every road that closes a cycle is wasted, and each wasted</span>
+<span class="c1">// road means one component too many. So:</span>
+<span class="c1">//   1. Read the roads through a DSU. A road whose ends already share a leader</span>
+<span class="c1">//      is a &quot;remove&quot; road (it adds nothing).</span>
+<span class="c1">//   2. Then join every component to city 1&#39;s component: each join is an &quot;add&quot;</span>
+<span class="c1">//      road. There are exactly as many adds as removes (n-1 roads in total,</span>
+<span class="c1">//      every useful one cuts the component count by one).</span>
+<span class="c1">//   3. Pair them: day i closes remove[i] and builds add[i].</span>
 
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
@@ -459,15 +523,15 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span><span class="w">          </span><span class="c1">// DSU parent; -1 = leader</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span><span class="w">   </span><span class="c1">// group size, kept at the leader</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">node</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]);</span>
-<span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span>
+<span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span><span class="w">   </span><span class="c1">// path compression</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span>
 <span class="p">}</span>
 
@@ -479,6 +543,7 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Union by size.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">]){</span>
 <span class="w">        </span><span class="n">par</span><span class="p">[</span><span class="n">leader2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader1</span><span class="p">;</span>
 <span class="w">        </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">];</span>
@@ -497,21 +562,25 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 <span class="w">        </span><span class="n">group_size</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">remove_roads</span><span class="p">;</span>
-<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">add_roads</span><span class="p">;</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">remove_roads</span><span class="p">;</span><span class="w">   </span><span class="c1">// roads that only closed a cycle</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">add_roads</span><span class="p">;</span><span class="w">      </span><span class="c1">// new roads that join two components</span>
 
+<span class="w">    </span><span class="c1">// Step 1: sort the old roads into &quot;useful&quot; (union) and &quot;wasted&quot; (remove).</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">leaderA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">leaderB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">leaderA</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">leaderB</span><span class="p">){</span>
-<span class="w">            </span><span class="n">remove_roads</span><span class="p">.</span><span class="n">push_back</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">});</span>
+<span class="w">            </span><span class="n">remove_roads</span><span class="p">.</span><span class="n">push_back</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">});</span><span class="w">   </span><span class="c1">// a and b were already connected</span>
 <span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 <span class="w">            </span><span class="n">dsu_union</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Step 2: walk over every city. If it is not yet in city 1&#39;s component,</span>
+<span class="w">    </span><span class="c1">// build a road 1 - i and merge, so its whole component joins at once.</span>
+<span class="w">    </span><span class="c1">// Later cities of that same component now share the leader and are skipped.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">leader1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">leader2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
@@ -521,22 +590,25 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Step 3: one day per wasted road, closing it and building one new road.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">remove_roads</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">remove_roads</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">remove_roads</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">remove_roads</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">add_roads</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">add_roads</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Debug helper: print only the roads that get closed.</span>
 <span class="w">    </span><span class="cm">/*</span>
 <span class="cm">    for(auto road : remove_roads){</span>
 <span class="cm">        cout &lt;&lt; road.first &lt;&lt; &quot; &quot; &lt;&lt; road.second &lt;&lt; endl;</span>
 <span class="cm">    }</span>
 <span class="cm">    */</span>
-<span class="w">    </span>
+
+<span class="w">    </span><span class="c1">// Cost: about O(n * alpha(n)).</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 110 lines ▾</button>
+    <button type="button" class="expand">Show all 128 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>7
@@ -564,7 +636,7 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
   <p class="what">Run Dijkstra from node 1 on an undirected weighted graph, remember each node&#x27;s parent, and print the shortest path from 1 to n (or -1).</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 122 lines</span>
+      <span>CPP · 139 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2013/problem3_dijkstra.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -691,7 +763,24 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 <span class="normal">118</span>
 <span class="normal">119</span>
 <span class="normal">120</span>
-<span class="normal">121</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://codeforces.com/problemset/problem/20/C</span>
 
@@ -737,38 +826,51 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 
 <span class="cm">*/</span>
 
+<span class="c1">// Solution idea (Dijkstra, Module 7, plus path printing from Module 2).</span>
+<span class="c1">// Weights are positive, so Dijkstra finds the cheapest distance from 1 to n.</span>
+<span class="c1">// To print the ROUTE, not just its cost, remember for every node which node</span>
+<span class="c1">// we came from when its distance last improved: par[child] = parent. Then walk</span>
+<span class="c1">// par[] back from n to 1 and reverse, exactly like BFS path printing.</span>
+
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // reverse</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;climits&gt;</span><span class="c1">      // LLONG_MAX</span>
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// long long everywhere: up to 10^5 edges of length up to 10^6 can add up to</span>
+<span class="c1">// 10^11, which does not fit in an int.</span>
 <span class="cp">#define ll long long int</span>
-<span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">ll</span><span class="p">,</span><span class="w"> </span><span class="n">ll</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span>
-<span class="n">ll</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span>
-<span class="n">ll</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">ll</span><span class="p">,</span><span class="w"> </span><span class="n">ll</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span><span class="w">   </span><span class="c1">// adj_list[x] = {neighbour, edge length}</span>
+<span class="n">ll</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span><span class="w">                           </span><span class="c1">// cheapest known distance from node 1</span>
+<span class="n">ll</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span><span class="w">                           </span><span class="c1">// node we came from on that cheapest route; -1 = none</span>
 
 <span class="kt">void</span><span class="w"> </span><span class="nf">dijkstra</span><span class="p">(</span><span class="n">ll</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Min-heap of {distance, node}: the smallest distance comes out first.</span>
 <span class="w">    </span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">ll</span><span class="p">,</span><span class="w"> </span><span class="n">ll</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">ll</span><span class="p">,</span><span class="w"> </span><span class="n">ll</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">greater</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">ll</span><span class="p">,</span><span class="w"> </span><span class="n">ll</span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">pq</span><span class="p">;</span>
 <span class="w">    </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">src</span><span class="p">});</span>
 <span class="w">    </span><span class="n">dis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="n">ll</span><span class="p">,</span><span class="w"> </span><span class="n">ll</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">();</span>
+<span class="w">        </span><span class="c1">// Named cur, not par: a local called par would hide the global par[]</span>
+<span class="w">        </span><span class="c1">// array, and the line par[child_node] = par_node below would not compile.</span>
+<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="n">ll</span><span class="p">,</span><span class="w"> </span><span class="n">ll</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cur</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">();</span>
 <span class="w">        </span><span class="n">pq</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
-<span class="w">        </span><span class="n">ll</span><span class="w"> </span><span class="n">par_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
-<span class="w">        </span><span class="n">ll</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ll</span><span class="w"> </span><span class="n">par_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cur</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ll</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cur</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
 
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par_node</span><span class="p">]){</span>
 <span class="w">            </span><span class="n">ll</span><span class="w"> </span><span class="n">child_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
 <span class="w">            </span><span class="n">ll</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
 
+<span class="w">            </span><span class="c1">// Relax: going through par_node is a cheaper way to child_node.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">par_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">]){</span>
 <span class="w">                </span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">child_dist</span><span class="p">;</span>
 <span class="w">                </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">],</span><span class="w"> </span><span class="n">child_node</span><span class="p">});</span>
-<span class="w">                </span><span class="n">par</span><span class="p">[</span><span class="n">child_node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_node</span><span class="p">;</span>
+<span class="w">                </span><span class="n">par</span><span class="p">[</span><span class="n">child_node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_node</span><span class="p">;</span><span class="w">   </span><span class="c1">// remember the step that gave this best route</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
@@ -782,19 +884,21 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 <span class="w">        </span><span class="n">ll</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span><span class="w">   </span><span class="c1">// undirected</span>
+<span class="w">        </span><span class="c1">// Loops and repeated edges are harmless: Dijkstra just keeps the cheaper.</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="n">ll</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LLONG_MAX</span><span class="p">;</span>
-<span class="w">        </span><span class="n">par</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LLONG_MAX</span><span class="p">;</span><span class="w">   </span><span class="c1">// not reached yet</span>
+<span class="w">        </span><span class="n">par</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span><span class="w">          </span><span class="c1">// no parent yet; node 1 keeps -1, which ends the walk-back</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="n">dijkstra</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dis</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">LLONG_MAX</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">   </span><span class="c1">// n was never reached</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Walk back n -&gt; par[n] -&gt; ... -&gt; 1 (whose par is -1).</span>
 <span class="w">        </span><span class="n">ll</span><span class="w"> </span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 <span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ll</span><span class="o">&gt;</span><span class="w"> </span><span class="n">path</span><span class="p">;</span>
 <span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="n">node</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -802,6 +906,7 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 <span class="w">            </span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">];</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// The walk collected the route backwards, so flip it to start at 1.</span>
 <span class="w">        </span><span class="n">reverse</span><span class="p">(</span><span class="n">path</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">path</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
 
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">path</span><span class="p">){</span>
@@ -810,11 +915,12 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Cost: O((n + m) log n) for Dijkstra, O(n) for the path.</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 122 lines ▾</button>
+    <button type="button" class="expand">Show all 139 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 6
@@ -823,13 +929,11 @@ reverse(path.begin(), path.end());</pre></div><div class="concept"><h4>BFS gives
 2 3 4
 1 4 1
 4 3 3
-3 5 1</pre><p class="io-note">n m, then m edges <code>a b w</code>. This is the Codeforces example (expected <code>1 4 3 5</code>).</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>problem3_dijkstra.cpp: In function &#x27;void dijkstra(long long int)&#x27;:
-problem3_dijkstra.cpp:78:20: error: no match for &#x27;operator[]&#x27; (operand types are &#x27;std::pair&lt;long long int, long long int&gt;&#x27; and &#x27;long long int&#x27;)
-                 par[child_node] = par_node;
-                    ^</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> The file does not compile, so no output appears. After the fix it prints <code>1 4 3 5</code> (cost 1+3+1 = 5, cheaper than 1-2-5 = 7).</p>
+3 5 1</pre><p class="io-note">n m, then m edges <code>a b w</code>. This is the Codeforces example (expected <code>1 4 3 5</code>).</p></div><div class="io out"><div class="io-h">Output </div><pre>1 4 3 5 
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> It prints <code>1 4 3 5</code>: the route costs 1+3+1 = 5, cheaper than 1-2-5 = 7, matching the judge&#x27;s example.</p>
   <details class="how" open><summary>How it works, step by step</summary><ol><li>Store edges both ways in <code>adj_list</code>; set <code>dis[i] = LLONG_MAX</code> and <code>par[i] = -1</code>.</li><li>Push <code>{0, 1}</code> into a min-heap <code>priority_queue</code>.</li><li>Pop the closest node; for each neighbour, if the distance improves, update <code>dis</code>, push it, and set <code>par[child] = node</code>.</li><li>If <code>dis[n]</code> is still infinite print -1.</li><li>Otherwise follow <code>par</code> from n back to 1, reverse the list, and print it.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Inside <code>dijkstra</code> the popped pair is named <code>par</code>, which hides the global array <code>par[]</code>, so <code>par[child_node] = par_node</code> fails to compile. Rename the local variable (for example <code>pair&lt;ll,ll&gt; cur = pq.top();</code>). Also add <code>#include &lt;climits&gt;</code> for <code>LLONG_MAX</code>, and skip stale heap entries with <code>if (cur.first &gt; dis[node]) continue;</code> to stay fast.</div>
+  <div class="callout warn"><b>Watch out.</b> A local variable must not share a name with a global array: the popped pair was first called <code>par</code>, which hid the global <code>par[]</code>, so <code>par[child_node] = par_node</code> did not compile. It is now <code>cur</code>, and <code>&lt;climits&gt;</code> is included for <code>LLONG_MAX</code>. For big tests also skip stale heap entries with <code>if (cur.first &gt; dis[par_node]) continue;</code>.</div>
   <details class="check"><summary><span>✅ Check yourself:</span> Why does following <code>par</code> from n give the path backwards?</summary><div>Each node stores only who came right before it, so you walk from the end to the start and must reverse at the end.</div></details>
 </section>
 <section class="prog" id="p-problem4-sundorbon">
@@ -843,7 +947,7 @@ problem3_dijkstra.cpp:78:20: error: no match for &#x27;operator[]&#x27; (operand
   <p class="what">Find the fewest moves from S to E on a square map where T cells are blocked. BFS from S fills <code>level</code> for every reachable cell; print <code>level</code> at E. Repeats until end of input.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 138 lines</span>
+      <span>CPP · 153 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2013/problem4_sundorbon.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -987,7 +1091,21 @@ problem3_dijkstra.cpp:78:20: error: no match for &#x27;operator[]&#x27; (operand
 <span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
-<span class="normal">138</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://school.outsbook.com/problems/problemdetails/10106</span>
 
@@ -1045,23 +1163,30 @@ problem3_dijkstra.cpp:78:20: error: no match for &#x27;operator[]&#x27; (operand
 
 <span class="cm">*/</span>
 
+<span class="c1">// Solution idea (BFS on a grid, Module 3).</span>
+<span class="c1">// Every move costs the same (one step), so the fewest moves from S to E is a</span>
+<span class="c1">// BFS level: start BFS at S, walk onto any cell that is not a tree, and read</span>
+<span class="c1">// level[] at E. It is the lesson bfs_on_grid_with_obstacles, with &#39;T&#39; as the wall.</span>
+
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span><span class="c1">      // memset</span>
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
-<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">35</span><span class="p">][</span><span class="mi">35</span><span class="p">];</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">35</span><span class="p">][</span><span class="mi">35</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="mi">35</span><span class="p">][</span><span class="mi">35</span><span class="p">];</span>
+<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">35</span><span class="p">][</span><span class="mi">35</span><span class="p">];</span><span class="w">     </span><span class="c1">// the map, at most 30 x 30</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">35</span><span class="p">][</span><span class="mi">35</span><span class="p">];</span><span class="w">      </span><span class="c1">// cell already queued?</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="mi">35</span><span class="p">][</span><span class="mi">35</span><span class="p">];</span><span class="w">     </span><span class="c1">// fewest moves from S to this cell; -1 = unreachable</span>
 
 <span class="c1">// the below line is also correct -- some old compilers may not support it</span>
 <span class="c1">// vector&lt;pair&lt;int, int&gt;&gt; direction = {{0, 1}, {0, -1}, {-1, 0}, {1, 0}};</span>
-<span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">direction</span><span class="p">;</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">direction</span><span class="p">;</span><span class="w">   </span><span class="c1">// right, left, up, down (filled in main)</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 
+<span class="c1">// Is (i, j) inside the n x n map?</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
@@ -1069,11 +1194,13 @@ problem3_dijkstra.cpp:78:20: error: no match for &#x27;operator[]&#x27; (operand
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sj</span><span class="p">){</span>
+<span class="c1">// BFS from (si, sj). It has to be BFS, not DFS: only BFS reaches every cell</span>
+<span class="c1">// first along a shortest route, so the level it writes is the fewest moves.</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sj</span><span class="p">){</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="n">sj</span><span class="p">});</span>
 <span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">    </span><span class="n">level</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">level</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// S is zero moves from itself</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
@@ -1081,14 +1208,16 @@ problem3_dijkstra.cpp:78:20: error: no match for &#x27;operator[]&#x27; (operand
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Try the four neighbours.</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
 
+<span class="w">            </span><span class="c1">// Inside the map, not a tree, not seen before. &#39;P&#39; and &#39;E&#39; both pass.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">&#39;T&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">false</span><span class="p">){</span>
 <span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">});</span>
 <span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">                </span><span class="n">level</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="n">par_i</span><span class="p">][</span><span class="n">par_j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">                </span><span class="n">level</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="n">par_i</span><span class="p">][</span><span class="n">par_j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// one move further than its parent</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
@@ -1099,12 +1228,13 @@ problem3_dijkstra.cpp:78:20: error: no match for &#x27;operator[]&#x27; (operand
 <span class="w">    </span><span class="n">direction</span><span class="p">.</span><span class="n">push_back</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">});</span>
 <span class="w">    </span><span class="n">direction</span><span class="p">.</span><span class="n">push_back</span><span class="p">({</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span>
 <span class="w">    </span><span class="n">direction</span><span class="p">.</span><span class="n">push_back</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="n">sj</span><span class="p">,</span><span class="w"> </span><span class="n">di</span><span class="p">,</span><span class="w"> </span><span class="n">dj</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="n">sj</span><span class="p">,</span><span class="w"> </span><span class="n">di</span><span class="p">,</span><span class="w"> </span><span class="n">dj</span><span class="p">;</span><span class="w">   </span><span class="c1">// positions of S and E</span>
 
+<span class="w">    </span><span class="c1">// Input ends at EOF: keep reading maps while another n can be read.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">                </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">                </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span><span class="w">   </span><span class="c1">// &gt;&gt; on a char skips the spaces between letters</span>
 <span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;S&#39;</span><span class="p">){</span>
 <span class="w">                    </span><span class="n">si</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
 <span class="w">                    </span><span class="n">sj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
@@ -1115,19 +1245,21 @@ problem3_dijkstra.cpp:78:20: error: no match for &#x27;operator[]&#x27; (operand
 <span class="w">                </span><span class="p">}</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">    </span>
+
+<span class="w">        </span><span class="c1">// Reset for every map, or the previous map&#39;s marks would leak in.</span>
 <span class="w">        </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
 <span class="w">        </span><span class="n">memset</span><span class="p">(</span><span class="n">level</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">level</span><span class="p">));</span>
-<span class="w">    </span>
-<span class="w">        </span><span class="n">dfs</span><span class="p">(</span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="n">sj</span><span class="p">);</span>
+
+<span class="w">        </span><span class="n">bfs</span><span class="p">(</span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="n">sj</span><span class="p">);</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">level</span><span class="p">[</span><span class="n">di</span><span class="p">][</span><span class="n">dj</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span>
+
+<span class="w">    </span><span class="c1">// Cost: O(n^2) per map, each cell is queued at most once.</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 138 lines ▾</button>
+    <button type="button" class="expand">Show all 153 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5
@@ -1143,8 +1275,8 @@ E P P</pre><p class="io-note">Maps one after another until EOF: n, then n rows o
 4
 </pre></div></div>
   <p class="readout"><b>Reading the output.</b> <code>5</code> for the first map and <code>4</code> for the second (S right, down, down, left).</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Fill <code>direction</code> with the four moves.</li><li><code>while (cin &gt;&gt; n)</code>: read the grid character by character, remembering the S and E positions.</li><li>Clear <code>vis</code> and set <code>level</code> to -1.</li><li>BFS from S (the function is named <code>dfs</code>, but it uses a queue, so it is BFS): push neighbours that are inside, not &#x27;T&#x27;, and unvisited, with <code>level = parent level + 1</code>.</li><li>Print <code>level[di][dj]</code>.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> The function name <code>dfs</code> is misleading: it is a BFS, and only BFS guarantees the fewest moves. Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Fill <code>direction</code> with the four moves.</li><li><code>while (cin &gt;&gt; n)</code>: read the grid character by character, remembering the S and E positions.</li><li>Clear <code>vis</code> and set <code>level</code> to -1.</li><li>BFS from S (the function <code>bfs</code> uses a queue): push neighbours that are inside, not &#x27;T&#x27;, and unvisited, with <code>level = parent level + 1</code>.</li><li>Print <code>level[di][dj]</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> This must be BFS, not DFS: only BFS reaches each cell first along a shortest route, so <code>level[]</code> is the fewest moves. (The function used to be named <code>dfs</code> although it used a queue; it is now <code>bfs</code>.) A new map comes in until EOF, so <code>vis</code> and <code>level</code> are reset for every map.</div>
   <details class="check"><summary><span>✅ Check yourself:</span> Why would a DFS not give the minimum number of moves here?</summary><div>DFS follows one path deep first and may reach E by a long route; BFS explores cells in order of distance, so the first time it reaches a cell is the shortest.</div></details>
 </section></section>
   <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://cses.fi/problemset/task/1676/" target="_blank" rel="noopener">Road Construction</a><span class="site">CSES</span></li><li><a href="https://codeforces.com/problemset/problem/25/D" target="_blank" rel="noopener">Roads not only in Berland</a><span class="site">Codeforces</span></li><li><a href="https://codeforces.com/problemset/problem/20/C" target="_blank" rel="noopener">Dijkstra?</a><span class="site">Codeforces</span></li><li><a href="https://school.outsbook.com/problems/problemdetails/10106" target="_blank" rel="noopener">Sundorbon</a><span class="site">Outsbook</span></li></ul></section>
@@ -1158,7 +1290,7 @@ E P P</pre><p class="io-note">Maps one after another until EOF: n, then n rows o
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=7" defer></script>
-<script src="../assets/site.js?v=7" defer></script>
+<script src="../assets/search-index.js?v=8" defer></script>
+<script src="../assets/site.js?v=8" defer></script>
 </body>
 </html>

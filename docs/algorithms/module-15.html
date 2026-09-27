@@ -7,7 +7,7 @@
 <meta name="description" content="0-1 knapsack is the classic &#x27;take it or leave it&#x27; DP: for each item you either put it in the bag or skip it, and you keep the better result. The state is (item index, remaining capacity), which you memoize in a 2D table. The practice day uses the same &#x27;make a choice, keep the best&#x27; idea on grid paths, stairs, house robbing and Pascal&#x27;s triangle.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=7">
+<link rel="stylesheet" href="../assets/site.css?v=8">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -50,7 +50,7 @@ bag capacity: 5kg</pre><p>So stop thinking about combinations and think about on
 items 0..0      0   0   3   3   3   3
 items 0..1      0   0   3   4   4   7
 items 0..2      0   0   3   4   5   7</pre><p><strong>Why the bottom-right cell is the answer.</strong> Read its two labels. The bottom row means every item was offered; the rightmost column means the bag was empty when you started. &quot;Best value when all three items were on the table and you had the full 5 kg&quot; is word for word the question you were asked, so the 7 sitting there is it — the same pair you found by hand, reached in 18 cells rather than 8 guesses. The gap widens fast: 40 items and a 100 kg bag is about 4000 cells against a million million combinations.</p><p><strong>What is new since Module 14.</strong> There the state was a single number and fed the next one in a fixed way. Here every state makes a real choice and you keep the better branch. That pattern is the rest of the day in different clothes: a grid path where at each cell you go down or right and keep the bigger sum, a staircase reached from one step back or two, houses where you rob this one plus the best two back or skip it.</p><p>Two practical points. The memo table must be set to -1 for every capacity from 0 to <code>W</code>, <code>W</code> included; a loop that stops one column short leaves a stale cell behind and the answer goes wrong without any warning. And when a state depends only on the previous one or two states, you do not need the table at all — two variables will do.</p><p>The programs below build knapsack twice, plain then memoised, then put the same take-or-leave thinking to work on five more problems.</p></div></section>
-  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-knapsack"><span class="n">1</span>0-1 knapsack with plain recursion</a></li><li><a href="#p-knapsack-using-dp"><span class="n">2</span>0-1 knapsack with memoization</a></li><li><a href="#p-codeforces-knapsack"><span class="n">3</span>Knapsack in the judge&#x27;s input format <em>(re-typed)</em></a></li><li><a href="#p-practice-day-2-1-knapsack"><span class="n">4</span>Practice: Knapsack (judge version) <em>(re-typed)</em></a></li><li><a href="#p-practice-day-2-2-max-path-sum"><span class="n">5</span>The maximum path-sum (grid DP)</a></li><li><a href="#p-practice-day-2-3-min-cost-climbing-stairs"><span class="n">6</span>LeetCode 746: Min Cost Climbing Stairs</a></li><li><a href="#p-practice-day-2-4-house-robber"><span class="n">7</span>LeetCode 198: House Robber</a></li><li><a href="#p-practice-day-2-5-pascals-triangle"><span class="n">8</span>LeetCode 118: Pascal&#x27;s Triangle</a></li></ol></details></nav>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><p class="toc-g">📘 The basics</p><ol><li><a href="#p-knapsack"><span class="n">1</span>0-1 knapsack with plain recursion</a></li><li><a href="#p-knapsack-using-dp"><span class="n">2</span>0-1 knapsack with memoization</a></li></ol><p class="toc-g">🏋️ Practice problems</p><ol><li><a href="#p-codeforces-knapsack"><span class="n">3</span>Problem: U. Knapsack (judge input format)</a></li><li><a href="#p-practice-day-2-1-knapsack"><span class="n">4</span>Practice: Knapsack (judge version) <em>(re-typed)</em></a></li><li><a href="#p-practice-day-2-2-max-path-sum"><span class="n">5</span>The maximum path-sum (grid DP)</a></li><li><a href="#p-practice-day-2-3-min-cost-climbing-stairs"><span class="n">6</span>LeetCode 746: Min Cost Climbing Stairs</a></li><li><a href="#p-practice-day-2-4-house-robber"><span class="n">7</span>LeetCode 198: House Robber</a></li><li><a href="#p-practice-day-2-5-pascals-triangle"><span class="n">8</span>LeetCode 118: Pascal&#x27;s Triangle</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>State</h4><p><code>knapsack(i, w)</code> = the best value using items 0..i with capacity w left. The answer is <code>knapsack(n-1, W)</code>.</p></div><div class="concept"><h4>Two choices per item</h4><p>If item i fits, compare taking it (<code>val[i] + knapsack(i-1, w - weight[i])</code>) with skipping it (<code>knapsack(i-1, w)</code>). If it does not fit, you can only skip.</p><pre class="snip">op1 = knapsack(i-1, w - weight[i]) + val[i];
 op2 = knapsack(i-1, w);
 return max(op1, op2);</pre></div><div class="concept"><h4>Base case</h4><p>No items left (<code>i &lt; 0</code>) or no capacity left: value 0.</p></div><div class="concept"><h4>2D memo table</h4><p>There are n x (W+1) states. Fill <code>dp</code> with -1 for <strong>every</strong> capacity 0..W, including W itself, then store each result the first time.</p><pre class="snip">for (i = 0; i &lt; n; i++) for (j = 0; j &lt;= W; j++) dp[i][j] = -1;</pre></div><div class="concept"><h4>Choice DP beyond knapsack</h4><p>Max path sum (go down or right), min cost stairs (come from one or two steps back), house robber (rob this house + best two back, or skip) all follow &#x27;best of the choices&#x27;.</p></div><div class="concept"><h4>Space-saving bottom-up</h4><p>When a state only needs the previous one or two states, two variables replace the whole table.</p></div></div></section>
@@ -115,7 +115,7 @@ items 0..1     0  0  3  4  4  7
 items 0..2     0  0  3  4  5  7
                               ^ the answer</pre><p class="flabel">Read the bottom-right cell by its two labels: all three items were offered, and the bag was empty at the start. That is word for word the question asked, so 7 is the answer - items 0 and 1, exactly the pair found by hand. 18 cells instead of 8 guesses, and the gap only widens.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 10</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-article"><a href="https://cp-algorithms.com/dynamic_programming/knapsack.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — knapsack</b><span class="rnote">The 0-1 and unbounded versions next to each other.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLgUwDviBIf0qUlt5H_kiKYaNSqJ81PMMY" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Striver — dynamic programming playlist</b><span class="rnote">Builds every DP from the plain recursion first, which is how this module does it.</span></a></li><li class="r-video"><a href="https://www.youtube.com/@AbdulBari" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>Abdul Bari</b><span class="rnote">Algorithms explained on a whiteboard, very slowly and very clearly.</span></a></li></ul></section>
-  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
+  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2><div class="pgroup" id="g-lesson"><h3>📘 The basics</h3><p>The module's own lesson code: the ideas, one small program at a time.</p></div>
 <section class="prog" id="p-knapsack">
   <div class="prog-h">
     <span class="num">1</span>
@@ -550,16 +550,16 @@ items 0..2     0  0  3  4  5  7
   <details class="how" open><summary>How it works, step by step</summary><ol><li>Read the input as in <code>knapsack.cpp</code>.</li><li>Fill <code>dp[i][j] = -1</code> to mark states as unsolved.</li><li>In <code>knapsack</code>, return <code>dp[i][w]</code> if it is already known.</li><li>Otherwise compute take/skip, store the result in <code>dp[i][w]</code>, and return it.</li><li>Print <code>knapsack(n-1, max_weight)</code>.</li></ol></details>
   <div class="callout warn"><b>Watch out.</b> The init loop is <code>j &lt; max_weight</code>, so <code>dp[i][max_weight]</code> keeps its global value 0 instead of -1. The very first call <code>knapsack(n-1, max_weight)</code> sees 0, thinks it is already solved, and returns 0. Fix: <code>j &lt;= max_weight</code>.</div>
   <details class="check"><summary><span>✅ Check yourself:</span> How many different states can this function visit?</summary><div>About n x (W+1): every item index combined with every capacity from 0 to W.</div></details>
-</section>
+</section><div class="pgroup" id="g-practice"><h3>🏋️ Practice problems</h3><p>Practice-day and judge problems, solved with what the module has taught so far.</p></div>
 <section class="prog" id="p-codeforces-knapsack">
   <div class="prog-h">
     <span class="num">3</span>
     <div class="prog-t">
-      <h3>Knapsack in the judge&#x27;s input format</h3>
-      <div class="meta"><code class="fname">codeforces_knapsack.cpp</code><span class="badge k-variant">Re-typed practice</span><span class="badge cx">Time O(n·W) · Space O(n·W)</span><a class="prob" href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/U" target="_blank" rel="noopener">↗ Codeforces Group - U. Knapsack</a></div>
+      <h3>Problem: U. Knapsack (judge input format)</h3>
+      <div class="meta"><code class="fname">codeforces_knapsack.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(n·W) · Space O(n·W)</span><a class="prob" href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/U" target="_blank" rel="noopener">↗ Codeforces Group - U. Knapsack</a></div>
     </div>
   </div>
-  <p class="what">Same memoized knapsack, but reads <code>N W</code> first and then one <code>weight value</code> pair per line, like the judge.</p><p class="same">Re-typed version of <a href="#p-knapsack-using-dp"><code>knapsack_using_dp.cpp</code></a>.</p>
+  <p class="what">The Codeforces group problem U solved with the memoized knapsack of <code>knapsack_using_dp.cpp</code>; it reads <code>N W</code> first and then one <code>weight value</code> pair per line, like the judge.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
       <span>CPP · 96 lines</span>
@@ -783,13 +783,515 @@ items 0..2     0  0  3  4  5  7
       <div class="meta"><code class="fname">practice_day_2_1_knapsack.cpp</code><span class="badge k-variant">Re-typed practice</span><span class="badge cx">Time O(n·W) · Space O(n·W)</span><a class="prob" href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/U" target="_blank" rel="noopener">↗ Codeforces Group - U. Knapsack</a></div>
     </div>
   </div>
-  <p class="what">The same solution again with arrays sized to the judge&#x27;s limits (N &lt;= 20, W &lt;= 100).</p><p class="same">Re-typed version of <a href="#p-codeforces-knapsack"><code>codeforces_knapsack.cpp</code></a>.</p>
+  <p class="what">The practice-day copy of <code>codeforces_knapsack.cpp</code>, re-typed with arrays sized to the judge&#x27;s limits (N &lt;= 20, W &lt;= 100).</p><p class="same">Re-typed version of <a href="#p-codeforces-knapsack"><code>codeforces_knapsack.cpp</code></a>.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 99 lines</span>
+      <span>CPP · 114 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/practice_day_2_1_knapsack.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/U</span>
+
+<span class="cm">Knapsack</span>
+
+<span class="cm">There are N  items numbered from 1 to N. The ith item has a weight of wi and a value of vi.</span>
+
+<span class="cm">You have to choose some items out of the N  items and carry them home in a knapsack. The capacity </span>
+<span class="cm">of the knapsack is W which donate the maximum weight that can be carried inside the knapsack. In </span>
+<span class="cm">other words, W means the total summation of all weights of items that can be carried in the </span>
+<span class="cm">knapsack.</span>
+
+<span class="cm">Print maximum possible sum of values of items that you can take home.</span>
+
+<span class="cm">Note: Solve this problem using recursion.</span>
+
+<span class="cm">Input</span>
+<span class="cm">First line contains two numbers N and W (1≤N≤20,1≤W≤100) number of items and the capacity of the </span>
+<span class="cm">knapsack.</span>
+
+<span class="cm">Next N lines will contain two numbers wi and vi (1≤wi≤50,1≤vi≤1000)</span>
+
+<span class="cm">Output</span>
+<span class="cm">Print maximum possible sum of values of items that you can take home.</span>
+
+<span class="cm">Examples</span>
+
+<span class="cm">Input</span>
+<span class="cm">3 8</span>
+<span class="cm">3 30</span>
+<span class="cm">4 50</span>
+<span class="cm">5 60</span>
+
+<span class="cm">Output</span>
+<span class="cm">90</span>
+
+<span class="cm">Input</span>
+<span class="cm">6 15</span>
+<span class="cm">6 5</span>
+<span class="cm">5 6</span>
+<span class="cm">6 4</span>
+<span class="cm">6 6</span>
+<span class="cm">3 5</span>
+<span class="cm">7 2</span>
+
+<span class="cm">Output</span>
+<span class="cm">17</span>
+
+<span class="cm">*/</span>
+
+<span class="c1">// The practice-day copy of codeforces_knapsack.cpp: the same memoized 0-1</span>
+<span class="c1">// knapsack, re-typed. Only small things differ: the arrays are sized from the</span>
+<span class="c1">// constraints (N &lt;= 20, W &lt;= 100) instead of 1005, and the values live in</span>
+<span class="c1">// value[] instead of val[]. See codeforces_knapsack.cpp for the full walk-through.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="mi">25</span><span class="p">],</span><span class="w"> </span><span class="n">value</span><span class="p">[</span><span class="mi">25</span><span class="p">];</span><span class="w">   </span><span class="c1">// N &lt;= 20 items</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">25</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span><span class="w">             </span><span class="c1">// dp[i][w] = best value from items 0..i with w room; -1 = unknown</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">knapsack</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// No items left or no room left: nothing more can be gained.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Already solved this (item, room) state.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// Item i fits: try both choices and keep the better one.</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"> </span><span class="c1">// taking the current item</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span><span class="w"> </span><span class="c1">// not taking the current item</span>
+<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span><span class="w"> </span><span class="n">op2</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Too heavy: leaving it is the only option.</span>
+<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">max_weight</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w">   </span><span class="c1">// judge order: weight, then value</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Mark every state &quot;not solved yet&quot;.</span>
+<span class="w">    </span><span class="c1">// BUG, the same one as in codeforces_knapsack.cpp and knapsack_using_dp.cpp:</span>
+<span class="w">    </span><span class="c1">// j &lt; max_weight leaves the column j == max_weight at the global 0, so the</span>
+<span class="w">    </span><span class="c1">// first call knapsack(n-1, max_weight) thinks it is already solved and the</span>
+<span class="w">    </span><span class="c1">// program prints 0. The fix is j &lt;= max_weight (done in Module 16).</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">max_weight</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 114 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3 8
+3 30
+4 50
+5 60</pre><p class="io-note">The judge&#x27;s first example (expected 90).</p></div><div class="io out"><div class="io-h">Output </div><pre>0
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>0</code> instead of 90 for the same reason as the other versions.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>n</code>, <code>max_weight</code>, then the <code>weight value</code> pairs.</li><li>Same init loop and take/skip recursion.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Init with <code>j &lt;= max_weight</code>. After the fix it prints 90.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why is the table sized <code>dp[25][105]</code>?</summary><div>N is at most 20 and W at most 100, so a little extra room covers every (i, w) pair.</div></details>
+</section>
+<section class="prog" id="p-practice-day-2-2-max-path-sum">
+  <div class="prog-h">
+    <span class="num">5</span>
+    <div class="prog-t">
+      <h3>The maximum path-sum (grid DP)</h3>
+      <div class="meta"><code class="fname">practice_day_2_2_max_path_sum.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(N·M) · Space O(N·M)</span><a class="prob" href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/X" target="_blank" rel="noopener">↗ Codeforces Group - X. The maximum path-sum</a></div>
+    </div>
+  </div>
+  <p class="what">From the top-left cell you may only move down or right. <code>maxPathSum(i, j)</code> = this cell + the better of going down or right, memoized in <code>dp</code>.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 107 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/practice_day_2_2_max_path_sum.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/X</span>
+
+<span class="cm">The Maximum path-sum</span>
+
+<span class="cm">time limit per test: 1 second</span>
+<span class="cm">memory limit per test: 256 megabytes</span>
+
+<span class="cm">Given a matrix A of size N*M. Print the maximum sum of numbers that can be obtained when you take </span>
+<span class="cm">a path from A1,1 to AN,M.</span>
+
+<span class="cm">If you stay in Ai,j you can only go to :</span>
+<span class="cm">- Ai+1,j if and only if i≤N</span>
+<span class="cm">- Ai,j+1 if and only if j≤M</span>
+
+
+<span class="cm">Note: Solve this problem using recursion.</span>
+
+<span class="cm">Input</span>
+<span class="cm">First line contains two numbers N and M (1≤N,M≤10) N donates number of rows and M donates number </span>
+<span class="cm">of columns.</span>
+
+<span class="cm">Next N lines each of them will contain M numbers (−10^5≤Ai,j≤10^5).</span>
+
+<span class="cm">Output</span>
+<span class="cm">Print the maximum sum of numbers can be obtained.</span>
+
+<span class="cm">Example</span>
+
+<span class="cm">Input</span>
+<span class="cm">3 3</span>
+<span class="cm">5 2 4</span>
+<span class="cm">1 3 5</span>
+<span class="cm">9 2 7</span>
+
+<span class="cm">Output</span>
+<span class="cm">24</span>
+
+<span class="cm">*/</span>
+
+<span class="c1">// Solution idea (a choice at every cell, like knapsack&#39;s take-or-leave).</span>
+<span class="c1">// maxPathSum(i, j) = the best sum of a path from cell (i, j) to the bottom-right</span>
+<span class="c1">// corner. From (i, j) you step down or right, so</span>
+<span class="c1">//     best(i, j) = A[i][j] + max(best(i+1, j), best(i, j+1)).</span>
+<span class="c1">// The same cell is reached along many routes, so dp[i][j] stores each answer.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="mi">11</span><span class="p">][</span><span class="mi">11</span><span class="p">];</span><span class="w">   </span><span class="c1">// N, M &lt;= 10</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">11</span><span class="p">][</span><span class="mi">11</span><span class="p">];</span><span class="w">       </span><span class="c1">// dp[i][j] = maxPathSum(i, j); -1 = not computed</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">maxPathSum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Base case: at the goal, the path is just this one cell.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="mi">-1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">m</span><span class="mi">-1</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// On the last row you can only go right...</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="mi">-1</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">maxPathSum</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// ...and on the last column you can only go down. (These two edge cases</span>
+<span class="w">    </span><span class="c1">// are cheap chains, so they are not stored in dp.)</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">m</span><span class="mi">-1</span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">maxPathSum</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Two real choices: go down, or go right. Keep the better one.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">maxPathSum</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">maxPathSum</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span><span class="w"> </span><span class="n">op2</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+<span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Every cell starts &quot;not computed&quot;.</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">maxPathSum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">   </span><span class="c1">// best path from the top-left corner</span>
+
+<span class="w">    </span><span class="c1">// Cost: O(N * M), each cell solved once.</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 107 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3 3
+5 2 4
+1 3 5
+9 2 7</pre><p class="io-note">N M, then the grid. This is the judge&#x27;s example (expected 24).</p></div><div class="io out"><div class="io-h">Output </div><pre>24
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>24</code>, matching the judge: 5 -&gt; 1 -&gt; 9 -&gt; 2 -&gt; 7.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Reaching the bottom-right cell returns its value (base case).</li><li>Return <code>dp[i][j]</code> if already computed.</li><li>On the last row you can only go right; on the last column only down.</li><li>Otherwise take <code>matrix[i][j] + max(down, right)</code> and store it.</li><li>Print <code>maxPathSum(0, 0)</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Values can be negative, so -1 is not a perfectly safe &#x27;unsolved&#x27; marker: a real answer of -1 would be recomputed (still correct, only slower). A separate <code>bool done[][]</code> avoids that.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why can&#x27;t you just go greedily to the bigger neighbour each step?</summary><div>A small step now can lead to large values later. Here 5 -&gt; 2 looks better than 5 -&gt; 1, but the 1 leads to the 9.</div></details>
+</section>
+<section class="prog" id="p-practice-day-2-3-min-cost-climbing-stairs">
+  <div class="prog-h">
+    <span class="num">6</span>
+    <div class="prog-t">
+      <h3>LeetCode 746: Min Cost Climbing Stairs</h3>
+      <div class="meta"><code class="fname">practice_day_2_3_min_cost_climbing_stairs.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(n) · Space O(1)</span><a class="prob" href="https://leetcode.com/problems/min-cost-climbing-stairs/" target="_blank" rel="noopener">↗ LeetCode 746 - Min Cost Climbing Stairs</a></div>
+    </div>
+  </div>
+  <p class="what">Bottom-up with two variables: the cheapest way to stand on position i is the cheaper of coming from i-2 (paying <code>cost[i-2]</code>) or from i-1 (paying <code>cost[i-1]</code>).</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 76 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/practice_day_2_3_min_cost_climbing_stairs.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -867,159 +1369,122 @@ items 0..2     0  0  3  4  5  7
 <span class="normal">72</span>
 <span class="normal">73</span>
 <span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span>
-<span class="normal">86</span>
-<span class="normal">87</span>
-<span class="normal">88</span>
-<span class="normal">89</span>
-<span class="normal">90</span>
-<span class="normal">91</span>
-<span class="normal">92</span>
-<span class="normal">93</span>
-<span class="normal">94</span>
-<span class="normal">95</span>
-<span class="normal">96</span>
-<span class="normal">97</span>
-<span class="normal">98</span>
-<span class="normal">99</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">75</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
-<span class="cm">https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/U</span>
+<span class="cm">https://leetcode.com/problems/min-cost-climbing-stairs/description/</span>
 
-<span class="cm">Knapsack</span>
+<span class="cm">746. Min Cost Climbing Stairs</span>
 
-<span class="cm">There are N  items numbered from 1 to N. The ith item has a weight of wi and a value of vi.</span>
+<span class="cm">You are given an integer array cost where cost[i] is the cost of ith step on a staircase. Once </span>
+<span class="cm">you pay the cost, you can either climb one or two steps.</span>
 
-<span class="cm">You have to choose some items out of the N  items and carry them home in a knapsack. The capacity </span>
-<span class="cm">of the knapsack is W which donate the maximum weight that can be carried inside the knapsack. In </span>
-<span class="cm">other words, W means the total summation of all weights of items that can be carried in the </span>
-<span class="cm">knapsack.</span>
+<span class="cm">You can either start from the step with index 0, or the step with index 1.</span>
 
-<span class="cm">Print maximum possible sum of values of items that you can take home.</span>
+<span class="cm">Return the minimum cost to reach the top of the floor.</span>
 
-<span class="cm">Note: Solve this problem using recursion.</span>
+<span class="cm"> </span>
 
-<span class="cm">Input</span>
-<span class="cm">First line contains two numbers N and W (1≤N≤20,1≤W≤100) number of items and the capacity of the </span>
-<span class="cm">knapsack.</span>
+<span class="cm">Example 1:</span>
 
-<span class="cm">Next N lines will contain two numbers wi and vi (1≤wi≤50,1≤vi≤1000)</span>
+<span class="cm">Input: cost = [10,15,20]</span>
+<span class="cm">Output: 15</span>
+<span class="cm">Explanation: You will start at index 1.</span>
+<span class="cm">- Pay 15 and climb two steps to reach the top.</span>
+<span class="cm">The total cost is 15.</span>
 
-<span class="cm">Output</span>
-<span class="cm">Print maximum possible sum of values of items that you can take home.</span>
+<span class="cm">Example 2:</span>
 
-<span class="cm">Examples</span>
+<span class="cm">Input: cost = [1,100,1,1,1,100,1,1,100,1]</span>
+<span class="cm">Output: 6</span>
+<span class="cm">Explanation: You will start at index 0.</span>
+<span class="cm">- Pay 1 and climb two steps to reach index 2.</span>
+<span class="cm">- Pay 1 and climb two steps to reach index 4.</span>
+<span class="cm">- Pay 1 and climb two steps to reach index 6.</span>
+<span class="cm">- Pay 1 and climb one step to reach index 7.</span>
+<span class="cm">- Pay 1 and climb two steps to reach index 9.</span>
+<span class="cm">- Pay 1 and climb one step to reach the top.</span>
+<span class="cm">The total cost is 6.</span>
+<span class="cm"> </span>
 
-<span class="cm">Input</span>
-<span class="cm">3 8</span>
-<span class="cm">3 30</span>
-<span class="cm">4 50</span>
-<span class="cm">5 60</span>
+<span class="cm">Constraints:</span>
 
-<span class="cm">Output</span>
-<span class="cm">90</span>
-
-<span class="cm">Input</span>
-<span class="cm">6 15</span>
-<span class="cm">6 5</span>
-<span class="cm">5 6</span>
-<span class="cm">6 4</span>
-<span class="cm">6 6</span>
-<span class="cm">3 5</span>
-<span class="cm">7 2</span>
-
-<span class="cm">Output</span>
-<span class="cm">17</span>
+<span class="cm">- 2 &lt;= cost.length &lt;= 1000</span>
+<span class="cm">- 0 &lt;= cost[i] &lt;= 999</span>
 
 <span class="cm">*/</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
+<span class="c1">// Solution idea (bottom-up DP with two variables).</span>
+<span class="c1">// Let best(i) = the cheapest cost to stand on step i (&quot;the top&quot; is step n).</span>
+<span class="c1">// You arrive at i either from i-1 (paying cost[i-1]) or from i-2 (paying</span>
+<span class="c1">// cost[i-2]), so best(i) = min(best(i-2) + cost[i-2], best(i-1) + cost[i-1]).</span>
+<span class="c1">// Steps 0 and 1 are free starting points: best(0) = best(1) = 0.</span>
+<span class="c1">// Each value only needs the two before it, so two variables replace the table.</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">minCostClimbingStairs</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">cost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cost</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="mi">25</span><span class="p">],</span><span class="w"> </span><span class="n">value</span><span class="p">[</span><span class="mi">25</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">25</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span>
+<span class="w">            </span><span class="c1">// Edge cases (LeetCode promises n &gt;= 2, so these never fire there)</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">cost</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="nf">knapsack</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">    </span><span class="c1">// best(i-2)</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// best(i-1)</span>
 
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">                </span><span class="c1">// Two ways onto step i; keep the cheaper.</span>
+<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">first</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cost</span><span class="p">[</span><span class="n">i</span><span class="mi">-2</span><span class="p">],</span><span class="w"> </span><span class="n">second</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cost</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">]);</span>
+<span class="w">                </span><span class="c1">// Slide the window one step up.</span>
+<span class="w">                </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">second</span><span class="p">;</span>
+<span class="w">                </span><span class="n">second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">current</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">max_weight</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"> </span><span class="c1">// taking the current item</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span><span class="w"> </span><span class="c1">// not taking the current item</span>
-<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span><span class="w"> </span><span class="n">op2</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
-<span class="w">        </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">i</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">max_weight</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">max_weight</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">max_weight</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">second</span><span class="p">;</span><span class="w">   </span><span class="c1">// best(n): standing on the top</span>
+<span class="w">            </span><span class="c1">// Cost: O(n) time, O(1) memory.</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">knapsack</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">max_weight</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="p">};</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 99 lines ▾</button>
+    <button type="button" class="expand">Show all 76 lines ▾</button>
   </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3 8
-3 30
-4 50
-5 60</pre><p class="io-note">The judge&#x27;s first example (expected 90).</p></div><div class="io out"><div class="io-h">Output </div><pre>0
+  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+</pre></div>
+<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cost</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">c</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">cost</span><span class="p">)</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">    </span><span class="n">Solution</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;minCostClimbingStairs = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">minCostClimbingStairs</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10
+1 100 1 1 1 100 1 1 100 1</pre><p class="io-note">The length, then the costs. This is LeetCode&#x27;s Example 2 (expected 6).</p></div><div class="io out"><div class="io-h">Output </div><pre>minCostClimbingStairs = 6
 </pre></div></div>
-  <p class="readout"><b>Reading the output.</b> Prints <code>0</code> instead of 90 for the same reason as the other versions.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Read <code>n</code>, <code>max_weight</code>, then the <code>weight value</code> pairs.</li><li>Same init loop and take/skip recursion.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Init with <code>j &lt;= max_weight</code>. After the fix it prints 90.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> Why is the table sized <code>dp[25][105]</code>?</summary><div>N is at most 20 and W at most 100, so a little extra room covers every (i, w) pair.</div></details>
+  <p class="readout"><b>Reading the output.</b> Prints <code>minCostClimbingStairs = 6</code>, matching LeetCode.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>first</code> and <code>second</code> are the best costs to reach positions i-2 and i-1; both start at 0 because you may start on step 0 or 1 for free.</li><li>For <code>i = 2..n</code>: <code>current = min(first + cost[i-2], second + cost[i-1])</code>.</li><li>Shift: <code>first = second</code>, <code>second = current</code>.</li><li>After the loop, <code>second</code> is the cost to reach position n (the top).</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> The file only holds the <code>Solution</code> class (no includes, no <code>main</code>); the page adds a test driver.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> For <code>cost = [10, 15, 20]</code>, what is the answer and why?</summary><div>15: start on step 1, pay 15, and jump two steps to the top.</div></details>
 </section>
-<section class="prog" id="p-practice-day-2-2-max-path-sum">
+<section class="prog" id="p-practice-day-2-4-house-robber">
   <div class="prog-h">
-    <span class="num">5</span>
+    <span class="num">7</span>
     <div class="prog-t">
-      <h3>The maximum path-sum (grid DP)</h3>
-      <div class="meta"><code class="fname">practice_day_2_2_max_path_sum.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(N·M) · Space O(N·M)</span><a class="prob" href="https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/X" target="_blank" rel="noopener">↗ Codeforces Group - X. The maximum path-sum</a></div>
+      <h3>LeetCode 198: House Robber</h3>
+      <div class="meta"><code class="fname">practice_day_2_4_house_robber.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(n) · Space O(n)</span><a class="prob" href="https://leetcode.com/problems/house-robber/" target="_blank" rel="noopener">↗ LeetCode 198 - House Robber</a></div>
     </div>
   </div>
-  <p class="what">From the top-left cell you may only move down or right. <code>maxPathSum(i, j)</code> = this cell + the better of going down or right, memoized in <code>dp</code>.</p>
+  <p class="what"><code>dp[i]</code> = the most money from houses 0..i. Either rob house i (then add <code>dp[i-2]</code>) or skip it (keep <code>dp[i-1]</code>). The file has its own <code>main</code> testing both LeetCode examples.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 93 lines</span>
+      <span>CPP · 94 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/practice_day_2_2_max_path_sum.cpp" target="_blank" rel="noopener">GitHub</a>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/practice_day_2_4_house_robber.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -1117,300 +1582,125 @@ items 0..2     0  0  3  4  5  7
 <span class="normal">92</span>
 <span class="normal">93</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
-<span class="cm">https://codeforces.com/group/MWSDmqGsZm/contest/223339/problem/X</span>
+<span class="cm">https://leetcode.com/problems/house-robber/description/</span>
 
-<span class="cm">The Maximum path-sum</span>
+<span class="cm">198. House Robber</span>
 
-<span class="cm">time limit per test: 1 second</span>
-<span class="cm">memory limit per test: 256 megabytes</span>
+<span class="cm">You are a professional robber planning to rob houses along a street. Each house has a certain </span>
+<span class="cm">amount of money stashed, the only constraint stopping you from robbing each of them is that </span>
+<span class="cm">adjacent houses have security systems connected and it will automatically contact the police if </span>
+<span class="cm">two adjacent houses were broken into on the same night.</span>
 
-<span class="cm">Given a matrix A of size N*M. Print the maximum sum of numbers that can be obtained when you take </span>
-<span class="cm">a path from A1,1 to AN,M.</span>
-
-<span class="cm">If you stay in Ai,j you can only go to :</span>
-<span class="cm">- Ai+1,j if and only if i≤N</span>
-<span class="cm">- Ai,j+1 if and only if j≤M</span>
-
-
-<span class="cm">Note: Solve this problem using recursion.</span>
-
-<span class="cm">Input</span>
-<span class="cm">First line contains two numbers N and M (1≤N,M≤10) N donates number of rows and M donates number </span>
-<span class="cm">of columns.</span>
-
-<span class="cm">Next N lines each of them will contain M numbers (−10^5≤Ai,j≤10^5).</span>
-
-<span class="cm">Output</span>
-<span class="cm">Print the maximum sum of numbers can be obtained.</span>
-
-<span class="cm">Example</span>
-
-<span class="cm">Input</span>
-<span class="cm">3 3</span>
-<span class="cm">5 2 4</span>
-<span class="cm">1 3 5</span>
-<span class="cm">9 2 7</span>
-
-<span class="cm">Output</span>
-<span class="cm">24</span>
-
-<span class="cm">*/</span>
-
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="mi">11</span><span class="p">][</span><span class="mi">11</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">11</span><span class="p">][</span><span class="mi">11</span><span class="p">];</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">maxPathSum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="mi">-1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">m</span><span class="mi">-1</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="mi">-1</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">maxPathSum</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">m</span><span class="mi">-1</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">maxPathSum</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">op1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">maxPathSum</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">op2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">maxPathSum</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span><span class="w"> </span><span class="n">op2</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">maxPathSum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 93 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3 3
-5 2 4
-1 3 5
-9 2 7</pre><p class="io-note">N M, then the grid. This is the judge&#x27;s example (expected 24).</p></div><div class="io out"><div class="io-h">Output </div><pre>24
-</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> Prints <code>24</code>, matching the judge: 5 -&gt; 1 -&gt; 9 -&gt; 2 -&gt; 7.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Reaching the bottom-right cell returns its value (base case).</li><li>Return <code>dp[i][j]</code> if already computed.</li><li>On the last row you can only go right; on the last column only down.</li><li>Otherwise take <code>matrix[i][j] + max(down, right)</code> and store it.</li><li>Print <code>maxPathSum(0, 0)</code>.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Values can be negative, so -1 is not a perfectly safe &#x27;unsolved&#x27; marker: a real answer of -1 would be recomputed (still correct, only slower). A separate <code>bool done[][]</code> avoids that.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> Why can&#x27;t you just go greedily to the bigger neighbour each step?</summary><div>A small step now can lead to large values later. Here 5 -&gt; 2 looks better than 5 -&gt; 1, but the 1 leads to the 9.</div></details>
-</section>
-<section class="prog" id="p-practice-day-2-3-min-cost-climbing-stairs">
-  <div class="prog-h">
-    <span class="num">6</span>
-    <div class="prog-t">
-      <h3>LeetCode 746: Min Cost Climbing Stairs</h3>
-      <div class="meta"><code class="fname">practice_day_2_3_min_cost_climbing_stairs.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(n) · Space O(1)</span><a class="prob" href="https://leetcode.com/problems/min-cost-climbing-stairs/" target="_blank" rel="noopener">↗ LeetCode 746 - Min Cost Climbing Stairs</a></div>
-    </div>
-  </div>
-  <p class="what">Bottom-up with two variables: the cheapest way to stand on position i is the cheaper of coming from i-2 (paying <code>cost[i-2]</code>) or from i-1 (paying <code>cost[i-1]</code>).</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 65 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/practice_day_2_3_min_cost_climbing_stairs.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
-
-<span class="cm">https://leetcode.com/problems/min-cost-climbing-stairs/description/</span>
-
-<span class="cm">746. Min Cost Climbing Stairs</span>
-
-<span class="cm">You are given an integer array cost where cost[i] is the cost of ith step on a staircase. Once </span>
-<span class="cm">you pay the cost, you can either climb one or two steps.</span>
-
-<span class="cm">You can either start from the step with index 0, or the step with index 1.</span>
-
-<span class="cm">Return the minimum cost to reach the top of the floor.</span>
+<span class="cm">Given an integer array nums representing the amount of money of each house, return the maximum </span>
+<span class="cm">amount of money you can rob tonight without alerting the police.</span>
 
 <span class="cm"> </span>
 
 <span class="cm">Example 1:</span>
 
-<span class="cm">Input: cost = [10,15,20]</span>
-<span class="cm">Output: 15</span>
-<span class="cm">Explanation: You will start at index 1.</span>
-<span class="cm">- Pay 15 and climb two steps to reach the top.</span>
-<span class="cm">The total cost is 15.</span>
-
+<span class="cm">Input: nums = [1,2,3,1]</span>
+<span class="cm">Output: 4</span>
+<span class="cm">Explanation: Rob house 1 (money = 1) and then rob house 3 (money = 3).</span>
+<span class="cm">Total amount you can rob = 1 + 3 = 4.</span>
 <span class="cm">Example 2:</span>
 
-<span class="cm">Input: cost = [1,100,1,1,1,100,1,1,100,1]</span>
-<span class="cm">Output: 6</span>
-<span class="cm">Explanation: You will start at index 0.</span>
-<span class="cm">- Pay 1 and climb two steps to reach index 2.</span>
-<span class="cm">- Pay 1 and climb two steps to reach index 4.</span>
-<span class="cm">- Pay 1 and climb two steps to reach index 6.</span>
-<span class="cm">- Pay 1 and climb one step to reach index 7.</span>
-<span class="cm">- Pay 1 and climb two steps to reach index 9.</span>
-<span class="cm">- Pay 1 and climb one step to reach the top.</span>
-<span class="cm">The total cost is 6.</span>
+<span class="cm">Input: nums = [2,7,9,3,1]</span>
+<span class="cm">Output: 12</span>
+<span class="cm">Explanation: Rob house 1 (money = 2), rob house 3 (money = 9) and rob house 5 (money = 1).</span>
+<span class="cm">Total amount you can rob = 2 + 9 + 1 = 12.</span>
 <span class="cm"> </span>
 
 <span class="cm">Constraints:</span>
 
-<span class="cm">- 2 &lt;= cost.length &lt;= 1000</span>
-<span class="cm">- 0 &lt;= cost[i] &lt;= 999</span>
+<span class="cm">1 &lt;= nums.length &lt;= 100</span>
+<span class="cm">0 &lt;= nums[i] &lt;= 400</span>
 
 <span class="cm">*/</span>
 
+<span class="c1">// Solution idea (bottom-up DP, take-or-leave like knapsack).</span>
+<span class="c1">// dp[i] = the most money from houses 0..i. For house i there are two choices:</span>
+<span class="c1">//   rob it   -&gt; nums[i] + dp[i-2]  (house i-1 must then be left alone)</span>
+<span class="c1">//   skip it  -&gt; dp[i-1]</span>
+<span class="c1">// Keep the bigger one.</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
 <span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">minCostClimbingStairs</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">cost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cost</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="w">            </span>
-<span class="w">            </span><span class="c1">// Edge cases</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">cost</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-<span class="w">            </span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">            </span>
-<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">first</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cost</span><span class="p">[</span><span class="n">i</span><span class="mi">-2</span><span class="p">],</span><span class="w"> </span><span class="n">second</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cost</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">]);</span>
-<span class="w">                </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">second</span><span class="p">;</span>
-<span class="w">                </span><span class="n">second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">current</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">rob</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
-<span class="w">            </span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">second</span><span class="p">;</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">1</span><span class="p">){</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span><span class="w">   </span><span class="c1">// a single house: rob it</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">   </span><span class="c1">// at most 100 houses</span>
+<span class="w">            </span><span class="n">memset</span><span class="p">(</span><span class="n">dp</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">dp</span><span class="p">));</span>
+
+<span class="w">            </span><span class="c1">// The first two cells have no i-2, so fill them by hand.</span>
+<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span><span class="w">                  </span><span class="c1">// only house 0 exists</span>
+<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span><span class="w">    </span><span class="c1">// neighbours: pick the richer one</span>
+
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">                </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="mi">-2</span><span class="p">],</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">]);</span><span class="w">   </span><span class="c1">// rob i, or skip i</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">n</span><span class="mi">-1</span><span class="p">];</span><span class="w">   </span><span class="c1">// best over all houses</span>
+<span class="w">            </span><span class="c1">// Cost: O(n) time, O(n) memory.</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">};</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 65 lines ▾</button>
-  </div>
-  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-</pre></div>
-<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
-<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cost</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">c</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">cost</span><span class="p">)</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
-<span class="w">    </span><span class="n">Solution</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;minCostClimbingStairs = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">minCostClimbingStairs</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="w">    </span><span class="c1">// Test the solution</span>
+<span class="w">    </span><span class="c1">// This file brings its own main, with LeetCode&#39;s two examples built in,</span>
+<span class="w">    </span><span class="c1">// so it reads no input.</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Test case 1</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nums1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">};</span>
+<span class="w">    </span><span class="n">Solution</span><span class="w"> </span><span class="n">sol1</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Example 1 output: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sol1</span><span class="p">.</span><span class="n">rob</span><span class="p">(</span><span class="n">nums1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"> </span><span class="c1">// Expected: 4</span>
+
+<span class="w">    </span><span class="c1">// Test case 2</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nums2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">};</span>
+<span class="w">    </span><span class="n">Solution</span><span class="w"> </span><span class="n">sol2</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Example 2 output: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sol2</span><span class="p">.</span><span class="n">rob</span><span class="p">(</span><span class="n">nums2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"> </span><span class="c1">// Expected: 12</span>
+
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
-</pre></div>
-</details>
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10
-1 100 1 1 1 100 1 1 100 1</pre><p class="io-note">The length, then the costs. This is LeetCode&#x27;s Example 2 (expected 6).</p></div><div class="io out"><div class="io-h">Output </div><pre>minCostClimbingStairs = 6
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 94 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>Example 1 output: 4
+Example 2 output: 12
 </pre></div></div>
-  <p class="readout"><b>Reading the output.</b> Prints <code>minCostClimbingStairs = 6</code>, matching LeetCode.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>first</code> and <code>second</code> are the best costs to reach positions i-2 and i-1; both start at 0 because you may start on step 0 or 1 for free.</li><li>For <code>i = 2..n</code>: <code>current = min(first + cost[i-2], second + cost[i-1])</code>.</li><li>Shift: <code>first = second</code>, <code>second = current</code>.</li><li>After the loop, <code>second</code> is the cost to reach position n (the top).</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> The file only holds the <code>Solution</code> class (no includes, no <code>main</code>); the page adds a test driver.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> For <code>cost = [10, 15, 20]</code>, what is the answer and why?</summary><div>15: start on step 1, pay 15, and jump two steps to the top.</div></details>
+  <p class="readout"><b>Reading the output.</b> <code>Example 1 output: 4</code> and <code>Example 2 output: 12</code>, matching LeetCode&#x27;s expected answers.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Handle 0 or 1 houses directly.</li><li><code>dp[0] = nums[0]</code>, <code>dp[1] = max(nums[0], nums[1])</code>.</li><li>For <code>i &gt;= 2</code>: <code>dp[i] = max(nums[i] + dp[i-2], dp[i-1])</code>.</li><li>Return <code>dp[n-1]</code>.</li></ol></details>
+  
+  <details class="check"><summary><span>✅ Check yourself:</span> What is the answer for <code>[2, 1, 1, 2]</code>?</summary><div>4: rob the first and last houses (2 + 2).</div></details>
 </section>
-<section class="prog" id="p-practice-day-2-4-house-robber">
+<section class="prog" id="p-practice-day-2-5-pascals-triangle">
   <div class="prog-h">
-    <span class="num">7</span>
+    <span class="num">8</span>
     <div class="prog-t">
-      <h3>LeetCode 198: House Robber</h3>
-      <div class="meta"><code class="fname">practice_day_2_4_house_robber.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(n) · Space O(n)</span><a class="prob" href="https://leetcode.com/problems/house-robber/" target="_blank" rel="noopener">↗ LeetCode 198 - House Robber</a></div>
+      <h3>LeetCode 118: Pascal&#x27;s Triangle</h3>
+      <div class="meta"><code class="fname">practice_day_2_5_pascals_triangle.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(numRows^2) · Space O(numRows^2)</span><a class="prob" href="https://leetcode.com/problems/pascals-triangle/" target="_blank" rel="noopener">↗ LeetCode 118 - Pascal&#x27;s Triangle</a></div>
     </div>
   </div>
-  <p class="what"><code>dp[i]</code> = the most money from houses 0..i. Either rob house i (then add <code>dp[i-2]</code>) or skip it (keep <code>dp[i-1]</code>). The file has its own <code>main</code> testing both LeetCode examples.</p>
+  <p class="what">Each row starts and ends with 1; every inner value is the sum of the two values above it in the previous row. The file&#x27;s <code>main</code> prints 5 rows.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 83 lines</span>
+      <span>CPP · 78 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/practice_day_2_4_house_robber.cpp" target="_blank" rel="noopener">GitHub</a>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/practice_day_2_5_pascals_triangle.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -1490,193 +1780,7 @@ items 0..2     0  0  3  4  5  7
 <span class="normal">74</span>
 <span class="normal">75</span>
 <span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
-
-<span class="cm">https://leetcode.com/problems/house-robber/description/</span>
-
-<span class="cm">198. House Robber</span>
-
-<span class="cm">You are a professional robber planning to rob houses along a street. Each house has a certain </span>
-<span class="cm">amount of money stashed, the only constraint stopping you from robbing each of them is that </span>
-<span class="cm">adjacent houses have security systems connected and it will automatically contact the police if </span>
-<span class="cm">two adjacent houses were broken into on the same night.</span>
-
-<span class="cm">Given an integer array nums representing the amount of money of each house, return the maximum </span>
-<span class="cm">amount of money you can rob tonight without alerting the police.</span>
-
-<span class="cm"> </span>
-
-<span class="cm">Example 1:</span>
-
-<span class="cm">Input: nums = [1,2,3,1]</span>
-<span class="cm">Output: 4</span>
-<span class="cm">Explanation: Rob house 1 (money = 1) and then rob house 3 (money = 3).</span>
-<span class="cm">Total amount you can rob = 1 + 3 = 4.</span>
-<span class="cm">Example 2:</span>
-
-<span class="cm">Input: nums = [2,7,9,3,1]</span>
-<span class="cm">Output: 12</span>
-<span class="cm">Explanation: Rob house 1 (money = 2), rob house 3 (money = 9) and rob house 5 (money = 1).</span>
-<span class="cm">Total amount you can rob = 2 + 9 + 1 = 12.</span>
-<span class="cm"> </span>
-
-<span class="cm">Constraints:</span>
-
-<span class="cm">1 &lt;= nums.length &lt;= 100</span>
-<span class="cm">0 &lt;= nums[i] &lt;= 400</span>
-
-<span class="cm">*/</span>
-
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">rob</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">1</span><span class="p">){</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-<span class="w">            </span><span class="p">}</span>
-
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
-<span class="w">            </span><span class="n">memset</span><span class="p">(</span><span class="n">dp</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">dp</span><span class="p">));</span>
-
-<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-<span class="w">            </span><span class="n">dp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
-
-<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">                </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="mi">-2</span><span class="p">],</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">]);</span>
-<span class="w">            </span><span class="p">}</span>
-
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">dp</span><span class="p">[</span><span class="n">n</span><span class="mi">-1</span><span class="p">];</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="p">};</span>
-
-<span class="w">    </span><span class="c1">// Test the solution</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="c1">// Test case 1</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nums1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">};</span>
-<span class="w">    </span><span class="n">Solution</span><span class="w"> </span><span class="n">sol1</span><span class="p">;</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Example 1 output: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sol1</span><span class="p">.</span><span class="n">rob</span><span class="p">(</span><span class="n">nums1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"> </span><span class="c1">// Expected: 4</span>
-<span class="w">    </span>
-<span class="w">    </span><span class="c1">// Test case 2</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nums2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">};</span>
-<span class="w">    </span><span class="n">Solution</span><span class="w"> </span><span class="n">sol2</span><span class="p">;</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Example 2 output: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sol2</span><span class="p">.</span><span class="n">rob</span><span class="p">(</span><span class="n">nums2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"> </span><span class="c1">// Expected: 12</span>
-<span class="w">    </span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 83 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>Example 1 output: 4
-Example 2 output: 12
-</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> <code>Example 1 output: 4</code> and <code>Example 2 output: 12</code>, matching LeetCode&#x27;s expected answers.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Handle 0 or 1 houses directly.</li><li><code>dp[0] = nums[0]</code>, <code>dp[1] = max(nums[0], nums[1])</code>.</li><li>For <code>i &gt;= 2</code>: <code>dp[i] = max(nums[i] + dp[i-2], dp[i-1])</code>.</li><li>Return <code>dp[n-1]</code>.</li></ol></details>
-  
-  <details class="check"><summary><span>✅ Check yourself:</span> What is the answer for <code>[2, 1, 1, 2]</code>?</summary><div>4: rob the first and last houses (2 + 2).</div></details>
-</section>
-<section class="prog" id="p-practice-day-2-5-pascals-triangle">
-  <div class="prog-h">
-    <span class="num">8</span>
-    <div class="prog-t">
-      <h3>LeetCode 118: Pascal&#x27;s Triangle</h3>
-      <div class="meta"><code class="fname">practice_day_2_5_pascals_triangle.cpp</code><span class="badge k-practice">Practice</span><span class="badge cx">Time O(numRows^2) · Space O(numRows^2)</span><a class="prob" href="https://leetcode.com/problems/pascals-triangle/" target="_blank" rel="noopener">↗ LeetCode 118 - Pascal&#x27;s Triangle</a></div>
-    </div>
-  </div>
-  <p class="what">Each row starts and ends with 1; every inner value is the sum of the two values above it in the previous row. The file&#x27;s <code>main</code> prints 5 rows.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 67 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2015/practice_day_2_5_pascals_triangle.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://leetcode.com/problems/pascals-triangle/description/</span>
 
@@ -1702,6 +1806,11 @@ Example 2 output: 12
 
 <span class="cm">*/</span>
 
+<span class="c1">// Solution idea (bottom-up DP, building each row from the one above).</span>
+<span class="c1">// Every row starts and ends with 1. Each inside number is the sum of the two</span>
+<span class="c1">// numbers just above it: row[j] = previous[j-1] + previous[j].</span>
+<span class="c1">// The finished rows are the table, and each new row reads only the last one.</span>
+
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
@@ -1713,26 +1822,31 @@ Example 2 output: 12
 <span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
 <span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">generate</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">numRows</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
-<span class="w">    </span>
+<span class="w">            </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w">   </span><span class="c1">// result[i] = row i of the triangle</span>
+
 <span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">numRows</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">                </span><span class="c1">// Row i has i+1 numbers. Start them all at 1: that already</span>
+<span class="w">                </span><span class="c1">// makes both ends right, and rows 0 and 1 are then finished.</span>
 <span class="w">                </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">row</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-<span class="w">    </span>
+
+<span class="w">                </span><span class="c1">// Fill the inside positions 1..i-1 from the row above.</span>
 <span class="w">                </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">i</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">                    </span><span class="n">row</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">][</span><span class="n">j</span><span class="mi">-1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
 <span class="w">                </span><span class="p">}</span>
 <span class="w">                </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">row</span><span class="p">);</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+<span class="w">            </span><span class="c1">// Cost: O(numRows^2), one step per number in the triangle.</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">};</span>
 
+<span class="w">    </span><span class="c1">// The file&#39;s own test: build 5 rows and print one row per line.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="n">Solution</span><span class="w"> </span><span class="n">sol</span><span class="p">;</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">numRows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
-<span class="w">        </span>
+
 <span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">triangle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sol</span><span class="p">.</span><span class="n">generate</span><span class="p">(</span><span class="n">numRows</span><span class="p">);</span>
-<span class="w">        </span>
+
 <span class="w">        </span><span class="c1">// Print the result</span>
 <span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">triangle</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -1740,12 +1854,12 @@ Example 2 output: 12
 <span class="w">            </span><span class="p">}</span>
 <span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">        </span>
+
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 67 lines ▾</button>
+    <button type="button" class="expand">Show all 78 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>1 
@@ -1770,7 +1884,7 @@ Example 2 output: 12
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=7" defer></script>
-<script src="../assets/site.js?v=7" defer></script>
+<script src="../assets/search-index.js?v=8" defer></script>
+<script src="../assets/site.js?v=8" defer></script>
 </body>
 </html>

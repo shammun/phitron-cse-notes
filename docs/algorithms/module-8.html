@@ -7,7 +7,7 @@
 <meta name="description" content="The mid-term exam solutions. All four are grid problems: reachability with DFS, the smallest component area, knight moves with BFS on a chessboard, and printing the BFS path through a maze with a parent array. Together they are a good revision of Modules 2-6.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=7">
+<link rel="stylesheet" href="../assets/site.css?v=8">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -63,7 +63,7 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
   <p class="what">Checks with DFS whether cell D can be reached from cell S through <code>.</code> cells.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 130 lines</span>
+      <span>CPP · 144 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%208/mid_term_1_same_component.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -199,7 +199,20 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="normal">127</span>
 <span class="normal">128</span>
 <span class="normal">129</span>
-<span class="normal">130</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Problem Statement</span>
 
@@ -255,16 +268,23 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 
 <span class="cm">*/</span>
 
+<span class="c1">// Mid-term question 1. &quot;Same component&quot; on a grid just means: starting at S</span>
+<span class="c1">// and stepping only on &#39;.&#39;, can we reach D? That is a reachability search, so</span>
+<span class="c1">// one DFS from S (Module 3&#39;s dfs_on_2d_grid.cpp) answers it. This version stops</span>
+<span class="c1">// early: the moment the DFS stands on D it returns true all the way up.</span>
+
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
-<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
+<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w">   </span><span class="c1">// the map: &#39;.&#39; open, &#39;-&#39; blocked</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w">    </span><span class="c1">// cells the DFS has already stood on</span>
+<span class="c1">// right, left, up, down as {row change, column change}</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}};</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
 
+<span class="c1">// Is (i, j) inside the grid?</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="o">&gt;=</span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="o">&gt;=</span><span class="n">m</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
@@ -272,11 +292,12 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// DFS from (si, sj). Returns true as soon as the destination (di, dj) is reached.</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sj</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">di</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">dj</span><span class="p">){</span>
 <span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">si</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">di</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">sj</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">dj</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">   </span><span class="c1">// standing on D: found it</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
@@ -284,6 +305,8 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sj</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
 
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">){</span>
+<span class="w">            </span><span class="c1">// Explore from the neighbour. If that search found D, there is no</span>
+<span class="w">            </span><span class="c1">// need to try the other directions: pass true straight back up.</span>
 <span class="w">            </span><span class="kt">bool</span><span class="w"> </span><span class="n">found</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dfs</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">,</span><span class="w"> </span><span class="n">di</span><span class="p">,</span><span class="w"> </span><span class="n">dj</span><span class="p">);</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">found</span><span class="p">){</span>
 <span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -291,7 +314,7 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">   </span><span class="c1">// every open cell around here explored, no D</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
@@ -304,16 +327,18 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="n">sj</span><span class="p">,</span><span class="w"> </span><span class="n">di</span><span class="p">,</span><span class="w"> </span><span class="n">dj</span><span class="p">;</span>
 
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">si</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">sj</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">di</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">dj</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">si</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">sj</span><span class="p">;</span><span class="w">   </span><span class="c1">// start cell S</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">di</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">dj</span><span class="p">;</span><span class="w">   </span><span class="c1">// destination cell D</span>
 
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
 
+<span class="w">    </span><span class="c1">// A blocked S or D cannot be part of any component of &#39;.&#39; cells.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;-&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">di</span><span class="p">][</span><span class="n">dj</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;-&#39;</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// S and D are the same open cell: trivially the same component.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">si</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">di</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">sj</span><span class="o">==</span><span class="n">dj</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -327,11 +352,12 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// At most every cell is visited once: O(N * M).</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 130 lines ▾</button>
+    <button type="button" class="expand">Show all 144 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 4
@@ -359,7 +385,7 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
   <p class="what">DFS measures each <code>.</code> component; the smallest area is printed, or -1 if there are none.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 121 lines</span>
+      <span>CPP · 131 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%208/mid_term_2_area_of_component.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -485,7 +511,17 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="normal">117</span>
 <span class="normal">118</span>
 <span class="normal">119</span>
-<span class="normal">120</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Area of component</span>
 
@@ -537,10 +573,15 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 
 <span class="cm">*/</span>
 
+<span class="c1">// Mid-term question 2. Every group of touching &#39;.&#39; cells is a component, and</span>
+<span class="c1">// its area is how many cells it has. So: flood each component with DFS once,</span>
+<span class="c1">// counting cells as the DFS visits them, and keep the smallest count.</span>
+<span class="c1">// If no &#39;.&#39; exists at all there is no component, and the answer is -1.</span>
+
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;climits&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;climits&gt;</span><span class="c1">      // INT_MAX</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
@@ -549,7 +590,7 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">},{</span><span class="mi">0</span><span class="p">,</span><span class="mi">-1</span><span class="p">},{</span><span class="mi">-1</span><span class="p">,</span><span class="mi">0</span><span class="p">},{</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">}};</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">area</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">area</span><span class="p">;</span><span class="w">   </span><span class="c1">// cells counted in the component being flooded right now</span>
 
 <span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
@@ -558,6 +599,7 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Flood one component, adding 1 to area for every cell stood on.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sj</span><span class="p">){</span>
 <span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">    </span><span class="n">area</span><span class="o">++</span><span class="p">;</span>
@@ -582,20 +624,23 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">min_area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">min_area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span><span class="w">   </span><span class="c1">// start above any real area, so the first min() wins</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">        </span><span class="c1">// did we find at least one component?</span>
 
+<span class="w">    </span><span class="c1">// Each unvisited &#39;.&#39; is the first cell we meet of a new component.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">){</span>
-<span class="w">                </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">                </span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
+<span class="w">                </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                        </span><span class="c1">// reset the counter for this component</span>
+<span class="w">                </span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span><span class="w">                       </span><span class="c1">// now area = its size</span>
 <span class="w">                </span><span class="n">min_area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">min_area</span><span class="p">,</span><span class="w"> </span><span class="n">area</span><span class="p">);</span>
 <span class="w">                </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span><span class="w">        </span>
+<span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// flag tells &quot;no components&quot; apart from a real answer. (Checking</span>
+<span class="w">    </span><span class="c1">// min_area == INT_MAX would work too.)</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">flag</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">min_area</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -603,11 +648,12 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// O(N * M): each cell is flooded once.</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 121 lines ▾</button>
+    <button type="button" class="expand">Show all 131 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 5
@@ -634,7 +680,7 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
   <p class="what">BFS from the knight&#x27;s cell with the 8 knight jumps; the level of the queen&#x27;s cell is the answer.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 124 lines</span>
+      <span>CPP · 140 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%208/mid_term_3_knight_moves.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -763,7 +809,23 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="normal">120</span>
 <span class="normal">121</span>
 <span class="normal">122</span>
-<span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Knoght Moves</span>
 
@@ -822,6 +884,11 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 
 <span class="cm">*/</span>
 
+<span class="c1">// Mid-term question 3. Every knight jump counts as one step, whatever its</span>
+<span class="c1">// shape, so this is a shortest-path question on an unweighted graph: BFS</span>
+<span class="c1">// (Module 2). The cells are the nodes, and each cell has up to 8 neighbours,</span>
+<span class="c1">// one per knight jump. The BFS level of the queen&#39;s cell is the answer.</span>
+
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
@@ -829,8 +896,11 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">   </span><span class="c1">// board size</span>
+<span class="c1">// The 8 knight jumps: two squares one way and one square the other way.</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-2</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">}};</span>
+<span class="c1">// dist[i][j] = fewest jumps from the knight to (i, j); -1 = not reached yet.</span>
+<span class="c1">// One array does two jobs: it is also the &quot;visited&quot; mark (-1 means unvisited).</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">dist</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span>
 
 <span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
@@ -840,12 +910,14 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// BFS from the knight (k_i, k_j); returns the jumps needed to reach (q_i, q_j).</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">k_i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">k_j</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">q_i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">q_j</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Reset for every test case: the same board array is reused.</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">dist</span><span class="p">));</span>
 
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">k_i</span><span class="p">,</span><span class="w"> </span><span class="n">k_j</span><span class="p">});</span>
-<span class="w">    </span><span class="n">dist</span><span class="p">[</span><span class="n">k_i</span><span class="p">][</span><span class="n">k_j</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">dist</span><span class="p">[</span><span class="n">k_i</span><span class="p">][</span><span class="n">k_j</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// zero jumps to stay where it is</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
@@ -853,6 +925,8 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// BFS pops cells in order of distance, so the first time the queen&#39;s</span>
+<span class="w">        </span><span class="c1">// cell comes out, its distance is already the smallest possible.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">par_i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">q_i</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">q_j</span><span class="p">){</span>
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">dist</span><span class="p">[</span><span class="n">par_i</span><span class="p">][</span><span class="n">par_j</span><span class="p">];</span>
 <span class="w">        </span><span class="p">}</span>
@@ -861,34 +935,38 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
 
+<span class="w">            </span><span class="c1">// Stay on the board, and only take cells not reached before.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">dist</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">});</span>
-<span class="w">                </span><span class="n">dist</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dist</span><span class="p">[</span><span class="n">par_i</span><span class="p">][</span><span class="n">par_j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">                </span><span class="n">dist</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dist</span><span class="p">[</span><span class="n">par_i</span><span class="p">][</span><span class="n">par_j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// one jump further</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// The queue ran dry without meeting the queen: on a tiny board (such as</span>
+<span class="w">    </span><span class="c1">// 2 x 2) some cells cannot be reached by knight jumps at all.</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w">   </span><span class="c1">// number of test cases</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">k_i</span><span class="p">,</span><span class="w"> </span><span class="n">k_j</span><span class="p">,</span><span class="w"> </span><span class="n">q_i</span><span class="p">,</span><span class="w"> </span><span class="n">q_j</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">k_i</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">k_j</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q_i</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q_j</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">k_i</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">k_j</span><span class="p">;</span><span class="w">   </span><span class="c1">// knight</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q_i</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q_j</span><span class="p">;</span><span class="w">   </span><span class="c1">// queen</span>
 
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">bfs</span><span class="p">(</span><span class="n">k_i</span><span class="p">,</span><span class="w"> </span><span class="n">k_j</span><span class="p">,</span><span class="w"> </span><span class="n">q_i</span><span class="p">,</span><span class="w"> </span><span class="n">q_j</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Each test: O(N * M * 8) at most.</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 124 lines ▾</button>
+    <button type="button" class="expand">Show all 140 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>3
@@ -920,7 +998,7 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
   <p class="what">BFS from R to D with a <code>path</code> parent grid, then walks back from D and puts <code>X</code> on every <code>.</code> cell of the route.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 241 lines</span>
+      <span>CPP · 267 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%208/mid_term_4_maze.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1166,7 +1244,33 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="normal">237</span>
 <span class="normal">238</span>
 <span class="normal">239</span>
-<span class="normal">240</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Maze</span>
 
@@ -1256,6 +1360,17 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 
 <span class="cm">*/</span>
 
+<span class="c1">// Mid-term question 4. &quot;Escape as early as possible&quot; = a shortest route in a</span>
+<span class="c1">// grid where every step costs the same, so it is BFS (Module 2 + Module 3&#39;s grid</span>
+<span class="c1">// BFS). To draw the route we also need path printing (Module 2&#39;s</span>
+<span class="c1">// path_printing.cpp): while BFS runs, remember for each cell which cell it was</span>
+<span class="c1">// discovered from. Afterwards, walk those parent links backwards from D to R and</span>
+<span class="c1">// put an &#39;X&#39; on every cell in between.</span>
+<span class="c1">//</span>
+<span class="c1">// The fixed move order (right, left, up, down) matters because several shortest</span>
+<span class="c1">// routes can exist; trying the directions in the order the problem states makes</span>
+<span class="c1">// BFS pick the same one the judge expects.</span>
+
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
@@ -1267,7 +1382,9 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
 <span class="kt">char</span><span class="w"> </span><span class="n">maze</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
 <span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
+<span class="c1">// right, left, up, down: exactly the order the problem demands</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}};</span>
+<span class="c1">// path[i][j] = the cell BFS came from when it first reached (i, j)</span>
 <span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">path</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
 
 <span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
@@ -1277,6 +1394,9 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// An earlier attempt, kept for comparison. DFS marks cells with &#39;X&#39; on the way</span>
+<span class="c1">// in and rubs them out when it backtracks, so it does find A route, but DFS</span>
+<span class="c1">// does not find the SHORTEST route. That is why the solution below uses BFS.</span>
 <span class="cm">/*</span>
 
 <span class="cm">void dfs(int si, int sj, int di, int dj){</span>
@@ -1311,7 +1431,10 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 
 <span class="cm">*/</span>
 
+<span class="c1">// BFS from R (si, sj). Returns true if D (di, dj) can be reached, and fills</span>
+<span class="c1">// path[][] with parent links along the way.</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sj</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">di</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">dj</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// {-1, -1} = &quot;no parent yet&quot;</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="n">path</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">};</span>
@@ -1330,22 +1453,23 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
 
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">par_i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">di</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">dj</span><span class="p">){</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">   </span><span class="c1">// reached the exit; the parent links are complete</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
 
+<span class="w">            </span><span class="c1">// Anything but a wall &#39;#&#39; is walkable (&#39;.&#39;, and &#39;D&#39; itself).</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">maze</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">&#39;#&#39;</span><span class="p">){</span>
 <span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">});</span>
 <span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">                </span><span class="n">path</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">par_i</span><span class="p">,</span><span class="w"> </span><span class="n">par_j</span><span class="p">};</span>
+<span class="w">                </span><span class="n">path</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">par_i</span><span class="p">,</span><span class="w"> </span><span class="n">par_j</span><span class="p">};</span><span class="w">   </span><span class="c1">// remember where we came from</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">   </span><span class="c1">// D is walled off from R</span>
 <span class="p">}</span>
 
 
@@ -1355,6 +1479,7 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">s_i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">s_j</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">d_i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">d_j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Read the maze and note where R (start) and D (exit) are.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">maze</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
@@ -1371,6 +1496,8 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
 
 
+<span class="w">    </span><span class="c1">// A guard for a maze without R or D. (It never fires as written, because</span>
+<span class="w">    </span><span class="c1">// s_i and d_i start at 0, not -1; the problem always gives both cells.)</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">s_i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">d_i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -1382,20 +1509,22 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">bfs</span><span class="p">(</span><span class="n">s_i</span><span class="p">,</span><span class="w"> </span><span class="n">s_j</span><span class="p">,</span><span class="w"> </span><span class="n">d_i</span><span class="p">,</span><span class="w"> </span><span class="n">d_j</span><span class="p">)){</span>
+<span class="w">        </span><span class="c1">// Walk back from D along the parent links until we get to R.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">d2_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d_i</span><span class="p">;</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">d2_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d_j</span><span class="p">;</span>
 <span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">s_i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">d2_i</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">s_j</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">d2_j</span><span class="p">)){</span>
-<span class="w">            </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">path</span><span class="p">[</span><span class="n">d2_i</span><span class="p">][</span><span class="n">d2_j</span><span class="p">];</span>
+<span class="w">            </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">path</span><span class="p">[</span><span class="n">d2_i</span><span class="p">][</span><span class="n">d2_j</span><span class="p">];</span><span class="w">   </span><span class="c1">// one step back towards R</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">s_i</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">s_j</span><span class="p">){</span>
-<span class="w">                </span><span class="k">break</span><span class="p">;</span>
+<span class="w">                </span><span class="k">break</span><span class="p">;</span><span class="w">   </span><span class="c1">// the next cell is R itself: R keeps its letter</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">maze</span><span class="p">[</span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">][</span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">){</span>
-<span class="w">                </span><span class="n">maze</span><span class="p">[</span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">][</span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;X&#39;</span><span class="p">;</span>
+<span class="w">                </span><span class="n">maze</span><span class="p">[</span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">][</span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;X&#39;</span><span class="p">;</span><span class="w">   </span><span class="c1">// this cell is on the route</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">            </span><span class="n">d2_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
 <span class="w">            </span><span class="n">d2_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// If BFS failed, nothing was marked: the maze is printed unchanged.</span>
 
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
@@ -1404,11 +1533,12 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// O(N * M) for the BFS, plus at most N * M steps to walk the route back.</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 241 lines ▾</button>
+    <button type="button" class="expand">Show all 267 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 6
@@ -1438,7 +1568,7 @@ the route itself         BFS + a parent grid</pre><p>The trap is picking DFS for
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=7" defer></script>
-<script src="../assets/site.js?v=7" defer></script>
+<script src="../assets/search-index.js?v=8" defer></script>
+<script src="../assets/site.js?v=8" defer></script>
 </body>
 </html>

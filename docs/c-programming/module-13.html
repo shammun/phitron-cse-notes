@@ -7,7 +7,7 @@
 <meta name="description" content="So far an array index has only been a position: a[0] is the first number, a[1] the second. Module 13 adds one new idea: use the number itself as the index. Make a counting array f filled with zeros. Whenever you read a number x, do f[x]++. After one loop, f[x] tells you how many times x appeared, with no searching. This is called a frequency array. If that sounds abstract, start with the tally-sheet story just below; the worked examples then trace the same idea step by step, with numbers, letters and a yes/no version.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=7">
+<link rel="stylesheet" href="../assets/site.css?v=8">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -46,7 +46,7 @@ for(int i = 0; i &lt; 10; i++){
     f[x]++;                      // put a tick next to that mark
 }
 printf(&quot;%d\n&quot;, f[3]);            // how many got 3?  -&gt;  3</pre><p><strong>What does <code>int f[10] = {0};</code> actually do?</strong> It reserves 10 boxes, <code>f[0]</code> to <code>f[9]</code>, and puts 0 in every one of them. The <code>{ }</code> part is a list of starting values: you wrote one value, so <code>f[0]</code> becomes 0, and C then fills <strong>every box you did not list</strong> with zero. That last rule is what does the real work here.</p><p>So <code>int f[10] = {5};</code> gives <code>5 0 0 0 0 0 0 0 0 0</code>, not ten 5s — the 5 goes to <code>f[0]</code> and the rest are zeroed. Since the tally wants zeros anyway, <code>= {0}</code> reads as &quot;all zeros&quot;, and that is how everyone writes it.</p><p>Leave the <code>= {0}</code> off and the boxes are <strong>not</strong> zero: a plain <code>int f[10];</code> inside a function holds whatever rubbish was in that memory, so <code>f[x]++</code> would be adding 1 to a random number. The one exception is an array declared above <code>main</code>, which starts at zero on its own — that is why the second program on this page can write <code>int f[100000];</code> with nothing after it.</p><p>One more thing about the size: 10 boxes means marks 0 to 9 only. A mark of 10 would write to <code>f[10]</code>, one box past the end, and C does not check for you.</p><p><strong>A second example.</strong> Take the word <code>banana</code> instead of marks. Keep 26 boxes, one for each letter, and tick a box for every letter you read. At the end the boxes say: <code>a</code> 3 times, <code>b</code> 1 time, <code>n</code> 2 times. Same tally, different things being counted.</p><p><strong>A third example.</strong> Sometimes you do not need the count, only &quot;did it come at all?&quot;. For the list <code>2 4 3 4 7</code>, put a 1 in the box instead of a tick, and the boxes become a yes/no table: box 2, 3, 4 and 7 hold 1, everything else holds 0. Now &quot;is 5 in the list?&quot; is answered by looking at <code>f[5]</code> and seeing 0. No searching.</p><p><strong>Why bother?</strong> Because looking inside a box takes one step, while searching the list takes as many steps as the list is long. With a list of 100000 numbers and 100000 questions, the searching way needs about 10,000,000,000 steps and will never finish in 1 second, while the tally way needs about 200000 steps and finishes immediately.</p><p>The rest of this page goes over the same idea slowly, with each example traced step by step, and then the three programs of the module.</p></div></section>
-  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-frequency-array"><span class="n">1</span>Presence array with yes/no queries</a></li><li><a href="#p-frequency-array-practice"><span class="n">2</span>The same program, typed out again <em>(re-typed)</em></a></li><li><a href="#p-frequency-array-all-output-at-the-end-practice"><span class="n">3</span>Same answers, but printed only after all the typing is done <em>(re-typed)</em></a></li><li><a href="#p-frequency-array-codeforce"><span class="n">4</span>Frequency Array (count 1..M)</a></li><li><a href="#p-unique-char-in-string"><span class="n">5</span>Distinct letters in a string</a></li></ol></details></nav>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><p class="toc-g">📘 The basics</p><ol><li><a href="#p-frequency-array"><span class="n">1</span>Presence array with yes/no queries</a></li><li><a href="#p-frequency-array-practice"><span class="n">2</span>The same program, typed out again <em>(re-typed)</em></a></li><li><a href="#p-frequency-array-all-output-at-the-end-practice"><span class="n">3</span>Same answers, but printed only after all the typing is done <em>(re-typed)</em></a></li><li><a href="#p-unique-char-in-string"><span class="n">4</span>Distinct letters in a string</a></li></ol><p class="toc-g">🏋️ Practice problems</p><ol><li><a href="#p-frequency-array-codeforce"><span class="n">5</span>Frequency Array (count 1..M)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>What we already know</h4><p>From the earlier modules you can read <code>n</code> numbers into an array with a loop, reach any element with <code>a[i]</code>, and count things with <code>cnt++</code>. Module 13 puts these together in a new way.</p></div><div class="concept"><h4>The new idea: the value is the index</h4><p>Until now you asked &quot;which number is at position <code>i</code>?&quot;. A frequency array asks the other way round: &quot;how many times did the number <code>x</code> show up?&quot;. The answer is kept in slot <code>f[x]</code>.</p><pre class="snip">f[x]++; // one more x seen</pre></div><div class="concept"><h4>A small example</h4><p>Input <code>1 2 3 4 5 3 2 1 5 3</code>. Start with <code>f</code> all zeros. Each number adds 1 to its own slot. At the end <code>f[1] = 2</code>, <code>f[2] = 2</code>, <code>f[3] = 3</code>, <code>f[4] = 1</code> and <code>f[5] = 2</code>. Print <code>f[1]</code> to <code>f[5]</code> and you have the answer.</p></div><div class="concept"><h4>Why not count with two loops?</h4><p>You could: for each <code>i</code> from 1 to M, walk the whole array and count the <code>i</code>s. But with N and M up to 100000 that is about 10^10 steps, far too slow for 1 second. The frequency array walks the numbers only once.</p></div><div class="concept"><h4>Start from zero</h4><p>Every slot must start at 0 before you count. Inside <code>main</code>, write <code>int f[100005] = {0};</code>. An array declared above <code>main</code> (a global array) starts at zero on its own.</p></div><div class="concept"><h4>Make it big enough</h4><p>The biggest number you may see must still be a valid index. If numbers go up to 100000, <code>f[100000]</code> must exist, so declare at least 100001 slots.</p></div><div class="concept"><h4>Seen or not seen</h4><p>Sometimes you only need to know whether <code>x</code> appeared. Then write <code>f[x] = 1</code> instead of <code>f[x]++</code>.</p></div><div class="concept"><h4>Letters work too</h4><p>In Module 11, <code>c - &#x27;0&#x27;</code> turned a digit character into its value. In the same way <code>ch - &#x27;a&#x27;</code> turns <code>a</code>..<code>z</code> into 0..25, so 26 slots can count lowercase letters.</p><pre class="snip">f[ch - &#x27;a&#x27;]++;</pre></div></div></section>
   <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>1. Picture a row of empty boxes</h3><p>Imagine a long shelf with boxes on it, and every box has a label: box 0, box 1, box 2, box 3 and so on. All the boxes start empty.</p><p>Now someone reads numbers out loud to you: <code>3, 1, 3, 2, 3</code>. Each time you hear a number, you put one stone in <strong>the box with that label</strong>. You hear 3, so one stone goes in box 3. You hear 1, one stone in box 1. You hear 3 again, so box 3 now has two stones.</p><p>At the end you do not have to remember the numbers at all. You just look at the boxes: box 1 has 1 stone, box 2 has 1 stone, box 3 has 3 stones. That is the whole idea of a frequency array.</p><p>In C the shelf is an array called <code>f</code>, the box label is the array index, and putting a stone in a box is <code>f[x]++</code>. <code>f</code> must start all zeros, because all the boxes start empty.</p><pre class="snip">int f[100005] = {0};   // the empty shelf
 f[3]++;                // one stone in box 3</pre></div><div class="wstep"><h3>2. Example one: counting numbers, step by step</h3><p>Take the sample from the Frequency Array problem: the numbers are <code>1 2 3 4 5 3 2 1 5 3</code> and we care about the numbers 1 to 5.</p><p>We read the numbers one by one, and after each number we only change <strong>one</strong> box, the box with that number&#x27;s label. Here is the shelf after every step.</p><p>Read the last line and you have the answer: 1 came twice, 2 came twice, 3 came three times, 4 came once, 5 came twice. That is exactly what the problem asks you to print, so the loop at the end just prints <code>f[1]</code> to <code>f[5]</code>.</p><p>Notice how little work this was. We touched each number once, and we never went back to look at the earlier numbers again.</p><pre class="snip">for(int i = 0; i &lt; n; i++){
@@ -84,7 +84,7 @@ flag    0  0  1  1  1  0  0  1  0  0
               ^  ^  ^        ^
               2  3  4        7   were seen</pre></div><div class="wstep"><h3>5. Why is this useful?</h3><p><strong>It saves a huge amount of work.</strong> The obvious way to count how many times each number from 1 to M appears is two loops: pick a number, then walk the whole array counting it. With N and M both 100000 that is 100000 × 100000 = 10,000,000,000 steps. No computer finishes that in 1 second. The frequency array reads the numbers once and prints the answers once, so it is about 200000 steps. The same problem, but fast enough to pass.</p><p><strong>Many questions become one lookup.</strong> Once the boxes are filled, &quot;how many 7s?&quot; is <code>f[7]</code>, and &quot;did 7 ever come?&quot; is <code>f[7] &gt; 0</code>. Even a thousand such questions cost almost nothing, because each one is a single peek into a box.</p><p><strong>It answers a whole family of everyday questions.</strong> Which number came the most times? Walk the boxes and keep the biggest. Which numbers came exactly once? Boxes holding 1. Did any number repeat? A box that goes above 1. How many different numbers came? Count the non-empty boxes. Do two words use exactly the same letters? Count the letters of both and compare the two 26-box shelves.</p><p><strong>It gives you sorted order for free.</strong> The boxes sit in order of their labels, so printing from the small end to the big end prints the values sorted, even though you never sorted anything. That is why the distinct letters in the third program come out alphabetically and not in the order they appear in the string.</p><p><strong>When it does not work.</strong> The box label is an array index, so the numbers must be small and not negative. If values can be up to 10^9 you would need a billion boxes, which will not fit in memory, and a negative number would be an invalid index and crash the program. In those cases you need a different tool, which comes later in the course.</p></div></div></section>
   
-  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
+  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2><div class="pgroup" id="g-lesson"><h3>📘 The basics</h3><p>The module's own lesson code: the ideas, one small program at a time.</p></div>
 <section class="prog" id="p-frequency-array">
   <div class="prog-h">
     <span class="num">1</span>
@@ -569,9 +569,160 @@ flag    0  0  1  1  1  0  0  1  0  0
   <div class="callout warn"><b>Watch out.</b> <code>int q[m+5];</code> is sized after <code>m</code> is read, so the <code>scanf(&quot;%d&quot;, &amp;m);</code> must come before the declaration. Reading <code>m</code> later would size the array with rubbish.</div>
   <details class="check"><summary><span>✅ Check yourself:</span> Why does the extra array <code>q</code> have to exist at all?</summary><div>The queries arrive before the printing starts, and each one is still needed after it. Without <code>q</code> the number read into <code>x</code> is overwritten by the next query, so it has to be kept somewhere.</div></details>
 </section>
-<section class="prog" id="p-frequency-array-codeforce">
+<section class="prog" id="p-unique-char-in-string">
   <div class="prog-h">
     <span class="num">4</span>
+    <div class="prog-t">
+      <h3>Distinct letters in a string</h3>
+      <div class="meta"><code class="fname">unique_char_in_string.c</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(len + 26) · Space O(1)</span></div>
+    </div>
+  </div>
+  <p class="what">Finds which lowercase letters appear in a fixed string and how many different letters there are. It uses a 26-slot presence array.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>C · 59 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2013/unique_char_in_string.c" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+
+<span class="cm">/* This program finds unique characters in a string and counts them</span>
+<span class="cm"> * For example, if input is &quot;aaaaaagggggccjcc&quot;</span>
+<span class="cm"> * Output will show which letters appear (regardless of frequency)</span>
+<span class="cm"> * and total count of unique letters</span>
+<span class="cm"> */</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="cm">/* Declare a string with max size 100000 and initialize with test value</span>
+<span class="cm">     * In real applications, you may want to get input from user instead</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="mi">100000</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;aaaaaagggggccjcc&quot;</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Create an array of size 26 (one for each lowercase letter)</span>
+<span class="cm">     * Initialize all elements to 0 using {0}</span>
+<span class="cm">     * This array will act as a presence checker for each letter</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">f</span><span class="p">[</span><span class="mi">26</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Get length of string to know how many characters to process */</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">len</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strlen</span><span class="p">(</span><span class="n">str</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* First loop: Mark presence of each character</span>
+<span class="cm">     * For each character in string:</span>
+<span class="cm">     * 1. Get the character and store in ch</span>
+<span class="cm">     * 2. Convert character to array index (0-25) by subtracting &#39;a&#39;</span>
+<span class="cm">     *    For example: &#39;a&#39;-&#39;a&#39;=0, &#39;b&#39;-&#39;a&#39;=1, etc.</span>
+<span class="cm">     * 3. Set corresponding array position to 1 to mark presence</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">len</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">&#39;a&#39;</span><span class="p">;</span>
+<span class="w">        </span><span class="n">f</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Initialize counter for unique characters */</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cnt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="cm">/* Second loop: Count and print unique characters</span>
+<span class="cm">     * For each position in frequency array (0-25):</span>
+<span class="cm">     * 1. If f[i]=1, that letter exists in string</span>
+<span class="cm">     * 2. Add 1 to total count</span>
+<span class="cm">     * 3. Print the letter (convert index back to char by adding &#39;a&#39;)</span>
+<span class="cm">     *    and its presence value</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">26</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cnt</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">){</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%c %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="sc">&#39;a&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Print total count of unique characters found */</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cnt</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 59 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>a 1
+c 1
+g 1
+j 1
+4
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>a 1</code>, <code>c 1</code>, <code>g 1</code> and <code>j 1</code> come out in alphabetical order, even though <code>g</code> comes before <code>c</code> in the string. The last line is <code>4</code>.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>The string is hard-coded as <code>&quot;aaaaaagggggccjcc&quot;</code>, and <code>f[26]</code> starts at zeros.</li><li>For each character, <code>ch - &#x27;a&#x27;</code> gives its slot, and that slot is set to 1.</li><li>Loop over the 26 slots. Add each <code>f[i]</code> to <code>cnt</code>, and if <code>f[i]</code> is 1, print the letter <code>i + &#x27;a&#x27;</code>.</li><li>Print <code>cnt</code>, the number of different letters.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Only lowercase letters are safe. An uppercase letter or a digit would give a negative index or one above 25.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why do the letters come out sorted?</summary><div>The second loop goes through the slots in order from 0 (<code>a</code>) to 25 (<code>z</code>), not in string order.</div></details>
+</section><div class="pgroup" id="g-practice"><h3>🏋️ Practice problems</h3><p>Practice-day and judge problems, solved with what the module has taught so far.</p></div>
+<section class="prog" id="p-frequency-array-codeforce">
+  <div class="prog-h">
+    <span class="num">5</span>
     <div class="prog-t">
       <h3>Frequency Array (count 1..M)</h3>
       <div class="meta"><code class="fname">frequency_array_codeforce.c</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(N + M) · Space O(M)</span><a class="prob" href="https://codeforces.com/group/MWSDmqGsZm/contest/219774/problem/V" target="_blank" rel="noopener">↗ Codeforces group - Frequency Array</a></div>
@@ -774,157 +925,6 @@ flag    0  0  1  1  1  0  0  1  0  0
   <details class="how" open><summary>How it works, step by step</summary><ol><li><code>int f[100000];</code> is global, so every slot starts at 0.</li><li>Read <code>n</code> and <code>m</code>.</li><li>Read each number and do <code>f[a[i]] += 1</code> in the same loop.</li><li>Print <code>f[1]</code>, <code>f[2]</code>, and so on up to <code>f[m]</code>, one per line.</li></ol></details>
   <div class="callout warn"><b>Watch out.</b> The array <code>a</code> isn&#x27;t really needed. You could read into a temporary <code>x</code> and do <code>f[x]++</code>.</div>
   <details class="check"><summary><span>✅ Check yourself:</span> If M were 6 with the same numbers, what would line 6 show?</summary><div><code>0</code>, because 6 never appears and a global array starts at zero.</div></details>
-</section>
-<section class="prog" id="p-unique-char-in-string">
-  <div class="prog-h">
-    <span class="num">5</span>
-    <div class="prog-t">
-      <h3>Distinct letters in a string</h3>
-      <div class="meta"><code class="fname">unique_char_in_string.c</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(len + 26) · Space O(1)</span></div>
-    </div>
-  </div>
-  <p class="what">Finds which lowercase letters appear in a fixed string and how many different letters there are. It uses a 26-slot presence array.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>C · 59 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/1_Introduction%20to%20Programming%20Language/Module%2013/unique_char_in_string.c" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
-
-<span class="cm">/* This program finds unique characters in a string and counts them</span>
-<span class="cm"> * For example, if input is &quot;aaaaaagggggccjcc&quot;</span>
-<span class="cm"> * Output will show which letters appear (regardless of frequency)</span>
-<span class="cm"> * and total count of unique letters</span>
-<span class="cm"> */</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="cm">/* Declare a string with max size 100000 and initialize with test value</span>
-<span class="cm">     * In real applications, you may want to get input from user instead</span>
-<span class="cm">     */</span>
-<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="mi">100000</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;aaaaaagggggccjcc&quot;</span><span class="p">;</span>
-<span class="w">    </span>
-<span class="w">    </span><span class="cm">/* Create an array of size 26 (one for each lowercase letter)</span>
-<span class="cm">     * Initialize all elements to 0 using {0}</span>
-<span class="cm">     * This array will act as a presence checker for each letter</span>
-<span class="cm">     */</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">f</span><span class="p">[</span><span class="mi">26</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
-<span class="w">    </span>
-<span class="w">    </span><span class="cm">/* Get length of string to know how many characters to process */</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">len</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strlen</span><span class="p">(</span><span class="n">str</span><span class="p">);</span>
-
-<span class="w">    </span><span class="cm">/* First loop: Mark presence of each character</span>
-<span class="cm">     * For each character in string:</span>
-<span class="cm">     * 1. Get the character and store in ch</span>
-<span class="cm">     * 2. Convert character to array index (0-25) by subtracting &#39;a&#39;</span>
-<span class="cm">     *    For example: &#39;a&#39;-&#39;a&#39;=0, &#39;b&#39;-&#39;a&#39;=1, etc.</span>
-<span class="cm">     * 3. Set corresponding array position to 1 to mark presence</span>
-<span class="cm">     */</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">len</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">&#39;a&#39;</span><span class="p">;</span>
-<span class="w">        </span><span class="n">f</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="cm">/* Initialize counter for unique characters */</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cnt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span>
-<span class="w">    </span><span class="cm">/* Second loop: Count and print unique characters</span>
-<span class="cm">     * For each position in frequency array (0-25):</span>
-<span class="cm">     * 1. If f[i]=1, that letter exists in string</span>
-<span class="cm">     * 2. Add 1 to total count</span>
-<span class="cm">     * 3. Print the letter (convert index back to char by adding &#39;a&#39;)</span>
-<span class="cm">     *    and its presence value</span>
-<span class="cm">     */</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">26</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cnt</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">){</span>
-<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%c %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="sc">&#39;a&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="cm">/* Print total count of unique characters found */</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cnt</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 59 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input</div><p class="io-note">This program reads no input.</p></div><div class="io out"><div class="io-h">Output </div><pre>a 1
-c 1
-g 1
-j 1
-4
-</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> <code>a 1</code>, <code>c 1</code>, <code>g 1</code> and <code>j 1</code> come out in alphabetical order, even though <code>g</code> comes before <code>c</code> in the string. The last line is <code>4</code>.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>The string is hard-coded as <code>&quot;aaaaaagggggccjcc&quot;</code>, and <code>f[26]</code> starts at zeros.</li><li>For each character, <code>ch - &#x27;a&#x27;</code> gives its slot, and that slot is set to 1.</li><li>Loop over the 26 slots. Add each <code>f[i]</code> to <code>cnt</code>, and if <code>f[i]</code> is 1, print the letter <code>i + &#x27;a&#x27;</code>.</li><li>Print <code>cnt</code>, the number of different letters.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Only lowercase letters are safe. An uppercase letter or a digit would give a negative index or one above 25.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> Why do the letters come out sorted?</summary><div>The second loop goes through the slots in order from 0 (<code>a</code>) to 25 (<code>z</code>), not in string order.</div></details>
 </section></section>
   <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://codeforces.com/group/MWSDmqGsZm/contest/219774/problem/V" target="_blank" rel="noopener">Frequency Array</a><span class="site">Codeforces</span></li></ul></section>
   <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>A frequency array uses the number as the index: <code>f[x]</code> is about the number <code>x</code>.</li><li><code>f[x]++</code> counts. <code>f[x] = 1</code> only marks that <code>x</code> was seen.</li><li>Fill it with zeros first, and make it bigger than the largest possible number.</li><li>One pass over the input is enough. There is no need to search the array again and again.</li><li><code>ch - &#x27;a&#x27;</code> turns a lowercase letter into an index from 0 to 25.</li><li>Printing <code>f</code> from the small end to the big end lists the values in sorted order.</li></ul></section>
@@ -937,7 +937,7 @@ j 1
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=7" defer></script>
-<script src="../assets/site.js?v=7" defer></script>
+<script src="../assets/search-index.js?v=8" defer></script>
+<script src="../assets/site.js?v=8" defer></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
 <meta name="description" content="This is the binary tree assignment. Every program first builds a tree from level-order input (-1 means no child), then answers one question: sum of non-leaf nodes, leaves in descending order, is the tree perfect, the nodes on level X, and the outer side of the tree. Revising it is a good way to practise the two tools you use for every tree problem: BFS with a queue and recursive DFS.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=7">
+<link rel="stylesheet" href="../assets/site.css?v=8">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -63,7 +63,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
   <p class="what">Builds the tree from level-order input and adds up the values of all nodes that have at least one child.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 143 lines</span>
+      <span>CPP · 159 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2020/assignment_problem_1_sum_without_leaf.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -212,7 +212,23 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="normal">140</span>
 <span class="normal">141</span>
 <span class="normal">142</span>
-<span class="normal">143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Sum without leaf</span>
 
@@ -256,6 +272,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// A binary tree node: a value and two child pointers (NULL = no child).</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
@@ -270,9 +287,12 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Reads the tree in level order, the Module 18 way: first the root, then for</span>
+<span class="c1">// every real node (in the order a queue hands them out) its left and right</span>
+<span class="c1">// child, with -1 meaning &quot;no child&quot;.</span>
 <span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="nf">input_tree</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">                  </span><span class="c1">// the root (or -1 for an empty tree)</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
@@ -280,17 +300,18 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Nodes whose two children have not been read yet.</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="p">){</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">     </span><span class="c1">// oldest node still waiting for its children</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
 
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w">           </span><span class="c1">// its left and right child values</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -308,6 +329,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Only real children wait in the queue for their own pair of values.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">){</span>
 <span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
@@ -320,8 +342,16 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="cm">/*</span>
+<span class="cm"> * Sum without leaf: add up every node that has at least one child.</span>
+<span class="cm"> *</span>
+<span class="cm"> * The idea: visit every node once with a level-order walk (queue). A node is</span>
+<span class="cm"> * NOT a leaf when it has a left child or a right child, so only then is its</span>
+<span class="cm"> * value added. Example (sample): 10, 20 and 30 have children, 40 50 60 do not,</span>
+<span class="cm"> * so the answer is 10 + 20 + 30 = 60.</span>
+<span class="cm"> */</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">sum_without_leaf</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">root</span><span class="p">){</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">root</span><span class="p">){</span><span class="w">                   </span><span class="c1">// empty tree: the sum is 0</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span>
@@ -333,10 +363,12 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">parent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
 
+<span class="w">        </span><span class="c1">// At least one child -&gt; not a leaf -&gt; count it.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">parent</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">parent</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">){</span>
 <span class="w">            </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">parent</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// Queue the children so every node gets checked.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">parent</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">){</span>
 <span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">parent</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
@@ -352,12 +384,12 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="p">{</span>
 <span class="w">    </span><span class="c1">// Write your code here</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input_tree</span><span class="p">();</span><span class="w"> </span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sum_without_leaf</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sum_without_leaf</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">    </span><span class="c1">// print the answer</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 143 lines ▾</button>
+    <button type="button" class="expand">Show all 159 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 50 -1 60 -1 -1 -1 -1 -1 -1</pre><p class="io-note">Tree in level order: 10 has children 20 and 30; 20 has 40 and 50; 30 has only a right child 60; the four leaves have <code>-1 -1</code>.</p></div><div class="io out"><div class="io-h">Output </div><pre>60
@@ -378,7 +410,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
   <p class="what">Collects every leaf value with a recursive DFS, sorts them from largest to smallest and prints them.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 137 lines</span>
+      <span>CPP · 154 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2020/assignment_problem_2_leaf_nodes.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -521,7 +553,24 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="normal">134</span>
 <span class="normal">135</span>
 <span class="normal">136</span>
-<span class="normal">137</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Print Leaf Nodes in Descending Order</span>
 
@@ -566,6 +615,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// A binary tree node: a value and two child pointers (NULL = no child).</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
@@ -580,9 +630,12 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Reads the tree in level order, the Module 18 way: first the root, then for</span>
+<span class="c1">// every real node (in the order a queue hands them out) its left and right</span>
+<span class="c1">// child, with -1 meaning &quot;no child&quot;.</span>
 <span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="nf">input_tree</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">                  </span><span class="c1">// the root (or -1 for an empty tree)</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
@@ -590,17 +643,18 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Nodes whose two children have not been read yet.</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="p">){</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">     </span><span class="c1">// oldest node still waiting for its children</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
 
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w">           </span><span class="c1">// its left and right child values</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -618,6 +672,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Only real children wait in the queue for their own pair of values.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">){</span>
 <span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
@@ -630,16 +685,26 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="cm">/*</span>
+<span class="cm"> * Leaf nodes in descending order.</span>
+<span class="cm"> *</span>
+<span class="cm"> * The idea: a recursive DFS collects every leaf (no left and no right child)</span>
+<span class="cm"> * into the vector v, which is passed by reference so all calls fill the same</span>
+<span class="cm"> * vector. Then main sorts it from big to small with greater&lt;int&gt;().</span>
+<span class="cm"> * Example (sample): leaves 40 50 60 are found, printed as 60 50 40.</span>
+<span class="cm"> */</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">all_leaf_nodes</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span><span class="w">            </span><span class="c1">// empty subtree: nothing to add</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// A leaf: store its value.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Look for leaves on both sides (for a leaf both calls return at once).</span>
 <span class="w">    </span><span class="n">all_leaf_nodes</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span>
 <span class="w">    </span><span class="n">all_leaf_nodes</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w">                    </span><span class="c1">// a copy of the filled vector</span>
 <span class="p">}</span>
 
 
@@ -650,6 +715,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">all_leaf_nodes</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// greater&lt;int&gt;() puts the biggest value first (descending order).</span>
 <span class="w">    </span><span class="n">sort</span><span class="p">(</span><span class="n">ans</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">ans</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="n">greater</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">());</span>
 
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">ans</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
@@ -660,7 +726,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 137 lines ▾</button>
+    <button type="button" class="expand">Show all 154 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 50 -1 60 -1 -1 -1 -1 -1 -1</pre><p class="io-note">Same tree as problem 1: leaves are 40, 50, 60.</p></div><div class="io out"><div class="io-h">Output </div><pre>60 50 40 </pre></div></div>
@@ -680,7 +746,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
   <p class="what">Counts the nodes and measures the depth, then checks the formula nodes = 2^depth - 1.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 187 lines</span>
+      <span>CPP · 208 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2020/assignment_problem_3_perfect_binary_tree.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -873,7 +939,28 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="normal">184</span>
 <span class="normal">185</span>
 <span class="normal">186</span>
-<span class="normal">187</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Problem Statement</span>
 
@@ -949,6 +1036,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// A binary tree node: a value and two child pointers (NULL = no child).</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
@@ -963,9 +1051,12 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Reads the tree in level order, the Module 18 way: first the root, then for</span>
+<span class="c1">// every real node (in the order a queue hands them out) its left and right</span>
+<span class="c1">// child, with -1 meaning &quot;no child&quot;.</span>
 <span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="nf">input_tree</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">                  </span><span class="c1">// the root (or -1 for an empty tree)</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
@@ -973,17 +1064,18 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Nodes whose two children have not been read yet.</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="p">){</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">     </span><span class="c1">// oldest node still waiting for its children</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
 
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w">           </span><span class="c1">// its left and right child values</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -1001,6 +1093,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Only real children wait in the queue for their own pair of values.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">){</span>
 <span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
@@ -1013,6 +1106,18 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="cm">/*</span>
+<span class="cm"> * Is the tree perfect? (Every level completely filled, all leaves on the</span>
+<span class="cm"> * bottom level.)</span>
+<span class="cm"> *</span>
+<span class="cm"> * The idea is the formula from the statement: a perfect tree of depth d has</span>
+<span class="cm"> * exactly 2^d - 1 nodes (1 + 2 + 4 + ... + 2^(d-1)). Any gap makes the real</span>
+<span class="cm"> * count smaller. So count the nodes, measure the depth, and compare.</span>
+<span class="cm"> * Example: 7 nodes, depth 3 -&gt; 2^3 - 1 = 7 -&gt; YES.</span>
+<span class="cm"> *          10 20 30 40 -1 60 ... : 5 nodes, depth 3 -&gt; 5 != 7 -&gt; NO.</span>
+<span class="cm"> */</span>
+
+<span class="c1">// Number of nodes = left count + right count + 1 (this node).</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">count_nodes</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -1022,6 +1127,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="c1">// Depth counted in nodes: 1 + the deeper of the two sides (0 for NULL).</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">max_depth</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -1037,11 +1143,13 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">total_nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count_nodes</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">max_depth_of_tree</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max_depth</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">total_nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count_nodes</span><span class="p">(</span><span class="n">root</span><span class="p">);</span><span class="w">        </span><span class="c1">// how many nodes there are</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">max_depth_of_tree</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max_depth</span><span class="p">(</span><span class="n">root</span><span class="p">);</span><span class="w">    </span><span class="c1">// how many levels there are</span>
 
+<span class="w">    </span><span class="c1">// How many nodes a perfect tree with that many levels must have.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">total_nodes_for_perfect_tree</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">max_depth_of_tree</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Perfect exactly when nothing is missing.</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">total_nodes</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">total_nodes_for_perfect_tree</span><span class="p">;</span>
 <span class="p">}</span>
 
@@ -1062,7 +1170,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 187 lines ▾</button>
+    <button type="button" class="expand">Show all 208 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 50 60 70 -1 -1 -1 -1 -1 -1 -1 -1</pre><p class="io-note">A full tree of depth 3: root 10, then 20 30, then 40 50 60 70, and eight <code>-1</code> for the leaves&#x27; children.</p></div><div class="io out"><div class="io-h">Output </div><pre>YES
@@ -1083,7 +1191,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
   <p class="what">Prints, from left to right, all node values on level X (root is level 0), or <code>Invalid</code> if that level does not exist.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 183 lines</span>
+      <span>CPP · 204 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2020/assignment_problem_4_level_nodes.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1272,7 +1380,28 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="normal">180</span>
 <span class="normal">181</span>
 <span class="normal">182</span>
-<span class="normal">183</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Level Nodes</span>
 
@@ -1339,6 +1468,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// A binary tree node: a value and two child pointers (NULL = no child).</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
@@ -1353,9 +1483,12 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Reads the tree in level order, the Module 18 way: first the root, then for</span>
+<span class="c1">// every real node (in the order a queue hands them out) its left and right</span>
+<span class="c1">// child, with -1 meaning &quot;no child&quot;.</span>
 <span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="nf">input_tree</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">                  </span><span class="c1">// the root (or -1 for an empty tree)</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
@@ -1363,17 +1496,18 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Nodes whose two children have not been read yet.</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="p">){</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">     </span><span class="c1">// oldest node still waiting for its children</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
 
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w">           </span><span class="c1">// its left and right child values</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -1391,6 +1525,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Only real children wait in the queue for their own pair of values.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">){</span>
 <span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
@@ -1403,11 +1538,22 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="cm">/*</span>
+<span class="cm"> * Level nodes: print the values on level X, left to right (the root is</span>
+<span class="cm"> * level 0 in this problem), or &quot;Invalid&quot; if the tree has no level X.</span>
+<span class="cm"> *</span>
+<span class="cm"> * The idea: a level-order walk where each node travels with its level as a</span>
+<span class="cm"> * pair {node, level}; children get level + 1. Every node whose level equals X</span>
+<span class="cm"> * is collected. The queue hands out each level left to right, so the values</span>
+<span class="cm"> * come out in the right order.</span>
+<span class="cm"> * If nothing was collected, the special value -999 is returned as a signal</span>
+<span class="cm"> * for &quot;no such level&quot; (safe, because real values are at least 1).</span>
+<span class="cm"> */</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">level_nodes</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="p">){</span>
-<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span><span class="w">       </span><span class="c1">// the root is on level 0</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
@@ -1417,10 +1563,12 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parent</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parent</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// On the wanted level: keep it.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">level</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">X</span><span class="p">){</span>
 <span class="w">            </span><span class="n">ans</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// Children are one level deeper.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">){</span>
 <span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">level</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">});</span>
 <span class="w">        </span><span class="p">}</span>
@@ -1429,6 +1577,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">level</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">});</span>
 <span class="w">        </span><span class="p">}</span><span class="w"> </span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// No node on level X: send back the &quot;invalid&quot; signal.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">ans</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
 <span class="w">        </span><span class="n">ans</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mi">-999</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
@@ -1445,6 +1594,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">level_nodes</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">X</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">// The signal value means level X does not exist.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">ans</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">ans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-999</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Invalid&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
@@ -1457,7 +1607,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 183 lines ▾</button>
+    <button type="button" class="expand">Show all 204 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10 20 30 40 50 -1 60 -1 -1 -1 -1 -1 -1
@@ -1478,7 +1628,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
   <p class="what">Prints the left edge of the tree from bottom to top, then the root, then the right edge from top to bottom. This is the version that gives the expected answers.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 157 lines</span>
+      <span>CPP · 184 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2020/assignment_problem_5_print_order_tree_another.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1641,7 +1791,34 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="normal">154</span>
 <span class="normal">155</span>
 <span class="normal">156</span>
-<span class="normal">157</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Problem Statement</span>
 
@@ -1693,6 +1870,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// A binary tree node: a value and two child pointers (NULL = no child).</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
@@ -1707,9 +1885,12 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Reads the tree in level order, the Module 18 way: first the root, then for</span>
+<span class="c1">// every real node (in the order a queue hands them out) its left and right</span>
+<span class="c1">// child, with -1 meaning &quot;no child&quot;.</span>
 <span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="nf">input_tree</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">                  </span><span class="c1">// the root (or -1 for an empty tree)</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
@@ -1717,17 +1898,18 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Nodes whose two children have not been read yet.</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="p">){</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">     </span><span class="c1">// oldest node still waiting for its children</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
 
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w">           </span><span class="c1">// its left and right child values</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -1745,6 +1927,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Only real children wait in the queue for their own pair of values.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">){</span>
 <span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
@@ -1757,23 +1940,44 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="cm">/*</span>
+<span class="cm"> * Outer side of the tree: the left edge from its bottom up to the root, then</span>
+<span class="cm"> * the right edge from the root down to its bottom.</span>
+<span class="cm"> *</span>
+<span class="cm"> * The idea: two small recursions that each walk ONE path, not the whole tree.</span>
+<span class="cm"> *   - left_boundary walks down the left edge: go left if possible, otherwise</span>
+<span class="cm"> *     right. The value is stored AFTER the recursive call, so the deepest</span>
+<span class="cm"> *     node is stored first (bottom-up order).</span>
+<span class="cm"> *   - right_boundary walks down the right edge: go right if possible,</span>
+<span class="cm"> *     otherwise left. The value is stored BEFORE the recursive call, so the</span>
+<span class="cm"> *     order is top-down.</span>
+<span class="cm"> * Sample 0: left edge 20 -&gt; 40 -&gt; 90 gives 90 40 20, then the root 10, then</span>
+<span class="cm"> * the right edge 30 -&gt; 50 -&gt; 60: 90 40 20 10 30 50 60.</span>
+<span class="cm"> *</span>
+<span class="cm"> * This is the version that gives the expected answers. The other two</span>
+<span class="cm"> * problem-5 files are earlier attempts that do not.</span>
+<span class="cm"> */</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">left_boundary</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Follow the outer path: left child first, the right one only if there</span>
+<span class="w">    </span><span class="c1">// is no left child.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">){</span>
 <span class="w">        </span><span class="n">left_boundary</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">){</span>
 <span class="w">        </span><span class="n">left_boundary</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span><span class="w">      </span><span class="c1">// after the call -&gt; bottom-up</span>
 <span class="p">}</span>
 
 <span class="kt">void</span><span class="w"> </span><span class="nf">right_boundary</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span>
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span><span class="w">      </span><span class="c1">// before the call -&gt; top-down</span>
+<span class="w">    </span><span class="c1">// Follow the outer path: right child first, the left one only if there</span>
+<span class="w">    </span><span class="c1">// is no right child.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">){</span>
 <span class="w">        </span><span class="n">right_boundary</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">){</span>
@@ -1782,9 +1986,9 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="p">}</span>
 
 <span class="kt">void</span><span class="w"> </span><span class="nf">print_boundary</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">v</span><span class="p">){</span>
-<span class="w">    </span><span class="n">left_boundary</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span>
-<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span>
-<span class="w">    </span><span class="n">right_boundary</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span>
+<span class="w">    </span><span class="n">left_boundary</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span><span class="w">    </span><span class="c1">// left edge, bottom to top</span>
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span><span class="w">          </span><span class="c1">// the root in the middle</span>
+<span class="w">    </span><span class="n">right_boundary</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span><span class="w">  </span><span class="c1">// right edge, top to bottom</span>
 
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
@@ -1800,7 +2004,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 157 lines ▾</button>
+    <button type="button" class="expand">Show all 184 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10
@@ -1825,7 +2029,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
   <p class="what">An attempt using the textbook &quot;boundary traversal&quot;: left boundary, all leaves, right boundary. That is a different problem, so the output does not match what this assignment asks.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 212 lines</span>
+      <span>CPP · 229 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2020/assignment_problem_5_print_outer_tree.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -2043,7 +2247,24 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="normal">209</span>
 <span class="normal">210</span>
 <span class="normal">211</span>
-<span class="normal">212</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Problem Statement</span>
 
@@ -2096,6 +2317,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// A binary tree node: a value and two child pointers (NULL = no child).</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
@@ -2110,9 +2332,12 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Reads the tree in level order, the Module 18 way: first the root, then for</span>
+<span class="c1">// every real node (in the order a queue hands them out) its left and right</span>
+<span class="c1">// child, with -1 meaning &quot;no child&quot;.</span>
 <span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="nf">input_tree</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">                  </span><span class="c1">// the root (or -1 for an empty tree)</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
@@ -2120,17 +2345,18 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Nodes whose two children have not been read yet.</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="p">){</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">     </span><span class="c1">// oldest node still waiting for its children</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
 
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w">           </span><span class="c1">// its left and right child values</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -2148,6 +2374,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Only real children wait in the queue for their own pair of values.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">){</span>
 <span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
@@ -2159,6 +2386,17 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="p">}</span>
+
+<span class="cm">/*</span>
+<span class="cm"> * An attempt at problem 5 using the textbook &quot;boundary traversal&quot;: left edge,</span>
+<span class="cm"> * then EVERY leaf, then right edge. That is a different problem: this</span>
+<span class="cm"> * assignment only wants the two outer edges, so inner leaves such as 110,</span>
+<span class="cm"> * 70 and 100 must not be printed. The right edge is also printed in the</span>
+<span class="cm"> * wrong order (50 30 instead of 30 50).</span>
+<span class="cm"> * Sample 0 prints 60 100 70 110 90 40 20 10 50 30, but the expected answer is</span>
+<span class="cm"> * 90 40 20 10 30 50 60. The working solution is</span>
+<span class="cm"> * assignment_problem_5_print_order_tree_another.cpp.</span>
+<span class="cm"> */</span>
 
 <span class="c1">// Helper function to check if node is leaf</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">isLeaf</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">node</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -2257,7 +2495,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 212 lines ▾</button>
+    <button type="button" class="expand">Show all 229 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10
@@ -2283,7 +2521,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
   <p class="what">An earlier attempt: collect all levels with repeated BFS, then take the first node of each level bottom-up and the last node of each level top-down. It crashes and the idea is also not correct in general.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 318 lines</span>
+      <span>CPP · 347 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/3_Basic%20Data%20Structures/Module%2020/assignment_problem_5_print_outer_tree_not_worked.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -2607,7 +2845,36 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="normal">315</span>
 <span class="normal">316</span>
 <span class="normal">317</span>
-<span class="normal">318</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Problem Statement</span>
 
@@ -2660,6 +2927,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// A binary tree node: a value and two child pointers (NULL = no child).</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">public</span><span class="o">:</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">     </span>
@@ -2674,9 +2942,12 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
+<span class="c1">// Reads the tree in level order, the Module 18 way: first the root, then for</span>
+<span class="c1">// every real node (in the order a queue hands them out) its left and right</span>
+<span class="c1">// child, with -1 meaning &quot;no child&quot;.</span>
 <span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="nf">input_tree</span><span class="p">(){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">val</span><span class="p">;</span><span class="w">                  </span><span class="c1">// the root (or -1 for an empty tree)</span>
 <span class="w">    </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
@@ -2684,17 +2955,18 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Node</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Nodes whose two children have not been read yet.</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="p">){</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
+<span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">     </span><span class="c1">// oldest node still waiting for its children</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
 
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w">           </span><span class="c1">// its left and right child values</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">){</span>
@@ -2712,6 +2984,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myLeft</span><span class="p">;</span>
 <span class="w">        </span><span class="n">p</span><span class="o">-&gt;</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myRight</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Only real children wait in the queue for their own pair of values.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">){</span>
 <span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span>
 <span class="w">        </span><span class="p">}</span>
@@ -2724,6 +2997,25 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">root</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="cm">/*</span>
+<span class="cm"> * An earlier attempt at problem 5, kept to learn from. It does not work.</span>
+<span class="cm"> *</span>
+<span class="cm"> * The plan: collect every level with level_nodes() from problem 4, then print</span>
+<span class="cm"> * the first node of each level from the bottom up and the last node of each</span>
+<span class="cm"> * level from the top down.</span>
+<span class="cm"> *</span>
+<span class="cm"> * Why it fails:</span>
+<span class="cm"> *   1. It crashes. In print_outer_nodes the loop</span>
+<span class="cm"> *        for(size_t i = levels.size()-1; i &gt;= 0; i--)</span>
+<span class="cm"> *      never ends: size_t is unsigned, so after i = 0 the i-- wraps round to</span>
+<span class="cm"> *      a huge number and levels[i] reads far outside the vector.</span>
+<span class="cm"> *   2. Even with `int i`, &quot;first node of each level&quot; is not the same as the</span>
+<span class="cm"> *      outer edge (100 is the first node of its level but is not on the edge).</span>
+<span class="cm"> *   3. main reads an extra number X that the problem never gives.</span>
+<span class="cm"> * The working solution is assignment_problem_5_print_order_tree_another.cpp.</span>
+<span class="cm"> */</span>
+
+<span class="c1">// Same as problem 4: the values on level X, or {-999} if there is no level X.</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">level_nodes</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
@@ -2757,6 +3049,8 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="p">}</span>
 
 
+<span class="c1">// Calls level_nodes for level 0, 1, 2, ... until a level is empty, and stores</span>
+<span class="c1">// each level as {level number, values}. (One BFS per level: O(n * h) time.)</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">all_nodes_at_all_levels</span><span class="p">(</span><span class="n">Node</span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="p">){</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">levels</span><span class="p">;</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -2890,6 +3184,8 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">leafLevel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">levels</span><span class="p">[</span><span class="n">levels</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
 <span class="w">    </span>
 <span class="w">    </span><span class="c1">// Go bottom to top on left side</span>
+<span class="w">    </span><span class="c1">// BUG (see the top comment): size_t can never be negative, so i &gt;= 0 is</span>
+<span class="w">    </span><span class="c1">// always true and this loop runs past index 0.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">levels</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">// Only add if it&#39;s a left boundary node (first in level)</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">levels</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -2927,7 +3223,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 318 lines ▾</button>
+    <button type="button" class="expand">Show all 347 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>10
@@ -2953,7 +3249,7 @@ p-&gt;left = (l == -1) ? NULL : new Node(l);</pre></div><div class="concept"><h4
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=7" defer></script>
-<script src="../assets/site.js?v=7" defer></script>
+<script src="../assets/search-index.js?v=8" defer></script>
+<script src="../assets/site.js?v=8" defer></script>
 </body>
 </html>

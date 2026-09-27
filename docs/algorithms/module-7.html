@@ -7,7 +7,7 @@
 <meta name="description" content="When edges have weights, BFS levels are no longer shortest distances. Dijkstra&#x27;s algorithm fixes this by always expanding the node with the smallest known distance, using a min-priority queue. The module builds a naive queue version first, then the optimized priority-queue version, and practises it on GFG, CSES and LeetCode.">
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
-<link rel="stylesheet" href="../assets/site.css?v=7">
+<link rel="stylesheet" href="../assets/site.css?v=8">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('recall')==='1')document.documentElement.classList.add('recall');}catch(e){}</script>
 </head>
 <body>
@@ -58,7 +58,7 @@ while(!pq.empty()){
         }
     }
 }</pre><p><strong>A second example.</strong> Make every road 1 km long and Dijkstra gives exactly the BFS levels back: BFS is the special case where all weights are equal.</p><p><strong>A third example.</strong> In Network Delay Time a signal starts at one computer and each cable takes some milliseconds. Dijkstra gives the moment each computer hears it; the answer is the largest of those numbers, because you wait for the last one. Any computer still at infinity was never reached, and the answer is -1.</p><p><strong>Where it breaks.</strong> Dijkstra rests on one promise: once a village is the nearest unfinished one, its distance is final. That promise holds only while every weight is zero or more. <strong>A negative edge can make a finished village cheaper later, and then the promise is a lie</strong> - so Dijkstra is not allowed on graphs with negative weights. Module 9 handles that case.</p><p>With the priority queue the cost is O((V + E) log V), which is fast enough for the judges. The programs below build it twice: first with a plain queue, so you can see why re-processing hurts, then the real version, and then the same code on GFG, LeetCode and CSES.</p></div></section>
-  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><ol><li><a href="#p-priority-queue-of-pairs"><span class="n">1</span>Min-heap of pairs</a></li><li><a href="#p-dijkstra-naive"><span class="n">2</span>Dijkstra with a plain queue</a></li><li><a href="#p-dijkstra-optimized"><span class="n">3</span>Dijkstra with a priority queue</a></li><li><a href="#p-problem-implement-dijkstra"><span class="n">4</span>GFG - Implementing Dijkstra</a></li><li><a href="#p-problem-network-delay-time"><span class="n">5</span>LeetCode 743 - Network Delay Time</a></li><li><a href="#p-gfg-undirected-graph-cycle-bfs"><span class="n">6</span>GFG - Detect cycle (BFS version)</a></li><li><a href="#p-problem-building-roads"><span class="n">7</span>CSES 1666 - Building Roads</a></li></ol></details></nav>
+  <nav class="toc" aria-label="Programs on this page"><details open><summary>On this page</summary><p class="toc-g">📘 The basics</p><ol><li><a href="#p-priority-queue-of-pairs"><span class="n">1</span>Min-heap of pairs</a></li><li><a href="#p-dijkstra-naive"><span class="n">2</span>Dijkstra with a plain queue</a></li><li><a href="#p-dijkstra-optimized"><span class="n">3</span>Dijkstra with a priority queue</a></li></ol><p class="toc-g">🏋️ Practice problems</p><ol><li><a href="#p-problem-implement-dijkstra"><span class="n">4</span>GFG - Implementing Dijkstra</a></li><li><a href="#p-problem-building-roads"><span class="n">5</span>CSES 1666 - Building Roads</a></li><li><a href="#p-problem-network-delay-time"><span class="n">6</span>LeetCode 743 - Network Delay Time</a></li><li><a href="#p-gfg-undirected-graph-cycle-bfs"><span class="n">7</span>GFG - Detect cycle (BFS version, Module 6 practice)</a></li></ol></details></nav>
   <section class="block" id="ideas"><h2>💡 Key ideas</h2><div class="concepts"><div class="concept"><h4>Distance array</h4><p><code>dis[v]</code> = best cost found so far from the source; start with <code>INT_MAX</code> (infinity) and <code>dis[src] = 0</code>.</p></div><div class="concept"><h4>Relaxation</h4><p>For an edge <code>u → v</code> with weight <code>w</code>: if <code>dis[u] + w &lt; dis[v]</code>, update <code>dis[v]</code> and push <code>v</code> again.</p><pre class="snip">if(d + w &lt; dis[v]){ dis[v] = d + w; pq.push({dis[v], v}); }</pre></div><div class="concept"><h4>Min-priority queue of pairs</h4><p><code>priority_queue&lt;pair&lt;int,int&gt;, vector&lt;pair&lt;int,int&gt;&gt;, greater&lt;pair&lt;int,int&gt;&gt;&gt;</code> pops the smallest pair; pairs compare by <code>first</code>, so store <code>{distance, node}</code>.</p></div><div class="concept"><h4>Naive vs optimized</h4><p>A plain queue works but may re-process nodes many times. The priority queue processes the closest node first, giving O((V + E) log V).</p></div><div class="concept"><h4>No negative edges</h4><p>Dijkstra assumes a node&#x27;s distance is final once popped as the smallest; a negative edge can break that. Use Bellman-Ford then.</p></div><div class="concept"><h4>Components again</h4><p>Building Roads: the number of new roads needed is (components − 1); connect one representative of each piece to the next.</p></div></div></section>
   <section class="block" id="walkthrough"><h2>🔍 Worked examples</h2><div class="walk"><div class="wstep"><h3>Watch it happen: Dijkstra across the five roads</h3><p>The map is the one at the top of the page, in kilometres, and the run starts at village 0. A dash means no route is known yet, and a <code>*</code> means that village is finished - its number can never change again. Watch the 10 under village 1: it does not survive.</p><div class="stepper" data-n="7"><p class="stitle">Press the arrows to finish one village at a time</p><div class="frames"><div class="frame" data-i="0"><pre>        10
     0---------1
@@ -139,7 +139,7 @@ dis      0    7    3    9
 done     *    *    *    *
               ^ 7 km via village 2</pre><p class="flabel">The queue is empty and the row is the answer. Village 1 costs 7, by going 0 -&gt; 2 -&gt; 1: two roads, and cheaper than the single 10 km road. That is exactly the case where BFS levels would have lied to you.</p></div></div><div class="sctl"><button type="button" class="sprev" aria-label="Previous step">◀</button><span class="scount">Step 1 of 7</span><button type="button" class="snext" aria-label="Next step">▶</button><button type="button" class="splay">Play ▶</button></div></div></div></div></section>
   <section class="block" id="resources"><h2>🎥 See it explained elsewhere</h2><p class="rlead">Same ideas, other voices and pictures. The interactive ones are worth the detour: you press a button and watch the structure move.</p><ul class="res"><li class="r-visual"><a href="https://visualgo.net/en/sssp" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>VisuAlgo — shortest paths</b><span class="rnote">Dijkstra and Bellman-Ford animated, with the distance table updating.</span></a></li><li class="r-visual"><a href="https://www.cs.usfca.edu/~galles/visualization/Dijkstra.html" target="_blank" rel="noopener"><span class="rkind">🎛️ Interactive</span><b>USFCA — Dijkstra</b><span class="rnote">The distance labels being lowered, one finished node at a time.</span></a></li><li class="r-article"><a href="https://cp-algorithms.com/graph/dijkstra.html" target="_blank" rel="noopener"><span class="rkind">📄 Read</span><b>cp-algorithms — Dijkstra</b><span class="rnote">Both versions, and when the priority queue one is worth it.</span></a></li><li class="r-video"><a href="https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P" target="_blank" rel="noopener"><span class="rkind">▶️ Video</span><b>William Fiset — graph theory playlist</b><span class="rnote">Every graph algorithm of this course, drawn before it is coded.</span></a></li></ul></section>
-  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2>
+  <section class="block" id="programs"><h2>🧑‍💻 Programs</h2><div class="pgroup" id="g-lesson"><h3>📘 The basics</h3><p>The module's own lesson code: the ideas, one small program at a time.</p></div>
 <section class="prog" id="p-priority-queue-of-pairs">
   <div class="prog-h">
     <span class="num">1</span>
@@ -272,7 +272,7 @@ done     *    *    *    *
   <p class="what">Relaxes edges using an ordinary FIFO queue of <code>{node, distance}</code> pairs.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 97 lines</span>
+      <span>CPP · 95 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%207/dijkstra_naive.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -373,9 +373,7 @@ done     *    *    *    *
 <span class="normal">92</span>
 <span class="normal">93</span>
 <span class="normal">94</span>
-<span class="normal">95</span>
-<span class="normal">96</span>
-<span class="normal">97</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Shortest paths with weights, first attempt: a plain queue.</span>
+<span class="normal">95</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Shortest paths with weights, first attempt: a plain queue.</span>
 <span class="c1">//</span>
 <span class="c1">// Module 2 got shortest distances out of BFS because every edge cost one step, so</span>
 <span class="c1">// the ring a node came out in was its distance. Put weights on the edges and that</span>
@@ -461,20 +459,18 @@ done     *    *    *    *
 
 <span class="w">    </span><span class="n">dijkstra</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
 
-<span class="w">    </span><span class="c1">// A copy-paste slip: this loop was meant to PRINT the answers, but it repeats</span>
-<span class="w">    </span><span class="c1">// the initialisation instead and wipes them. That is why the program prints</span>
-<span class="w">    </span><span class="c1">// nothing at all. It should be the line from dijkstra_optimized.cpp:</span>
-<span class="w">    </span><span class="c1">//     cout &lt;&lt; i &lt;&lt; &quot;-&gt;&quot; &lt;&lt; dis[i] &lt;&lt; endl;</span>
-<span class="w">    </span><span class="c1">// The distances it worked out, and then threw away, are 0, 7, 3, 9.</span>
+<span class="w">    </span><span class="c1">// Print the answer: the cheapest cost from node 0 to every node.</span>
+<span class="w">    </span><span class="c1">// (Watch out: this loop is easy to paste as a second copy of the INT_MAX</span>
+<span class="w">    </span><span class="c1">// loop above, which silently wipes the answers and prints nothing.)</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;-&gt;&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 97 lines ▾</button>
+    <button type="button" class="expand">Show all 95 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 5
@@ -482,10 +478,14 @@ done     *    *    *    *
 0 2 3
 2 1 4
 1 3 2
-2 3 8</pre><p class="io-note"><code>n e</code>, then e lines <code>a b w</code> (undirected). Source is node 0.</p></div><div class="io out"><div class="io-h">Output </div><pre><span class="muted">(prints nothing)</span></pre></div></div>
-  <p class="readout"><b>Reading the output.</b> The real output is <strong>empty</strong>: the program never prints the distances (see watch out). The distances it computes are 0, 7, 3, 9.</p>
+2 3 8</pre><p class="io-note"><code>n e</code>, then e lines <code>a b w</code> (undirected). Source is node 0.</p></div><div class="io out"><div class="io-h">Output </div><pre>0-&gt;0
+1-&gt;7
+2-&gt;3
+3-&gt;9
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>0-&gt;0</code>, <code>1-&gt;7</code>, <code>2-&gt;3</code>, <code>3-&gt;9</code>. Node 1 costs 7 via 0 -&gt; 2 -&gt; 1 (3 + 4), cheaper than the direct road of 10.</p>
   <details class="how" open><summary>How it works, step by step</summary><ol><li>Set every <code>dis[i] = INT_MAX</code>, then <code>dis[0] = 0</code>.</li><li>Pop a pair <code>(par_node, par_dist)</code>.</li><li>For each <code>(child_node, child_dist)</code>: if <code>par_dist + child_dist &lt; dis[child_node]</code>, update and push the child.</li><li>Nodes can enter the queue many times; the loop ends when nothing improves.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> After <code>dijkstra(0)</code> the code resets <code>dis</code> to <code>INT_MAX</code> a second time instead of printing it - a copy-paste slip. Replace the second loop with <code>cout &lt;&lt; i &lt;&lt; &quot;-&gt;&quot; &lt;&lt; dis[i] &lt;&lt; endl;</code>.</div>
+  <div class="callout warn"><b>Watch out.</b> The print loop after <code>dijkstra(0)</code> is easy to paste as a second copy of the <code>dis[i] = INT_MAX</code> loop, which wipes the answers and prints nothing. The first copy of this file had exactly that slip; it now prints <code>i-&gt;dis[i]</code>.</div>
   <details class="check"><summary><span>✅ Check yourself:</span> Why is the plain-queue version slower?</summary><div>It may pop a node with an outdated larger distance and re-relax its edges many times.</div></details>
 </section>
 <section class="prog" id="p-dijkstra-optimized">
@@ -714,7 +714,7 @@ done     *    *    *    *
   <details class="how" open><summary>How it works, step by step</summary><ol><li>Initialise <code>dis</code> to <code>INT_MAX</code>, push <code>{0, src}</code>.</li><li>Pop the smallest <code>{par_dist, par_node}</code>.</li><li>Relax every edge from <code>par_node</code>, pushing <code>{dis[child], child}</code> when improved.</li><li>Print <code>i-&gt;dis[i]</code> for all nodes.</li></ol></details>
   <div class="callout warn"><b>Watch out.</b> Nodes can be popped with an outdated distance; adding <code>if (par_dist &gt; dis[par_node]) continue;</code> skips that extra work.</div>
   <details class="check"><summary><span>✅ Check yourself:</span> Why would BFS give the wrong answer for node 1 here?</summary><div>BFS counts edges, so it would pick the direct 1-edge path costing 10.</div></details>
-</section>
+</section><div class="pgroup" id="g-practice"><h3>🏋️ Practice problems</h3><p>Practice-day and judge problems, solved with what the module has taught so far.</p></div>
 <section class="prog" id="p-problem-implement-dijkstra">
   <div class="prog-h">
     <span class="num">4</span>
@@ -724,9 +724,9 @@ done     *    *    *    *
     </div>
   </div>
   <p class="what">The same priority-queue Dijkstra as a function that takes the adjacency list and returns the distance vector.</p>
-  <div class="codebox-wrap">
+  <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 39 lines</span>
+      <span>CPP · 49 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%207/problem_implement_dijkstra.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -771,7 +771,16 @@ done     *    *    *    *
 <span class="normal">36</span>
 <span class="normal">37</span>
 <span class="normal">38</span>
-<span class="normal">39</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://www.geeksforgeeks.org/problems/implementing-dijkstra-set-1-adjacency-matrix/1?utm_source=geeksforgeeks&amp;utm_medium=article_practice_tab&amp;utm_campaign=article_practice_tab</span>
 
@@ -783,36 +792,45 @@ done     *    *    *    *
 
 <span class="cm">*/</span>
 
-<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dijkstra</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;&gt;&amp;</span><span class="w"> </span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adj</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dist</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">);</span>
+<span class="c1">// dijkstra_optimized.cpp in the shape GFG asks for. The judge builds the graph</span>
+<span class="c1">// for us (adj[u] holds {v, weight} pairs) and wants the distance list back</span>
+<span class="c1">// instead of printed, so the function owns its own dist vector and returns it.</span>
+<span class="c1">// There is no main and no #include here: on GFG they live in the hidden driver.</span>
 
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dijkstra</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;&gt;&amp;</span><span class="w"> </span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adj</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w">                 </span><span class="c1">// number of vertices</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dist</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">);</span><span class="w">       </span><span class="c1">// INT_MAX = &quot;no route found yet&quot;</span>
+
+<span class="w">    </span><span class="c1">// Min-heap of {distance, node}: the closest waiting node is always on top.</span>
 <span class="w">    </span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">greater</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">pq</span><span class="p">;</span>
 <span class="w">    </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">src</span><span class="p">});</span>
-<span class="w">    </span><span class="n">dist</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">dist</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                      </span><span class="c1">// the source is 0 away from itself</span>
 
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">();</span>
+<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">();</span><span class="w">  </span><span class="c1">// closest node not yet expanded</span>
 <span class="w">        </span><span class="n">pq</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
 
+<span class="w">        </span><span class="c1">// Here adj[par_node] holds {neighbour, weight}: node first, weight</span>
+<span class="w">        </span><span class="c1">// second (the opposite order to the heap&#39;s pairs).</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="n">par_node</span><span class="p">]){</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">child_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">second</span><span class="p">;</span><span class="w">   </span><span class="c1">// the weight of this edge</span>
 
+<span class="w">            </span><span class="c1">// Relax: is going through par_node better than the best route so far?</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">child_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dist</span><span class="p">[</span><span class="n">child_node</span><span class="p">]){</span>
 <span class="w">                </span><span class="n">dist</span><span class="p">[</span><span class="n">child_node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">child_dist</span><span class="p">;</span>
-<span class="w">                </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">dist</span><span class="p">[</span><span class="n">child_node</span><span class="p">],</span><span class="w"> </span><span class="n">child_node</span><span class="p">});</span>
+<span class="w">                </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">dist</span><span class="p">[</span><span class="n">child_node</span><span class="p">],</span><span class="w"> </span><span class="n">child_node</span><span class="p">});</span><span class="w">   </span><span class="c1">// offer the new, better distance</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">dist</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">dist</span><span class="p">;</span><span class="w">   </span><span class="c1">// O((V + E) log V)</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 39 lines ▾</button>
+    <button type="button" class="expand">Show all 49 lines ▾</button>
   </div>
   <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
@@ -848,9 +866,249 @@ dist[3] = 9
   
   <details class="check"><summary><span>✅ Check yourself:</span> What does <code>dist[x]</code> stay at if x is unreachable?</summary><div><code>INT_MAX</code>.</div></details>
 </section>
-<section class="prog" id="p-problem-network-delay-time">
+<section class="prog" id="p-problem-building-roads">
   <div class="prog-h">
     <span class="num">5</span>
+    <div class="prog-t">
+      <h3>CSES 1666 - Building Roads</h3>
+      <div class="meta"><code class="fname">problem_building_roads.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(n + m) · Space O(n + m)</span><a class="prob" href="https://cses.fi/problemset/task/1666" target="_blank" rel="noopener">↗ CSES 1666 - Building Roads</a></div>
+    </div>
+  </div>
+  <p class="what">No weights here, so no Dijkstra: it is a components count. DFS from every unvisited city, keep one city per component, and join consecutive ones; k = components - 1 new roads.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 105 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%207/problem_building_roads.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">https://cses.fi/problemset/task/1666/</span>
+
+<span class="cm">Building Roads</span>
+
+<span class="cm">Byteland has n cities, and m roads between them. The goal is to construct new roads so that there </span>
+<span class="cm">is a route between any two cities.</span>
+<span class="cm">Your task is to find out the minimum number of roads required, and also determine which roads </span>
+<span class="cm">should be built.</span>
+
+<span class="cm">Input</span>
+<span class="cm">The first input line has two integers n and m: the number of cities and roads. The cities are </span>
+<span class="cm">numbered 1,2, ...,n.</span>
+<span class="cm">After that, there are m lines describing the roads. Each line has two integers a and b: there is </span>
+<span class="cm">a road between those cities.</span>
+<span class="cm">A road always connects two different cities, and there is at most one road between any two cities.</span>
+
+<span class="cm">Output</span>
+<span class="cm">First print an integer k: the number of required roads.</span>
+<span class="cm">Then, print k lines that describe the new roads. You can print any valid solution.</span>
+<span class="cm">Constraints</span>
+
+<span class="cm">1. 1 &lt;= n &lt;= 10^5</span>
+<span class="cm">2. 1 &lt;= m &lt;= 2x10^5</span>
+<span class="cm">3. 1 &lt;= a,b &lt;= n</span>
+
+<span class="cm">Example</span>
+<span class="cm">Input:</span>
+<span class="cm">4 2</span>
+<span class="cm">1 2</span>
+<span class="cm">3 4</span>
+
+<span class="cm">Output:</span>
+<span class="cm">1</span>
+<span class="cm">2 3</span>
+
+<span class="cm">*/</span>
+
+<span class="c1">// Building Roads, as it turned up on the Dijkstra practice day. No weights are</span>
+<span class="c1">// involved, so no Dijkstra is needed: it is a components question (Module 3).</span>
+<span class="c1">// Each group of cities that can already reach each other is one component.</span>
+<span class="c1">// Joining the components in a chain (first to second, second to third, ...)</span>
+<span class="c1">// connects everything, and fewer than (components - 1) roads can never do it.</span>
+<span class="c1">// So: find one city in every component, then link neighbours in that list.</span>
+
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="c1">// Mark every city reachable from node. adj and vis are passed by reference</span>
+<span class="c1">// (&amp;), so the function works on main&#39;s vectors instead of copies.</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">vis</span><span class="p">){</span>
+<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="n">node</span><span class="p">]){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">child</span><span class="p">,</span><span class="w"> </span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="n">vis</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Cities are numbered 1..n, so the vectors need n + 1 slots: index n must</span>
+<span class="w">    </span><span class="c1">// exist, and index 0 is simply never used.</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">adj</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span><span class="w">   </span><span class="c1">// roads go both ways</span>
+<span class="w">        </span><span class="n">adj</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vis</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">components</span><span class="p">;</span><span class="w">   </span><span class="c1">// one representative city per component</span>
+
+<span class="w">    </span><span class="c1">// A city that no earlier DFS reached starts a new component: remember it,</span>
+<span class="w">    </span><span class="c1">// then flood its whole component.</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">components</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="n">vis</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">components</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// roads needed</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Link each representative to the next one: a chain through every piece.</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">k</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">components</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">components</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// O(n + m) time and memory.</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 105 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 2
+1 2
+3 4</pre><p class="io-note">The task&#x27;s sample: 4 cities, roads 1-2 and 3-4.</p></div><div class="io out"><div class="io-h">Output </div><pre>1
+1 3
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>1</code> and then <code>1 3</code>: city 1 represents {1, 2} and city 3 represents {3, 4}, so one road 1-3 connects everything. Any valid road is accepted.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Cities are 1..n, so <code>adj</code> and <code>vis</code> get <code>n + 1</code> slots.</li><li>Loop <code>i</code> from 1 to n; each unvisited city starts a DFS and is saved in <code>components</code>.</li><li>Print <code>k = components.size() - 1</code>.</li><li>Print the pairs <code>components[i] components[i+1]</code>: a chain through every piece.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> CSES numbers cities from 1. With vectors of size <code>n</code>, city n has no slot and the program runs off the end of the array; size them <code>n + 1</code> and loop from 1 to n. (The first copy of this file had exactly that crash; it is fixed.)</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why are exactly (components − 1) roads enough?</summary><div>Linking the pieces in a chain connects them all, and fewer links would leave some piece separate.</div></details>
+</section>
+<section class="prog" id="p-problem-network-delay-time">
+  <div class="prog-h">
+    <span class="num">6</span>
     <div class="prog-t">
       <h3>LeetCode 743 - Network Delay Time</h3>
       <div class="meta"><code class="fname">problem_network_delay_time.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O((V + E) log V) · Space O(V + E)</span><a class="prob" href="https://leetcode.com/problems/network-delay-time/" target="_blank" rel="noopener">↗ LeetCode 743 - Network Delay Time</a></div>
@@ -859,369 +1117,10 @@ dist[3] = 9
   <p class="what">Run Dijkstra from <code>k</code> on a directed graph; the answer is the largest distance, or -1 if some node is unreachable.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 70 lines</span>
+      <span>CPP · 83 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%207/problem_network_delay_time.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
-
-<span class="cm">https://leetcode.com/problems/network-delay-time/description/</span>
-
-<span class="cm">743. Network Delay Time</span>
-
-<span class="cm">You are given a network of n nodes, labeled from 1 to n. You are also given times, a </span>
-<span class="cm">list of travel times as directed edges times[i] = (ui, vi, wi), where ui is the source </span>
-<span class="cm">node, vi is the target node, and wi is the time it takes for a signal to travel from </span>
-<span class="cm">source to target.</span>
-
-<span class="cm">We will send a signal from a given node k. Return the minimum time it takes for all the </span>
-<span class="cm">n nodes to receive the signal. If it is impossible for all the n nodes to receive the </span>
-<span class="cm">signal, return -1.</span>
-
-<span class="cm">*/</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
-<span class="w">    </span>
-<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">dijkstra</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
-<span class="w">            </span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">greater</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">pq</span><span class="p">;</span>
-<span class="w">    </span>
-<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">                </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">    </span>
-<span class="w">            </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">src</span><span class="p">});</span>
-<span class="w">            </span><span class="n">dis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span>
-<span class="w">            </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">                </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">();</span>
-<span class="w">                </span><span class="n">pq</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
-<span class="w">    </span>
-<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">par_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
-<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
-<span class="w">    </span>
-<span class="w">                </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par_node</span><span class="p">]){</span>
-<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">child_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
-<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
-<span class="w">    </span>
-<span class="w">                    </span><span class="k">if</span><span class="p">(</span><span class="n">par_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">]){</span>
-<span class="w">                        </span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">child_dist</span><span class="p">;</span>
-<span class="w">                        </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">],</span><span class="w"> </span><span class="n">child_node</span><span class="p">});</span>
-<span class="w">                    </span><span class="p">}</span>
-<span class="w">                </span><span class="p">}</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">networkDelayTime</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">times</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">v</span><span class="o">:</span><span class="w"> </span><span class="n">times</span><span class="p">){</span>
-<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
-<span class="w">                </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">    </span>
-<span class="w">            </span><span class="n">dijkstra</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
-<span class="w">    </span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">max_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">                </span><span class="n">max_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">max_time</span><span class="p">,</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">    </span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">max_time</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">};</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 70 lines ▾</button>
-  </div>
-  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-</pre></div>
-<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">;</span><span class="w">               </span><span class="c1">// m = number of edges, n = nodes, k = start</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">;</span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">times</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">3</span><span class="p">));</span>
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">e</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">times</span><span class="p">)</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
-<span class="w">        </span><span class="n">Solution</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;networkDelayTime = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">networkDelayTime</span><span class="p">(</span><span class="n">times</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</details>
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
-3 4 2
-2 1 1
-2 3 1
-3 4 1
-1 2 2
-1 2 1</pre><p class="io-note">Driver format: cases; each <code>m n k</code> then m lines <code>u v w</code>. Case 1 is LeetCode example 1; case 2 starts at node 2 with only the edge 1→2.</p></div><div class="io out"><div class="io-h">Output </div><pre>networkDelayTime = 2
-networkDelayTime = -1
-</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> <code>2</code> (expected answer of example 1) and <code>-1</code> (from node 2 the signal cannot reach node 1).</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Build directed edges <code>a → b</code> with time <code>c</code> (nodes are 1-based, arrays have room).</li><li><code>dijkstra(k, n)</code> fills <code>dis[1..n]</code>.</li><li>If any <code>dis[i]</code> is still <code>INT_MAX</code>, return -1.</li><li>Otherwise return the maximum <code>dis[i]</code>: the moment the last node hears the signal.</li></ol></details>
-  
-  <details class="check"><summary><span>✅ Check yourself:</span> Why the maximum distance and not the sum?</summary><div>The signal travels to all nodes at the same time; we wait until the farthest one receives it.</div></details>
-</section>
-<section class="prog" id="p-gfg-undirected-graph-cycle-bfs">
-  <div class="prog-h">
-    <span class="num">6</span>
-    <div class="prog-t">
-      <h3>GFG - Detect cycle (BFS version)</h3>
-      <div class="meta"><code class="fname">gfg_undirected_graph_cycle_bfs.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(V + E) · Space O(V)</span><a class="prob" href="https://www.geeksforgeeks.org/problems/detect-cycle-in-an-undirected-graph/1" target="_blank" rel="noopener">↗ GFG - Detect cycle in an undirected graph</a></div>
-    </div>
-  </div>
-  <p class="what">Tries the Module 6 parent rule with BFS, storing <code>{node, parent}</code> pairs in the queue.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 55 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%207/gfg_undirected_graph_cycle_bfs.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
-
-<span class="cm">Given an undirected graph with V vertices labelled from 0 to V-1 and E edges, check whether </span>
-<span class="cm">the graph contains any cycle or not. The Graph is represented as an adjacency list, where </span>
-<span class="cm">adj[i] contains all the vertices that are directly connected to vertex i.</span>
-
-<span class="cm">NOTE: The adjacency list represents undirected edges, meaning that if there is an edge between </span>
-<span class="cm">vertex i and vertex j, both j will be adj[i] and i will be in adj[j].</span>
-
-<span class="cm">Examples:</span>
-
-<span class="cm">*/</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">      </span><span class="c1">// Function to detect cycle in an undirected graph.</span>
-<span class="w">      </span><span class="kt">bool</span><span class="w"> </span><span class="n">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">adj</span><span class="p">){</span>
-<span class="w">          </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
-<span class="w">          </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">});</span>
-<span class="w">          </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-
-<span class="w">          </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">curr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">().</span><span class="n">first</span><span class="p">;</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">().</span><span class="n">second</span><span class="p">;</span>
-<span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
-
-<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="n">curr</span><span class="p">]){</span>
-<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">parent</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">child</span><span class="p">){</span>
-<span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">                </span><span class="p">}</span>
-<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
-<span class="w">                    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">child</span><span class="p">,</span><span class="w"> </span><span class="n">curr</span><span class="p">});</span>
-<span class="w">                    </span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">                </span><span class="p">}</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">          </span><span class="p">}</span>
-
-<span class="w">          </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">      </span><span class="p">}</span>
-<span class="w">      </span>
-<span class="w">      </span><span class="kt">bool</span><span class="w"> </span><span class="n">isCycle</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">adj</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">          </span><span class="c1">// Code here</span>
-<span class="w">          </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adj</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="w">          </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vis</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
-<span class="w">          </span>
-<span class="w">          </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">              </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
-<span class="w">                  </span><span class="k">if</span><span class="p">(</span><span class="n">bfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="n">adj</span><span class="p">)){</span>
-<span class="w">                      </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">                  </span><span class="p">}</span>
-<span class="w">              </span><span class="p">}</span>
-<span class="w">          </span><span class="p">}</span>
-<span class="w">          </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">      </span><span class="p">}</span>
-<span class="w">  </span><span class="p">};</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 55 lines ▾</button>
-  </div>
-  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-</pre></div>
-<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">E</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">V</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">E</span><span class="p">;</span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj</span><span class="p">(</span><span class="n">V</span><span class="p">);</span>
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">E</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">            </span><span class="n">adj</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
-<span class="w">            </span><span class="n">adj</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="n">Solution</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;isCycle = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">isCycle</span><span class="p">(</span><span class="n">adj</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</details>
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
-3 3
-0 1
-1 2
-2 0
-4 3
-0 1
-1 2
-2 3</pre><p class="io-note">Driver format: cases; each <code>V E</code> then E edges. A triangle, then a simple path.</p></div><div class="io out bad"><div class="io-h">Compiler says <span class="tag bad">does not compile</span></div><pre>gfg_undirected_graph_cycle_bfs.cpp: In member function &#x27;bool Solution::isCycle(std::vector&lt;std::vector&lt;int&gt; &gt;&amp;)&#x27;:
-gfg_undirected_graph_cycle_bfs.cpp:44:28: error: &#x27;V&#x27; was not declared in this scope</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> The real output is a compile error: <code>&#x27;V&#x27; was not declared</code>. With both fixes below it would print <code>true</code> then <code>false</code>.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>isCycle</code> loops over all nodes and starts BFS on unvisited ones.</li><li>The queue holds <code>{child, curr}</code> so each node knows its parent.</li><li>A visited neighbour that is not the parent should mean a cycle.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Two mistakes. (1) <code>vector&lt;bool&gt; vis(V, false)</code> uses <code>V</code>, which does not exist here; use <code>n</code>. (2) The check uses the function argument <code>parent</code> (always -1) instead of the popped node&#x27;s parent <code>par</code>, so every edge back to a parent would look like a cycle. Write <code>if (vis[child] &amp;&amp; par != child)</code>.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> Which parent must be compared in the BFS version?</summary><div>The parent of the node just popped from the queue (<code>par</code>), stored alongside it.</div></details>
-</section>
-<section class="prog" id="p-problem-building-roads">
-  <div class="prog-h">
-    <span class="num">7</span>
-    <div class="prog-t">
-      <h3>CSES 1666 - Building Roads</h3>
-      <div class="meta"><code class="fname">problem_building_roads.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(n + m) · Space O(n + m)</span><a class="prob" href="https://cses.fi/problemset/task/1666" target="_blank" rel="noopener">↗ CSES 1666 - Building Roads</a></div>
-    </div>
-  </div>
-  <p class="what">Counts components with DFS and joins each component&#x27;s first node to the next one&#x27;s; k = components − 1 new roads.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 89 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%207/problem_building_roads.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -1306,114 +1205,326 @@ gfg_undirected_graph_cycle_bfs.cpp:44:28: error: &#x27;V&#x27; was not declared 
 <span class="normal">79</span>
 <span class="normal">80</span>
 <span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span>
-<span class="normal">86</span>
-<span class="normal">87</span>
-<span class="normal">88</span>
-<span class="normal">89</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">82</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
-<span class="cm">https://cses.fi/problemset/task/1666/</span>
+<span class="cm">https://leetcode.com/problems/network-delay-time/description/</span>
 
-<span class="cm">Building Roads</span>
+<span class="cm">743. Network Delay Time</span>
 
-<span class="cm">Byteland has n cities, and m roads between them. The goal is to construct new roads so that there </span>
-<span class="cm">is a route between any two cities.</span>
-<span class="cm">Your task is to find out the minimum number of roads required, and also determine which roads </span>
-<span class="cm">should be built.</span>
+<span class="cm">You are given a network of n nodes, labeled from 1 to n. You are also given times, a </span>
+<span class="cm">list of travel times as directed edges times[i] = (ui, vi, wi), where ui is the source </span>
+<span class="cm">node, vi is the target node, and wi is the time it takes for a signal to travel from </span>
+<span class="cm">source to target.</span>
 
-<span class="cm">Input</span>
-<span class="cm">The first input line has two integers n and m: the number of cities and roads. The cities are </span>
-<span class="cm">numbered 1,2, ...,n.</span>
-<span class="cm">After that, there are m lines describing the roads. Each line has two integers a and b: there is </span>
-<span class="cm">a road between those cities.</span>
-<span class="cm">A road always connects two different cities, and there is at most one road between any two cities.</span>
-
-<span class="cm">Output</span>
-<span class="cm">First print an integer k: the number of required roads.</span>
-<span class="cm">Then, print k lines that describe the new roads. You can print any valid solution.</span>
-<span class="cm">Constraints</span>
-
-<span class="cm">1. 1 &lt;= n &lt;= 10^5</span>
-<span class="cm">2. 1 &lt;= m &lt;= 2x10^5</span>
-<span class="cm">3. 1 &lt;= a,b &lt;= n</span>
-
-<span class="cm">Example</span>
-<span class="cm">Input:</span>
-<span class="cm">4 2</span>
-<span class="cm">1 2</span>
-<span class="cm">3 4</span>
-
-<span class="cm">Output:</span>
-<span class="cm">1</span>
-<span class="cm">2 3</span>
+<span class="cm">We will send a signal from a given node k. Return the minimum time it takes for all the </span>
+<span class="cm">n nodes to receive the signal. If it is impossible for all the n nodes to receive the </span>
+<span class="cm">signal, return -1.</span>
 
 <span class="cm">*/</span>
 
+<span class="c1">// Network Delay Time is Dijkstra from node k, plus one question at the end.</span>
+<span class="c1">// Each node hears the signal the moment the shortest route to it finishes, and</span>
+<span class="c1">// the signal spreads along all routes at once. So the time until EVERY node has</span>
+<span class="c1">// it is the LARGEST shortest distance. If some node is never reached: -1.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="c1">// Nodes are numbered 1..n (n &lt;= 100), so size 105 leaves room for index n.</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">   </span><span class="c1">// adj_list[a] = {b, time} edges out of a</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">                            </span><span class="c1">// dis[x] = fastest time from k to x</span>
 
-<span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">vis</span><span class="p">){</span>
-<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="n">node</span><span class="p">]){</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
-<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">child</span><span class="p">,</span><span class="w"> </span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="n">vis</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">dijkstra</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">            </span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">greater</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">pq</span><span class="p">;</span>
+
+<span class="w">            </span><span class="c1">// Start every node at &quot;unreached&quot;. A loop, not memset, because</span>
+<span class="w">            </span><span class="c1">// INT_MAX is not a value memset can write byte by byte.</span>
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">                </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">src</span><span class="p">});</span><span class="w">   </span><span class="c1">// {time, node}</span>
+<span class="w">            </span><span class="n">dis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">            </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">pq</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">                </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pq</span><span class="p">.</span><span class="n">top</span><span class="p">();</span><span class="w">   </span><span class="c1">// the earliest node to hear the signal</span>
+<span class="w">                </span><span class="n">pq</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+
+<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">par_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
+
+<span class="w">                </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par_node</span><span class="p">]){</span>
+<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">child_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
+<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+
+<span class="w">                    </span><span class="c1">// Relax the edge par_node -&gt; child_node.</span>
+<span class="w">                    </span><span class="k">if</span><span class="p">(</span><span class="n">par_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">child_dist</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">]){</span>
+<span class="w">                        </span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_dist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">child_dist</span><span class="p">;</span>
+<span class="w">                        </span><span class="n">pq</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">dis</span><span class="p">[</span><span class="n">child_node</span><span class="p">],</span><span class="w"> </span><span class="n">child_node</span><span class="p">});</span>
+<span class="w">                    </span><span class="p">}</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">networkDelayTime</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">times</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// Each entry of times is {from, to, time}. The edges are DIRECTED:</span>
+<span class="w">            </span><span class="c1">// a signal sent from a to b cannot travel back, so push only one way.</span>
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">v</span><span class="o">:</span><span class="w"> </span><span class="n">times</span><span class="p">){</span>
+<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="w">                </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span>
+<span class="w">            </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">            </span><span class="n">dijkstra</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
 
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">adj</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
-<span class="w">        </span><span class="n">adj</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
+<span class="w">            </span><span class="c1">// The slowest node decides the answer; an unreached node makes it -1.</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">max_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">                </span><span class="n">max_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">max_time</span><span class="p">,</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">            </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vis</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
-<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">components</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
-<span class="w">            </span><span class="n">components</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
-<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="n">vis</span><span class="p">);</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">max_time</span><span class="p">;</span><span class="w">   </span><span class="c1">// O((V + E) log V)</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">components</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">k</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">components</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">components</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="p">};</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 89 lines ▾</button>
+    <button type="button" class="expand">Show all 83 lines ▾</button>
   </div>
+  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+</pre></div>
+<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">;</span><span class="w">               </span><span class="c1">// m = number of edges, n = nodes, k = start</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">k</span><span class="p">;</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">times</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">3</span><span class="p">));</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">e</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">times</span><span class="p">)</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="w">        </span><span class="n">Solution</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;networkDelayTime = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">networkDelayTime</span><span class="p">(</span><span class="n">times</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
+3 4 2
+2 1 1
+2 3 1
+3 4 1
+1 2 2
+1 2 1</pre><p class="io-note">Driver format: cases; each <code>m n k</code> then m lines <code>u v w</code>. Case 1 is LeetCode example 1; case 2 starts at node 2 with only the edge 1→2.</p></div><div class="io out"><div class="io-h">Output </div><pre>networkDelayTime = 2
+networkDelayTime = -1
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>2</code> (expected answer of example 1) and <code>-1</code> (from node 2 the signal cannot reach node 1).</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>Build directed edges <code>a → b</code> with time <code>c</code> (nodes are 1-based, arrays have room).</li><li><code>dijkstra(k, n)</code> fills <code>dis[1..n]</code>.</li><li>If any <code>dis[i]</code> is still <code>INT_MAX</code>, return -1.</li><li>Otherwise return the maximum <code>dis[i]</code>: the moment the last node hears the signal.</li></ol></details>
   
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 2
+  <details class="check"><summary><span>✅ Check yourself:</span> Why the maximum distance and not the sum?</summary><div>The signal travels to all nodes at the same time; we wait until the farthest one receives it.</div></details>
+</section>
+<section class="prog" id="p-gfg-undirected-graph-cycle-bfs">
+  <div class="prog-h">
+    <span class="num">7</span>
+    <div class="prog-t">
+      <h3>GFG - Detect cycle (BFS version, Module 6 practice)</h3>
+      <div class="meta"><code class="fname">gfg_undirected_graph_cycle_bfs.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(V + E) · Space O(V)</span><a class="prob" href="https://www.geeksforgeeks.org/problems/detect-cycle-in-an-undirected-graph/1" target="_blank" rel="noopener">↗ GFG - Detect cycle in an undirected graph</a></div>
+    </div>
+  </div>
+  <p class="what">Module 6&#x27;s Practice Day problem 1, saved in this folder: the undirected-cycle question solved with BFS. Each node travels through the queue with its parent as a <code>{node, parent}</code> pair, so the Module 6 parent rule still works.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 74 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%207/gfg_undirected_graph_cycle_bfs.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+
+<span class="cm">Given an undirected graph with V vertices labelled from 0 to V-1 and E edges, check whether </span>
+<span class="cm">the graph contains any cycle or not. The Graph is represented as an adjacency list, where </span>
+<span class="cm">adj[i] contains all the vertices that are directly connected to vertex i.</span>
+
+<span class="cm">NOTE: The adjacency list represents undirected edges, meaning that if there is an edge between </span>
+<span class="cm">vertex i and vertex j, both j will be adj[i] and i will be in adj[j].</span>
+
+<span class="cm">Examples:</span>
+
+<span class="cm">*/</span>
+
+<span class="c1">// This is Module 6&#39;s Practice Day problem 1: the same GFG cycle question as</span>
+<span class="c1">// Module 6&#39;s extra_problem_undirected_graph_cycle_dfs.cpp, but solved with BFS</span>
+<span class="c1">// as that practice day asked. The rule does not change: reaching a node that</span>
+<span class="c1">// is already visited, and that is not the node we came from, means there are</span>
+<span class="c1">// two different ways to reach it, so the graph has a cycle.</span>
+<span class="c1">//</span>
+<span class="c1">// What BFS needs extra: DFS gets the parent for free as a function argument,</span>
+<span class="c1">// but BFS takes nodes out of a queue much later than it discovers them. So</span>
+<span class="c1">// each node travels through the queue together with its parent: {node, parent}.</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">      </span><span class="c1">// Function to detect cycle in an undirected graph.</span>
+<span class="w">      </span><span class="c1">// BFS over the piece of the graph that contains src. (The parent</span>
+<span class="w">      </span><span class="c1">// argument is unused: the parents come out of the queue instead.)</span>
+<span class="w">      </span><span class="kt">bool</span><span class="w"> </span><span class="n">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">adj</span><span class="p">){</span>
+<span class="w">          </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
+<span class="w">          </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">});</span><span class="w">   </span><span class="c1">// the start node has no parent: -1</span>
+<span class="w">          </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="w">          </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">curr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">().</span><span class="n">first</span><span class="p">;</span><span class="w">    </span><span class="c1">// the node explored now</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">().</span><span class="n">second</span><span class="p">;</span><span class="w">    </span><span class="c1">// the node that discovered curr</span>
+<span class="w">            </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="n">curr</span><span class="p">]){</span>
+<span class="w">                </span><span class="c1">// Visited, and not simply the edge back to curr&#39;s own parent:</span>
+<span class="w">                </span><span class="c1">// someone else reached child first, so there is a cycle.</span>
+<span class="w">                </span><span class="c1">// It must be par, the parent of THIS node. Comparing with the</span>
+<span class="w">                </span><span class="c1">// function argument, which is always -1, would call every</span>
+<span class="w">                </span><span class="c1">// undirected edge a cycle.</span>
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">child</span><span class="p">){</span>
+<span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
+<span class="w">                    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">child</span><span class="p">,</span><span class="w"> </span><span class="n">curr</span><span class="p">});</span><span class="w">   </span><span class="c1">// curr becomes child&#39;s parent</span>
+<span class="w">                    </span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">       </span><span class="c1">// mark on push, as in Module 2</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">          </span><span class="p">}</span>
+
+<span class="w">          </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">   </span><span class="c1">// this piece has no cycle</span>
+<span class="w">      </span><span class="p">}</span>
+
+<span class="w">      </span><span class="kt">bool</span><span class="w"> </span><span class="n">isCycle</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">adj</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="c1">// Code here</span>
+<span class="w">          </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adj</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w">          </span><span class="c1">// number of vertices</span>
+<span class="w">          </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vis</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+
+<span class="w">          </span><span class="c1">// The graph may be split into pieces: try every unvisited node.</span>
+<span class="w">          </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">              </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
+<span class="w">                  </span><span class="k">if</span><span class="p">(</span><span class="n">bfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="n">adj</span><span class="p">)){</span>
+<span class="w">                      </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">                  </span><span class="p">}</span>
+<span class="w">              </span><span class="p">}</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">          </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">   </span><span class="c1">// O(V + E)</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">  </span><span class="p">};</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 74 lines ▾</button>
+  </div>
+  <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+</pre></div>
+<div class="io-h sub">Added after the file</div><div class="hl"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">E</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">V</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">E</span><span class="p">;</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj</span><span class="p">(</span><span class="n">V</span><span class="p">);</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">E</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">            </span><span class="n">adj</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="w">            </span><span class="n">adj</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">Solution</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;isCycle = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">isCycle</span><span class="p">(</span><span class="n">adj</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2
+3 3
+0 1
 1 2
-3 4</pre><p class="io-note">The task&#x27;s sample: 4 cities, roads 1-2 and 3-4.</p></div><div class="io out"><div class="io-h">Output <span class="tag warn">ended with exit code 0xc0000005</span></div><pre><span class="muted">(prints nothing)</span></pre></div></div>
-  <p class="readout"><b>Reading the output.</b> The real run <strong>crashes</strong> (status is an access-violation code) and prints nothing. The intended output is <code>1</code> then <code>2 3</code> (or any valid pair like <code>1 3</code>).</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>Build the adjacency list.</li><li>Loop over nodes; each unvisited node starts a DFS and its number is saved in <code>components</code>.</li><li>Print <code>k = components.size() - 1</code>.</li><li>Print pairs <code>components[i] components[i+1]</code>.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Cities are numbered 1..n, but <code>adj</code> has size <code>n</code>, so <code>adj[n]</code> is out of range. Fix: <code>vector&lt;vector&lt;int&gt;&gt; adj(n + 1)</code>, <code>vis(n + 1)</code>, loop <code>i</code> from 1 to n and save <code>i</code> (not <code>i+1</code>).</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> Why are exactly (components − 1) roads enough?</summary><div>Linking the pieces in a chain connects them all, and fewer links would leave some piece separate.</div></details>
+2 0
+4 3
+0 1
+1 2
+2 3</pre><p class="io-note">Driver format: cases; each <code>V E</code> then E edges. A triangle, then a simple path.</p></div><div class="io out"><div class="io-h">Output </div><pre>isCycle = true
+isCycle = false
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>isCycle = true</code> for the triangle and <code>isCycle = false</code> for the simple path.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>isCycle</code> loops over all nodes and starts a BFS on every unvisited one (the graph may be in pieces).</li><li>The queue holds <code>{child, curr}</code>, so when a node is popped we also know <code>par</code>, the node that discovered it.</li><li>For each neighbour: if it is visited and is not <code>par</code>, some other route reached it first, so return true.</li><li>Otherwise push it with <code>curr</code> as its parent and mark it visited at once.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Compare with the parent of the node you just popped (<code>par</code>), not with the function&#x27;s <code>parent</code> argument, which is always -1: that would call every undirected edge a cycle. (The first copy of this file made exactly that slip, and also sized <code>vis</code> with an undeclared <code>V</code>; both are fixed.)</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why must the parent travel inside the queue in the BFS version?</summary><div>BFS pops a node long after discovering it, so there is no function argument holding its parent; storing <code>{node, parent}</code> keeps the two together.</div></details>
 </section></section>
   <section class="block" id="practice"><h2>🏋️ Practice problems</h2><ul class="plinks"><li><a href="https://www.geeksforgeeks.org/problems/implementing-dijkstra-set-1-adjacency-matrix/1" target="_blank" rel="noopener">Implementing Dijkstra Algorithm</a><span class="site">GeeksforGeeks</span></li><li><a href="https://cses.fi/problemset/task/1666/" target="_blank" rel="noopener">Building Roads</a><span class="site">CSES</span></li><li><a href="https://leetcode.com/problems/network-delay-time/description/" target="_blank" rel="noopener">Network Delay Time</a><span class="site">LeetCode</span></li></ul></section>
   <section class="block recap" id="recap"><h2>📌 Remember</h2><ul><li>Weighted shortest path, no negative edges → Dijkstra.</li><li>Min-heap of <code>{dist, node}</code> with <code>greater&lt;&gt;</code>.</li><li>Relax: <code>if (d + w &lt; dis[v])</code> update and push.</li><li>Start distances at <code>INT_MAX</code>; unreachable nodes stay there.</li><li>Watch 1-based node numbers when sizing arrays.</li></ul></section>
@@ -1426,7 +1537,7 @@ gfg_undirected_graph_cycle_bfs.cpp:44:28: error: &#x27;V&#x27; was not declared 
   (GCC 8.1, C11 / GNU C++14). <a href="https://github.com/shammun/phitron-cse-notes">Source on GitHub</a> · <a href="../index.html">All modules</a></p>
 </footer>
 <script>window.SITE_ROOT="../";</script>
-<script src="../assets/search-index.js?v=7" defer></script>
-<script src="../assets/site.js?v=7" defer></script>
+<script src="../assets/search-index.js?v=8" defer></script>
+<script src="../assets/site.js?v=8" defer></script>
 </body>
 </html>
