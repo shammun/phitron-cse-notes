@@ -75,7 +75,7 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
   <p class="what">Reads a directed graph and stores it in a 2D array <code>adj_mat</code>, then prints the whole table.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 64 lines</span>
+      <span>CPP · 80 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%201/adjacency_matrix_for_directed_graph.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -144,72 +144,104 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
 <span class="normal">60</span>
 <span class="normal">61</span>
 <span class="normal">62</span>
-<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The first way to store a graph: the adjacency matrix, for a DIRECTED graph.</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The first way to store a graph: the adjacency matrix, for a DIRECTED graph.</span>
 <span class="c1">//</span>
 <span class="c1">// Picture an n x n table with one row and one column per node. The cell in row a,</span>
 <span class="c1">// column b answers one yes/no question: &quot;is there an arrow from a to b?&quot;. A 1 means</span>
 <span class="c1">// yes, a 0 means no. Asking about one edge is a single look, O(1), but the table</span>
 <span class="c1">// always costs n x n cells, however few edges the graph really has.</span>
+<span class="c1">//</span>
+<span class="c1">// Example input (3 nodes, 2 arrows):     Output (diagonal is 1, see below):</span>
+<span class="c1">//   3 2                                  1 1 0</span>
+<span class="c1">//   0 1                                  0 1 1</span>
+<span class="c1">//   1 2                                  0 0 1</span>
+<span class="c1">// Row 0 has a 1 in column 1 (arrow 0-&gt;1), but row 1 column 0 stays 0:</span>
+<span class="c1">// there is no arrow back from 1 to 0.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin / cout for input and output</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector (not used in this file; course template line)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // sort, max, min ... (not used here; template line)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span><span class="c1">       // std::string (not used here; template line)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span><span class="c1">        // std::stack (not used here; template line)</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// lets us write cout instead of std::cout</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">           </span><span class="c1">// n = number of nodes, e = number of edges (arrows)</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="c1">// n = number of vertices, e = number of edges</span>
 
 <span class="w">    </span><span class="c1">// The table itself. Nodes are numbered 0..n-1, so a node number can be used</span>
 <span class="w">    </span><span class="c1">// directly as a row or column index.</span>
+<span class="w">    </span><span class="c1">// int adj_mat[n][n] is a 2D array whose size comes from input at run time</span>
+<span class="w">    </span><span class="c1">// (a &quot;variable length array&quot;). Standard C++ does not allow that, but g++</span>
+<span class="w">    </span><span class="c1">// accepts it as an extension, which is why the course uses it. It lives on</span>
+<span class="w">    </span><span class="c1">// the stack, so it is fine for small n (a few thousand at most).</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">n</span><span class="p">];</span>
 
 <span class="w">    </span><span class="c1">// A local array starts full of leftover garbage, so clear every cell to 0</span>
 <span class="w">    </span><span class="c1">// (&quot;no edge yet&quot;) before writing any edges in.</span>
+<span class="w">    </span><span class="c1">// Outer loop picks row i, inner loop walks every column j of that row.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">            </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">      </span><span class="c1">// cell (i, j) = &quot;no arrow from i to j&quot;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// Optional convention: every node can &quot;reach itself&quot;, so mark the diagonal.</span>
 <span class="w">    </span><span class="c1">// The loop runs over the n nodes (i &lt; n), one diagonal cell per node.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">          </span><span class="c1">// diagonal cell: row i, column i</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="cm">/*</span>
 <span class="cm">    </span>
 <span class="cm">    // Shortcut for setting all elements to 0 (memset lives in &lt;cstring&gt;)</span>
+<span class="cm">    // memset fills the array&#39;s raw bytes with the byte 0; an int made of four</span>
+<span class="cm">    // zero bytes is 0, so the whole table becomes 0 in one call. sizeof(adj_mat)</span>
+<span class="cm">    // is the table size in bytes. It is commented out because the loop above</span>
+<span class="cm">    // already did the job. (memset only works like this for 0 and -1.)</span>
 <span class="cm">    memset(adj_mat, 0, sizeof(adj_mat));</span>
 <span class="cm">    </span>
 <span class="cm">    */</span>
 
 <span class="w">    </span><span class="c1">// Read the e arrows. &quot;a b&quot; means you can go from a to b, and only that way,</span>
 <span class="w">    </span><span class="c1">// so only the cell [a][b] is set. Row = from, column = to.</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">         </span><span class="c1">// one pass = one arrow read and stored</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">                   </span><span class="c1">// a = start node, b = end node</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">          </span><span class="c1">// mark &quot;a -&gt; b exists&quot;; [b][a] is left alone</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// Print the table row by row. Because arrows are one-way, the table is</span>
 <span class="w">    </span><span class="c1">// usually NOT symmetric: [a][b] can be 1 while [b][a] is 0.</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">             </span><span class="c1">// row i = arrows going OUT of node i</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span><span class="w">         </span><span class="c1">// column j = is there an arrow into j?</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w">   </span><span class="c1">// print the cell and a space</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">                   </span><span class="c1">// row finished: move to a new line</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                           </span><span class="c1">// program ended normally</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 64 lines ▾</button>
+    <button type="button" class="expand">Show all 80 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
@@ -237,7 +269,7 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
   <p class="what">Same as the directed version, but every edge is written in both directions so the table is symmetric.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 59 lines</span>
+      <span>CPP · 71 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%201/adjacency_matrix_of_undirected_graph.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -301,67 +333,91 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
 <span class="normal">55</span>
 <span class="normal">56</span>
 <span class="normal">57</span>
-<span class="normal">58</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The adjacency matrix again, this time for an UNDIRECTED graph.</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The adjacency matrix again, this time for an UNDIRECTED graph.</span>
 <span class="c1">//</span>
 <span class="c1">// Same n x n table as adjacency_matrix_for_directed_graph.cpp. The one change:</span>
 <span class="c1">// an undirected edge can be walked both ways, so every edge is written into the</span>
 <span class="c1">// table twice, [a][b] and [b][a]. That makes the table symmetric about its</span>
 <span class="c1">// diagonal, which is a quick way to recognise an undirected graph&#39;s matrix.</span>
+<span class="c1">//</span>
+<span class="c1">// Example input (3 nodes, 2 edges):      Output:</span>
+<span class="c1">//   3 2                                  1 1 0</span>
+<span class="c1">//   0 1                                  1 1 1</span>
+<span class="c1">//   1 2                                  0 1 1</span>
+<span class="c1">// Row 0 column 1 and row 1 column 0 are BOTH 1: the edge 0-1 works both ways.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin / cout for input and output</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector (not used in this file; course template line)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // sort, max, min ... (not used here; template line)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span><span class="c1">       // std::string (not used here; template line)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span><span class="c1">        // std::stack (not used here; template line)</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// lets us write cout instead of std::cout</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">           </span><span class="c1">// n = number of nodes, e = number of edges</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="c1">// n = number of vertices, e = number of edges</span>
 
+<span class="w">    </span><span class="c1">// An n x n table whose size is known only at run time. Standard C++ does</span>
+<span class="w">    </span><span class="c1">// not allow this (&quot;variable length array&quot;), but g++ accepts it, so the</span>
+<span class="w">    </span><span class="c1">// course uses it for small n. Nodes are 0..n-1 and are used as indexes.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">n</span><span class="p">];</span><span class="w">   </span><span class="c1">// row = one end of an edge, column = the other end</span>
 
 <span class="w">    </span><span class="c1">// Clear the table: a local array holds garbage until we write to it.</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">             </span><span class="c1">// every row i ...</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span><span class="w">         </span><span class="c1">// ... and every column j in it</span>
+<span class="w">            </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">          </span><span class="c1">// 0 = &quot;no edge between i and j&quot;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// Optional: mark each node as connected to itself (one cell per node).</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">              </span><span class="c1">// the diagonal cell (i, i)</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="cm">/*</span>
 <span class="cm">    </span>
 <span class="cm">    // Shortcut for setting all elements to 0 (memset lives in &lt;cstring&gt;)</span>
+<span class="cm">    // memset writes the byte 0 into every byte of the table, which makes every</span>
+<span class="cm">    // int 0. Left commented out because the loop above already cleared it.</span>
 <span class="cm">    memset(adj_mat, 0, sizeof(adj_mat));</span>
 <span class="cm">    </span>
 <span class="cm">    */</span>
 
+<span class="w">    </span><span class="c1">// Read the e edges; one pass of the loop handles one edge &quot;a b&quot;.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">                       </span><span class="c1">// the two ends of this edge</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="c1">// One road, two cells: a can reach b AND b can reach a.</span>
-<span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">              </span><span class="c1">// a -&gt; b</span>
 <span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">b</span><span class="p">][</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">// directed graph will not have this line</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// Print the table. Compare row k with column k: they are always equal here.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w">   </span><span class="c1">// one cell followed by a space</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">                       </span><span class="c1">// end of row i: new line</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                               </span><span class="c1">// program ended normally</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 59 lines ▾</button>
+    <button type="button" class="expand">Show all 71 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
@@ -389,7 +445,7 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
   <p class="what">Stores the graph as an array of vectors, one vector of neighbours per node, and prints each node&#x27;s list.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 56 lines</span>
+      <span>CPP · 69 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%201/adjacency_list_for_undirected_graph.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -451,7 +507,19 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
 <span class="normal">53</span>
 <span class="normal">54</span>
 <span class="normal">55</span>
-<span class="normal">56</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The third way to store a graph: the adjacency list.</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The third way to store a graph: the adjacency list.</span>
 <span class="c1">//</span>
 <span class="c1">// The matrix files kept an n x n table and wrote a 1 where an edge existed. That</span>
 <span class="c1">// table always costs n x n cells, even when the graph has only a handful of edges.</span>
@@ -461,43 +529,55 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
 <span class="c1">// answered by reading one list instead of scanning a whole row.</span>
 <span class="c1">//</span>
 <span class="c1">// This is the storage every BFS and DFS from Module 2 onwards will use.</span>
+<span class="c1">//</span>
+<span class="c1">// Example input (4 nodes, 3 edges):      Output:</span>
+<span class="c1">//   4 3                                  0 -&gt; 1 2</span>
+<span class="c1">//   0 1                                  1 -&gt; 0 3</span>
+<span class="c1">//   0 2                                  2 -&gt; 0</span>
+<span class="c1">//   1 3                                  3 -&gt; 1</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin / cout for input and output</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector: a growable array; each node&#39;s list is one</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // sort, max, min ... (not used here; course template line)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span><span class="c1">       // std::string (not used here; template line)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span><span class="c1">        // std::stack (not used here; template line)</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// lets us write vector / cout without the std:: prefix</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">           </span><span class="c1">// n = number of nodes, e = number of edges</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="c1">// n = number of vertices, e = number of edges</span>
 
 <span class="w">    </span><span class="c1">// An array of n vectors, one per node, all empty to begin with. Read it as</span>
 <span class="w">    </span><span class="c1">// &quot;for each node, a growable list of neighbours&quot;. Node numbers start at 0 so</span>
 <span class="w">    </span><span class="c1">// a node number can be used directly as the index here.</span>
+<span class="w">    </span><span class="c1">// (An array whose size n comes from input is a g++ extension, not standard</span>
+<span class="w">    </span><span class="c1">// C++, but it works with g++ and the course uses it. adj_list[i] is a</span>
+<span class="w">    </span><span class="c1">// vector&lt;int&gt;: the neighbour list of node i.)</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
 
+<span class="w">    </span><span class="c1">// Read the e edges. while(e--) tests e, then subtracts 1, so the body runs</span>
+<span class="w">    </span><span class="c1">// exactly e times (for e = 3: runs at 3, 2, 1, stops at 0).</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">                   </span><span class="c1">// the two ends of one edge</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="c1">// One edge, written down twice: once in a&#39;s list and once in b&#39;s. That</span>
 <span class="w">        </span><span class="c1">// is what &quot;undirected&quot; means here, the road can be walked either way, so</span>
 <span class="w">        </span><span class="c1">// both endpoints must know about it.</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span><span class="w">   </span><span class="c1">// add b at the end of a&#39;s neighbour list</span>
 <span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span><span class="w"> </span><span class="c1">// directed graph will not have this line</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// Print each node with its neighbours. The inner loop reads the whole list of</span>
 <span class="w">    </span><span class="c1">// node i, so the neighbours come out in the order the edges were read, not in</span>
 <span class="w">    </span><span class="c1">// sorted order. A list makes no promise about order, only about membership.</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; -&gt; &quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">             </span><span class="c1">// one pass = one node&#39;s line</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; -&gt; &quot;</span><span class="p">;</span><span class="w">            </span><span class="c1">// the node itself</span>
+<span class="w">        </span><span class="c1">// Range-for: x takes each value stored in adj_list[i], front to back.</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
-<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w">           </span><span class="c1">// one neighbour of i</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">                   </span><span class="c1">// finish this node&#39;s line</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// Two things worth remembering from this file:</span>
@@ -505,11 +585,11 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
 <span class="w">    </span><span class="c1">//   the total of all the sizes is 2e for an undirected graph, because every</span>
 <span class="w">    </span><span class="c1">//   edge was stored twice.</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                           </span><span class="c1">// program ended normally</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 56 lines ▾</button>
+    <button type="button" class="expand">Show all 69 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 5
@@ -539,7 +619,7 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
   <p class="what">Keeps every edge as a <code>pair&lt;int,int&gt;</code> inside one vector and prints them back.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 48 lines</span>
+      <span>CPP · 73 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%201/edge_list.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -592,44 +672,94 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
 <span class="normal">44</span>
 <span class="normal">45</span>
 <span class="normal">46</span>
-<span class="normal">47</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The simplest way to store a graph: the edge list.</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// The simplest way to store a graph: the edge list.</span>
 <span class="c1">//</span>
 <span class="c1">// No table, no per-node lists: just every edge, written down as the pair (a, b)</span>
 <span class="c1">// in the order it was read. It is small (one pair per edge) and it is exactly the</span>
 <span class="c1">// shape wanted by algorithms that sweep over all edges again and again, such as</span>
 <span class="c1">// Bellman-Ford later in the course. Its weakness: to find the neighbours of one</span>
 <span class="c1">// node you must read the whole list.</span>
+<span class="c1">//</span>
+<span class="c1">// Example input (4 nodes, 3 edges):      Output:</span>
+<span class="c1">//   4 3                                  0 &lt;- 1</span>
+<span class="c1">//   0 1                                  1 &lt;- 2</span>
+<span class="c1">//   1 2                                  2 &lt;- 3</span>
+<span class="c1">//   2 3</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin (read from keyboard/input) and cout (print to screen)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector: an array that can grow with push_back</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // sort, max, min ... (not used here; kept from the course template)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span><span class="c1">       // std::string (not used here; template line)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span><span class="c1">        // std::stack (not used here; template line)</span>
 
+<span class="c1">// Every standard name (cin, cout, vector, pair, endl) lives inside the &quot;std&quot;</span>
+<span class="c1">// namespace. This line lets us write cout instead of std::cout.</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
 
+<span class="c1">// Program starts here. main returns an int: 0 tells the system &quot;finished fine&quot;.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">          </span><span class="c1">// n = how many vertices (nodes), e = how many edges</span>
+<span class="w">    </span><span class="c1">// cin &gt;&gt; skips any spaces/newlines, then reads a number into n, then into e.</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="c1">// n = number of vertices, e = number of edges</span>
+<span class="w">    </span><span class="c1">// Note: n is read but never needed below. An edge list does not need to</span>
+<span class="w">    </span><span class="c1">// know the node count, it only stores pairs. (A matrix or list would.)</span>
 
 <span class="w">    </span><span class="c1">// One growable list of pairs. p.first is one end of an edge, p.second the other.</span>
+<span class="w">    </span><span class="c1">// pair&lt;int, int&gt; is a tiny struct holding two ints, named .first and .second.</span>
+<span class="w">    </span><span class="c1">// vector&lt;pair&lt;int,int&gt;&gt; is therefore &quot;a growable array of such pairs&quot;.</span>
+<span class="w">    </span><span class="c1">// It starts empty (size 0).</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">edge_list</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Read the e edges. while(e--) checks e (is it non-zero?) and THEN lowers it</span>
+<span class="w">    </span><span class="c1">// by one, so the body runs exactly e times: with e = 3 it runs for e = 3, 2, 1</span>
+<span class="w">    </span><span class="c1">// and stops when it sees 0. (After the loop e is -1, so e is used up.)</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">;</span><span class="w">                       </span><span class="c1">// the two ends of this one edge</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">                 </span><span class="c1">// read them, e.g. &quot;0 1&quot; -&gt; a = 0, b = 1</span>
 <span class="w">        </span><span class="n">edge_list</span><span class="p">.</span><span class="n">push_back</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">});</span><span class="w">   </span><span class="c1">// {a, b} builds the pair in place</span>
+<span class="w">        </span><span class="c1">// push_back adds the pair at the END of the vector, so the size grows by 1</span>
+<span class="w">        </span><span class="c1">// and the edges stay in the order they were typed.</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// Walk the list and print each edge. The &quot;&lt;-&quot; is only decoration: the pair</span>
 <span class="w">    </span><span class="c1">// is simply the edge (a, b), in the order it was typed.</span>
+<span class="w">    </span><span class="c1">// Range-for: &quot;for each element p in edge_list, in order&quot;. p is a COPY of the</span>
+<span class="w">    </span><span class="c1">// current pair, which is fine for reading.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">edge_list</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// p.first = a, p.second = b. endl prints a newline and flushes the output.</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &lt;- &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="cm">/*</span>
 <span class="cm">    </span>
 <span class="cm">    // Instead we can also write the above loop as:</span>
+<span class="cm">    // (auto lets the compiler work out the type of p: here pair&lt;int, int&gt;.</span>
+<span class="cm">    //  The loop is commented out so the edges are not printed twice.)</span>
 
 <span class="cm">    for(auto p : edge_list){</span>
 <span class="cm">        cout &lt;&lt; p.first &lt;&lt; &quot; &lt;- &quot; &lt;&lt; p.second &lt;&lt; endl;</span>
@@ -637,11 +767,11 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
 
 <span class="cm">    */</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">          </span><span class="c1">// 0 = the program ended normally</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 48 lines ▾</button>
+    <button type="button" class="expand">Show all 73 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 3
@@ -667,7 +797,7 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
   <p class="what">Reads the 6-node, 10-edge graph from the extra practice sheet once and stores it as an edge list, an adjacency matrix and an adjacency list at the same time, then prints all three.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 79 lines</span>
+      <span>CPP · 92 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%201/practice_all_three_representations.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -751,7 +881,20 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
 <span class="normal">75</span>
 <span class="normal">76</span>
 <span class="normal">77</span>
-<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Extra practice: store ONE graph in all three ways and print each of them.</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Extra practice: store ONE graph in all three ways and print each of them.</span>
 <span class="c1">//</span>
 <span class="c1">// The graph (from the module&#39;s extra practice sheet) has 6 nodes numbered 1..6</span>
 <span class="c1">// and 10 undirected edges:</span>
@@ -763,35 +906,47 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
 <span class="c1">//</span>
 <span class="c1">// Example: with the 6-node graph above, row 1 of the matrix is &quot;0 1 0 0 1 0&quot;</span>
 <span class="c1">// and the list line for node 4 is &quot;4 -&gt; 2 3 5 6&quot;.</span>
+<span class="c1">//</span>
+<span class="c1">// Which one to use?</span>
+<span class="c1">//   edge list  - smallest, good for &quot;loop over every edge&quot; (Bellman-Ford).</span>
+<span class="c1">//   matrix     - O(1) &quot;is a joined to b?&quot;, but n*n memory.</span>
+<span class="c1">//   list       - O(n + e) memory, fast &quot;neighbours of x&quot;; used by BFS/DFS.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin / cout for input and output</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector: growable array (edge list and adjacency list)</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// lets us write vector / cout / pair without std::</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">           </span><span class="c1">// n = number of nodes, e = number of edges</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">      </span><span class="c1">// e.g. &quot;6 10&quot; for the graph above</span>
 
 <span class="w">    </span><span class="c1">// Nodes are numbered from 1 here, not 0. The easy way to cope: make every</span>
 <span class="w">    </span><span class="c1">// array one bigger (size n+1) and simply never use index 0.</span>
+<span class="w">    </span><span class="c1">// (Arrays sized by a variable, like [n + 1], are a g++ extension; the</span>
+<span class="w">    </span><span class="c1">// course uses them for small inputs.)</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">edge_list</span><span class="p">;</span><span class="w">          </span><span class="c1">// 1) edge list: the pairs as read</span>
+<span class="w">    </span><span class="c1">// pair&lt;int,int&gt; holds two ints called .first and .second.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">][</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">];</span><span class="w">                 </span><span class="c1">// 2) adjacency matrix</span>
+<span class="w">    </span><span class="c1">// adj_mat[a][b] == 1 means &quot;a and b are joined by an edge&quot;.</span>
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">];</span><span class="w">               </span><span class="c1">// 3) adjacency list</span>
+<span class="w">    </span><span class="c1">// adj_list[a] is a vector holding every neighbour of a.</span>
 
 <span class="w">    </span><span class="c1">// A local matrix starts with garbage in it, so clear every cell first.</span>
+<span class="w">    </span><span class="c1">// Note i and j go up to n INCLUSIVE (&lt;=), because the table has n+1 rows.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">            </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                 </span><span class="c1">// 0 = no edge</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// Read each edge ONCE and write it into all three storages.</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">                </span><span class="c1">// one pass = one edge</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">                              </span><span class="c1">// its two ends</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 
 <span class="w">        </span><span class="n">edge_list</span><span class="p">.</span><span class="n">push_back</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">});</span><span class="w">   </span><span class="c1">// edge list: stored once, as typed</span>
+<span class="w">        </span><span class="c1">// {a, b} builds a pair; push_back appends it at the end of the vector.</span>
 
 <span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">             </span><span class="c1">// matrix: undirected, so both cells</span>
 <span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">b</span><span class="p">][</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -801,37 +956,38 @@ adj[b].push_back(a);</pre></div><div class="concept"><h4>Edge list</h4><p>Just a
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// 1) Edge list: e lines, one pair each.</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Edge list:&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Edge list:&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">              </span><span class="c1">// endl = newline (and flush)</span>
+<span class="w">    </span><span class="c1">// auto: the compiler works out that p is a pair&lt;int, int&gt;.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">edge_list</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">   </span><span class="c1">// e.g. &quot;1 2&quot;</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// 2) Matrix: n rows of n numbers (index 0 skipped). It must come out</span>
 <span class="w">    </span><span class="c1">//    symmetric, because every edge was written in both directions.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Adjacency matrix:&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">               </span><span class="c1">// rows 1..n (row 0 is unused)</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span><span class="w">           </span><span class="c1">// columns 1..n</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w">      </span><span class="c1">// 1 if i-j is an edge, else 0</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">                          </span><span class="c1">// end of row i</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// 3) List: each node followed by its neighbours, in the order edges came in.</span>
 <span class="w">    </span><span class="c1">//    The length of each line is that node&#39;s degree.</span>
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Adjacency list:&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">               </span><span class="c1">// nodes 1..n</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; -&gt; &quot;</span><span class="p">;</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span><span class="w">              </span><span class="c1">// x = each neighbour of i, in order</span>
 <span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                                  </span><span class="c1">// program ended normally</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 79 lines ▾</button>
+    <button type="button" class="expand">Show all 92 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>6 10

@@ -72,7 +72,7 @@ sizes: 3 cells and 2 cells</pre><p>You walked over the cells in reading order. T
   <p class="what">For each query it checks whether B appears in A&#x27;s adjacency list (a node counts as connected to itself).</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 122 lines</span>
+      <span>CPP · 135 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%204/assignment1_problem1_connected_or_not.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -199,19 +199,32 @@ sizes: 3 cells and 2 cells</pre><p>You walked over the cells in reading order. T
 <span class="normal">118</span>
 <span class="normal">119</span>
 <span class="normal">120</span>
-<span class="normal">121</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Problem Statement</span>
 
-<span class="cm">You will be given a directed graph as input. Then you will receive Q queries. For each query, you will be </span>
-<span class="cm">given two nodes, A and B. You need to determine whether you can go from A to B directly without using any </span>
+<span class="cm">You will be given a directed graph as input. Then you will receive Q queries. For each query, you will be</span>
+<span class="cm">given two nodes, A and B. You need to determine whether you can go from A to B directly without using any</span>
 <span class="cm">other nodes.</span>
 
 <span class="cm">Input Format</span>
 
-<span class="cm">- The first line will contain N and E, the number of nodes and the number of edges, </span>
+<span class="cm">- The first line will contain N and E, the number of nodes and the number of edges,</span>
 <span class="cm">respectively. The values of the nodes range from 0 to N-1.</span>
-<span class="cm">- Next E lines will contain two node values which means there is a connection from first </span>
+<span class="cm">- Next E lines will contain two node values which means there is a connection from first</span>
 <span class="cm">node to second node.</span>
 <span class="cm">- The next line will contain Q.</span>
 <span class="cm">- The following Q lines will each contain A and B.</span>
@@ -225,7 +238,7 @@ sizes: 3 cells and 2 cells</pre><p>You walked over the cells in reading order. T
 
 <span class="cm">Output Format</span>
 
-<span class="cm">For each query output YES if it is possible to go from A to B directly without using any </span>
+<span class="cm">For each query output YES if it is possible to go from A to B directly without using any</span>
 <span class="cm">other nodes, NO otherwise. Don&#39;t forget to put a new line after each query.</span>
 
 <span class="cm">Sample Input 0</span>
@@ -263,53 +276,64 @@ sizes: 3 cells and 2 cells</pre><p>You walked over the cells in reading order. T
 <span class="cm">*/</span>
 
 <span class="c1">// Idea: &quot;directly, without using any other node&quot; means ONE edge, so no search</span>
-<span class="c1">// is needed. Store the directed graph as an adjacency list (Module 1) and, for</span>
-<span class="c1">// a query (A, B), look through A&#39;s list for B. The sample also treats A == B as</span>
-<span class="c1">// YES (a node can always &quot;reach&quot; itself), so that case is answered first.</span>
+<span class="c1">// (no BFS/DFS) is needed. Store the directed graph as an adjacency list</span>
+<span class="c1">// (Module 1) and, for a query (A, B), look through A&#39;s list for B. The sample</span>
+<span class="c1">// also treats A == B as YES (a node can always &quot;reach&quot; itself), so that case is</span>
+<span class="c1">// answered first.</span>
 <span class="c1">//</span>
 <span class="c1">// Example: edge 1 -&gt; 2 exists, so &quot;1 2&quot; is YES, but &quot;2 1&quot; is NO because the</span>
-<span class="c1">// graph is directed and nobody stored 2 -&gt; 1.</span>
+<span class="c1">// graph is directed and nobody stored 2 -&gt; 1. &quot;0 3&quot; is NO even though</span>
+<span class="c1">// 0 -&gt; 2 -&gt; 3 is a path: that path uses the other node 2, so it is not direct.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin (read input) and cout (print output)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector: an array that can grow with push_back</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// lets us write cin, vector, ... instead of std::cin, std::vector</span>
 
+<span class="c1">// Adjacency list: an ARRAY of 1005 vectors, one vector per node (N &lt;= 1000,</span>
+<span class="c1">// plus a little spare room). adj_list[a] holds every node b with an arrow</span>
+<span class="c1">// a -&gt; b. It is global, so it lives outside main (no stack-size worries) and</span>
+<span class="c1">// every function can use it.</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span><span class="w">   </span><span class="c1">// adj_list[a] = nodes with an arrow a -&gt; them</span>
 
 <span class="c1">// Is there an arrow from -&gt; to (or are they the same node)?</span>
+<span class="c1">// Parameters: the two query nodes. Returns true (YES) or false (NO).</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">direct_edge</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">to</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">from</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">to</span><span class="p">){</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">from</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">to</span><span class="p">){</span><span class="w">           </span><span class="c1">// query like &quot;2 2&quot;</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">          </span><span class="c1">// same node: the sample expects YES</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="c1">// Scan the neighbours of &quot;from&quot;, looking for &quot;to&quot;.</span>
+<span class="w">    </span><span class="c1">// Range-for: &quot;child&quot; takes each value stored in adj_list[from] in turn.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">from</span><span class="p">]){</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">child</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">to</span><span class="p">){</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">child</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">to</span><span class="p">){</span><span class="w">      </span><span class="c1">// found the arrow from -&gt; to</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">      </span><span class="c1">// stop at once, no need to look further</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">             </span><span class="c1">// walked the whole list, no arrow to &quot;to&quot;</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">                 </span><span class="c1">// n = number of nodes, e = number of edges</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">            </span><span class="c1">// cin &gt;&gt; skips spaces/newlines between numbers</span>
 
 <span class="w">    </span><span class="c1">// Directed: store only a -&gt; b, never b -&gt; a.</span>
+<span class="w">    </span><span class="c1">// One pass reads one edge; i counts edges read, the loop stops after e of them.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">             </span><span class="c1">// the edge goes from a to b</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span><span class="w">   </span><span class="c1">// append b to the end of a&#39;s neighbour list</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span><span class="w">                    </span><span class="c1">// number of queries</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// while(Q--) runs exactly Q times: it tests Q (non-zero = true), then</span>
+<span class="w">    </span><span class="c1">// lowers it by 1. When Q reaches 0 the test is false and the loop ends.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">Q</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="n">to</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="n">to</span><span class="p">;</span><span class="w">         </span><span class="c1">// the query: can we go from -&gt; to in one step?</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">to</span><span class="p">;</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">direct_edge</span><span class="p">(</span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="n">to</span><span class="p">)){</span>
-<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">   </span><span class="c1">// endl prints a newline and flushes the output</span>
 <span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 <span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
@@ -317,12 +341,14 @@ sizes: 3 cells and 2 cells</pre><p>You walked over the cells in reading order. T
 
 <span class="w">    </span><span class="c1">// Another way: an N x N adjacency matrix (N &lt;= 1000 fits) answers each</span>
 <span class="w">    </span><span class="c1">// query in O(1) with adj_mat[A][B]. The list costs O(degree of A) per query.</span>
+<span class="w">    </span><span class="c1">// Note: with up to 10^6 queries, &quot;\n&quot; instead of endl would be faster,</span>
+<span class="w">    </span><span class="c1">// because endl forces a flush of the output every single time.</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                 </span><span class="c1">// 0 tells the system the program ended normally</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 122 lines ▾</button>
+    <button type="button" class="expand">Show all 135 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 6
@@ -359,7 +385,7 @@ YES
   <p class="what">For each query node X, sort its adjacency list in descending order and print it, or -1 if it has none.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 125 lines</span>
+      <span>CPP · 135 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%204/assignment1_problem2_connected_nodes.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -489,21 +515,31 @@ YES
 <span class="normal">121</span>
 <span class="normal">122</span>
 <span class="normal">123</span>
-<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Problem Statement</span>
 
-<span class="cm">You will be given an undirected graph as input. Then you will be given Q queries. For </span>
-<span class="cm">each query you will be given a node X. You need to print the nodes that are connected </span>
+<span class="cm">You will be given an undirected graph as input. Then you will be given Q queries. For</span>
+<span class="cm">each query you will be given a node X. You need to print the nodes that are connected</span>
 <span class="cm">with X in descending order.</span>
 
 <span class="cm">Note: If there is no node connected to X, then print -1.</span>
 
 <span class="cm">Input Format</span>
 
-<span class="cm">- The first line will contain N and E, the number of nodes and the number of edges, </span>
+<span class="cm">- The first line will contain N and E, the number of nodes and the number of edges,</span>
 <span class="cm">respectively. The values of the nodes range from 0 to N-1.</span>
-<span class="cm">- Next E lines will contain two node values which means there is a connection between </span>
+<span class="cm">- Next E lines will contain two node values which means there is a connection between</span>
 <span class="cm">first node and second node.</span>
 <span class="cm">- The next line will contain Q.</span>
 <span class="cm">- The following Q lines will each contain X.</span>
@@ -540,12 +576,12 @@ YES
 
 <span class="cm">Sample Output 0</span>
 
-<span class="cm">5 4 2 1 </span>
-<span class="cm">3 0 </span>
-<span class="cm">4 0 </span>
-<span class="cm">5 4 1 </span>
-<span class="cm">3 2 0 </span>
-<span class="cm">3 0 </span>
+<span class="cm">5 4 2 1</span>
+<span class="cm">3 0</span>
+<span class="cm">4 0</span>
+<span class="cm">5 4 1</span>
+<span class="cm">3 2 0</span>
+<span class="cm">3 0</span>
 
 <span class="cm">Sample Input 1</span>
 
@@ -559,7 +595,7 @@ YES
 <span class="cm">Sample Output 1</span>
 
 <span class="cm">-1</span>
-<span class="cm">4 1 </span>
+<span class="cm">4 1</span>
 
 <span class="cm">*/</span>
 
@@ -568,54 +604,64 @@ YES
 <span class="c1">// otherwise sort that list largest-first and print it.</span>
 <span class="c1">//</span>
 <span class="c1">// Example: in sample 0, node 0 has edges to 4, 5, 2 and 1 -&gt; &quot;5 4 2 1&quot;.</span>
+<span class="c1">// In sample 1, node 3 appears in no edge, so its list is empty -&gt; &quot;-1&quot;.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin / cout</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector (growable array)</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // sort, greater</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// use cin, vector, sort ... without the std:: prefix</span>
 
+<span class="c1">// Adjacency list: one vector per node. adj_list[x] = every node joined to x by</span>
+<span class="c1">// an edge. Size 1005 covers node values 0..1000 (N &lt;= 1000, and even X == N</span>
+<span class="c1">// from the constraints stays inside the array). Global = starts empty.</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">                 </span><span class="c1">// n = number of nodes, e = number of edges</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
 
 <span class="w">    </span><span class="c1">// Undirected: each edge goes into both endpoints&#39; lists.</span>
+<span class="w">    </span><span class="c1">// One pass reads one edge; the loop stops after e edges.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">             </span><span class="c1">// the two ends of this edge</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span><span class="w">   </span><span class="c1">// b is a neighbour of a</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span><span class="w">   </span><span class="c1">// and a is a neighbour of b</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span><span class="w">                    </span><span class="c1">// number of queries</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">Q</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1">// Runs Q times: test Q, then decrease it; stops when Q hits 0.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">Q</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w">                </span><span class="c1">// the node asked about</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">adj_list</span><span class="p">[</span><span class="n">x</span><span class="p">].</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">adj_list</span><span class="p">[</span><span class="n">x</span><span class="p">].</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span><span class="w">      </span><span class="c1">// size() = how many neighbours x has</span>
 <span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">           </span><span class="c1">// X touches no edge at all</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">        </span><span class="k">else</span><span class="p">{</span>
 <span class="w">            </span><span class="c1">// Sort X&#39;s own list in descending order (greater&lt;int&gt;() flips the</span>
 <span class="w">            </span><span class="c1">// comparison). Sorting it in place is harmless: if X is asked</span>
 <span class="w">            </span><span class="c1">// again, the list is simply already sorted.</span>
+<span class="w">            </span><span class="c1">// begin()/end() mark the whole range of the vector to sort.</span>
+<span class="w">            </span><span class="c1">// Without greater&lt;int&gt;() sort would give ascending order.</span>
 <span class="w">            </span><span class="n">sort</span><span class="p">(</span><span class="n">adj_list</span><span class="p">[</span><span class="n">x</span><span class="p">].</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">x</span><span class="p">].</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="n">greater</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">            </span><span class="c1">// Print every neighbour, each followed by a space</span>
+<span class="w">            </span><span class="c1">// (the sample output also ends each line with a space).</span>
 <span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">adj_list</span><span class="p">[</span><span class="n">x</span><span class="p">].</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w">   </span><span class="c1">// i-th neighbour of x</span>
 <span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">                         </span><span class="c1">// finish this query&#39;s line</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                 </span><span class="c1">// normal end of program</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 125 lines ▾</button>
+    <button type="button" class="expand">Show all 135 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 3
@@ -645,7 +691,7 @@ YES
   <p class="what">Finds the cells A and B while reading the map, then BFS from A through non-wall cells and stops when B is popped.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 130 lines</span>
+      <span>CPP · 150 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%204/assignment1_problem3_can_go_or_not.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -780,19 +826,39 @@ YES
 <span class="normal">126</span>
 <span class="normal">127</span>
 <span class="normal">128</span>
-<span class="normal">129</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Problem Statement</span>
 
-<span class="cm">You are given an N X M sized 2D matrix that represents a map of a building. Each cell </span>
-<span class="cm">represents a wall, a floor or a room. You will be given two rooms A and B. You need to </span>
-<span class="cm">tell if you can go from room A to B by passing through the floors. You can walk left, </span>
+<span class="cm">You are given an N X M sized 2D matrix that represents a map of a building. Each cell</span>
+<span class="cm">represents a wall, a floor or a room. You will be given two rooms A and B. You need to</span>
+<span class="cm">tell if you can go from room A to B by passing through the floors. You can walk left,</span>
 <span class="cm">right, up, and down through the floor cells. You can&#39;t pass through walls.</span>
 
 <span class="cm">Input Format</span>
 
 <span class="cm">- The first input line has two integers N and M: the height and width of the map.</span>
-<span class="cm">- Then there are N lines of M characters describing the map. Each character is .(floor), </span>
+<span class="cm">- Then there are N lines of M characters describing the map. Each character is .(floor),</span>
 <span class="cm">#(wall), A or B (rooms).</span>
 
 <span class="cm">Constraints</span>
@@ -826,52 +892,67 @@ YES
 <span class="c1">// Example: in the sample, A at (1,2) goes left, down to row 3, right along the</span>
 <span class="c1">// open corridor and up to B at (2,6) -&gt; YES.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin / cout</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector (used for the direction list)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span><span class="c1">        // queue: first-in first-out line, the heart of BFS</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span><span class="c1">      // memset</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// write queue, pair, cin ... without std::</span>
 
+<span class="c1">// Globals live outside main: big arrays here do not overflow the stack, and</span>
+<span class="c1">// global arrays start zeroed (grid all &#39;\0&#39;, vis all false).</span>
 <span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w">          </span><span class="c1">// the map, one character per cell</span>
 <span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w">           </span><span class="c1">// vis[i][j] = has cell (i, j) been queued?</span>
 <span class="c1">// The 4 moves as {row change, column change}: right, left, up, down.</span>
+<span class="c1">// This is the &quot;dx/dy&quot; direction array: adding direction[k] to a cell gives</span>
+<span class="c1">// its k-th neighbour, so one small loop replaces four copied if-blocks.</span>
+<span class="c1">// Example: from (1,2), {0,1} -&gt; (1,3), {0,-1} -&gt; (1,1), {-1,0} -&gt; (0,2), {1,0} -&gt; (2,2).</span>
+<span class="c1">// pair&lt;int,int&gt; holds two ints; .first = row change, .second = column change.</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}};</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">                       </span><span class="c1">// global so valid() can see the grid size</span>
 
 <span class="c1">// Is (i, j) inside the map?</span>
+<span class="c1">// Rows go 0..n-1 and columns 0..m-1; anything outside would read past the map.</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span><span class="w">   </span><span class="c1">// off any of the four edges</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">                </span><span class="c1">// inside the map</span>
 <span class="p">}</span>
 
 <span class="c1">// BFS from A; returns true as soon as B leaves the queue.</span>
+<span class="c1">// Parameters: (Ai, Aj) = start cell A, (Bi, Bj) = target cell B.</span>
+<span class="c1">// BFS works in waves: the queue hands out cells in the order they were found,</span>
+<span class="c1">// so all cells 1 step from A come out before cells 2 steps away, and so on.</span>
+<span class="c1">// The vis array makes sure no cell is ever queued twice (no endless loops).</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">Ai</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">Aj</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">Bi</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">Bj</span><span class="p">){</span>
 <span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span><span class="w">    </span><span class="c1">// the queue now holds cells: (row, col) pairs</span>
-<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">Ai</span><span class="p">,</span><span class="w"> </span><span class="n">Aj</span><span class="p">});</span>
-<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">Ai</span><span class="p">][</span><span class="n">Aj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">Ai</span><span class="p">,</span><span class="w"> </span><span class="n">Aj</span><span class="p">});</span><span class="w">           </span><span class="c1">// start the search at room A</span>
+<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">Ai</span><span class="p">][</span><span class="n">Aj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">         </span><span class="c1">// mark A when it is queued, not when it is popped</span>
 
+<span class="w">    </span><span class="c1">// One pass takes the oldest cell out of the queue and queues its unseen,</span>
+<span class="w">    </span><span class="c1">// walkable neighbours. The loop stops when no cell is left to explore.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
-<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">   </span><span class="c1">// front() = oldest cell in the queue (&quot;parent&quot;)</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span><span class="w">                          </span><span class="c1">// remove it from the queue</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span><span class="w">            </span><span class="c1">// its row</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span><span class="w">           </span><span class="c1">// its column</span>
 
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">par_i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">Bi</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">Bj</span><span class="p">){</span>
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">        </span><span class="c1">// reached room B: stop early, the answer is known</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">// Try all 4 directions from the current cell.</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span><span class="w">    </span><span class="c1">// the child cell</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
 <span class="w">            </span><span class="c1">// Step only onto cells inside the map, not yet queued and not a wall.</span>
 <span class="w">            </span><span class="c1">// valid() comes first so grid[ci][cj] is never read out of range.</span>
+<span class="w">            </span><span class="c1">// (&amp;&amp; stops at the first false test, so the later tests are skipped.)</span>
 <span class="w">            </span><span class="c1">// (Floor &#39;.&#39;, and the rooms &#39;A&#39; and &#39;B&#39;, all count as walkable.)</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">&#39;#&#39;</span><span class="p">){</span>
-<span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">});</span>
-<span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">});</span><span class="w">   </span><span class="c1">// explore it later</span>
+<span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="c1">// and never queue it again</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
@@ -879,39 +960,44 @@ YES
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">              </span><span class="c1">// n rows (height), m columns (width)</span>
 
 <span class="w">    </span><span class="c1">// -999 = &quot;not seen yet&quot;; the map is promised to contain both rooms.</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">Ai</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-999</span><span class="p">,</span><span class="w"> </span><span class="n">Aj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-999</span><span class="p">,</span><span class="w"> </span><span class="n">Bi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-999</span><span class="p">,</span><span class="w"> </span><span class="n">Bj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-999</span><span class="p">;</span>
 
 <span class="w">    </span><span class="c1">// Read the map cell by cell (cin &gt;&gt; char skips the line breaks) and note</span>
 <span class="w">    </span><span class="c1">// where A and B are while we are at it.</span>
+<span class="w">    </span><span class="c1">// Outer loop: row i. Inner loop: column j of that row.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;A&#39;</span><span class="p">){</span>
+<span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span><span class="w">          </span><span class="c1">// one character: &#39;.&#39;, &#39;#&#39;, &#39;A&#39; or &#39;B&#39;</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;A&#39;</span><span class="p">){</span><span class="w">      </span><span class="c1">// remember where room A is</span>
 <span class="w">                </span><span class="n">Ai</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
 <span class="w">                </span><span class="n">Aj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;B&#39;</span><span class="p">){</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;B&#39;</span><span class="p">){</span><span class="w">   </span><span class="c1">// remember where room B is</span>
 <span class="w">                </span><span class="n">Bi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
 <span class="w">                </span><span class="n">Bj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// memset fills the whole vis array, byte by byte, with false (0).</span>
+<span class="w">    </span><span class="c1">// sizeof(vis) = its size in bytes. It is already false (global), so this</span>
+<span class="w">    </span><span class="c1">// is just a safety reset.</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bfs</span><span class="p">(</span><span class="n">Ai</span><span class="p">,</span><span class="w"> </span><span class="n">Aj</span><span class="p">,</span><span class="w"> </span><span class="n">Bi</span><span class="p">,</span><span class="w"> </span><span class="n">Bj</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bfs</span><span class="p">(</span><span class="n">Ai</span><span class="p">,</span><span class="w"> </span><span class="n">Aj</span><span class="p">,</span><span class="w"> </span><span class="n">Bi</span><span class="p">,</span><span class="w"> </span><span class="n">Bj</span><span class="p">);</span><span class="w">  </span><span class="c1">// can A reach B?</span>
 
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">result</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;YES&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">          </span><span class="c1">// endl = newline + flush</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;NO&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="c1">// Cost: O(N * M), each cell is queued at most once.</span>
+<span class="w">    </span><span class="c1">// (main without &quot;return 0;&quot; is allowed in C++: it returns 0 by itself.)</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 130 lines ▾</button>
+    <button type="button" class="expand">Show all 150 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 8
@@ -937,7 +1023,7 @@ YES
   <p class="what">Counts connected groups of <code>.</code> cells using BFS started from every unvisited floor cell.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 129 lines</span>
+      <span>CPP · 139 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%204/assignment1_problem4_count_apartments.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1071,19 +1157,29 @@ YES
 <span class="normal">125</span>
 <span class="normal">126</span>
 <span class="normal">127</span>
-<span class="normal">128</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Problem Statement</span>
 
-<span class="cm">You are given an N X M sized 2D matrix that represents a map of a building. Each cell represents a </span>
-<span class="cm">wall or a room. The connected rooms are called apartments. Your task is to count the number of </span>
-<span class="cm">apartments in that building. You can walk left, right, up, and down through the room cells. You </span>
+<span class="cm">You are given an N X M sized 2D matrix that represents a map of a building. Each cell represents a</span>
+<span class="cm">wall or a room. The connected rooms are called apartments. Your task is to count the number of</span>
+<span class="cm">apartments in that building. You can walk left, right, up, and down through the room cells. You</span>
 <span class="cm">can&#39;t pass through walls.</span>
 
 <span class="cm">Input Format</span>
 
 <span class="cm">The first input line has two integers  and : the height and width of the map.</span>
-<span class="cm">Then there are  lines of  characters describing the map. Each character is either .(room) or </span>
+<span class="cm">Then there are  lines of  characters describing the map. Each character is either .(room) or</span>
 <span class="cm">#(wall).</span>
 
 <span class="cm">Constraints</span>
@@ -1131,42 +1227,50 @@ YES
 <span class="c1">// Example: sample 0 has rooms {(1,1),(1,2)}, the big block on the right, and</span>
 <span class="c1">// {(3,1),(3,2)} -&gt; 3 apartments.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin / cout</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector (the direction list)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span><span class="c1">        // queue for BFS (first in, first out)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // not really needed here (no sort is used)</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// skip the std:: prefix</span>
 
-<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
+<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w">   </span><span class="c1">// the map: &#39;.&#39; = room, &#39;#&#39; = wall (N, M &lt;= 1000)</span>
 <span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w">    </span><span class="c1">// global, so it starts all false</span>
+<span class="c1">// Direction array {row change, column change}: right, left, up, down.</span>
+<span class="c1">// Adding direction[k] to (i, j) gives the k-th neighbour of that cell.</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}};</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">                </span><span class="c1">// rows and columns, global so valid() can see them</span>
 
+<span class="c1">// Is (i, j) inside the map? Rows 0..n-1, columns 0..m-1.</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span><span class="w">   </span><span class="c1">// outside on some side</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="c1">// Grid BFS from (Ai, Aj): marks every room cell of this apartment.</span>
+<span class="c1">// Nothing is returned; the useful result is the vis marks it leaves behind,</span>
+<span class="c1">// so the main loop will not start this apartment again.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">Ai</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">Aj</span><span class="p">){</span>
-<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
-<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">Ai</span><span class="p">,</span><span class="w"> </span><span class="n">Aj</span><span class="p">});</span>
-<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">Ai</span><span class="p">][</span><span class="n">Aj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span><span class="w">    </span><span class="c1">// cells waiting to be explored, as (row, col)</span>
+<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">Ai</span><span class="p">,</span><span class="w"> </span><span class="n">Aj</span><span class="p">});</span><span class="w">           </span><span class="c1">// start cell</span>
+<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">Ai</span><span class="p">][</span><span class="n">Aj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">         </span><span class="c1">// mark on push so it is never queued twice</span>
 
+<span class="w">    </span><span class="c1">// Each pass: take the oldest cell, queue its unvisited room neighbours.</span>
+<span class="w">    </span><span class="c1">// Stops when the whole apartment has been explored (queue empty).</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
-<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">   </span><span class="c1">// oldest cell (&quot;parent&quot;)</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span><span class="w">                          </span><span class="c1">// remove it</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span><span class="w">            </span><span class="c1">// its row</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span><span class="w">           </span><span class="c1">// its column</span>
 
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">           </span><span class="c1">// look in all 4 directions</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span><span class="w">    </span><span class="c1">// child row</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span><span class="w">   </span><span class="c1">// child column</span>
 
 <span class="w">            </span><span class="c1">// Spread only into room cells (&#39;.&#39;) inside the map, not yet seen.</span>
+<span class="w">            </span><span class="c1">// valid() is checked first so the arrays are never read out of range.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">){</span>
 <span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">});</span>
 <span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -1176,15 +1280,17 @@ YES
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">              </span><span class="c1">// height and width</span>
 
+<span class="w">    </span><span class="c1">// Read the map one character at a time; cin &gt;&gt; char skips the newlines.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">              </span><span class="c1">// apartments found so far</span>
+<span class="w">    </span><span class="c1">// Visit every cell once, row by row.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="c1">// A room nobody has reached yet = the first cell of a new apartment.</span>
@@ -1197,11 +1303,11 @@ YES
 
 <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">     </span><span class="c1">// Cost: O(N * M)</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                  </span><span class="c1">// normal end</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 129 lines ▾</button>
+    <button type="button" class="expand">Show all 139 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 8
@@ -1227,7 +1333,7 @@ YES
   <p class="what">Like problem 4, but <code>bfs</code> returns how many cells it visited; the sizes are sorted and printed (0 if none).</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 141 lines</span>
+      <span>CPP · 151 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%204/assignment1_problem5_count_appartments_2.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1373,22 +1479,32 @@ YES
 <span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
-<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">Problem Statement</span>
 
-<span class="cm">You are given an n X M sized 2D matrix that represents a map of a building. Each cell </span>
-<span class="cm">represents a wall or a room. The connected rooms are called apartments. Your task is to </span>
-<span class="cm">count the number rooms in each of the apartments in that building. You can walk left, </span>
+<span class="cm">You are given an n X M sized 2D matrix that represents a map of a building. Each cell</span>
+<span class="cm">represents a wall or a room. The connected rooms are called apartments. Your task is to</span>
+<span class="cm">count the number rooms in each of the apartments in that building. You can walk left,</span>
 <span class="cm">right, up, and down through the room cells. You can&#39;t pass through walls.</span>
 
-<span class="cm">You need to print the count of the rooms in ascending order. If there are no apartments </span>
+<span class="cm">You need to print the count of the rooms in ascending order. If there are no apartments</span>
 <span class="cm">available in that building, then you should print 0.</span>
 
 <span class="cm">Input Format</span>
 
 <span class="cm">- The first input line has two integers N and M: the height and width of the map.</span>
-<span class="cm">- Then there are N lines of M characters describing the map. Each character is either </span>
+<span class="cm">- Then there are N lines of M characters describing the map. Each character is either</span>
 <span class="cm">.(room) or #(wall).</span>
 
 <span class="cm">Constraints</span>
@@ -1435,42 +1551,48 @@ YES
 <span class="c1">//</span>
 <span class="c1">// Example: sample 0 has apartments of 2, 8 and 2 rooms -&gt; &quot;2 2 8&quot;.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin / cout</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector: direction list and the list of apartment sizes</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span><span class="c1">        // queue for BFS</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // sort</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// skip the std:: prefix</span>
 
-<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span>
+<span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w">  </span><span class="c1">// the map: &#39;.&#39; = room, &#39;#&#39; = wall</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w">   </span><span class="c1">// vis[i][j] = cell already counted? (global -&gt; starts false)</span>
+<span class="c1">// Direction array {row change, column change}: right, left, up, down.</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}};</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">               </span><span class="c1">// rows and columns, global so valid() can use them</span>
 
+<span class="c1">// Is (i, j) inside the map? Rows 0..n-1, columns 0..m-1.</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">           </span><span class="c1">// off the map</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="c1">// Grid BFS that returns how many rooms this apartment has.</span>
+<span class="c1">// (Ai, Aj) is an unvisited room cell; every room reachable from it is marked.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">Ai</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">Aj</span><span class="p">){</span>
-<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
+<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span><span class="w">    </span><span class="c1">// cells waiting to be explored</span>
 <span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">Ai</span><span class="p">,</span><span class="w"> </span><span class="n">Aj</span><span class="p">});</span>
 <span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">Ai</span><span class="p">][</span><span class="n">Aj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">room_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">         </span><span class="c1">// the starting room itself</span>
 
+<span class="w">    </span><span class="c1">// Each pass: pop the oldest cell and queue (and count) its new room neighbours.</span>
+<span class="w">    </span><span class="c1">// Ends when the queue is empty, i.e. the whole apartment is marked.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
+<span class="w">        </span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">   </span><span class="c1">// oldest cell</span>
 <span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">first</span><span class="p">;</span><span class="w">            </span><span class="c1">// row</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">.</span><span class="n">second</span><span class="p">;</span><span class="w">           </span><span class="c1">// column</span>
 
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">           </span><span class="c1">// the 4 neighbours</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par_j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
 
+<span class="w">            </span><span class="c1">// Inside the map, not seen yet, and a room (walls are skipped).</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">){</span>
 <span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">({</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">});</span>
 <span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -1478,12 +1600,13 @@ YES
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">room_count</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">room_count</span><span class="p">;</span><span class="w">          </span><span class="c1">// size of this apartment</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">              </span><span class="c1">// height and width</span>
 
+<span class="w">    </span><span class="c1">// Read the map; cin &gt;&gt; char skips the line breaks between rows.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
@@ -1491,31 +1614,34 @@ YES
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">apartments</span><span class="p">;</span><span class="w">     </span><span class="c1">// one size per apartment</span>
+<span class="w">    </span><span class="c1">// Scan every cell; an unvisited room is the first cell of a new apartment.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">){</span>
-<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">room_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
-<span class="w">                </span><span class="n">apartments</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">room_count</span><span class="p">);</span>
+<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">room_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span><span class="w">          </span><span class="c1">// mark it and get its size</span>
+<span class="w">                </span><span class="n">apartments</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">room_count</span><span class="p">);</span><span class="w">    </span><span class="c1">// add the size to the end of the list</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// sort with no third argument = ascending order. Example: {2, 8, 2} -&gt; {2, 2, 8}.</span>
 <span class="w">    </span><span class="n">sort</span><span class="p">(</span><span class="n">apartments</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">apartments</span><span class="p">.</span><span class="n">end</span><span class="p">());</span><span class="w">   </span><span class="c1">// smallest first</span>
 
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">apartments</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">      </span><span class="c1">// all walls: no apartment at all</span>
 <span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Print the sizes separated by spaces, then one newline.</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">apartments</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">apartments</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                   </span><span class="c1">// normal end</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 141 lines ▾</button>
+    <button type="button" class="expand">Show all 151 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 8

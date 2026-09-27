@@ -68,7 +68,7 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
   <p class="what">Directed graph with possibly negative weights. Run Bellman-Ford once from the source; if a negative cycle is found print one line, otherwise answer each destination query.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 224 lines</span>
+      <span>CPP · 237 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2012/assignment2_1_can_go_again.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -297,7 +297,20 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="normal">220</span>
 <span class="normal">221</span>
 <span class="normal">222</span>
-<span class="normal">223</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://www.hackerrank.com/contests/assignment-02-a-introduction-to-algorithms-a-batch-06/challenges/can-go-again</span>
 
@@ -413,18 +426,28 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="c1">// Bellman-Ford does not care about the sign. It relaxes every edge n-1 times,</span>
 <span class="c1">// then does one extra round: if anything still improves, a negative cycle is</span>
 <span class="c1">// reachable and no &quot;minimum cost&quot; exists, which is exactly the special message.</span>
+<span class="c1">//</span>
+<span class="c1">// &quot;Relaxing&quot; edge a -&gt; b (cost c) means: if reaching a and then taking this</span>
+<span class="c1">// edge is cheaper than the best known way to b, remember that cheaper cost.</span>
+<span class="c1">//</span>
+<span class="c1">// Trace with Sample 0 (source 1): after the rounds dis[1]=0, dis[3]=-2,</span>
+<span class="c1">// dis[2]=-2+1=-1, dis[4]=-2-3=-5, dis[5]=-1+2=1... and 4-&gt;5 gives -5+5=0,</span>
+<span class="c1">// so dis[5]=0. Output 0, -1, -2, -5, 0.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin, cout, endl</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector - the edge list</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;climits&gt;</span><span class="c1">      // LLONG_MAX, our &quot;infinity&quot;</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// no std:: prefix</span>
 
 <span class="c1">// One directed edge a -&gt; b with cost c, stored as an object (the edge list of</span>
 <span class="c1">// Module 1). Bellman-Ford only ever loops over edges, so a list is all it needs.</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Edge</span><span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w">            </span><span class="c1">// members usable from outside the class</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w">       </span><span class="c1">// from, to, cost (|c| &lt;= 10^9 fits in an int)</span>
+<span class="w">    </span><span class="c1">// Constructor: runs when an Edge is created, e.g. Edge(1, 2, 10).</span>
+<span class="w">    </span><span class="c1">// The parameters have the same names as the members, so &quot;this-&gt;a&quot; means</span>
+<span class="w">    </span><span class="c1">// &quot;the member a of this object&quot; and plain &quot;a&quot; means the parameter.</span>
 <span class="w">    </span><span class="n">Edge</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">){</span>
 <span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
 <span class="w">        </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
@@ -432,28 +455,29 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="w">    </span><span class="p">}</span>
 <span class="p">};</span>
 
-<span class="n">vector</span><span class="o">&lt;</span><span class="n">Edge</span><span class="o">&gt;</span><span class="w"> </span><span class="n">edge_list</span><span class="p">;</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="n">Edge</span><span class="o">&gt;</span><span class="w"> </span><span class="n">edge_list</span><span class="p">;</span><span class="w">  </span><span class="c1">// every edge of the graph, global so all code sees it</span>
 <span class="c1">// long long, not int: a path can use up to 999 edges of cost up to 10^9 each,</span>
 <span class="c1">// which is far past the int limit of about 2.1 * 10^9.</span>
 <span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="mi">1005</span><span class="p">];</span><span class="w">    </span><span class="c1">// dis[x] = cheapest known cost from the source to x</span>
 
 <span class="c1">// Fills dis[] and returns true if a negative cycle is reachable from source.</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">bellman_ford</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">source</span><span class="p">){</span>
-<span class="w">    </span><span class="n">dis</span><span class="p">[</span><span class="n">source</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">dis</span><span class="p">[</span><span class="n">source</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">    </span><span class="c1">// the source costs nothing to reach</span>
 
 <span class="w">    </span><span class="c1">// n-1 rounds (i = 1 .. n-1). A cheapest path visits each node at most once,</span>
 <span class="w">    </span><span class="c1">// so it has at most n-1 edges, and every round fixes at least one more edge</span>
 <span class="w">    </span><span class="c1">// of it. After n-1 rounds every honest distance is final.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// Range-for: &quot;edge&quot; is a copy of each Edge in the list in turn.</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">edge</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">edge_list</span><span class="p">){</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">.</span><span class="n">a</span><span class="p">;</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">.</span><span class="n">b</span><span class="p">;</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">.</span><span class="n">c</span><span class="p">;</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">.</span><span class="n">a</span><span class="p">;</span><span class="w">   </span><span class="c1">// start of the edge</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">.</span><span class="n">b</span><span class="p">;</span><span class="w">   </span><span class="c1">// end of the edge</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">.</span><span class="n">c</span><span class="p">;</span><span class="w">   </span><span class="c1">// its cost</span>
 
 <span class="w">            </span><span class="c1">// Relax a -&gt; b. The LLONG_MAX guard matters twice: an unreached a</span>
 <span class="w">            </span><span class="c1">// has no route to extend, and LLONG_MAX + a positive c would overflow.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">LLONG_MAX</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">b</span><span class="p">]){</span>
-<span class="w">                </span><span class="n">dis</span><span class="p">[</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">                </span><span class="n">dis</span><span class="p">[</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w">   </span><span class="c1">// cheaper route to b found</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
@@ -466,20 +490,22 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">edge</span><span class="p">.</span><span class="n">c</span><span class="p">;</span>
 
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">LLONG_MAX</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">b</span><span class="p">]){</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">    </span><span class="c1">// still improving: negative cycle</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">           </span><span class="c1">// everything settled: no reachable negative cycle</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">              </span><span class="c1">// nodes, edges</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
 
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">    </span><span class="c1">// read the e edges</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">        </span><span class="c1">// Edge(a, b, c) builds a temporary object; push_back copies it to the</span>
+<span class="w">        </span><span class="c1">// end of the list.</span>
 <span class="w">        </span><span class="n">edge_list</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Edge</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">));</span><span class="w">   </span><span class="c1">// one-way: only a -&gt; b is stored</span>
 <span class="w">    </span><span class="p">}</span>
 
@@ -488,10 +514,10 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="w">        </span><span class="n">dis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LLONG_MAX</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">source</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">source</span><span class="p">;</span><span class="w">            </span><span class="c1">// the start node S</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">source</span><span class="p">;</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w">                 </span><span class="c1">// number of queries</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
 
 <span class="w">    </span><span class="c1">// One run from the source answers every query: only the destination changes.</span>
@@ -501,11 +527,11 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="w">    </span><span class="c1">// so we stop before reading or answering any query.</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">negative_cycle</span><span class="p">){</span>
 <span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Negative Cycle Detected&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">          </span><span class="c1">// end the program here</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">){</span><span class="w">            </span><span class="c1">// answer the t queries</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span><span class="w">          </span><span class="c1">// destination D</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">dest</span><span class="p">;</span>
 
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">source</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">dest</span><span class="p">){</span>
@@ -513,7 +539,7 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">dis</span><span class="p">[</span><span class="n">dest</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">LLONG_MAX</span><span class="p">){</span>
 <span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Not Possible&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">    </span><span class="c1">// never reached from the source</span>
 <span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">dest</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dis</span><span class="p">[</span><span class="n">dest</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">         </span><span class="c1">// the cheapest cost</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
@@ -522,7 +548,7 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 224 lines ▾</button>
+    <button type="button" class="expand">Show all 237 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 7
@@ -561,7 +587,7 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
   <p class="what">N is at most 100 but there are up to 10^5 queries, so compute all pairs once with Floyd-Warshall and answer each query from the table.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 161 lines</span>
+      <span>CPP · 166 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2012/assignment2_2_shortest_distance.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -727,7 +753,12 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="normal">157</span>
 <span class="normal">158</span>
 <span class="normal">159</span>
-<span class="normal">160</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://www.hackerrank.com/contests/assignment-02-a-introduction-to-algorithms-a-batch-06/challenges/shortest-distance-2</span>
 
@@ -814,12 +845,15 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="c1">// Many (X, Y) questions about the same small graph (N &lt;= 100): instead of</span>
 <span class="c1">// running a single-source algorithm per query, compute the cheapest cost</span>
 <span class="c1">// between EVERY pair once, then each query is a table lookup.</span>
+<span class="c1">//</span>
+<span class="c1">// Trace with Sample 1: edges 1-&gt;2 (4, then 10: keep 4), 2-&gt;3 (4), 3-&gt;1 (2).</span>
+<span class="c1">// Query 2 -&gt; 1: direct none; via 3: 4 + 2 = 6. Query 1 -&gt; 3: 4 + 4 = 8.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin, cout, endl</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // not used here</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;climits&gt;</span><span class="c1">      // LLONG_MAX marks &quot;no path known&quot;</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// write cout, min without std::</span>
 
 <span class="c1">// adj_mat[i][j] starts as the direct edge cost and ends as the cheapest cost</span>
 <span class="c1">// from i to j. The array is changed in place (arrays are passed by address).</span>
@@ -828,12 +862,12 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="w">    </span><span class="c1">// After round k, adj_mat[i][j] is the best route whose middle stops are</span>
 <span class="w">    </span><span class="c1">// only from 1..k. When k reaches n, every route is allowed.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">          </span><span class="c1">// i = start node</span>
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span><span class="w">      </span><span class="c1">// j = end node</span>
 <span class="w">                </span><span class="c1">// Is &quot;i to k, then k to j&quot; cheaper than what we have for i to j?</span>
 <span class="w">                </span><span class="c1">// Both halves must exist; adding to LLONG_MAX would overflow.</span>
 <span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">LLONG_MAX</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">LLONG_MAX</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]){</span>
-<span class="w">                    </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">                    </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">];</span><span class="w">   </span><span class="c1">// go via k</span>
 <span class="w">                </span><span class="p">}</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
@@ -841,7 +875,7 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">          </span><span class="c1">// nodes, edges</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
 
 <span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">adj_mat</span><span class="p">[</span><span class="mi">105</span><span class="p">][</span><span class="mi">105</span><span class="p">];</span><span class="w">   </span><span class="c1">// adjacency matrix (Module 1), 1-based</span>
@@ -857,9 +891,9 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span><span class="w">        </span><span class="c1">// read the e edges</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">      </span><span class="c1">// from, to</span>
+<span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w">   </span><span class="c1">// cost (up to 10^9)</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
 <span class="w">        </span><span class="c1">// The same pair can be given twice (the sample has 1 -&gt; 2 with cost 4</span>
 <span class="w">        </span><span class="c1">// and with cost 10). Keep only the cheaper edge; a plain assignment</span>
@@ -867,14 +901,16 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="w">        </span><span class="n">adj_mat</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">adj_mat</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">],</span><span class="w"> </span><span class="n">c</span><span class="p">);</span><span class="w">   </span><span class="c1">// directed: a -&gt; b only</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// Build the all-pairs table. Passing adj_mat passes the address of its</span>
+<span class="w">    </span><span class="c1">// first row, so the function fills THIS array.</span>
 <span class="w">    </span><span class="n">floyd_warshall</span><span class="p">(</span><span class="n">adj_mat</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">q</span><span class="p">;</span><span class="w">             </span><span class="c1">// number of queries</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
 
 <span class="w">    </span><span class="c1">// Every question is now just a look-up in the finished table.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">q</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">;</span><span class="w">      </span><span class="c1">// source, destination</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">Y</span><span class="p">;</span>
 
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">adj_mat</span><span class="p">[</span><span class="n">X</span><span class="p">][</span><span class="n">Y</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">LLONG_MAX</span><span class="p">){</span>
@@ -889,7 +925,7 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 161 lines ▾</button>
+    <button type="button" class="expand">Show all 166 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
@@ -926,7 +962,7 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
   <p class="what">Counts the edges that would close a cycle: for every edge, if both ends already share a leader add 1, otherwise union them.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 121 lines</span>
+      <span>CPP · 129 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2012/assignment2_3_cycle_of_edges.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1052,7 +1088,15 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="normal">117</span>
 <span class="normal">118</span>
 <span class="normal">119</span>
-<span class="normal">120</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://www.hackerrank.com/contests/assignment-02-a-introduction-to-algorithms-a-batch-06/challenges/cycle-of-edges</span>
 
@@ -1105,44 +1149,51 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="c1">// Add the edges one by one. If both ends already share a leader, they were</span>
 <span class="c1">// connected before this edge arrived, so the edge closes a cycle: count it.</span>
 <span class="c1">// Otherwise the edge joins two separate groups: union them.</span>
+<span class="c1">//</span>
+<span class="c1">// DSU in one line: every group has a LEADER; par[x] points one step towards</span>
+<span class="c1">// it, and par[x] == -1 means x is the leader. Same leader = same group.</span>
+<span class="c1">//</span>
+<span class="c1">// Trace with Sample 1: 1-2 (merge), 2-3 (merge), 1-3 (same leader -&gt; count 1).</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin, cout, endl</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span><span class="c1">        // not used here</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span><span class="c1">      // memset</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // not used here</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// no std:: prefix</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span><span class="w">          </span><span class="c1">// par[x] = x&#39;s parent in its group&#39;s tree; -1 = x is a leader</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="mi">100005</span><span class="p">];</span><span class="w">   </span><span class="c1">// group_size[leader] = how many nodes that group holds</span>
 
 <span class="c1">// Walk up to the leader, and on the way back point every node straight at it</span>
 <span class="c1">// (path compression), so the next find() on these nodes takes one step.</span>
+<span class="c1">// Base case: par == -1 -&gt; node is the leader.</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node</span><span class="p">){</span>
 <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">==</span><span class="mi">-1</span><span class="p">){</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">node</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]);</span>
-<span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]);</span><span class="w">   </span><span class="c1">// the parent&#39;s leader is our leader</span>
+<span class="w">    </span><span class="n">par</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span><span class="w">             </span><span class="c1">// shortcut for next time</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">leader</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="c1">// Union by size: hang the smaller tree under the bigger one&#39;s leader, so the</span>
-<span class="c1">// trees stay shallow.</span>
+<span class="c1">// trees stay shallow. (main only calls this when the leaders differ.)</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">dsu_union</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">node1</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">node2</span><span class="p">){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">node1</span><span class="p">);</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leader2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">node2</span><span class="p">);</span>
 
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">]){</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">]){</span><span class="w">   </span><span class="c1">// group 1 is bigger/equal</span>
 <span class="w">        </span><span class="n">par</span><span class="p">[</span><span class="n">leader2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader1</span><span class="p">;</span>
 <span class="w">        </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span><span class="w">                                           </span><span class="c1">// group 2 is bigger</span>
 <span class="w">        </span><span class="n">par</span><span class="p">[</span><span class="n">leader1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">leader2</span><span class="p">;</span>
 <span class="w">        </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader2</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">group_size</span><span class="p">[</span><span class="n">leader1</span><span class="p">];</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="c1">// memset fills bytes; 0xFF in every byte makes each int -1.</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">par</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">par</span><span class="p">));</span><span class="w">   </span><span class="c1">// everyone starts as the leader of a group of one</span>
 <span class="w">    </span><span class="c1">// Every group starts with size 1. This must be a loop: memset fills BYTES,</span>
 <span class="w">    </span><span class="c1">// so memset(group_size, 1, ...) would make each int 0x01010101 = 16843009.</span>
@@ -1150,16 +1201,16 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="w">        </span><span class="n">group_size</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">          </span><span class="c1">// nodes, edges</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
 
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">edges</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// edges that closed a cycle</span>
 
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span><span class="w">        </span><span class="c1">// read and process each edge</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">leader1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">leader2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">leader1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">a</span><span class="p">);</span><span class="w">     </span><span class="c1">// a&#39;s group</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">leader2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">b</span><span class="p">);</span><span class="w">     </span><span class="c1">// b&#39;s group</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">leader1</span><span class="o">==</span><span class="n">leader2</span><span class="p">){</span>
 <span class="w">            </span><span class="n">edges</span><span class="o">++</span><span class="p">;</span><span class="w">           </span><span class="c1">// a and b were already connected: this edge is extra</span>
 <span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
@@ -1167,14 +1218,15 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">edges</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">edges</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">     </span><span class="c1">// how many edges closed a cycle</span>
 
 <span class="w">    </span><span class="c1">// Cost: about O(E * alpha(N)), practically linear.</span>
+<span class="w">    </span><span class="c1">// (alpha is the inverse Ackermann function: at most 4 for any real N.)</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 121 lines ▾</button>
+    <button type="button" class="expand">Show all 129 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 7
@@ -1202,7 +1254,7 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
   <p class="what">The container is measured only by height, and the water level is the shorter of the two lines. So the best pair is simply the two tallest lines; print their indices left first.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 104 lines</span>
+      <span>CPP · 113 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%2012/assignment2_4_water.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1311,7 +1363,16 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="normal">100</span>
 <span class="normal">101</span>
 <span class="normal">102</span>
-<span class="normal">103</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://www.hackerrank.com/contests/assignment-02-a-introduction-to-algorithms-a-batch-06/challenges/water-4-1</span>
 
@@ -1362,25 +1423,34 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="c1">// Solution idea: only height counts here, and a container is as tall as its</span>
 <span class="c1">// SHORTER wall. So the best pair is simply the two tallest lines. One pass</span>
 <span class="c1">// keeps the index of the tallest (max1) and of the second tallest (max2).</span>
+<span class="c1">//</span>
+<span class="c1">// Trace with 5 2 1 6 3: start max1=0 (5), max2=-1.</span>
+<span class="c1">//   i=1 (2): not &gt; 5; max2 empty -&gt; max2=1</span>
+<span class="c1">//   i=2 (1): not &gt; 5, not &gt; 2    -&gt; no change</span>
+<span class="c1">//   i=3 (6): &gt; 5 -&gt; max2=0, max1=3</span>
+<span class="c1">//   i=4 (3): not &gt; 6, not &gt; 5    -&gt; no change</span>
+<span class="c1">// Answer: min(3,0)=0, max(3,0)=3 -&gt; &quot;0 3&quot;.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin, cout, endl</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // min, max</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// no std:: prefix</span>
 
 <span class="c1">// Returns {left index, right index} of the two tallest lines.</span>
+<span class="c1">// &quot;vector&lt;int&gt; &amp;arr&quot; passes the array by reference: no copy is made.</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">area</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">arr</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">max1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">    </span><span class="c1">// start by assuming line 0 is the tallest</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">max2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span><span class="w">   </span><span class="c1">// -1 = no second-tallest chosen yet</span>
 
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">          </span><span class="c1">// look at every other line once</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">max1</span><span class="p">]){</span>
 <span class="w">            </span><span class="c1">// A new tallest: the old tallest slides down to second place.</span>
 <span class="w">            </span><span class="n">max2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max1</span><span class="p">;</span>
 <span class="w">            </span><span class="n">max1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">max2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">arr</span><span class="p">[</span><span class="n">max2</span><span class="p">]){</span>
 <span class="w">            </span><span class="c1">// Not the tallest, but beats the current second (or fills it).</span>
+<span class="w">            </span><span class="c1">// (max2 == -1 is tested first, so arr[-1] is never read.)</span>
 <span class="w">            </span><span class="n">max2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
@@ -1389,26 +1459,26 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">leftIndex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">max1</span><span class="p">,</span><span class="w"> </span><span class="n">max2</span><span class="p">);</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">rightIndex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">max1</span><span class="p">,</span><span class="w"> </span><span class="n">max2</span><span class="p">);</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="n">leftIndex</span><span class="p">,</span><span class="w"> </span><span class="n">rightIndex</span><span class="p">};</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="n">leftIndex</span><span class="p">,</span><span class="w"> </span><span class="n">rightIndex</span><span class="p">};</span><span class="w">   </span><span class="c1">// builds a 2-element vector</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w">                 </span><span class="c1">// number of test cases</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
 
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">){</span><span class="w">            </span><span class="c1">// one pass per test case</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w">             </span><span class="c1">// number of lines</span>
 <span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 
-<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">arr</span><span class="p">;</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">arr</span><span class="p">;</span><span class="w">   </span><span class="c1">// the heights</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
 <span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
-<span class="w">            </span><span class="n">arr</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="w">            </span><span class="n">arr</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w">   </span><span class="c1">// append at the end</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">indices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">area</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">   </span><span class="c1">// left right</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// Cost: O(N) per test case, one pass, no sorting.</span>
@@ -1416,7 +1486,7 @@ answer: 0 3          (smaller index first)</pre><p>Things to watch while you wor
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 104 lines ▾</button>
+    <button type="button" class="expand">Show all 113 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>2

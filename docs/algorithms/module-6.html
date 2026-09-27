@@ -88,148 +88,10 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
   <p class="what">Reads <code>a b c</code> edges and stores <code>{b, c}</code> in <code>a</code>&#x27;s list and <code>{a, c}</code> in <code>b</code>&#x27;s list, then prints them.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 51 lines</span>
+      <span>CPP · 75 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%206/adj_list_for_weighted_graph.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// An adjacency list when the edges have a cost.</span>
-<span class="c1">//</span>
-<span class="c1">// Until now an edge was just &quot;these two nodes are joined&quot;, and adj_list[a] held</span>
-<span class="c1">// plain node numbers. Real roads have a length, calls have a price, pipes have a</span>
-<span class="c1">// capacity. So each entry has to carry two facts instead of one: which neighbour,</span>
-<span class="c1">// and what the edge to it costs.</span>
-<span class="c1">//</span>
-<span class="c1">// A pair&lt;int,int&gt; is the smallest way to say that. Nothing else about the storage</span>
-<span class="c1">// changes: still one list per node, still both directions for an undirected edge,</span>
-<span class="c1">// still O(n + e) memory. This is the exact shape Dijkstra will read in Module 7.</span>
-
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="c1">// Read one entry as {neighbour, weight}. The neighbour goes in .first and the</span>
-<span class="w">    </span><span class="c1">// cost in .second. Keep that order in mind: Module 7 deliberately flips it</span>
-<span class="w">    </span><span class="c1">// when the pair goes into a priority queue, and mixing the two up is the most</span>
-<span class="w">    </span><span class="c1">// common bug in Dijkstra code.</span>
-<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w">   </span><span class="c1">// c is the weight of the edge between a and b</span>
-<span class="w">        </span><span class="c1">// Both endpoints must know the cost, so the weight is written twice, the</span>
-<span class="w">        </span><span class="c1">// same way the neighbour was written twice in Module 1.</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; -&gt; &quot;</span><span class="p">;</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
-<span class="w">            </span><span class="c1">// p.first is the neighbour, p.second is what it costs to get there.</span>
-<span class="w">            </span><span class="c1">// There is no space after the &#39;)&#39;, so entries run into each other in</span>
-<span class="w">            </span><span class="c1">// the output: read 1 (5)2 (3) as &quot;1 with cost 5, 2 with cost 3&quot;.</span>
-<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; (&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;)&quot;</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 51 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
-0 1 5
-0 2 3
-1 3 2
-2 3 7</pre><p class="io-note"><code>n e</code>, then e lines <code>a b weight</code>.</p></div><div class="io out"><div class="io-h">Output </div><pre>0 -&gt; 1 (5)2 (3)
-1 -&gt; 0 (5)3 (2)
-2 -&gt; 0 (3)3 (7)
-3 -&gt; 1 (2)2 (7)
-</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> <code>0 -&gt; 1 (5)2 (3)</code> means node 0 connects to 1 with cost 5 and to 2 with cost 3 (there is no space between items, so read carefully).</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>vector&lt;pair&lt;int,int&gt;&gt; adj_list[n]</code>.</li><li>For each edge push <code>{b, c}</code> to <code>a</code> and <code>{a, c}</code> to <code>b</code>.</li><li>Print each node&#x27;s neighbours as <code>node (weight)</code>.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Add a space after <code>)</code> in the print for easier reading.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> What does <code>p.second</code> hold in this list?</summary><div>The weight of the edge.</div></details>
-</section>
-<section class="prog" id="p-detect-cycle-in-undirected-graph-bfs">
-  <div class="prog-h">
-    <span class="num">2</span>
-    <div class="prog-t">
-      <h3>Undirected cycle detection (BFS)</h3>
-      <div class="meta"><code class="fname">detect_cycle_in_undirected_graph_bfs.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(V + E) · Space O(V)</span></div>
-    </div>
-  </div>
-  <p class="what">BFS from every unvisited node; a visited neighbour that is not the current node&#x27;s parent means a cycle.</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 91 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%206/detect_cycle_in_undirected_graph_bfs.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -307,23 +169,225 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
 <span class="normal">72</span>
 <span class="normal">73</span>
 <span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span>
-<span class="normal">86</span>
-<span class="normal">87</span>
-<span class="normal">88</span>
-<span class="normal">89</span>
-<span class="normal">90</span>
-<span class="normal">91</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Does an undirected graph contain a cycle? BFS version.</span>
+<span class="normal">75</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// An adjacency list when the edges have a cost.</span>
+<span class="c1">//</span>
+<span class="c1">// Until now an edge was just &quot;these two nodes are joined&quot;, and adj_list[a] held</span>
+<span class="c1">// plain node numbers. Real roads have a length, calls have a price, pipes have a</span>
+<span class="c1">// capacity. So each entry has to carry two facts instead of one: which neighbour,</span>
+<span class="c1">// and what the edge to it costs.</span>
+<span class="c1">//</span>
+<span class="c1">// A pair&lt;int,int&gt; is the smallest way to say that. Nothing else about the storage</span>
+<span class="c1">// changes: still one list per node, still both directions for an undirected edge,</span>
+<span class="c1">// still O(n + e) memory. This is the exact shape Dijkstra will read in Module 7.</span>
+<span class="c1">//</span>
+<span class="c1">// Sample input (4 nodes, 4 edges, each line &quot;a b cost&quot;):</span>
+<span class="c1">//   4 4</span>
+<span class="c1">//   0 1 5</span>
+<span class="c1">//   0 2 3</span>
+<span class="c1">//   1 3 2</span>
+<span class="c1">//   2 3 7</span>
+<span class="c1">// Output:</span>
+<span class="c1">//   0 -&gt; 1 (5)2 (3)</span>
+<span class="c1">//   1 -&gt; 0 (5)3 (2)</span>
+<span class="c1">//   2 -&gt; 0 (3)3 (7)</span>
+<span class="c1">//   3 -&gt; 1 (2)2 (7)</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin (read from keyboard) and cout (print to screen)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector: an array that can grow with push_back</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // sort, max, min ... (not used here, kept from the class template)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span><span class="c1">       // std::string (not used here)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span><span class="c1">        // std::stack (not used here)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span><span class="c1">        // std::queue / priority_queue (not used here; Dijkstra will need it)</span>
+
+<span class="c1">// Lets us write cin, cout, vector, pair instead of std::cin, std::cout, ...</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="c1">// Program starts here. It reads a weighted undirected graph, stores it as an</span>
+<span class="c1">// adjacency list of (neighbour, cost) pairs, then prints each node&#39;s list.</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">           </span><span class="c1">// n = number of nodes (numbered 0..n-1), e = number of edges</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">      </span><span class="c1">// cin &gt;&gt; skips spaces/newlines, so &quot;4 4&quot; on one line or two lines both work</span>
+<span class="w">    </span><span class="c1">// Read one entry as {neighbour, weight}. The neighbour goes in .first and the</span>
+<span class="w">    </span><span class="c1">// cost in .second. Keep that order in mind: Module 7 deliberately flips it</span>
+<span class="w">    </span><span class="c1">// when the pair goes into a priority queue, and mixing the two up is the most</span>
+<span class="w">    </span><span class="c1">// common bug in Dijkstra code.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// vector&lt;pair&lt;int,int&gt;&gt; adj_list[n] is an ARRAY of n vectors: adj_list[0] is</span>
+<span class="w">    </span><span class="c1">// node 0&#39;s list, adj_list[1] is node 1&#39;s list, and so on. Each list starts</span>
+<span class="w">    </span><span class="c1">// empty. (An array whose size n is only known at run time is a g++ extension</span>
+<span class="w">    </span><span class="c1">// called a VLA; standard C++ would write vector&lt;vector&lt;pair&lt;int,int&gt;&gt;&gt; adj_list(n).)</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+
+<span class="w">    </span><span class="c1">// e-- tests the current e (non-zero = true) and then subtracts 1, so the body</span>
+<span class="w">    </span><span class="c1">// runs exactly e times: once per edge line in the input.</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w">          </span><span class="c1">// the two endpoints of this edge, and its cost</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w">   </span><span class="c1">// c is the weight of the edge between a and b</span>
+<span class="w">        </span><span class="c1">// Both endpoints must know the cost, so the weight is written twice, the</span>
+<span class="w">        </span><span class="c1">// same way the neighbour was written twice in Module 1.</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span><span class="w">   </span><span class="c1">// in a&#39;s list: &quot;b, reached at cost c&quot;. {b, c} builds a pair</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">});</span><span class="w">   </span><span class="c1">// in b&#39;s list: &quot;a, reached at cost c&quot; (undirected edge)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Print the whole list: one output line per node i.</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; -&gt; &quot;</span><span class="p">;</span><span class="w">            </span><span class="c1">// the node whose neighbours follow</span>
+<span class="w">        </span><span class="c1">// Range-for: p takes each pair in adj_list[i] in turn, in the order it was added.</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
+<span class="w">            </span><span class="c1">// p.first is the neighbour, p.second is what it costs to get there.</span>
+<span class="w">            </span><span class="c1">// There is no space after the &#39;)&#39;, so entries run into each other in</span>
+<span class="w">            </span><span class="c1">// the output: read 1 (5)2 (3) as &quot;1 with cost 5, 2 with cost 3&quot;.</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; (&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;)&quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">                   </span><span class="c1">// endl = newline + flush the output</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// 0 tells the operating system the program finished normally</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 75 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
+0 1 5
+0 2 3
+1 3 2
+2 3 7</pre><p class="io-note"><code>n e</code>, then e lines <code>a b weight</code>.</p></div><div class="io out"><div class="io-h">Output </div><pre>0 -&gt; 1 (5)2 (3)
+1 -&gt; 0 (5)3 (2)
+2 -&gt; 0 (3)3 (7)
+3 -&gt; 1 (2)2 (7)
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> <code>0 -&gt; 1 (5)2 (3)</code> means node 0 connects to 1 with cost 5 and to 2 with cost 3 (there is no space between items, so read carefully).</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li><code>vector&lt;pair&lt;int,int&gt;&gt; adj_list[n]</code>.</li><li>For each edge push <code>{b, c}</code> to <code>a</code> and <code>{a, c}</code> to <code>b</code>.</li><li>Print each node&#x27;s neighbours as <code>node (weight)</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Add a space after <code>)</code> in the print for easier reading.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> What does <code>p.second</code> hold in this list?</summary><div>The weight of the edge.</div></details>
+</section>
+<section class="prog" id="p-detect-cycle-in-undirected-graph-bfs">
+  <div class="prog-h">
+    <span class="num">2</span>
+    <div class="prog-t">
+      <h3>Undirected cycle detection (BFS)</h3>
+      <div class="meta"><code class="fname">detect_cycle_in_undirected_graph_bfs.cpp</code><span class="badge k-lesson">Lesson</span><span class="badge cx">Time O(V + E) · Space O(V)</span></div>
+    </div>
+  </div>
+  <p class="what">BFS from every unvisited node; a visited neighbour that is not the current node&#x27;s parent means a cycle.</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 107 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%206/detect_cycle_in_undirected_graph_bfs.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Does an undirected graph contain a cycle? BFS version.</span>
 <span class="c1">//</span>
 <span class="c1">// A cycle means there are two different ways to reach the same node. So while</span>
 <span class="c1">// exploring node par, meeting a neighbour that is ALREADY visited looks like the</span>
@@ -340,31 +404,45 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
 <span class="c1">// Note this is why a parent array is needed here at all, and why the same rule</span>
 <span class="c1">// cannot be used on a directed graph (see detect_cycle_in_directed_graph_dfs.cpp):</span>
 <span class="c1">// there, arrows 0-&gt;2 and 1-&gt;2 make 2 visited twice with no cycle anywhere.</span>
+<span class="c1">//</span>
+<span class="c1">// Tiny trace, triangle 0-1, 0-2, 1-2:</span>
+<span class="c1">//   pop 0: 1 and 2 are new -&gt; push both, parent[1] = parent[2] = 0</span>
+<span class="c1">//   pop 1: neighbour 0 is visited but is parent[1] -&gt; excused;</span>
+<span class="c1">//          neighbour 2 is visited and is NOT parent[1] -&gt; cycle!</span>
+<span class="c1">// Output: Cycle Detected</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin, cout</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector, for the adjacency lists</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // not used here (class template)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span><span class="c1">       // not used here</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span><span class="c1">        // not used here</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span><span class="c1">        // queue: first-in first-out line, the heart of BFS</span>
+<span class="c1">// BUG: memset (used in main) is declared in &lt;cstring&gt;, which is not included.</span>
+<span class="c1">// Some compilers pull it in through &lt;iostream&gt; by accident, but many (including</span>
+<span class="c1">// the g++ this repo is checked with) stop with &quot;&#39;memset&#39; was not declared in this</span>
+<span class="c1">// scope&quot;. Fix: add #include &lt;cstring&gt; here.</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// write cin/cout/queue without std::</span>
 
-<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
-<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">              </span><span class="c1">// vis[x] = has x been discovered (put in the queue) yet?</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">  </span><span class="c1">// adj_list[x] = all neighbours of x</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">parent</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">   </span><span class="c1">// parent[x] = the node that discovered x; -1 for a start node</span>
 <span class="kt">bool</span><span class="w"> </span><span class="n">cycle</span><span class="p">;</span><span class="w">        </span><span class="c1">// global so bfs() can raise the flag from anywhere</span>
 
+<span class="c1">// Breadth-first search from src: visits every node of src&#39;s component, layer</span>
+<span class="c1">// by layer, filling parent[] and raising cycle if a second route is found.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
-<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
-<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
-<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="n">queue</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">q</span><span class="p">;</span><span class="w">       </span><span class="c1">// nodes discovered but not yet explored, oldest first</span>
+<span class="w">    </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">src</span><span class="p">);</span><span class="w">        </span><span class="c1">// start with src waiting in line</span>
+<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">    </span><span class="c1">// mark when PUSHED, so no node enters the queue twice</span>
 
+<span class="w">    </span><span class="c1">// One pass = take the oldest waiting node and look at all its neighbours.</span>
+<span class="w">    </span><span class="c1">// Stops when the queue is empty: the whole component has been explored.</span>
 <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">q</span><span class="p">.</span><span class="n">empty</span><span class="p">()){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>
-<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">front</span><span class="p">();</span><span class="w">   </span><span class="c1">// front() reads the oldest node...</span>
+<span class="w">        </span><span class="n">q</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span><span class="w">               </span><span class="c1">// ...and pop() removes it (pop returns nothing)</span>
 
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par</span><span class="p">]){</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">par</span><span class="p">]){</span><span class="w">   </span><span class="c1">// each neighbour of par in turn</span>
 <span class="w">            </span><span class="c1">// Already seen, and not the node we came from: a second way in.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">parent</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">child</span><span class="p">){</span>
 <span class="w">                </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -375,27 +453,29 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
 <span class="w">            </span><span class="c1">// The ordinary BFS step, unchanged from Module 2 except for the one</span>
 <span class="w">            </span><span class="c1">// extra line that remembers who did the discovering.</span>
 <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
-<span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
-<span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">                </span><span class="n">parent</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">;</span>
+<span class="w">                </span><span class="n">q</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">child</span><span class="p">);</span><span class="w">          </span><span class="c1">// child joins the back of the line</span>
+<span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">      </span><span class="c1">// discovered now</span>
+<span class="w">                </span><span class="n">parent</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">par</span><span class="p">;</span><span class="w">    </span><span class="c1">// par is the one who found it</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">                       </span><span class="c1">// n nodes (0..n-1), e edges</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span><span class="w">                     </span><span class="c1">// body runs e times, once per edge</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">              </span><span class="c1">// an edge between a and b</span>
 <span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
 <span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span><span class="w">   </span><span class="c1">// undirected, so both lists hold the edge</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// memset fills bytes. false is byte 0, fine. -1 also works for int because</span>
+<span class="w">    </span><span class="c1">// -1 is the byte 0xFF repeated (0xFFFFFFFF = -1); memset with 5 would NOT give 5.</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">parent</span><span class="p">));</span>
 
-<span class="w">    </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">                  </span><span class="c1">// innocent until proven guilty</span>
 <span class="w">    </span><span class="c1">// Start a search from every node that is still unvisited, because the cycle</span>
 <span class="w">    </span><span class="c1">// may sit in a piece of the graph that node 0 cannot reach at all.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
@@ -412,11 +492,11 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
 
 <span class="w">    </span><span class="c1">// Cost: one BFS over the whole graph, O(V + E).</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// normal exit</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 91 lines ▾</button>
+    <button type="button" class="expand">Show all 107 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 4
@@ -441,7 +521,7 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
   <p class="what">Same parent rule written with recursive DFS.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 74 lines</span>
+      <span>CPP · 91 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%206/detect_cycle_in_undirected_graph_dfs.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -521,7 +601,24 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
 <span class="normal">71</span>
 <span class="normal">72</span>
 <span class="normal">73</span>
-<span class="normal">74</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Does an undirected graph contain a cycle? DFS version.</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Does an undirected graph contain a cycle? DFS version.</span>
 <span class="c1">//</span>
 <span class="c1">// The rule is exactly the one from detect_cycle_in_undirected_graph_bfs.cpp: a</span>
 <span class="c1">// neighbour that is already visited and is not the node we came from means there</span>
@@ -531,24 +628,39 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
 <span class="c1">//</span>
 <span class="c1">// Only the walk changes, from a queue to recursion. Here parent[src] is the node</span>
 <span class="c1">// whose loop called us, so it is precisely the one to skip.</span>
+<span class="c1">//</span>
+<span class="c1">// Sample input: the path 0-1-2-3-4</span>
+<span class="c1">//   5 4</span>
+<span class="c1">//   0 1</span>
+<span class="c1">//   1 2</span>
+<span class="c1">//   2 3</span>
+<span class="c1">//   3 4</span>
+<span class="c1">// Output: No Cycle   (add the edge 4 0 and it becomes Cycle Detected)</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin, cout</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector, for the adjacency lists</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // not used here (class template)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span><span class="c1">       // not used here</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span><span class="c1">        // not used here</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span><span class="c1">        // not used here</span>
+<span class="c1">// BUG: memset (used in main) is declared in &lt;cstring&gt;, which is not included.</span>
+<span class="c1">// Some compilers pull it in through &lt;iostream&gt; by accident, but many (including</span>
+<span class="c1">// the g++ this repo is checked with) stop with &quot;&#39;memset&#39; was not declared in this</span>
+<span class="c1">// scope&quot;. Fix: add #include &lt;cstring&gt; here.</span>
 
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// write cin/cout/vector without std::</span>
 
-<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
-<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">parent</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">cycle</span><span class="p">;</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">              </span><span class="c1">// vis[x] = has DFS already entered x?</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">  </span><span class="c1">// adj_list[x] = all neighbours of x</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">parent</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">            </span><span class="c1">// parent[x] = node whose dfs call discovered x; -1 = start node</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">cycle</span><span class="p">;</span><span class="w">                 </span><span class="c1">// becomes true as soon as a cycle is seen</span>
 
+<span class="c1">// Depth-first search from src. Recursion: each call marks src, then dives into</span>
+<span class="c1">// every unvisited neighbour; the call stack itself remembers the path back.</span>
+<span class="c1">// It stops (returns) when every neighbour of src has been checked.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
-<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">src</span><span class="p">]){</span>
+<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">                      </span><span class="c1">// entered src</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">src</span><span class="p">]){</span><span class="w">       </span><span class="c1">// each neighbour of src</span>
 <span class="w">        </span><span class="c1">// Visited already, and not the node we arrived from: a cycle.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">parent</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">child</span><span class="p">){</span>
 <span class="w">            </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -558,20 +670,22 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
 <span class="w">            </span><span class="c1">// start looking at child&#39;s own neighbours and will ask parent[child]</span>
 <span class="w">            </span><span class="c1">// the moment it sees src again in child&#39;s list.</span>
 <span class="w">            </span><span class="n">parent</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">src</span><span class="p">;</span>
-<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
+<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">child</span><span class="p">);</span><span class="w">                   </span><span class="c1">// explore everything reachable from child, then come back</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">                       </span><span class="c1">// n nodes (0..n-1), e edges</span>
 <span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span><span class="w">                     </span><span class="c1">// runs e times</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">              </span><span class="c1">// edge between a and b</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span><span class="w">   </span><span class="c1">// a knows b</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">b</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span><span class="w">   </span><span class="c1">// b knows a (undirected)</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// memset fills every byte: false -&gt; all 0; -1 -&gt; all bytes 0xFF, which reads</span>
+<span class="w">    </span><span class="c1">// back as the int -1 (this trick only works for 0 and -1).</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">parent</span><span class="p">));</span><span class="w">   </span><span class="c1">// a start node has no parent</span>
 
@@ -593,11 +707,11 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
 <span class="w">    </span><span class="c1">// cycle is a forest, and a forest on n nodes has fewer than n edges. So the</span>
 <span class="w">    </span><span class="c1">// path 0-1-2-3-4 here, 5 nodes and 4 edges, cannot possibly hold a cycle.</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// normal exit</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 74 lines ▾</button>
+    <button type="button" class="expand">Show all 91 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 4
@@ -622,10 +736,279 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
   <p class="what">Uses <code>pathvisit</code> to know which nodes are on the current DFS path; an edge to such a node closes a cycle.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 95 lines</span>
+      <span>CPP · 118 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%206/detect_cycle_in_directed_graph_dfs.cpp" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Does a DIRECTED graph contain a cycle?</span>
+<span class="c1">//</span>
+<span class="c1">// The undirected rule does not survive the move to one-way edges. Take 0 -&gt; 2 and</span>
+<span class="c1">// 1 -&gt; 2. Searching from 0 marks 2; later, standing on 1, node 2 is already</span>
+<span class="c1">// visited and is certainly not 1&#39;s parent, so the old rule shouts &quot;cycle&quot; when</span>
+<span class="c1">// there is plainly none. Two arrows can meet at a node without any way back.</span>
+<span class="c1">//</span>
+<span class="c1">// A cycle in a directed graph means something stricter: following arrows, you can</span>
+<span class="c1">// return to a node you have not finished leaving yet. So the question to ask</span>
+<span class="c1">// about a neighbour is not &quot;has it ever been visited?&quot; but &quot;is it still on the</span>
+<span class="c1">// path I am standing on right now?&quot;.</span>
+<span class="c1">//</span>
+<span class="c1">// That needs a second array. vis[] remembers everything ever seen, for all time.</span>
+<span class="c1">// pathvisit[] remembers only the chain of calls currently open, the route from</span>
+<span class="c1">// the node this search started at down to where we are now. It is switched on</span>
+<span class="c1">// when a node is entered and switched off again at the very end of dfs, when that</span>
+<span class="c1">// node is finished and the recursion steps back out of it. An edge into a node</span>
+<span class="c1">// whose pathvisit is still true is an edge pointing backwards along our own</span>
+<span class="c1">// route: a cycle.</span>
+<span class="c1">//</span>
+<span class="c1">// Miss that final unset and a node stays &quot;on the path&quot; long after we have left</span>
+<span class="c1">// it, and the program reports cycles that do not exist.</span>
+<span class="c1">//</span>
+<span class="c1">// Sample input (n e, then e lines &quot;a b&quot; meaning an arrow a -&gt; b):</span>
+<span class="c1">//   4 4</span>
+<span class="c1">//   0 1</span>
+<span class="c1">//   1 2</span>
+<span class="c1">//   2 3</span>
+<span class="c1">//   3 1</span>
+<span class="c1">// Output: Cycle Detected</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin, cout</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector, for the adjacency lists</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    // not used here (class template)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span><span class="c1">       // not used here</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span><span class="c1">        // not used here</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span><span class="c1">        // not used here</span>
+<span class="c1">// BUG: memset (used in main) is declared in &lt;cstring&gt;, which is not included.</span>
+<span class="c1">// Some compilers pull it in through &lt;iostream&gt; by accident, but many (including</span>
+<span class="c1">// the g++ this repo is checked with) stop with &quot;&#39;memset&#39; was not declared in this</span>
+<span class="c1">// scope&quot;. Fix: add #include &lt;cstring&gt; here.</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// write cin/cout/vector without std::</span>
+
+<span class="c1">// Globals: the graph and the marks are shared by dfs() and main(). 105 slots</span>
+<span class="c1">// because the course problems have at most about 100 nodes.</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">              </span><span class="c1">// ever seen, in any search</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">  </span><span class="c1">// adj_list[a] = every b with an arrow a -&gt; b</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">pathvisit</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">        </span><span class="c1">// on the chain of calls that is open right now</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">cycle</span><span class="p">;</span><span class="w">                 </span><span class="c1">// set to true the moment any cycle is found</span>
+
+<span class="c1">// Depth-first search from src. Marks src as seen and as &quot;on the current path&quot;,</span>
+<span class="c1">// explores every arrow out of it, then removes it from the path on the way out.</span>
+<span class="c1">// Returns nothing; its result is the global flag cycle.</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
+<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">            </span><span class="c1">// seen, forever</span>
+<span class="w">    </span><span class="n">pathvisit</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">      </span><span class="c1">// we have entered src and have not left it yet</span>
+
+<span class="w">    </span><span class="c1">// Look at every node src points to.</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">src</span><span class="p">]){</span>
+<span class="w">        </span><span class="c1">// Seen before AND still on the current route: the arrow leads back into</span>
+<span class="w">        </span><span class="c1">// the chain we are standing on, which closes a loop.</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">pathvisit</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">child</span><span class="p">);</span><span class="w">         </span><span class="c1">// brand-new node: go deeper; returns when child is fully explored</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">// A child that is visited but NOT on the path is deliberately ignored:</span>
+<span class="w">        </span><span class="c1">// it belongs to a branch already finished, so it is a shortcut forwards,</span>
+<span class="w">        </span><span class="c1">// never a way back. That is the whole difference from the undirected file.</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Leaving src for good. Take it off the current route, so a later branch that</span>
+<span class="w">    </span><span class="c1">// merely points at src does not look like a loop.</span>
+<span class="w">    </span><span class="n">pathvisit</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w">                       </span><span class="c1">// n nodes (0..n-1), e arrows</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span><span class="w">                     </span><span class="c1">// runs e times, once per arrow</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">              </span><span class="c1">// one arrow a -&gt; b</span>
+<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span><span class="w">   </span><span class="c1">// directed: stored once, a -&gt; b only</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// memset(array, value, bytes) sets every byte; sizeof gives the array&#39;s total bytes.</span>
+<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
+<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">pathvisit</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">pathvisit</span><span class="p">));</span>
+
+<span class="w">    </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">                  </span><span class="c1">// no cycle found yet</span>
+
+<span class="w">    </span><span class="c1">// We are running for loop as there could be disconnected</span>
+<span class="w">    </span><span class="c1">// components</span>
+<span class="w">    </span><span class="c1">// (Also: in a directed graph, even a connected one, node 0 may not be able</span>
+<span class="w">    </span><span class="c1">// to REACH every node along the arrows, so we start again from any node</span>
+<span class="w">    </span><span class="c1">// still unvisited.)</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
+<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">cycle</span><span class="p">){</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Cycle Detected&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="p">{</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;No Cycle&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// With the sample edges 0-&gt;1, 1-&gt;2, 2-&gt;3, 3-&gt;1 the search goes 0, 1, 2, 3 and</span>
+<span class="w">    </span><span class="c1">// from 3 finds 1, which is still open on the call stack (the open calls are</span>
+<span class="w">    </span><span class="c1">// dfs(0), dfs(1), dfs(2), dfs(3)), so pathvisit[1] is true. Cycle.</span>
+<span class="w">    </span><span class="c1">// Note that a directed graph with no cycle is exactly what can be sorted into</span>
+<span class="w">    </span><span class="c1">// an order where every arrow points forwards; that is topological sort, and</span>
+<span class="w">    </span><span class="c1">// it is the next use of this same pathvisit idea.</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// normal exit</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+</div>
+    <button type="button" class="expand">Show all 118 lines ▾</button>
+  </div>
+  
+  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
+0 1
+1 2
+2 3
+3 1</pre><p class="io-note">Directed edges 0→1→2→3→1 (the loop is 1-2-3).</p></div><div class="io out"><div class="io-h">Output </div><pre>Cycle Detected
+</pre></div></div>
+  <p class="readout"><b>Reading the output.</b> Prints <code>Cycle Detected</code>: 1 -&gt; 2 -&gt; 3 -&gt; 1 loops back to a node still on the path.</p>
+  <details class="how" open><summary>How it works, step by step</summary><ol><li>On entering <code>src</code>: <code>vis[src] = pathvisit[src] = true</code>.</li><li>For each child: if it is visited <strong>and</strong> on the path, set <code>cycle = true</code>.</li><li>If it is not visited, recurse.</li><li>On leaving <code>src</code>: <code>pathvisit[src] = false</code>.</li></ol></details>
+  <div class="callout warn"><b>Watch out.</b> Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
+  <details class="check"><summary><span>✅ Check yourself:</span> Why must <code>pathvisit[src]</code> be reset to false when DFS leaves <code>src</code>?</summary><div>Once we back out, <code>src</code> is no longer on the current path; a later arrow into it is not a cycle.</div></details>
+</section><div class="pgroup" id="g-practice"><h3>🏋️ Practice problems</h3><p>Practice-day and judge problems, solved with what the module has taught so far.</p></div>
+<section class="prog" id="p-extra-problem-undirected-graph-cycle-dfs">
+  <div class="prog-h">
+    <span class="num">5</span>
+    <div class="prog-t">
+      <h3>GFG - Detect cycle in an undirected graph (DFS)</h3>
+      <div class="meta"><code class="fname">extra_problem_undirected_graph_cycle_dfs.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(V + E) · Space O(V)</span><a class="prob" href="https://www.geeksforgeeks.org/problems/detect-cycle-in-an-undirected-graph/1" target="_blank" rel="noopener">↗ GFG - Detect cycle in an undirected graph</a></div>
+    </div>
+  </div>
+  <p class="what">Practice Day problems 1 and 2 ask the same GFG question twice: once with BFS, once with DFS. This is the DFS one: it returns true as soon as the DFS finds a visited neighbour that is not its parent; <code>parent</code> is passed as an argument. The BFS version was saved in the Module 7 folder as <code>gfg_undirected_graph_cycle_bfs.cpp</code> (it is shown on the Module 7 page).</p>
+  <div class="codebox-wrap long">
+    <div class="code-bar">
+      <span>CPP · 76 lines</span>
+      <span class="code-actions">
+        <button type="button" class="cbtn copy">Copy</button>
+        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%206/extra_problem_undirected_graph_cycle_dfs.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
@@ -704,222 +1087,13 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
 <span class="normal">73</span>
 <span class="normal">74</span>
 <span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span>
-<span class="normal">86</span>
-<span class="normal">87</span>
-<span class="normal">88</span>
-<span class="normal">89</span>
-<span class="normal">90</span>
-<span class="normal">91</span>
-<span class="normal">92</span>
-<span class="normal">93</span>
-<span class="normal">94</span>
-<span class="normal">95</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Does a DIRECTED graph contain a cycle?</span>
-<span class="c1">//</span>
-<span class="c1">// The undirected rule does not survive the move to one-way edges. Take 0 -&gt; 2 and</span>
-<span class="c1">// 1 -&gt; 2. Searching from 0 marks 2; later, standing on 1, node 2 is already</span>
-<span class="c1">// visited and is certainly not 1&#39;s parent, so the old rule shouts &quot;cycle&quot; when</span>
-<span class="c1">// there is plainly none. Two arrows can meet at a node without any way back.</span>
-<span class="c1">//</span>
-<span class="c1">// A cycle in a directed graph means something stricter: following arrows, you can</span>
-<span class="c1">// return to a node you have not finished leaving yet. So the question to ask</span>
-<span class="c1">// about a neighbour is not &quot;has it ever been visited?&quot; but &quot;is it still on the</span>
-<span class="c1">// path I am standing on right now?&quot;.</span>
-<span class="c1">//</span>
-<span class="c1">// That needs a second array. vis[] remembers everything ever seen, for all time.</span>
-<span class="c1">// pathvisit[] remembers only the chain of calls currently open, the route from</span>
-<span class="c1">// the node this search started at down to where we are now. It is switched on</span>
-<span class="c1">// when a node is entered and switched off again at the very end of dfs, when that</span>
-<span class="c1">// node is finished and the recursion steps back out of it. An edge into a node</span>
-<span class="c1">// whose pathvisit is still true is an edge pointing backwards along our own</span>
-<span class="c1">// route: a cycle.</span>
-<span class="c1">//</span>
-<span class="c1">// Miss that final unset and a node stays &quot;on the path&quot; long after we have left</span>
-<span class="c1">// it, and the program reports cycles that do not exist.</span>
+<span class="normal">76</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span><span class="c1">    </span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stack&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;queue&gt;</span>
-
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">              </span><span class="c1">// ever seen, in any search</span>
-<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">pathvisit</span><span class="p">[</span><span class="mi">105</span><span class="p">];</span><span class="w">        </span><span class="c1">// on the chain of calls that is open right now</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">cycle</span><span class="p">;</span>
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">){</span>
-<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">    </span><span class="n">pathvisit</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">      </span><span class="c1">// we have entered src and have not left it yet</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj_list</span><span class="p">[</span><span class="n">src</span><span class="p">]){</span>
-<span class="w">        </span><span class="c1">// Seen before AND still on the current route: the arrow leads back into</span>
-<span class="w">        </span><span class="c1">// the chain we are standing on, which closes a loop.</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">pathvisit</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
-<span class="w">            </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
-<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="c1">// A child that is visited but NOT on the path is deliberately ignored:</span>
-<span class="w">        </span><span class="c1">// it belongs to a branch already finished, so it is a shortcut forwards,</span>
-<span class="w">        </span><span class="c1">// never a way back. That is the whole difference from the undirected file.</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// Leaving src for good. Take it off the current route, so a later branch that</span>
-<span class="w">    </span><span class="c1">// merely points at src does not look like a loop.</span>
-<span class="w">    </span><span class="n">pathvisit</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">e</span><span class="o">--</span><span class="p">){</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-<span class="w">        </span><span class="n">adj_list</span><span class="p">[</span><span class="n">a</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span><span class="w">   </span><span class="c1">// directed: stored once, a -&gt; b only</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
-<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">pathvisit</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">pathvisit</span><span class="p">));</span>
-
-<span class="w">    </span><span class="n">cycle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">// We are running for loop as there could be disconnected </span>
-<span class="w">    </span><span class="c1">// components</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
-<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">cycle</span><span class="p">){</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Cycle Detected&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">else</span><span class="p">{</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;No Cycle&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// With the sample edges 0-&gt;1, 1-&gt;2, 2-&gt;3, 3-&gt;1 the search goes 0, 1, 2, 3 and</span>
-<span class="w">    </span><span class="c1">// from 3 finds 1, which is still open three calls up the stack. Cycle.</span>
-<span class="w">    </span><span class="c1">// Note that a directed graph with no cycle is exactly what can be sorted into</span>
-<span class="w">    </span><span class="c1">// an order where every arrow points forwards; that is topological sort, and</span>
-<span class="w">    </span><span class="c1">// it is the next use of this same pathvisit idea.</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-</div>
-    <button type="button" class="expand">Show all 95 lines ▾</button>
-  </div>
-  
-  <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>4 4
-0 1
-1 2
-2 3
-3 1</pre><p class="io-note">Directed edges 0→1→2→3→1 (the loop is 1-2-3).</p></div><div class="io out"><div class="io-h">Output </div><pre>Cycle Detected
-</pre></div></div>
-  <p class="readout"><b>Reading the output.</b> Prints <code>Cycle Detected</code>: 1 -&gt; 2 -&gt; 3 -&gt; 1 loops back to a node still on the path.</p>
-  <details class="how" open><summary>How it works, step by step</summary><ol><li>On entering <code>src</code>: <code>vis[src] = pathvisit[src] = true</code>.</li><li>For each child: if it is visited <strong>and</strong> on the path, set <code>cycle = true</code>.</li><li>If it is not visited, recurse.</li><li>On leaving <code>src</code>: <code>pathvisit[src] = false</code>.</li></ol></details>
-  <div class="callout warn"><b>Watch out.</b> Tip: on some compilers you need <code>#include &lt;cstring&gt;</code> for <code>memset</code>; this file relies on another header bringing it in.</div>
-  <details class="check"><summary><span>✅ Check yourself:</span> Why must <code>pathvisit[src]</code> be reset to false when DFS leaves <code>src</code>?</summary><div>Once we back out, <code>src</code> is no longer on the current path; a later arrow into it is not a cycle.</div></details>
-</section><div class="pgroup" id="g-practice"><h3>🏋️ Practice problems</h3><p>Practice-day and judge problems, solved with what the module has taught so far.</p></div>
-<section class="prog" id="p-extra-problem-undirected-graph-cycle-dfs">
-  <div class="prog-h">
-    <span class="num">5</span>
-    <div class="prog-t">
-      <h3>GFG - Detect cycle in an undirected graph (DFS)</h3>
-      <div class="meta"><code class="fname">extra_problem_undirected_graph_cycle_dfs.cpp</code><span class="badge k-problem">Problem</span><span class="badge cx">Time O(V + E) · Space O(V)</span><a class="prob" href="https://www.geeksforgeeks.org/problems/detect-cycle-in-an-undirected-graph/1" target="_blank" rel="noopener">↗ GFG - Detect cycle in an undirected graph</a></div>
-    </div>
-  </div>
-  <p class="what">Practice Day problems 1 and 2 ask the same GFG question twice: once with BFS, once with DFS. This is the DFS one: it returns true as soon as the DFS finds a visited neighbour that is not its parent; <code>parent</code> is passed as an argument. The BFS version was saved in the Module 7 folder as <code>gfg_undirected_graph_cycle_bfs.cpp</code> (it is shown on the Module 7 page).</p>
-  <div class="codebox-wrap long">
-    <div class="code-bar">
-      <span>CPP · 62 lines</span>
-      <span class="code-actions">
-        <button type="button" class="cbtn copy">Copy</button>
-        <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%206/extra_problem_undirected_graph_cycle_dfs.cpp" target="_blank" rel="noopener">GitHub</a>
-      </span>
-    </div>
-    <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
-
-<span class="cm">Given an undirected graph with V vertices labelled from 0 to V-1 and E edges, check whether </span>
-<span class="cm">the graph contains any cycle or not. The Graph is represented as an adjacency list, where </span>
+<span class="cm">Given an undirected graph with V vertices labelled from 0 to V-1 and E edges, check whether</span>
+<span class="cm">the graph contains any cycle or not. The Graph is represented as an adjacency list, where</span>
 <span class="cm">adj[i] contains all the vertices that are directly connected to vertex i.</span>
 
-<span class="cm">NOTE: The adjacency list represents undirected edges, meaning that if there is an edge between </span>
+<span class="cm">NOTE: The adjacency list represents undirected edges, meaning that if there is an edge between</span>
 <span class="cm">vertex i and vertex j, both j will be adj[i] and i will be in adj[j].</span>
 
 <span class="cm">Examples:</span>
@@ -931,15 +1105,28 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
 <span class="c1">// printing. The rule is the same: while walking DFS, meeting a neighbour that is</span>
 <span class="c1">// ALREADY visited and is NOT the node we just came from means there is a second</span>
 <span class="c1">// way back to it, i.e. a cycle.</span>
+<span class="c1">//</span>
+<span class="c1">// There is no #include, no using namespace std and no main() here: this is only</span>
+<span class="c1">// the class GFG&#39;s judge asks for. The judge&#39;s own hidden code supplies the</span>
+<span class="c1">// headers, builds adj from the input, creates a Solution and calls isCycle().</span>
+<span class="c1">// (So this file does not compile on its own.)</span>
+<span class="c1">//</span>
+<span class="c1">// Example: adj = {{1}, {0, 2}, {1}} is the path 0-1-2 -&gt; false.</span>
+<span class="c1">//          adj = {{1, 2}, {0, 2}, {0, 1}} is a triangle -&gt; true.</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span><span class="w">        </span><span class="c1">// GFG&#39;s required wrapper; the methods below are its members</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w">             </span><span class="c1">// public: the judge&#39;s code, outside the class, may call them</span>
 <span class="w">      </span><span class="c1">// DFS from src. parent = the node we arrived from (-1 for a start node).</span>
 <span class="w">      </span><span class="c1">// Returns true as soon as a cycle is found anywhere below src.</span>
+<span class="w">      </span><span class="c1">// vis and adj are passed by reference (&amp;): the function works on the</span>
+<span class="w">      </span><span class="c1">// caller&#39;s own vectors instead of making a copy on every call, so marks</span>
+<span class="w">      </span><span class="c1">// made here are seen everywhere and no time is wasted copying.</span>
+<span class="w">      </span><span class="c1">// Here parent is a plain parameter, not an array: each call carries its</span>
+<span class="w">      </span><span class="c1">// own value on the call stack, which is all the DFS needs.</span>
 <span class="w">      </span><span class="kt">bool</span><span class="w"> </span><span class="n">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">adj</span><span class="p">){</span>
-<span class="w">          </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">          </span>
-<span class="w">          </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="n">src</span><span class="p">]){</span>
+<span class="w">          </span><span class="n">vis</span><span class="p">[</span><span class="n">src</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">   </span><span class="c1">// entered src</span>
+
+<span class="w">          </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="n">src</span><span class="p">]){</span><span class="w">   </span><span class="c1">// each neighbour of src</span>
 <span class="w">              </span><span class="c1">// Seen before, and not simply the edge we walked in on: cycle.</span>
 <span class="w">              </span><span class="c1">// (The parent is always visited, because an undirected edge is</span>
 <span class="w">              </span><span class="c1">// stored both ways; that edge alone is not a cycle.)</span>
@@ -950,34 +1137,35 @@ pathvisit[u] = false;</pre></div><div class="concept"><h4>Why the undirected rul
 <span class="w">              </span><span class="c1">// search found a cycle, pass the good news straight up.</span>
 <span class="w">              </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">child</span><span class="p">]){</span>
 <span class="w">                  </span><span class="k">if</span><span class="p">(</span><span class="n">dfs</span><span class="p">(</span><span class="n">child</span><span class="p">,</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="n">adj</span><span class="p">)){</span>
-<span class="w">                      </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">                      </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">   </span><span class="c1">// stop early; every caller returns true in turn</span>
 <span class="w">                  </span><span class="p">}</span>
 <span class="w">              </span><span class="p">}</span>
 <span class="w">          </span><span class="p">}</span>
-<span class="w">          </span>
+
 <span class="w">          </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">   </span><span class="c1">// explored everything below src, no cycle</span>
 <span class="w">      </span><span class="p">}</span>
-<span class="w">      </span>
+
+<span class="w">      </span><span class="c1">// Entry point called by the judge. Returns true if the graph has a cycle.</span>
 <span class="w">      </span><span class="kt">bool</span><span class="w"> </span><span class="n">isCycle</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">adj</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">          </span><span class="c1">// Code here</span>
 <span class="w">          </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adj</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w">          </span><span class="c1">// number of vertices</span>
 <span class="w">          </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vis</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span><span class="w">  </span><span class="c1">// local, so every call starts clean</span>
-<span class="w">          </span>
+
 <span class="w">          </span><span class="c1">// The graph may be in several pieces, and the cycle may live in any</span>
 <span class="w">          </span><span class="c1">// of them: start a DFS from every node not yet visited.</span>
 <span class="w">          </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">              </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">]){</span>
-<span class="w">                  </span><span class="k">if</span><span class="p">(</span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="n">adj</span><span class="p">)){</span>
+<span class="w">                  </span><span class="k">if</span><span class="p">(</span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="n">adj</span><span class="p">)){</span><span class="w">   </span><span class="c1">// -1 = &quot;no parent&quot;, never a real vertex</span>
 <span class="w">                      </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">                  </span><span class="p">}</span>
 <span class="w">              </span><span class="p">}</span>
 <span class="w">          </span><span class="p">}</span>
 <span class="w">          </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w">   </span><span class="c1">// O(V + E)</span>
 <span class="w">      </span><span class="p">}</span>
-<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="p">};</span><span class="w">                     </span><span class="c1">// a class definition must end with a semicolon</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 62 lines ▾</button>
+    <button type="button" class="expand">Show all 76 lines ▾</button>
   </div>
   <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
@@ -1027,7 +1215,7 @@ isCycle = false
   <p class="what">Counts connected floor areas with DFS on the grid.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 111 lines</span>
+      <span>CPP · 136 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%206/cses_counting_rooms.cpp" target="_blank" rel="noopener">GitHub</a>
@@ -1143,19 +1331,44 @@ isCycle = false
 <span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span>
-<span class="normal">110</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://cses.fi/problemset/task/1192/</span>
 
 <span class="cm">Counting Rooms</span>
 
-<span class="cm">You are given a map of a building, and your task is to count the number of its rooms. The </span>
-<span class="cm">size of the map is n \times m squares, and each square is either floor or wall. You can walk </span>
+<span class="cm">You are given a map of a building, and your task is to count the number of its rooms. The</span>
+<span class="cm">size of the map is n \times m squares, and each square is either floor or wall. You can walk</span>
 <span class="cm">left, right, up, and down through the floor squares.</span>
 
 <span class="cm">Input</span>
 <span class="cm">The first input line has two integers n and m: the height and width of the map.</span>
-<span class="cm">Then there are n lines of m characters describing the map. Each character is either . (floor) </span>
+<span class="cm">Then there are n lines of m characters describing the map. Each character is either . (floor)</span>
 <span class="cm">or # (wall).</span>
 
 <span class="cm">Output</span>
@@ -1184,53 +1397,78 @@ isCycle = false
 <span class="c1">// side by side are joined by an edge. A room is one connected piece of floor,</span>
 <span class="c1">// so the answer is: how many times do we have to START a new DFS before every</span>
 <span class="c1">// floor square has been visited?</span>
+<span class="c1">//</span>
+<span class="c1">// Note: there is no adjacency list at all. The &quot;neighbours&quot; of square (i, j)</span>
+<span class="c1">// are worked out on the fly by adding the four direction steps to (i, j).</span>
+<span class="c1">//</span>
+<span class="c1">// Trace on the example: the scan meets (1,1) first -&gt; DFS floods (1,1),(1,2):</span>
+<span class="c1">// room 1. Next unvisited &#39;.&#39; is (1,4) -&gt; DFS floods the right-hand block</span>
+<span class="c1">// (1,4..6),(2,4),(2,6),(3,4..6): room 2. Last is (3,1) -&gt; floods (3,1),(3,2):</span>
+<span class="c1">// room 3. Output 3.</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="c1">     // cin, cout</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="c1">       // vector (used for the list of four directions)</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span><span class="c1">       // std::string (not needed here, harmless)</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstring&gt;</span><span class="c1">      // memset</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w">    </span><span class="c1">// so we can write cin/cout/vector without the std:: prefix</span>
 
+<span class="c1">// Globals live outside main. Two reasons: (1) dfs() and valid() can use them</span>
+<span class="c1">// without passing them as parameters, and (2) a 1005 x 1005 array is about a</span>
+<span class="c1">// million bytes, too big to sit safely on the stack inside main; globals are</span>
+<span class="c1">// stored elsewhere and are automatically filled with 0 / false.</span>
 <span class="kt">char</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w">   </span><span class="c1">// the map, one character per square</span>
 <span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">1005</span><span class="p">][</span><span class="mi">1005</span><span class="p">];</span><span class="w">    </span><span class="c1">// vis[i][j] = has this floor square been reached yet?</span>
 <span class="c1">// The four moves: right, left, up, down (row change, column change).</span>
+<span class="c1">// This is the &quot;dx/dy&quot; (here: direction) trick: instead of writing four near-identical</span>
+<span class="c1">// if-blocks, loop over these four pairs and add them to the current square.</span>
+<span class="c1">// Example: from (2, 5), {0,1} -&gt; (2,6) right; {-1,0} -&gt; (1,5) up.</span>
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}};</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">                </span><span class="c1">// height and width, global so valid() can see them</span>
 
 <span class="c1">// Is (i, j) inside the map? Stepping off the edge must be refused before we</span>
 <span class="c1">// ever read grid[i][j], or we would read memory that is not part of the map.</span>
+<span class="c1">// Parameters: a row i and a column j. Returns true if 0 &lt;= i &lt; n and 0 &lt;= j &lt; m.</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span><span class="w">   </span><span class="c1">// any one coordinate out of range is enough to fail</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">                               </span><span class="c1">// both coordinates are inside the map</span>
 <span class="p">}</span>
 
 <span class="c1">// Flood one room: mark (si, sj) and every floor square reachable from it.</span>
+<span class="c1">// Recursion: each call marks its own square, then calls itself on every new</span>
+<span class="c1">// floor neighbour. There is no explicit base case: a call simply stops when</span>
+<span class="c1">// none of its four neighbours qualifies, and returns to the square that called</span>
+<span class="c1">// it (the call stack remembers the way back, like a trail of breadcrumbs).</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sj</span><span class="p">){</span>
-<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="n">vis</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">   </span><span class="c1">// mark FIRST, so no neighbour can walk back in here and loop forever</span>
 
+<span class="w">    </span><span class="c1">// Try the four directions; i picks which step from the direction list.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="o">=</span><span class="w"> </span><span class="n">si</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span><span class="w">    </span><span class="c1">// neighbour&#39;s row</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sj</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">direction</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span><span class="w">  </span><span class="c1">// neighbour&#39;s column</span>
 <span class="w">        </span><span class="c1">// Go there only if it is on the map, not seen yet, and floor (&#39;#&#39; is</span>
-<span class="w">        </span><span class="c1">// a wall and splits rooms apart).</span>
+<span class="w">        </span><span class="c1">// a wall and splits rooms apart). valid() is checked first: &amp;&amp; stops</span>
+<span class="w">        </span><span class="c1">// at the first false, so grid[ci][cj] is never read off the map.</span>
 <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">){</span>
-<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">);</span>
+<span class="w">            </span><span class="n">dfs</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">);</span><span class="w">   </span><span class="c1">// flood onward from that neighbour; comes back here when done</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span>
-<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w">   </span><span class="c1">// number of rows, then number of columns</span>
 <span class="w">    </span><span class="c1">// cin &gt;&gt; char skips whitespace, so reading square by square works even</span>
 <span class="w">    </span><span class="c1">// though each row arrives as one string like &quot;#..#...#&quot;.</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">          </span><span class="c1">// i = row</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span><span class="w">      </span><span class="c1">// j = column</span>
+<span class="w">            </span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span><span class="w">       </span><span class="c1">// one character: &#39;.&#39; or &#39;#&#39;</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">// memset(array, value, bytes) fills every byte of the array with value.</span>
+<span class="w">    </span><span class="c1">// sizeof(vis) is the size of the whole array in bytes. Globals already start</span>
+<span class="w">    </span><span class="c1">// false, so this is only a safety habit (it matters if the code is ever reused).</span>
 <span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cnt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// rooms found so far</span>
 
@@ -1239,23 +1477,23 @@ isCycle = false
 <span class="w">    </span><span class="c1">// none of its other squares gets counted again.</span>
 <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">){</span>
-<span class="w">                </span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
-<span class="w">                </span><span class="n">cnt</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">){</span><span class="w">   </span><span class="c1">// unvisited floor = start of a new room</span>
+<span class="w">                </span><span class="n">dfs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span><span class="w">   </span><span class="c1">// mark the whole room as visited</span>
+<span class="w">                </span><span class="n">cnt</span><span class="o">++</span><span class="p">;</span><span class="w">       </span><span class="c1">// one more room</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cnt</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cnt</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w">   </span><span class="c1">// print the number of rooms; endl = newline + flush</span>
 
 <span class="w">    </span><span class="c1">// Each square is visited once and looks at 4 neighbours: O(n * m).</span>
 <span class="w">    </span><span class="c1">// Watch out: a 1000 x 1000 room of floor makes the recursion a million</span>
 <span class="w">    </span><span class="c1">// calls deep, which needs a big stack (the CSES judge gives one).</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// normal exit</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 111 lines ▾</button>
+    <button type="button" class="expand">Show all 136 lines ▾</button>
   </div>
   
   <div class="io-grid"><div class="io in"><div class="io-h">Input (stdin)</div><pre>5 8
@@ -1281,98 +1519,117 @@ isCycle = false
   <p class="what">The same solution as in Module 5, solved again on this practice day: DFS sums the fish in each pond and keeps the best.</p>
   <div class="codebox-wrap long">
     <div class="code-bar">
-      <span>CPP · 85 lines</span>
+      <span>CPP · 104 lines</span>
       <span class="code-actions">
         <button type="button" class="cbtn copy">Copy</button>
         <a class="cbtn" href="https://github.com/shammun/phitron-cse-notes/blob/main/4_Introduction%20to%20Algorithms/Module%206/leetcode_maximum_number_of_fish_in_a_grid.cpp" target="_blank" rel="noopener">GitHub</a>
       </span>
     </div>
     <div class="recall-cover"><p>🧠 Recall mode — try writing this program yourself first.</p><button type="button" class="cbtn reveal">Show code</button></div>
-    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
+    <div class="codebox"><div class="hl"><table class="hltable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">  1</span>
+<span class="normal">  2</span>
+<span class="normal">  3</span>
+<span class="normal">  4</span>
+<span class="normal">  5</span>
+<span class="normal">  6</span>
+<span class="normal">  7</span>
+<span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cm">/*</span>
 
 <span class="cm">https://leetcode.com/problems/maximum-number-of-fish-in-a-grid/description/</span>
 
@@ -1382,15 +1639,15 @@ isCycle = false
 
 <span class="cm">A land cell if grid[r][c] = 0, or</span>
 <span class="cm">A water cell containing grid[r][c] fish, if grid[r][c] &gt; 0.</span>
-<span class="cm">A fisher can start at any water cell (r, c) and can do the following operations any number of </span>
+<span class="cm">A fisher can start at any water cell (r, c) and can do the following operations any number of</span>
 <span class="cm">times:</span>
 
 <span class="cm">- Catch all the fish at cell (r, c), or</span>
 <span class="cm">- Move to any adjacent water cell.</span>
-<span class="cm">Return the maximum number of fish the fisher can catch if he chooses his starting cell </span>
+<span class="cm">Return the maximum number of fish the fisher can catch if he chooses his starting cell</span>
 <span class="cm">optimally, or 0 if no water cell exists.</span>
 
-<span class="cm">An adjacent cell of the cell (r, c), is one of the cells (r, c + 1), (r, c - 1), (r + 1, c) or </span>
+<span class="cm">An adjacent cell of the cell (r, c), is one of the cells (r, c + 1), (r, c - 1), (r + 1, c) or</span>
 <span class="cm">(r - 1, c) if it exists.</span>
 
 <span class="cm">*/</span>
@@ -1400,49 +1657,68 @@ isCycle = false
 <span class="c1">// anywhere inside one pond but can never cross land, so the best he can do is</span>
 <span class="c1">// empty the richest pond. Answer = the largest total of fish over all ponds.</span>
 <span class="c1">// So: one DFS per pond, adding up fish as it goes, and keep the biggest sum.</span>
+<span class="c1">//</span>
+<span class="c1">// There is no #include, no using namespace std and no main(): LeetCode wraps</span>
+<span class="c1">// this class in its own code that supplies them and calls findMaxFish().</span>
+<span class="c1">//</span>
+<span class="c1">// Tiny trace: grid = {{0,2,1,0},</span>
+<span class="c1">//                     {4,0,0,3},</span>
+<span class="c1">//                     {1,0,0,4},</span>
+<span class="c1">//                     {0,3,2,0}}</span>
+<span class="c1">// Ponds: {2,1} = 3, {4,1} = 5, {3,4} = 7, {3,2} = 5. Answer 7.</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w">             </span><span class="c1">// LeetCode&#39;s code must be able to call findMaxFish</span>
+<span class="w">        </span><span class="c1">// The data below are members of the class: every member function</span>
+<span class="w">        </span><span class="c1">// (valid, dfs, findMaxFish) can read and change them directly.</span>
 <span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">vis</span><span class="p">[</span><span class="mi">55</span><span class="p">][</span><span class="mi">55</span><span class="p">];</span><span class="w">   </span><span class="c1">// the grid is at most 10 x 10, so 55 is plenty</span>
-<span class="w">            </span><span class="c1">// right, left, up, down</span>
+<span class="w">            </span><span class="c1">// left, right, up, down  (row change, column change)</span>
+<span class="w">            </span><span class="c1">// The direction trick: adding d[i] to (si, sj) gives the i-th</span>
+<span class="w">            </span><span class="c1">// neighbour, so one loop replaces four copied if-blocks.</span>
 <span class="w">            </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}};</span>
 <span class="w">            </span><span class="c1">// n, m = grid size; total = fish in the pond being flooded now;</span>
 <span class="w">            </span><span class="c1">// mx = best pond seen so far. Members, so dfs() can update them.</span>
 <span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="p">,</span><span class="w"> </span><span class="n">mx</span><span class="p">;</span>
-<span class="w">        </span>
-<span class="w">            </span><span class="c1">// Is (i, j) inside the grid?</span>
+
+<span class="w">            </span><span class="c1">// Is (i, j) inside the grid? Returns true if 0 &lt;= i &lt; n and 0 &lt;= j &lt; m.</span>
 <span class="w">            </span><span class="kt">bool</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">){</span>
-<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span>
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="p">){</span><span class="w">   </span><span class="c1">// off any edge</span>
 <span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
 <span class="w">                </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span>
 <span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="w">                </span><span class="p">}</span>
 <span class="w">            </span><span class="p">}</span>
-<span class="w">        </span>
+
 <span class="w">            </span><span class="c1">// Flood one pond from (si, sj), collecting its fish into total.</span>
+<span class="w">            </span><span class="c1">// grid is passed by reference (&amp;) so the 2D vector is not copied on</span>
+<span class="w">            </span><span class="c1">// every recursive call. Recursion stops on its own when no</span>
+<span class="w">            </span><span class="c1">// neighbour is new water; each call then returns to its caller.</span>
 <span class="w">            </span><span class="kt">void</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">si</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sj</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">grid</span><span class="p">){</span>
-<span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">                </span><span class="n">vis</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">             </span><span class="c1">// mark first so we never come back here</span>
 <span class="w">                </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="n">sj</span><span class="p">];</span><span class="w">   </span><span class="c1">// catch the fish in this cell</span>
-<span class="w">        </span>
-<span class="w">                </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">si</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span>
-<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sj</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
+
+<span class="w">                </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span><span class="w">          </span><span class="c1">// try each of the 4 directions</span>
+<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">si</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">first</span><span class="p">;</span><span class="w">    </span><span class="c1">// neighbour&#39;s row</span>
+<span class="w">                    </span><span class="kt">int</span><span class="w"> </span><span class="n">cj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sj</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">second</span><span class="p">;</span><span class="w">   </span><span class="c1">// neighbour&#39;s column</span>
 <span class="w">                    </span><span class="c1">// Only water (&gt; 0) is walkable; 0 is land and stops us.</span>
+<span class="w">                    </span><span class="c1">// valid() comes first, so grid[ci][cj] is never read off the grid.</span>
 <span class="w">                    </span><span class="k">if</span><span class="p">(</span><span class="n">valid</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">vis</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="n">ci</span><span class="p">][</span><span class="n">cj</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
-<span class="w">                        </span><span class="n">dfs</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">,</span><span class="w"> </span><span class="n">grid</span><span class="p">);</span>
+<span class="w">                        </span><span class="n">dfs</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span><span class="w"> </span><span class="n">cj</span><span class="p">,</span><span class="w"> </span><span class="n">grid</span><span class="p">);</span><span class="w">       </span><span class="c1">// keep flooding from there</span>
 <span class="w">                    </span><span class="p">}</span>
 <span class="w">                </span><span class="p">}</span>
 <span class="w">            </span><span class="p">}</span>
-<span class="w">    </span>
+
+<span class="w">        </span><span class="c1">// Entry point called by LeetCode. Returns the most fish in one pond.</span>
 <span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="nf">findMaxFish</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">grid</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="w">                </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">size</span><span class="p">();</span>
+<span class="w">            </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w">           </span><span class="c1">// number of rows (how many inner vectors)</span>
+<span class="w">                </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">size</span><span class="p">();</span><span class="w">    </span><span class="c1">// number of columns (length of row 0)</span>
 <span class="w">                </span><span class="n">mx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">// 0 is also the right answer when there is no water</span>
-<span class="w">        </span>
+
 <span class="w">                </span><span class="c1">// LeetCode reuses one Solution object for many tests, so wipe</span>
-<span class="w">                </span><span class="c1">// the member array every call.</span>
+<span class="w">                </span><span class="c1">// the member array every call. memset(array, value, bytes)</span>
+<span class="w">                </span><span class="c1">// fills every byte; sizeof(vis) = total bytes of the array.</span>
 <span class="w">                </span><span class="n">memset</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">vis</span><span class="p">));</span>
-<span class="w">        </span>
+
 <span class="w">                </span><span class="c1">// Every unvisited water cell starts a new pond.</span>
 <span class="w">                </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
 <span class="w">                    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
@@ -1453,13 +1729,13 @@ isCycle = false
 <span class="w">                        </span><span class="p">}</span>
 <span class="w">                    </span><span class="p">}</span>
 <span class="w">                </span><span class="p">}</span>
-<span class="w">        </span>
+
 <span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">mx</span><span class="p">;</span><span class="w">   </span><span class="c1">// O(n * m): each cell is flooded at most once</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">};</span>
+<span class="w">    </span><span class="p">};</span><span class="w">   </span><span class="c1">// a class definition must end with a semicolon</span>
 </code></pre></div></td></tr></table></div>
 </div>
-    <button type="button" class="expand">Show all 85 lines ▾</button>
+    <button type="button" class="expand">Show all 104 lines ▾</button>
   </div>
   <details class="harness"><summary>🧪 Test driver — this file has no <code>main</code> (judge-style), so this page wraps it with a small harness to run it</summary><div class="io-h sub">Added before the file</div><div class="hl"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
