@@ -110,30 +110,33 @@ y
 // Practice copy of mid_term_question_4_web_address.cpp; the list is called
 // `web` here. One line is missing in the `prev` branch (see the note there).
 
-#include <iostream>
-#include <string>
-#include <list>
-#include <sstream>
+#include <iostream>     // cin, cout, endl, getline
+#include <string>       // std::string
+#include <list>         // std::list, the STL doubly linked list
+#include <sstream>      // std::stringstream, splits a string into words like cin
 
-using namespace std;
+using namespace std;    // write string/list/cout without std::
 
+// Handles ONE query line. web is passed by reference (&) so it is not copied;
+// curr is a POINTER to main's current-address string, so *curr = ... updates main.
 void browse_history(list<string> &web, string* curr){
     // Read the whole command line, then split it into words.
     string line;
-    getline(cin, line);
-    stringstream ss(line);
+    getline(cin, line);         // the full line, newline removed
+    stringstream ss(line);      // a stream over that line
     string command;
-    ss >> command;
+    ss >> command;              // first word of the line
 
     if(command == "visit"){
         string address;
-        ss >> address;
+        ss >> address;          // second word: where to go
         bool found = false;   // stays false if the address is not in the list
 
+        // Range-for: s is a copy of each address, front to back.
         for(string s : web){
             if(s == address){
                 found = true;
-                *curr = s;
+                *curr = s;      // move there (writes main's curr)
                 break;
             }
         }
@@ -145,14 +148,14 @@ void browse_history(list<string> &web, string* curr){
             cout << "Not Available" << endl;
         }
     } else if(command == "next"){
-        bool previous_word_found = false;
+        bool previous_word_found = false;   // true once we pass our position
 
         for(string s : web){
             // The element right after `curr` is the next address.
             if(previous_word_found){
                 *curr = s;
                 cout << *curr << endl;
-                return;
+                return;         // query done
             }
 
             // Found our position: the element in the next round is the answer.
@@ -160,22 +163,25 @@ void browse_history(list<string> &web, string* curr){
                 previous_word_found = true;
             }
         }
-        cout << "Not Available" << endl;
+        cout << "Not Available" << endl;    // curr was the last address
     } else if(command == "prev"){
         // Already on the first address: there is no previous one.
-        string prev = web.front();
+        string prev = web.front();          // value of the first element
         if(*curr == prev){
             cout << "Not Available" << endl;
-            // Bug in this copy: a `return;` is missing here, so the loop below
-            // still runs and prints the first address as well.
-        } 
+            // BUG: a `return;` is missing here, so the loop below
+            // still runs. Its first s equals *curr, so it prints the first address
+            // as well: the output is "Not Available" AND e.g. "facebook".
+            // Fix: add `return;` on this line.
+        }
 
+        // Walk with prev = the element seen just before s.
         for(string s : web){
             // Not our position yet: remember it as the candidate `prev`.
             if(s != *curr){
                 prev = s;
             } else {
-                *curr = prev;
+                *curr = prev;   // reached our position: step back to prev
                 cout << *curr << endl;
                 return;
             }
@@ -184,28 +190,30 @@ void browse_history(list<string> &web, string* curr){
 }
 
 int main(){
-    list<string> web;
+    list<string> web;       // the addresses in order
     string s;
 
     // Read addresses until the word "end".
+    // cin >> s reads one space-separated word per pass.
     while(cin >> s){
         if(s == "end"){
             break;
         }
-        web.push_back(s);
+        web.push_back(s);   // append at the end
     }
 
     int Q;
-    cin >> Q;
+    cin >> Q;               // number of queries
     // Skip the newline after Q, or the first getline would read an empty line.
-    cin.ignore();
+    cin.ignore();           // throws away one leftover character (the newline)
 
     // We start on the first address (the head).
     string curr = web.front();
 
+    // Runs Q times.
     while(Q--){
-        browse_history(web, &curr);
+        browse_history(web, &curr);     // pass curr's address so it can be changed
     }
 
-    return 0;
+    return 0;               // normal exit
 }

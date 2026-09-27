@@ -7,7 +7,7 @@ Given a number N. Print all numbers from N to 1 separated by a single space.
 Note: Solve this problem using recursion.
 
 Input
-Only one line containing a number N (1 ≤ N ≤ 103).
+Only one line containing a number N (1 <= N <= 10^3).
 
 Output
 Print from N to 1 separated by a single space.
@@ -21,6 +21,7 @@ Note
 Make sure don't print any leading or trailing spaces.
 */
 
+// Include standard input/output library for printf and scanf functions
 #include <stdio.h>
 
 /*
@@ -56,21 +57,25 @@ Why space is used instead of newline:
     - Problem requires all numbers on same line
     - Space separator between numbers
     - Last number should not be followed by space
+
+void means the function returns no value; its job is only printing.
 */
 void print_N_to_1(int x, int n){
     // Base case: if x exceeds n, stop recursion
     if(x > n){
-        return;
+        return;     // leave this call at once, printing nothing
     }
     
     // First make recursive call to reach N
     print_N_to_1(x+1, n);
 
     // After returning from recursion, print current number
-    // Print space only if it's not the first number (x > 1)
-    // This avoids trailing space at the end
+    // x == 1 is the number printed LAST (its call was made first, so it
+    // finishes last). Every other number gets a space after it; 1 does not,
+    // which avoids a trailing space at the end.
+    // Output for n = 4: "4 3 2 1" with no trailing space.
     if(x > 1){
-        printf("%d ", x);
+        printf("%d ", x);   // the number, then one space
     } else {
         printf("%d", x);  // Last number (1) without space
     }
@@ -84,6 +89,7 @@ Purpose:
     - Takes input N from user
     - Calls print_N_to_1 to print numbers N to 1
     - Returns 0 to indicate successful execution
+Every C program starts running at main.
 */
 int main(){
     // Declare variable to store input number
@@ -95,6 +101,7 @@ int main(){
     scanf("%d", &n);
     
     // Call print_N_to_1 starting from 1 up to n
+    // (the chain starts at 1, but 1 is printed last)
     print_N_to_1(1, n);
     
     // Return 0 to indicate successful program execution

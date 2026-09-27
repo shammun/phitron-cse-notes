@@ -43,16 +43,27 @@ Sample Output 1
 
 
 
+/* Header files pasted in before compiling:
+     stdio.h  - scanf and printf (the only one needed here)
+     string.h, math.h, stdlib.h - text, maths and general helpers;
+     unused in this program, left over from a template. */
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
 
-int main() {
-    int N;
+int main() {    /* the program starts here */
+    int N;      /* the last number to print (a whole number) */
+    /* %d = read a whole number; &N = where to store it. */
     scanf("%d", &N); // Input the positive integer N
 
+    /* Walk through every number from 1 to N.
+       int i=1 starts at 1; i<=N keeps going up to and INCLUDING N;
+       i++ adds 1 after each round. One round = one output line. */
     for(int i=1; i<=N; i++){
+        /* % gives the remainder of a division. i % 5 == 0 means 5 goes
+           into i with nothing left over, i.e. i is divisible by 5.
+           e.g. 10 % 5 = 0 -> Yes,   7 % 5 = 2 -> No. */
         if(i % 5 == 0){
             printf("%d Yes\n", i); // Output the value and "Yes" if it's divisible by 5
         } else {
@@ -60,5 +71,5 @@ int main() {
         }
     }
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

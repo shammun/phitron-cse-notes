@@ -40,33 +40,41 @@ Constraints:
 //   rob it   -> nums[i] + dp[i-2]  (house i-1 must then be left alone)
 //   skip it  -> dp[i-1]
 // Keep the bigger one.
+//
+// Base cases: dp[0] = nums[0]; dp[1] = max(nums[0], nums[1]).
+// Trace with [2, 7, 9, 3, 1]:
+//   dp[0]=2, dp[1]=7, dp[2]=max(9+2, 7)=11, dp[3]=max(3+7, 11)=11,
+//   dp[4]=max(1+11, 11)=12 -> answer 12.
 
-#include <iostream>
-#include <algorithm>
-#include <cstring>
-#include <vector>
+#include <iostream>     // cout, endl
+#include <algorithm>    // max
+#include <cstring>      // memset
+#include <vector>       // vector
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
+// LeetCode's required class.
 class Solution {
-    public:
+    public:   // callable from outside
+        // nums passed by reference: no copy.
         int rob(vector<int>& nums) {
-            int n = nums.size();
+            int n = nums.size();   // number of houses
             if(n==0){
-                return 0;
+                return 0;          // no houses, no money
             }
             if(n==1){
                 return nums[0];   // a single house: rob it
             }
 
             int dp[105];   // at most 100 houses
+            // Zero the table (memset fills bytes; all-zero bytes = int 0).
             memset(dp, 0, sizeof(dp));
 
             // The first two cells have no i-2, so fill them by hand.
             dp[0] = nums[0];                  // only house 0 exists
             dp[1] = max(nums[0], nums[1]);    // neighbours: pick the richer one
 
-            for(int i=2; i <n; i++){
+            for(int i=2; i <n; i++){          // every later house, left to right
                 dp[i] = max(nums[i] + dp[i-2], dp[i-1]);   // rob i, or skip i
             }
 
@@ -78,10 +86,12 @@ class Solution {
     // Test the solution
     // This file brings its own main, with LeetCode's two examples built in,
     // so it reads no input.
+    // (std:: is written out below even though "using namespace std;" makes it
+    // optional - both forms mean the same.)
 int main() {
     // Test case 1
-    std::vector<int> nums1 = {1, 2, 3, 1};
-    Solution sol1;
+    std::vector<int> nums1 = {1, 2, 3, 1};   // vector filled from a list
+    Solution sol1;                           // object to call rob() on
     std::cout << "Example 1 output: " << sol1.rob(nums1) << std::endl; // Expected: 4
 
     // Test case 2
@@ -89,5 +99,5 @@ int main() {
     Solution sol2;
     std::cout << "Example 2 output: " << sol2.rob(nums2) << std::endl; // Expected: 12
 
-    return 0;
+    return 0;   // success
 }

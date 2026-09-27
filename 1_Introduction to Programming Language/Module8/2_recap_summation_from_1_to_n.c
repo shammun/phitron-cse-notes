@@ -24,8 +24,8 @@
   The Codeforces page lists only "Given a number N", without an explicit
   bound. Since the accepted reference solution reads N as 'long long' and
   uses the closed-form formula, we do the same defensively. This handles
-  N up to about 4.2 * 10^9 safely (beyond that, N*(N+1) itself overflows
-  even long long).
+  N up to about 3.04 * 10^9 safely (beyond that, N*(N+1) itself overflows
+  even long long - see the overflow note below).
 
   Math
   ----
@@ -45,17 +45,20 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
-    long long n;
-    scanf("%lld", &n);
+int main() {        /* the program starts running here */
+    long long n;            /* 8-byte whole number, so big N is allowed */
+    scanf("%lld", &n);      /* %lld = read a long long */
 
     /* Closed-form sum: N*(N+1)/2. Always an integer because exactly one
-       of N and N+1 is even, so the division by 2 is exact. */
+       of N and N+1 is even, so the division by 2 is exact.
+       e.g. N = 5: 5 * 6 / 2 = 15 = 1+2+3+4+5. */
     long long sum = n * (n + 1) / 2;
 
-    printf("%lld\n", sum);
+    printf("%lld\n", sum);  /* print the long long, then a newline */
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

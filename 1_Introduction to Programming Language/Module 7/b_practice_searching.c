@@ -57,31 +57,39 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
-    int n;
-    scanf("%d", &n);
+int main() {                /* the program starts running here */
+    int n;                  /* how many numbers are coming */
+    scanf("%d", &n);        /* %d = read a whole number; &n = where to put it */
 
+    /* n boxes a[0] .. a[n-1]; the size comes from the input, which C allows
+       since C99 (a "variable-length array"). */
     int a[n];   /* variable-length array, C99 */
 
+    /* Pass i reads one number into a[i]; &a[i] is that box's address. */
     for (int i = 0; i < n; i++) {
         scanf("%d", &a[i]);
     }
 
-    int x;
+    int x;              /* the value to look for */
     scanf("%d", &x);
 
-    /* Linear search. Stop at the first match so we get the earliest index. */
+    /* Linear search. Stop at the first match so we get the earliest index.
+       pos starts at -1, meaning "not found yet"; if no box matches, it is
+       still -1 at the end, which is exactly what the problem wants printed.
+       Trace 3 0 1, x = 0: i=0: 3 != 0; i=1: 0 == 0 -> pos = 1, break. */
     int pos = -1;
     for (int i = 0; i < n; i++) {
         if (a[i] == x) {
-            pos = i;
-            break;
+            pos = i;    /* remember where it was found */
+            break;      /* leave the loop now: later matches do not matter */
         }
     }
 
-    printf("%d\n", pos);
+    printf("%d\n", pos);    /* the index, or -1 */
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

@@ -25,38 +25,40 @@ Explanation 0
 In the sample only 1, 5, 6 have apeared only once in the array.So, the count is 3.
 */
 
-#include<stdio.h>
+#include<stdio.h> // standard input/output library: scanf and printf
 
-int main(){
-    int N;
-    scanf("%d", &N);
+int main(){ // program execution starts here
+    int N; // how many numbers
+    scanf("%d", &N); // &N = address where scanf stores N
 
-    /* One counter per possible value (values go up to 10^5). */
+    /* One counter per possible value (values go up to 10^5).
+       = {0} starts every counter at 0. */
     int freq[100005] = {0};
 
-    int numbers[N+5];
+    int numbers[N+5]; // the input numbers (size from input: C99 variable length array)
 
-    for(int i=0; i<N; i++){
+    for(int i=0; i<N; i++){ // read N numbers
         scanf("%d", &numbers[i]);
     }
 
     /* Pass 1: count every value. */
     for(int i=0; i<N; i++){
-        freq[numbers[i]]++;
+        freq[numbers[i]]++; // the value itself is the index of its counter
     }
 
     /* Pass 2: walk the numbers again and count those whose value appeared
        exactly once. A value that appears once is met exactly once in this
-       walk, so it adds exactly 1; values seen 2 or more times add nothing. */
+       walk, so it adds exactly 1; values seen 2 or more times add nothing.
+       Trace with the sample: freq[1]=1, freq[5]=1, freq[6]=1, the rest are 2 or 3 -> 3. */
     int count = 0;
     for(int i=0; i<N; i++){
-        if(freq[numbers[i]] == 1){
+        if(freq[numbers[i]] == 1){ // this value appears only once in the whole array
             count++;
         }
     }
 
-    printf("%d\n", count);
+    printf("%d\n", count); // print the answer
 
-    return 0;
+    return 0; // program ended successfully
 }
 

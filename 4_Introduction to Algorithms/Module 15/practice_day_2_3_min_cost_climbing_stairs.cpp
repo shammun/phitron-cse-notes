@@ -48,11 +48,21 @@ Constraints:
 // cost[i-2]), so best(i) = min(best(i-2) + cost[i-2], best(i-1) + cost[i-1]).
 // Steps 0 and 1 are free starting points: best(0) = best(1) = 0.
 // Each value only needs the two before it, so two variables replace the table.
+//
+// Trace with cost = [10, 15, 20] (n = 3):
+//   i=2: min(0 + 10, 0 + 15) = 10     -> first=0,  second=10
+//   i=3: min(0 + 15, 10 + 20) = 15    -> first=10, second=15
+//   answer 15.
+//
+// No #include or main: LeetCode supplies them (with "using namespace std;")
+// and calls minCostClimbingStairs itself.
 
+// LeetCode's required class.
 class Solution {
-    public:
+    public:   // callable from outside
+        // cost is passed by reference (&): the vector is not copied.
         int minCostClimbingStairs(vector<int>& cost) {
-            int n = cost.size();
+            int n = cost.size();   // number of steps; the top is "step n"
 
             // Edge cases (LeetCode promises n >= 2, so these never fire there)
             if(n==0) return 0;
@@ -61,7 +71,7 @@ class Solution {
             int first = 0;    // best(i-2)
             int second = 0;   // best(i-1)
 
-            for(int i=2; i<=n; i++){
+            for(int i=2; i<=n; i++){   // compute best(2) .. best(n)
                 // Two ways onto step i; keep the cheaper.
                 int current = min(first + cost[i-2], second + cost[i-1]);
                 // Slide the window one step up.

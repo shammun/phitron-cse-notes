@@ -4,8 +4,8 @@ https://www.geeksforgeeks.org/problems/distance-from-the-source-bellman-ford-alg
 
 Bellman-Ford
 
-Given a weighted and directed graph of v vertices and edges, Find the shortest distance of all the vertex's from the source 
-vertex, src and return a list of integers where the ith integer denotes the distance of the ith node from the source node. If a 
+Given a weighted and directed graph of v vertices and edges, Find the shortest distance of all the vertex's from the source
+vertex, src and return a list of integers where the ith integer denotes the distance of the ith node from the source node. If a
 vertices can't be reach from the s then mark the distance as 10^8.
 Note: If there exist a path to a negative weighted cycle from the source node then return {-1}.
 
@@ -18,7 +18,7 @@ Explanation: Shortest distance of all nodes from source is printed
 
 Input: edges = [[0,1,5], [1,0,3], [1,2,-1], [2,0,1]], src = 2
 Output: [1, 6, 0]
-Explanation: For nodes 2 to 0, we can follow the path: 2-0. This has a distance of 1. For nodes 2 to 1, we cam follow the path: 
+Explanation: For nodes 2 to 0, we can follow the path: 2-0. This has a distance of 1. For nodes 2 to 1, we cam follow the path:
 2-0-1, which has a distance of 1+5 = 6,
 
 Constraints:
@@ -34,32 +34,41 @@ Constraints:
 // edge is a small vector {u, v, w}, and wants every distance back in a vector.
 // Unreachable vertices keep 10^8, and a reachable negative cycle turns the
 // whole answer into {-1}.
+//
+// There is no main() in this file: on GeeksforGeeks the judge supplies main,
+// builds the edge list, and calls Solution().bellmanFord(...) itself. So this
+// file compiles but cannot be run on its own (the linker would say main is
+// missing).
 
-#include <iostream>
-#include <queue>
-#include <cstring>
-#include <vector>
-#include <algorithm>
+#include <iostream>    // cin/cout (not actually used here)
+#include <queue>       // not used; left over from other graph files
+#include <cstring>     // not used
+#include <vector>      // vector - the edge list and the answer
+#include <algorithm>   // not used here (min/max live there)
 
-using namespace std;
+using namespace std;   // write vector instead of std::vector
 
+// The judge's required wrapper class.
 class Solution {
-    public:
+    public:   // members below are callable from outside (by the judge)
       /*  Function to implement Bellman Ford
        *   edges: vector of vectors which represents the graph
        *   src: source vertex
        *   V: number of vertices
        */
+      // Takes the edge list by reference (&) so it is not copied; returns the
+      // vector of distances.
       vector<int> bellmanFord(int V, vector<vector<int>>& edges, int src) {
           // Code here
           // 10^8 is the judge's "infinity": far above any real distance, and
           // far enough below the int limit that adding a weight cannot overflow.
-          vector<int> dist(V, 100000000);
-          dist[src] = 0;
+          vector<int> dist(V, 100000000);   // V entries, all "unreached"
+          dist[src] = 0;                    // the source costs nothing to reach
 
           // V-1 rounds. A shortest path uses at most V-1 edges, and each round
           // over all edges settles at least one more edge of every such path.
-          for(int i=0; i< V-1; i++){
+          for(int i=0; i< V-1; i++){        // i only counts the rounds
+              // Look at every edge once per round. auto = vector<int> here.
               for(auto edge : edges){
                   int u = edge[0];   // from
                   int v = edge[1];   // to
@@ -67,19 +76,21 @@ class Solution {
                   // Relax. The dist[u] check skips vertices not reached yet:
                   // "infinity" plus a negative weight must not look like a route.
                   if(dist[u] != 100000000 && dist[u] + w < dist[v]){
-                      dist[v] = dist[u] + w;
+                      dist[v] = dist[u] + w;   // found a cheaper way to v
                   }
               }
           }
 
           // One more round. After V-1 rounds every honest distance is final;
           // if something can still get smaller, a negative cycle is feeding it.
+          // Trace idea: cycle 0->1 (1), 1->0 (-3): every round lowers both
+          // again, so round V still finds an improvement.
           for(auto edge : edges){
               int u = edge[0];
               int v = edge[1];
               int w = edge[2];
               if(dist[u] != 100000000 && dist[u] + w < dist[v]){
-                  return {-1};
+                  return {-1};   // a vector containing just -1
               }
           }
           return dist;   // O(V * E)

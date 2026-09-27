@@ -11,10 +11,12 @@
  * information, carried inside the data itself. That is the point of this
  * file. Every string function, strlen included, works by walking forward
  * until it meets that '\0'.
+ *
+ * Output: Length of string: 10
  */
 
-#include <stdio.h>
-#include <string.h>
+#include <stdio.h>  // standard input/output library: printf
+#include <string.h> // string library: strlen
 
 /* char x[] here means the same as char *x: x is the address of the caller's
  * first character, not a copy of the string. Nothing is duplicated, however
@@ -28,12 +30,12 @@ void length(char x[]){
     printf("Length of string: %d\n", n);
 }
 
-int main(){
+int main(){ // program execution starts here
     /* char a[] with nothing in the brackets: the compiler counts the
      * characters and reserves 11 slots, 10 letters plus the '\0'. */
     char a[] = "programmer";
     /* The array name on its own means "the address of a[0]", so this hands
      * over the address. No size is needed; the '\0' will stop the counting. */
     length(a);
-    return 0;
+    return 0; // program ended successfully
 }

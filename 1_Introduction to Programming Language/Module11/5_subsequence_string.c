@@ -37,27 +37,37 @@ NO
 
 */
 
-# include <stdio.h>
-# include <string.h>
+/* Idea (two pointers): i walks through S, j walks through "hello".
+   j only moves forward when S gives us the letter we are waiting for.
+   If j gets past all 5 letters, "hello" can be picked out of S in order. */
 
-int main() {
+# include <stdio.h>  // standard input/output library: scanf and printf
+# include <string.h> // string library: strlen
+
+int main() { // program execution starts here
     /* |S| can be 10^4, so 10005 slots hold the letters and the '\0'. */
     char s[10005];
-    scanf("%s", s);
+    scanf("%s", s); // read S; s is an array name (an address), so no &
 
+    /* A char array can be filled from a string literal when it is declared:
+       target gets 'h' 'e' 'l' 'l' 'o' '\0', and the remaining 4 slots are set to 0. */
     char target[10] = "hello";
 
-    int length = strlen(s);
+    int length = strlen(s); // number of letters in S, computed once
 
     /* j points at the letter of "hello" we are still looking for.
        Walk S from left to right. Whenever the current letter of S is the
        one we need, move j to the next letter of "hello".
        Taking the earliest match is always safe: it leaves the most of S
-       for the letters that are still needed. */
-    int j = 0;
-    for(int i = 0; i < length; i++){
-        if(j < 5 && s[i] == target[j]){
-            j++;
+       for the letters that are still needed.
+       The check j < 5 comes first so that, once "hello" is complete,
+       target[j] is not read any more (&& stops as soon as the left side is false).
+       Trace with "hlelo": 'h' -> j=1, 'l' (need 'e') skip, 'e' -> j=2, 'l' -> j=3,
+       'o' (need second 'l') skip -> j ends at 3 -> NO. */
+    int j = 0; // index into target: how many letters of "hello" are already matched
+    for(int i = 0; i < length; i++){ // i = index into S
+        if(j < 5 && s[i] == target[j]){ // still letters to find, and this one is the next needed letter
+            j++; // matched it; now look for the next letter of "hello"
         }
     }
 
@@ -69,5 +79,5 @@ int main() {
         printf("NO");
     }
 
-    return 0;
+    return 0; // program ended successfully
 }

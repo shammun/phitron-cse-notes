@@ -67,15 +67,23 @@ So, the string t = abc appears 6 times as a subsequence in the string s = ababcc
 //   arr[i][j] = in how many ways the first j letters of t can be picked out of
 //               the first i letters of s (as a subsequence).
 // t has exactly 3 letters, so the table is only 4 columns wide.
+//
+//   base cases  arr[i][0] = 1 (build nothing: one way), arr[0][j>0] = 0
+//   transition  arr[i][j] = arr[i-1][j]                         (skip s[i-1])
+//                         + arr[i-1][j-1] if s[i-1] == t[j-1]   (use it)
+// Small trace, s = "aab", t = "ab" (2 columns shown):
+//   after "a": ways("a") = 1;  after "aa": ways("a") = 2;
+//   after "aab": ways("ab") = ways("ab" in "aa") + ways("a" in "aa") = 0 + 2 = 2.
 
-#include <iostream>
-#include <string>
-#include <vector>
+#include <iostream>     // cin, cout, endl
+#include <string>       // string
+#include <vector>       // vector
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
+// Number of ways t occurs as a subsequence of s. Strings are taken by value.
 long long subsequences(string s, string t) {
-    int n = s.length();
+    int n = s.length();     // length of s
 
     // (n+1) rows x 4 columns, all starting at 0. A vector keeps the table on
     // the heap: as a local array long long arr[n+1][4] it would take about
@@ -89,8 +97,8 @@ long long subsequences(string s, string t) {
         arr[i][0] = 1;
     }
 
-    for(int i=1; i <= n; i++) {
-        for(int j=1; j <= 3; j++) {
+    for(int i=1; i <= n; i++) {         // use the first i letters of s
+        for(int j=1; j <= 3; j++) {     // to build the first j letters of t
             // Way 1: do not use the letter s[i-1]. Every way that already
             // worked with the first i-1 letters still works.
             arr[i][j] = arr[i-1][j];
@@ -110,11 +118,11 @@ long long subsequences(string s, string t) {
 }
 
 int main() {
-    int T;
+    int T;                  // number of test cases
     cin >> T;
 
     while(T--) {
-        string s, t;
+        string s, t;        // the book and the 3-letter spell
         cin >> s >> t;
 
         cout << subsequences(s, t) << endl;

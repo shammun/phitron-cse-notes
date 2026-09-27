@@ -54,14 +54,17 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
-    int n;
-    scanf("%d", &n);
+int main() {            /* the program starts running here */
+    int n;              /* how many numbers */
+    scanf("%d", &n);    /* %d = read a whole number; &n = where to put it */
 
-    int a[n];
+    int a[n];       /* n boxes a[0] .. a[n-1]; size from the input (C99) */
 
+    /* Pass i reads one number into a[i]; &a[i] is that box's address. */
     for (int i = 0; i < n; i++) {
         scanf("%d", &a[i]);
     }
@@ -72,7 +75,7 @@ int main() {
     int min_val = a[0];
     for (int i = 1; i < n; i++) {
         if (a[i] < min_val) {
-            min_val = a[i];
+            min_val = a[i];     /* a new smallest value */
         }
     }
 
@@ -80,17 +83,18 @@ int main() {
     int count = 0;
     for (int i = 0; i < n; i++) {
         if (a[i] == min_val) {
-            count++;
+            count++;            /* one more copy of the minimum */
         }
     }
 
     /* Step 3: odd count -> Lucky, even count -> Unlucky.
-       We use count % 2 != 0 (equivalently count & 1) to test for odd. */
+       We use count % 2 != 0 (equivalently count & 1) to test for odd:
+       an odd number leaves remainder 1 when divided by 2. */
     if (count % 2 != 0) {
         printf("Lucky\n");
     } else {
         printf("Unlucky\n");
     }
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

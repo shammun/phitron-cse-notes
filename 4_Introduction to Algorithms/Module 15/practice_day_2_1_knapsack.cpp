@@ -53,17 +53,25 @@ Output
 // knapsack, re-typed. Only small things differ: the arrays are sized from the
 // constraints (N <= 20, W <= 100) instead of 1005, and the values live in
 // value[] instead of val[]. See codeforces_knapsack.cpp for the full walk-through.
+//
+// The DP in brief:
+//   meaning     dp[i][w] = best total value using only items 0..i with w room
+//   base cases  i < 0 (no items) or w <= 0 (no room) -> 0
+//   transition  dp[i][w] = max(value[i] + dp[i-1][w - weight[i]],   take i
+//                              dp[i-1][w])                          leave i
+//   memo marker -1 = "not solved yet" (a real value total is never negative)
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <cstring>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // max
+#include <cstring>      // not used here (memset would live here)
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 int weight[25], value[25];   // N <= 20 items
 int dp[25][105];             // dp[i][w] = best value from items 0..i with w room; -1 = unknown
 
+// Best value using items 0..i with max_weight kilos of room left.
 int knapsack(int i, int max_weight){
     // No items left or no room left: nothing more can be gained.
     if(i < 0 || max_weight <= 0){
@@ -79,7 +87,7 @@ int knapsack(int i, int max_weight){
         // Item i fits: try both choices and keep the better one.
         int op1 = knapsack(i-1, max_weight - weight[i]) + value[i]; // taking the current item
         int op2 = knapsack(i-1, max_weight); // not taking the current item
-        dp[i][max_weight] = max(op1, op2);
+        dp[i][max_weight] = max(op1, op2);   // store before returning
         return dp[i][max_weight];
     } else{
         // Too heavy: leaving it is the only option.
@@ -89,7 +97,7 @@ int knapsack(int i, int max_weight){
 }
 
 int main(){
-    int n, max_weight;
+    int n, max_weight;             // N items, capacity W
     cin >> n >> max_weight;
 
     for(int i=0; i<n; i++){
@@ -102,12 +110,14 @@ int main(){
     // first call knapsack(n-1, max_weight) thinks it is already solved and the
     // program prints 0. The fix is j <= max_weight (done in Module 16).
     for(int i=0; i<n; i++){
-        for(int j=0; j<max_weight; j++){
+        for(int j=0; j<max_weight; j++){   // BUG: should be j <= max_weight
             dp[i][j] = -1;
         }
     }
 
+    // All items on offer, full capacity. Prints 0 instead of 90 for sample 1
+    // because of the BUG above.
     cout << knapsack(n-1, max_weight) << endl;
 
-    return 0;
+    return 0;   // success
 }

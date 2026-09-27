@@ -2,12 +2,12 @@
 // the sum of the two before it. This file is here to be SLOW, on purpose - the
 // two files after it fix exactly the problem it shows.
 
-#include <iostream>
-#include <vector>
-#include <algorithm>    
-#include <string>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // not used here
 
-using namespace std;
+using namespace std;    // write cout instead of std::cout
 
 // Two base cases are needed, not one, because the recursive step reaches two
 // steps back: fib(2) asks for fib(1) and fib(0), so both must be known outright.
@@ -26,17 +26,28 @@ using namespace std;
 // again, fib(n-2) computes fib(n-3) twice, and so on. fib(5) alone is worked out
 // from scratch eight times inside fib(10). Nothing is remembered between calls,
 // which is precisely what fibonacci_with_memoization.cpp changes.
+//
+// Small call tree for fib(4):
+//            fib(4)
+//          /        .
+//      fib(3)      fib(2)       <- fib(2) is computed here AND inside fib(3)
+//      /    .      /    .
+//   fib(2) fib(1) fib(1) fib(0)
+//   /   .
+// fib(1) fib(0)
+// ("." marks the right-hand branch.)
 int fib(int n){
     if(n == 0 || n == 1){ // or, we can also write if(n < 2)
-        return n;
+        return n;         // base cases: fib(0) = 0, fib(1) = 1
     }
+    // Trust the two smaller calls to be right, and add them.
     return fib(n-1) + fib(n-2);
 }
 
 int main(){
-    int n;
+    int n;                    // which Fibonacci number
     cin >> n;
-    cout << fib(n) << endl;
+    cout << fib(n) << endl;   // e.g. input 10 prints 55
 
-    return 0;
+    return 0;                 // success
 }

@@ -1,6 +1,10 @@
 // The other half of DSU: joining two groups. find() (with path compression, as in
 // find_optimized.cpp) is copied in unchanged; the new part is dsu_union.
 //
+// Reminder of the storage: par[x] is the node above x in its group, and
+// par[x] == -1 means x is the group's LEADER. Two nodes are in the same group
+// exactly when find() gives the same leader for both.
+//
 // Merging is cheap because of how the groups are stored: to fold group B into
 // group A you do not touch B's members at all - you just make B's leader point at
 // A's leader. One assignment, and every node that used to climb to B now climbs
@@ -11,14 +15,17 @@
 // nodes get one step deeper, so the tree can never grow taller than about log n.
 // That is what keeps find fast even before path compression helps.
 
-#include <iostream>
-#include <queue>
-#include <cstring>
-#include <vector>
-using namespace std;
-int par[1005];
+#include <iostream>   // cout, endl
+#include <queue>      // not used here
+#include <cstring>    // memset
+#include <vector>     // not used here
+using namespace std;  // no std:: prefix
+int par[1005];          // parent of each node; -1 = leader
 int group_size[1005];   // group_size[L] = how many nodes are in leader L's group
 
+// find(node): leader of node's group. Base case: no parent -> node leads.
+// Otherwise the recursive call returns the parent's leader, and node is
+// re-pointed straight at it (path compression).
 int find(int node){
     if(par[node] == -1){
         return node;
@@ -36,14 +43,14 @@ int find(int node){
 // detect_cycle_in_undirected_graph_using_DSU.cpp, where the equal case is exactly
 // the cycle it is hunting for.
 void dsu_union(int node1, int node2){
-    int leader1 = find(node1);
-    int leader2 = find(node2);
+    int leader1 = find(node1);   // leader of the first group
+    int leader2 = find(node2);   // leader of the second group
     // The bigger group keeps its leader; the smaller one is hung underneath and
     // its members are added to the winner's count. On a tie either side may win -
     // here leader1 does, because of the >=.
     if(group_size[leader1] >= group_size[leader2]){
-        par[leader2] = leader1;
-        group_size[leader1] += group_size[leader2];
+        par[leader2] = leader1;                       // B's leader under A's
+        group_size[leader1] += group_size[leader2];   // A now counts B's members
     } else{
         par[leader1] = leader2;
         group_size[leader2] += group_size[leader1];
@@ -52,6 +59,7 @@ void dsu_union(int node1, int node2){
 
 int main(){
     // Everyone starts alone: no parent, group of one.
+    // memset writes byte 0xFF into every byte; an int of four 0xFF bytes is -1.
     memset(par, -1, sizeof(par));
 
     // BUG, left in place on purpose. memset fills BYTES, not ints. Setting every
@@ -64,8 +72,8 @@ int main(){
     // or `fill(group_size, group_size + 1005, 1);`
     // (memset(par, -1, ...) above is fine only because the byte 11111111 happens
     // to make the int -1 as well.)
-    memset(group_size, 1, sizeof(group_size));
-    
+    memset(group_size, 1, sizeof(group_size)); // BUG: sizes become 16843009, not 1 (see above)
+
     // 1 and 2 are both alone, so each is its own leader and the sizes tie.
     // The >= sends 2 under 1: par[2] becomes 1.
     dsu_union(1, 2);
@@ -73,8 +81,8 @@ int main(){
     // A leader still has par == -1. Only node 2 has a parent now, so the output
     // is -1, -1, 1, -1 for nodes 0, 1, 2, 3.
     for(int i=0; i<4; i++){
-        cout << i << " -> " << par[i] << endl;
+        cout << i << " -> " << par[i] << endl;   // e.g. "2 -> 1"
     }
 
-    return 0;
+    return 0;   // success
 }

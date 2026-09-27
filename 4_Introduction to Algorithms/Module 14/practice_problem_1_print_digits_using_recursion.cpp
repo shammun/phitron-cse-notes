@@ -35,15 +35,18 @@ Output
 // n % 10 is the LAST digit, n / 10 is everything before it. Printing the last
 // digit first would come out backwards, so: first recurse on n / 10 (which
 // prints all the earlier digits), and only on the way back print n % 10.
+// (Integer division drops the remainder: 121 / 10 = 12, and 121 % 10 = 1.)
 
-#include <iostream>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+using namespace std;    // no std:: prefix
 
+// Prints the digits of n separated by single spaces (no trailing space).
+// long long because N can be up to 10^9 (int would also fit, but this is safe).
 void printDigits(long long n){
     // Base case: a single digit (this also handles N = 0). Print it, no space.
     if(n < 10){
         cout << n;
-        return;
+        return;                // void function: return just stops here
     }
 
     printDigits(n/10);         // print every digit except the last one
@@ -56,8 +59,8 @@ int main(){
     int t;
     cin >> t;   // number of test cases
 
-    while(t--){
-        long long n;
+    while(t--){            // runs t times
+        long long n;       // the number for this test
         cin >> n;
 
         printDigits(n);

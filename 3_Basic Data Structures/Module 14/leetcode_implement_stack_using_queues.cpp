@@ -28,9 +28,11 @@ Example: push 1, push 2, top() -> 2, pop() -> 2, empty() -> false.
  * (The judge supplies the includes and `using namespace std`.)
  */
 
+// The stack class LeetCode asks for.
 class MyStack {
-public:
+public:     // callable by the judge
     queue<int> q;   // front = oldest value, back = newest value (the stack's top)
+    // Constructor: nothing to do, q starts empty.
     MyStack() {
 
     }
@@ -41,13 +43,14 @@ public:
     }
 
     // Remove and return the newest value, the one at the back of q.
+    // (LeetCode only calls pop on a non-empty stack.)
     int pop() {
-        queue<int> q2;
-        int val;
+        queue<int> q2;      // collects every value except the newest
+        int val;            // the value most recently taken off q
         while(!q.empty()){
             // Take the front value off q.
             val = q.front();
-            q.pop();
+            q.pop();        // queue pop() removes the FRONT
             // If q is empty now, `val` was the last (newest) value: that is
             // the one to remove, so do NOT keep it -- leave the loop.
             if(q.empty()){
@@ -57,7 +60,9 @@ public:
             q2.push(val);
         }
         // q2 holds every value except the newest one: it becomes the stack.
+        // (`q = q2` copies the whole queue.)
         q = q2;
+        // Trace q = 1 2 3: q2 gets 1, 2; val = 3 is returned; q becomes 1 2.
         return val;
     }
 

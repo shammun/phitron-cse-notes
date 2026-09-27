@@ -43,6 +43,8 @@ below the call reverses the output, which is exactly the next file,
 recursion_print_N_to_1.c.
 */
 
+// stdio.h ("standard input output") declares printf and scanf; #include
+// pastes it in before compiling so the compiler knows those names.
 #include <stdio.h>
 
 /*
@@ -52,28 +54,32 @@ Parameters:
     - n: the last number to print; passed along unchanged so that every call
          knows where the job ends
 Return value: none (void) - the work is the printing itself
+
+Output for n = 3: "1 2 3 " (each number is followed by a space).
 */
 void print_1_to_N(int x, int n){
     // Base case: x has gone past n, so there is nothing left to print.
     if(x > n){
-        return;
+        return;     // leave this call at once
     }
     // The small piece of work this particular call does.
-    printf("%d ", x);
+    printf("%d ", x);       // %d is replaced by x; then one space
     // The rest of the job, handed to a copy of this function.
     // x+1 is what makes the problem smaller each time.
     print_1_to_N(x+1, n);
 }
 
+// Every C program starts running at main.
 int main(){
-    int n;
+    int n;      // how far to count (a whole number)
     // A prompt for a human at the keyboard. An online judge counts it as
     // extra output and would mark the answer wrong, which is why
     // practice_print_1_to_N.c - the judge version of this program - has no
     // prompt.
     printf("Enter the value of n: ");
+    // %d = read a whole number; &n = the address of n, where it is stored.
     scanf("%d", &n);
     // Start the chain at x = 1.
     print_1_to_N(1, n);
-    return 0;
+    return 0;   // 0 = the program finished normally
 }

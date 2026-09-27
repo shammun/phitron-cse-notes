@@ -43,9 +43,19 @@ Constraints:
 // Fill a table from the smallest case upward: dp[0] and dp[1] are given, and
 // every later cell is the sum of the two cells just before it. No recursion,
 // and each value is computed exactly once.
+//
+// The DP in three parts:
+//   meaning     dp[i] = F(i)
+//   base cases  dp[0] = 0, dp[1] = 1
+//   transition  dp[i] = dp[i-1] + dp[i-2]
+// Trace for n = 4: dp = 0, 1, 1, 2, 3 -> returns 3.
+//
+// No #include or main: LeetCode supplies them (with "using namespace std;")
+// and calls fib itself.
 
+// LeetCode's required class.
 class Solution {
-    public:
+    public:   // callable from outside
         int fib(int n) {
             // Answer the two base cases directly.
             if(n == 0){
@@ -57,10 +67,11 @@ class Solution {
 
             int dp[31];   // n <= 30, so 31 cells are enough
             // Not strictly needed: every cell up to n is written before it is read.
+            // (memset fills bytes; 0xFF bytes make each int -1.)
             memset(dp, -1, sizeof(dp));
 
-            dp[0] = 0;
-            dp[1] = 1;
+            dp[0] = 0;    // base case F(0)
+            dp[1] = 1;    // base case F(1)
 
             // Build upward: when we compute dp[i], dp[i-1] and dp[i-2] are ready.
             for(int i=2; i<=n; i++){

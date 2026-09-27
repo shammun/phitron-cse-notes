@@ -99,19 +99,22 @@ R -> 20 70 80 10 40 90 30 100 60
 // the labels are `L -->` / `R -->` (the judge wants `L -> ` / `R -> `), and
 // `insert_at_head` has the wrong body (see the note above it).
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here (template leftover)
+#include <algorithm>    // not used here (template leftover)
+#include <string>       // not used here (template leftover)
 
-using namespace std;
+using namespace std;    // write cin/cout without std::
 
+// One node of a DOUBLY linked list: a value plus arrows both ways.
 class Node{
-    public:
-        int val;
-        Node* next;
-        Node* prev;
+    public:             // accessible from outside the class
+        int val;        // the number stored
+        Node* next;     // right neighbour (NULL at the tail)
+        Node* prev;     // left neighbour (NULL at the head)
 
+        // Constructor, runs on `new Node(val)`. this->val is the member; plain val is
+        // the parameter (same name, so `this->` is needed to tell them apart).
         Node(int val){
             this->val = val;
             this->next = NULL;
@@ -121,9 +124,9 @@ class Node{
 
 // Left to right, following `next` from the head.
 void print_forward(Node* head){
-    cout << "L --> ";
-    Node* tmp = head;
-    while(tmp != NULL){
+    cout << "L --> ";           // (judge expects "L -> ", see note at the top)
+    Node* tmp = head;           // walker
+    while(tmp != NULL){         // one pass per node
         cout << tmp->val << " ";
         tmp = tmp->next;
     }
@@ -132,11 +135,11 @@ void print_forward(Node* head){
 
 // Right to left, following `prev` from the tail.
 void print_backward(Node* tail){
-    cout << "R --> ";
+    cout << "R --> ";           // (judge expects "R -> ")
     Node* tmp = tail;
     while(tmp != NULL){
         cout << tmp->val << " ";
-        tmp = tmp->prev;
+        tmp = tmp->prev;        // step left
     }
     cout << endl;
 }
@@ -152,22 +155,24 @@ int get_size(Node* head){
     return size;
 }
 
-// Bug in this copy: the body below is the tail-insert body, so a value
+// BUG: the body below is the tail-insert body, so a value
 // meant for index 0 is appended at the end. It should be
 //     newNode->next = head; head->prev = newNode; head = newNode;
+// (Sample 1 query "0 30" on list 10 20 prints 10 20 30 instead of 30 10 20.)
 void insert_at_head(Node* &head, Node* &tail, int val){
-    Node* newNode = new Node(val);
-    if(head == NULL){
+    Node* newNode = new Node(val);  // node on the heap
+    if(head == NULL){           // empty list: this part is correct
         head = newNode;
         tail = newNode;
         return;
     }
-    tail->next = newNode;
+    tail->next = newNode;       // BUG: links after the TAIL, not before the head
     newNode->prev = tail;
-    tail = newNode; 
+    tail = newNode;
 }
 
 // New last node: two arrows between the old tail and it.
+// `Node* &head` = reference to main's pointer, so main sees the change.
 void insert_at_tail(Node* &head, Node* &tail, int val){
     Node* newNode = new Node(val);
     if(head == NULL){
@@ -175,21 +180,22 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
         tail = newNode;
         return;
     }
-    tail->next = newNode;
-    newNode->prev = tail;
-    tail = newNode;
+    tail->next = newNode;       // old tail -> new
+    newNode->prev = tail;       // old tail <- new
+    tail = newNode;             // new tail
 }
 
+// One query: insert val at index pos and print, or print Invalid.
 void insert_at_any_position(Node* &head, Node* &tail, int pos, int val){
     int size = get_size(head);
-    // Reject the index before touching the list.
+    // Reject the index before touching the list. Legal indexes: 0..size.
     if(pos < 0 || pos > size){
         cout << "Invalid" << endl;
         return;
     }
 
     if(pos == 0){
-        insert_at_head(head, tail, val);   // new first node
+        insert_at_head(head, tail, val);   // new first node (buggy here, see above)
         print_forward(head);
         print_backward(tail);
         return;
@@ -209,29 +215,30 @@ void insert_at_any_position(Node* &head, Node* &tail, int pos, int val){
     }
 
     Node* newNode = new Node(val);
-    // Four arrows. The new node's own two first, while tmp->next still
-    // points at the right-hand neighbour.
+    // Four arrows. The first two read tmp->next (the right-hand neighbour), so they
+    // must run before line 3 overwrites tmp->next.
     newNode->next = tmp->next;         // new -> right neighbour
     tmp->next->prev = newNode;         // right neighbour -> new
     tmp->next = newNode;               // left neighbour (tmp) -> new
     newNode->prev = tmp;               // new -> left neighbour
     print_forward(head);
     print_backward(tail);
-    return;
+    return;                            // (not needed at the end of a void function)
 }
 
 int main(){
-    int Q;
+    int Q;              // number of queries
     cin >> Q;
 
-    Node* head = NULL;
+    Node* head = NULL;  // empty list
     Node* tail = NULL;
 
+    // Runs Q times: Q is tested, then decreased.
     while(Q--){
         int X, V;
         cin >> X >> V;     // insert value V at index X
         insert_at_any_position(head, tail, X, V);
     }
 
-    return 0;
+    return 0;           // normal exit
 }

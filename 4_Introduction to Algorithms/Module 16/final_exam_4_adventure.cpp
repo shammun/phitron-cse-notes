@@ -60,20 +60,34 @@ value is 7+6=13 and its the maximum value possible.
 // fits) and add its value, or skip it. knapsack(i, W) = best value using items
 // 0..i with W weight left; dp[][] remembers every answer so each state is
 // solved once.
+//
+// The DP in three parts:
+//   meaning     dp[i][w] = best value using items 0..i with w room left
+//   base cases  i < 0 (no items) or w == 0 (no room) -> 0
+//   transition  dp[i][w] = max(val[i] + dp[i-1][w - weight[i]], dp[i-1][w])
+//               (only the second option if item i does not fit)
+//   memo marker -1 = "not computed" (values are >= 0, so -1 is never real)
+// This is the FIXED version of Module 15's knapsack: the reset loop below
+// runs j up to AND INCLUDING max_weight.
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <cstring>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // max
+#include <string>       // not used here
+#include <cstring>      // not used here (reset is done with a loop)
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
-int val[1005], weight[1005];
+int val[1005], weight[1005];   // value and weight of each item
 int dp[1005][1005];   // dp[i][w] = knapsack(i, w), or -1 if not computed yet
 
+// Best value using items 0..i with max_weight room left.
 int knapsack(int i, int max_weight){
     // Base case: no items left to look at, or no room left in the bag.
+    // BUG (edge case): weights may be 0 here (0 <= w[i]), so with no room left
+    // a zero-weight item with a positive value could still be taken, but this
+    // returns 0 without looking. Testing only i < 0 would be fully correct
+    // (a zero-weight item always "fits" in the weight check below).
     if(i < 0 || max_weight == 0){
         return 0;
     }
@@ -89,7 +103,7 @@ int knapsack(int i, int max_weight){
         int op1 = knapsack(i-1, max_weight - weight[i]) + val[i];
         // op2: leave it - same room, move on to item i-1.
         int op2 = knapsack(i-1, max_weight);
-        dp[i][max_weight] = max(op1, op2);
+        dp[i][max_weight] = max(op1, op2);   // store the better one
         return dp[i][max_weight];
     } else {
         // Item i is too heavy for the room left: skipping is the only choice.
@@ -99,11 +113,11 @@ int knapsack(int i, int max_weight){
 }
 
 int main(){
-    int t;
+    int t;                      // number of test cases
     cin >> t;
 
-    while(t--){
-        int n, max_weight;
+    while(t--){                 // one pass per test case
+        int n, max_weight;      // items, capacity W
         cin >> n >> max_weight;
 
         // Note the input order: all the weights first, then all the values.
@@ -117,6 +131,8 @@ int main(){
 
         // Reset the part of dp this test case uses to "unknown".
         // Answers left over from the previous case belong to different items.
+        // j <= max_weight (not <): the column max_weight is the very first
+        // state asked for, so it must be reset too - Module 15's bug.
         for(int i=0; i<n; i++){
             for(int j=0; j<=max_weight; j++){
                 dp[i][j] = -1;
@@ -128,4 +144,5 @@ int main(){
         cout << knapsack(n-1, max_weight) << endl;
     }
     // At most N * (W+1) states with O(1) work each: O(N * W) per test case.
+    // (No "return 0;": main may leave it out and then returns 0.)
 }

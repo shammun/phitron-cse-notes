@@ -14,6 +14,9 @@ https://leetcode.com/problems/leaf-similar-trees/
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines this struct and calls leafSimilar from its own hidden
+ * main, so there are no #includes or main here.)
  */
 /*
  * Leaf-similar trees: read the leaves of each tree from left to right. If the
@@ -27,8 +30,10 @@ https://leetcode.com/problems/leaf-similar-trees/
  *          Two trees of different shapes whose leaves both read 6 7 4 9 8 -> true.
  */
 class Solution {
-public:
+public:   // LeetCode calls leafSimilar from outside the class
 
+    // Appends the leaves of the subtree under root, left to right, to `leaves`.
+    // Base cases: NULL (nothing) and a leaf (record it).
     void leafSequence(TreeNode* root, vector<int>& leaves){
         if(root == NULL){       // empty subtree: no leaves here
             return;
@@ -36,7 +41,7 @@ public:
 
         // A leaf: record it. It has no children, so we can stop here.
         if(root->left == NULL && root->right == NULL){
-            leaves.push_back(root->val);
+            leaves.push_back(root->val);    // push_back adds at the end of the vector
             return;
         }
 
@@ -47,10 +52,10 @@ public:
     }
 
     bool leafSimilar(TreeNode* root1, TreeNode* root2) {
-        vector<int> leaves1, leaves2;
+        vector<int> leaves1, leaves2;       // two empty vectors, one per tree
 
-        leafSequence(root1, leaves1);
-        leafSequence(root2, leaves2);
+        leafSequence(root1, leaves1);       // fill with tree 1's leaves
+        leafSequence(root2, leaves2);       // fill with tree 2's leaves
 
         // == on vectors compares size and every element in order.
         return leaves1 == leaves2;

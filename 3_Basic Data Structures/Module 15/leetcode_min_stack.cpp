@@ -36,20 +36,26 @@ Sample
  *
  *   after push -2, 0, -3:   main  -2  0  -3      mins  -2  -2  -3
  *   after pop:              main  -2  0          mins  -2  -2    -> min is -2
+ *
+ * Note: no #include or main() - LeetCode's hidden code includes the STL,
+ * creates a MinStack and calls its functions.
  */
 
 class MinStack {
-public:
+public:                // everything below can be used from outside the class
     stack<int> st;     // the actual values
     stack<int> mins;   // mins.top() = smallest value in st right now
 
+    // Constructor: runs once when LeetCode creates the MinStack.
     MinStack() {
         // Two empty stacks - nothing else to set up.
     }
 
+    // Put val on top, and record the minimum for this new level.
     void push(int val) {
         st.push(val);
         // The new minimum is val itself, unless an older value is smaller.
+        // If mins is empty, || stops early, so mins.top() is never called on an empty stack.
         if(mins.empty() || val < mins.top()){
             mins.push(val);
         }
@@ -58,16 +64,19 @@ public:
         }
     }
 
+    // Remove the top value.
     void pop() {
         // Both stacks always have the same size, so pop them together.
         st.pop();
         mins.pop();
     }
 
+    // Return the top value (without removing it).
     int top() {
         return st.top();
     }
 
+    // Return the smallest value in the stack.
     int getMin() {
         return mins.top();   // O(1): no need to look through st
     }

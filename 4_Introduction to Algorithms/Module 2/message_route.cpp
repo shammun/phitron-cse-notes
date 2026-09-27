@@ -51,73 +51,93 @@ IMPOSSIBLE
 
 */
 
+/* Trace of example 1 (edges 1-2, 1-3, 1-4, 2-3, 5-4):
+     BFS from 1: level 0 = {1}; level 1 = {2, 3, 4} (parent 1 each);
+     level 2 = {5}, found from 4, so parent[5] = 4.
+     Walk back from 5: 5 -> parent 4 -> parent 1 -> parent -1 (stop)
+     gives 5 4 1; reversed: 1 4 5, size 3. */
+
+// <bits/stdc++.h> is a GCC-only header that pulls in the whole standard library
+// (iostream, vector, queue, algorithm, ...) in one line. Handy in contests; it is
+// not portable to every compiler and makes compiling a bit slower.
 #include <bits/stdc++.h>
-using namespace std;
+using namespace std;   // use cout, vector, queue, ... without writing std:: each time
 
 int main() {
-    int n, m;
-    cin >> n >> m;
+    int n, m;          // n = number of computers, m = number of connections
+    cin >> n >> m;     // cin >> reads whitespace-separated numbers
 
     /* n can be in the hundreds of thousands, so the adjacency list is a
        vector of size n+1 instead of a fixed-size global array. Index 0 stays
        unused because the computers are numbered from 1. */
+    // vector<vector<int>> adj_list(n + 1) = n+1 empty inner vectors, one per computer.
     vector<vector<int>> adj_list(n + 1);
 
+    // Read the m connections. while(m--) runs the body exactly m times.
     while(m--) {
-        int a, b;
+        int a, b;                   // the two computers joined by this connection
         cin >> a >> b;
-        adj_list[a].push_back(b);
+        adj_list[a].push_back(b);   // b is a neighbour of a
         adj_list[b].push_back(a);   // the connection works both ways
     }
 
-    vector<bool> visited(n + 1, false);
-    vector<int> level(n + 1, -1);
+    // vector<T> v(size, value) makes size copies of value.
+    vector<bool> visited(n + 1, false);   // visited[x] = x has already been queued
+    vector<int> level(n + 1, -1);         // level[x] = edges from computer 1 to x; -1 = unreached
     /* parent[x] is the computer that first reached x. The source has no
        parent, so it is left at -1 and that is what stops the walk back. */
     vector<int> parent(n + 1, -1);
 
+    // BFS from computer 1. The queue holds found-but-unexplored computers
+    // in first-in, first-out order, so they come out ring by ring.
     queue<int> q;
-    q.push(1);
-    visited[1] = true;
-    level[1] = 0;
+    q.push(1);           // the message starts at computer 1
+    visited[1] = true;   // mark on push so it is never queued again
+    level[1] = 0;        // computer 1 is 0 edges from itself
 
+    // One pass = explore one computer's connections. Stops when the queue is empty.
     while(!q.empty()) {
-        int par = q.front();
-        q.pop();
+        int par = q.front();   // the computer being explored (the "parent")
+        q.pop();               // remove it from the front of the queue
 
+        // child takes every neighbour of par in turn.
         for(int child : adj_list[par]) {
-            if(!visited[child]) {
-                visited[child] = true;
-                level[child] = level[par] + 1;
-                parent[child] = par;
-                q.push(child);
+            if(!visited[child]) {                  // first time we meet child
+                visited[child] = true;             // mark it now (never queue it twice)
+                level[child] = level[par] + 1;     // one ring further than par
+                parent[child] = par;               // remember who found it: this is the route back
+                q.push(child);                     // explore child later
             }
         }
     }
 
+    // BFS reached everything connected to 1. If n was not among them, no route exists.
     if(!visited[n]) {
-        cout << "IMPOSSIBLE" << endl;
-        return 0;
+        cout << "IMPOSSIBLE" << endl;   // endl = newline + flush
+        return 0;                       // stop the program here; nothing else to print
     }
 
     /* Walk back from n through the parents. That gives the route in reverse,
        so it is collected in a vector and turned around. */
-    vector<int> path;
-    int node = n;
-    while(node != -1) {
-        path.push_back(node);
-        node = parent[node];
+    vector<int> path;          // the route, filled backwards first
+    int node = n;              // start the walk at the destination
+    while(node != -1) {        // -1 = parent of computer 1, so we stop after adding 1
+        path.push_back(node);  // record this computer
+        node = parent[node];   // step one computer closer to 1
     }
+    // reverse(begin, end) (from <algorithm>) flips the vector in place: n..1 becomes 1..n.
     reverse(path.begin(), path.end());
 
     /* level[n] counts edges; the number of computers is one more than that,
        and it is also the size of the path we just built. */
-    cout << path.size() << endl;
+    cout << path.size() << endl;   // size() = how many elements the vector holds
+    // Print the route. (int) turns size() (an unsigned type) into int so the
+    // comparison i < size is between two ints and the compiler does not warn.
     for(int i = 0; i < (int)path.size(); i++) {
         if(i > 0) cout << " ";   // one space between computers, none at the end
-        cout << path[i];
+        cout << path[i];         // the i-th computer on the route
     }
-    cout << endl;
+    cout << endl;   // finish the output line
 
-    return 0;
+    return 0;   // success
 }

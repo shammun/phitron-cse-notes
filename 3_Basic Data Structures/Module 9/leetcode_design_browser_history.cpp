@@ -63,91 +63,104 @@ the home page.
 
 */
 
-#include <iostream>
-#include <string>
+#include <iostream>   // cin and cout
+#include <string>     // std::string - a piece of text (used for the urls and commands)
 using namespace std; // Allows us to avoid prefixing standard library objects with `std::`.
 
 // Node of a doubly linked list, but holding a url instead of a number.
 class Node {
-    public:
-        string url;
+    public:              // members below are usable from outside the class
+        string url;      // the page this node stands for
         Node* next;  // the page ahead of this one
         Node* prev;  // the page behind this one
 
+    // Constructor: runs on `new Node("x.com")`. `this->url` is the member,
+    // plain `url` is the parameter with the same name.
     Node(string url) {
-        this->url = url;
-        this->next = NULL;
-        this->prev = NULL;
+        this->url = url;     // store the page
+        this->next = NULL;   // nothing ahead yet
+        this->prev = NULL;   // nothing behind yet
     }
 };
 
+// The class LeetCode asks for. It only needs one pointer: the page we are on.
+// The pages behind and ahead are reached through `prev` and `next`.
 class BrowserHistory {
 public:
     Node* current; // the page on screen right now
 
+    // Constructor: the history starts with just the home page.
     BrowserHistory(string homepage) {
-        current = new Node(homepage);
+        current = new Node(homepage);   // `new` makes the node on the heap and returns its address
     }
 
+    // Open `url` from the current page. O(1).
     void visit(string url) {
-        Node* newNode = new Node(url);
+        Node* newNode = new Node(url);   // the new page, not linked yet
 
         /* Linking the new page after `current` is also what throws the
            forward history away: nothing points at the old `current->next`
            any more, so those pages can never be reached again. */
-        current->next = newNode;
-        newNode->prev = current;
+        // (Those old pages are never `delete`d - a small leak, fine here.)
+        current->next = newNode;   // current page -> new page
+        newNode->prev = current;   // current page <- new page
 
-        current = newNode;
+        current = newNode;         // we are now on the new page
     }
 
+    // Move back up to `steps` pages; return the page we land on. O(steps).
     string back(int steps) {
         /* Two ways to stop: the steps run out, or there is no page behind.
            The second test is what makes `back(7)` on a 3-page history safe. */
+        // `&&` = both must be true to keep going.
         while(steps > 0 && current->prev != NULL){
-            current = current->prev;
-            steps--;
+            current = current->prev;   // one page back
+            steps--;                   // one step used
         }
-        return current->url;
+        return current->url;           // the page we stopped on
     }
 
+    // The mirror image of back: follow `next` instead of `prev`.
     string forward(int steps) {
-        while(steps > 0 && current->next != NULL){
-            current = current->next;
-            steps--;
+        while(steps > 0 && current->next != NULL){   // steps left AND a page ahead
+            current = current->next;   // one page forward
+            steps--;                   // one step used
         }
-        return current->url;
+        return current->url;           // the page we stopped on
     }
 };
 
 // Main function: Entry point of the program.
+// Reads the home page and q commands, runs them, prints the result of every
+// back/forward.
 int main(){
     string homepage;
-    cin >> homepage;
+    cin >> homepage;   // `cin >>` into a string reads one word (stops at a space/newline)
 
-    BrowserHistory browser(homepage);
+    BrowserHistory browser(homepage);   // make the history object; its constructor runs here
 
     int q;
-    cin >> q;
+    cin >> q;          // number of commands
 
+    // One command per round.
     for(int i = 0; i < q; i++){
         string command;
-        cin >> command;
+        cin >> command;   // "visit", "back" or "forward"
 
-        if(command == "visit"){
+        if(command == "visit"){          // std::string can be compared with == directly
             string url;
-            cin >> url;
-            browser.visit(url);
+            cin >> url;                  // the page to open
+            browser.visit(url);          // prints nothing
         } else if(command == "back"){
             int steps;
             cin >> steps;
-            cout << browser.back(steps) << endl;
+            cout << browser.back(steps) << endl;      // page after moving back; endl = newline + flush
         } else if(command == "forward"){
             int steps;
             cin >> steps;
-            cout << browser.forward(steps) << endl;
+            cout << browser.forward(steps) << endl;   // page after moving forward
         }
     }
 
-    return 0;
+    return 0;   // normal exit
 }

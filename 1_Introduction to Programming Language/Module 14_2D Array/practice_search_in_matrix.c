@@ -32,29 +32,32 @@ inside the matrix.
 
 */
 
-# include <stdio.h>
+/* Idea: read the grid, read X, then visit every cell until X is found.
+   A flag remembers whether it was found. */
 
-int main() {
-    int n, m;
-    scanf("%d %d", &n, &m);
+# include <stdio.h> // standard input/output library: scanf and printf
 
-    int a[n][m];
-    for(int i = 0; i < n; i++) {
-        for(int j = 0; j < m; j++) {
-            scanf("%d", &a[i][j]);
+int main() { // program execution starts here
+    int n, m; // n = rows, m = columns
+    scanf("%d %d", &n, &m); // & gives scanf the addresses of n and m
+
+    int a[n][m]; // the grid; size comes from input (C99 variable length array)
+    for(int i = 0; i < n; i++) { // i = row
+        for(int j = 0; j < m; j++) { // j = column; the inner loop fills one row
+            scanf("%d", &a[i][j]); // &a[i][j] = address of cell (i, j)
         }
     }
 
-    int x;
+    int x; // the number Aladdin wants to take
     scanf("%d", &x);
 
     /* found stays 0 until the number is seen somewhere in the grid. One flag
        is enough: we do not care how many times x appears, only whether it is
        there at all. */
     int found = 0;
-    for(int i = 0; i < n; i++) {
-        for(int j = 0; j < m; j++) {
-            if(a[i][j] == x) {
+    for(int i = 0; i < n; i++) { // visit every row ...
+        for(int j = 0; j < m; j++) { // ... and every column of that row
+            if(a[i][j] == x) { // this cell holds x
                 found = 1;
                 break;      /* stop this row: the answer cannot change any more */
             }
@@ -64,11 +67,11 @@ int main() {
         }
     }
 
-    if(found == 1) {
+    if(found == 1) { // x is already in the matrix
         printf("will not take number\n");
-    } else {
+    } else { // x was nowhere in the matrix
         printf("will take number\n");
     }
 
-    return 0;
+    return 0; // program ended successfully
 }

@@ -22,38 +22,44 @@ Example: push 3, push 1, getMin() -> 1, pop() -> 1, getMin() -> 3.
  */
 
 
-#include <bits/stdc++.h> 
+// <bits/stdc++.h> = GCC's "include everything" header (gives std::stack).
+// Code360's template supplies `using namespace std;` and main().
+#include <bits/stdc++.h>
 // Implement class for minStack.
 class minStack
 {
 	// Write your code here.
-	
-	public:
-		
+
+	public:     // everything below is callable by the judge
+
 		stack<int> st, min_st;   // all values, and the minimums (newest on top)
 		// Constructor
-		minStack() 
-		{ 
+		// (Nothing to set up: both stacks start empty on their own.)
+		minStack()
+		{
 			// Write your code here.
 		}
-		
+
 		// Function to add another element equal to num at the top of stack.
 		void push(int num)
 		{
 			// Write your code here.
 			st.push(num);
             // A new minimum (or a tie with it) is also remembered in min_st.
+            // (min_st.empty() is tested first, so top() is never called on an empty stack.)
+            // Ties are pushed too: with 2, 2 both on min_st, popping one 2 still leaves 2 as the min.
             if (min_st.empty() || min_st.top() >= num) {
 				min_st.push(num);
 			}
         }
-		
+
 		// Function to remove the top element of the stack.
+		// Returns the removed value, or -1 if the stack was empty.
 		int pop()
 		{
             // Nothing to remove: the problem asks for -1.
             if (st.empty()) {
-                return -1;       
+                return -1;
 			}
             // Write your code here.
             // The value leaving is the current minimum: it leaves min_st too.
@@ -63,9 +69,10 @@ class minStack
 			// Save the top before popping so it can be returned.
 			int val = st.top();
 			st.pop();
-			return val; 
+			return val;
+			// Trace push 3, push 1: st = 3 1, min_st = 3 1. pop() -> 1 leaves both -> min 3.
         }
-		
+
 		// Function to return the top element of stack if it is present. Otherwise return -1.
 		int top()
 		{
@@ -75,7 +82,7 @@ class minStack
 			}
             return st.top();
 		}
-		
+
 		// Function to return minimum element of stack if it is present. Otherwise return -1.
 		int getMin()
 		{

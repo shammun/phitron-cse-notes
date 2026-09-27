@@ -66,25 +66,31 @@ The first test case was explained in the problem statement. For the second test 
 // Module 17: for each new coin, every old answer stays true (skip the coin),
 // and every old true at (c-1, s-v) makes (c, s) true (take the coin).
 //
+// The DP in three parts:
+//   meaning     reach[c][s] = true if some c of the coins seen so far sum to s
+//   base case   reach[0][0] = true (take nothing: 0 coins, sum 0)
+//   transition  new reach[c][s] = old reach[c][s] (skip coin v)
+//                                 OR old reach[c-1][s-v] (take coin v)
+//
 // Example 1 2 3 10: k = 2, total = 16. Two coins can make 3, 4, 5, 11, 12, 13.
 // s = 5 gives |16 - 10| = 6 and s = 11 gives |16 - 22| = 6, so the answer is 6.
 
-#include <iostream>
-#include <vector>
-#include <cstdlib>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // vector
+#include <cstdlib>      // abs
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 int main(){
-    int T;
+    int T;              // number of test cases
     cin >> T;
 
-    while(T--){
-        int n;
+    while(T--){         // one pass per test case
+        int n;          // number of coins
         cin >> n;
 
-        vector<int> coin(n);
-        int total = 0;
+        vector<int> coin(n);    // the coin values
+        int total = 0;          // sum of all coins
         for(int i = 0; i < n; i++){
             cin >> coin[i];
             total += coin[i];
@@ -94,11 +100,12 @@ int main(){
 
         // reach[c][s], c = 0..k coins, s = 0..total. Only 0 coins making 0
         // is possible before any coin is looked at: the empty choice.
+        // vector<bool>(total + 1, false) = one row of total+1 "false" cells.
         vector<vector<bool>> reach(k + 1, vector<bool>(total + 1, false));
         reach[0][0] = true;
 
-        for(int i = 0; i < n; i++){
-            int v = coin[i];
+        for(int i = 0; i < n; i++){     // add coins one at a time
+            int v = coin[i];            // this coin's value
             // Build the next table from the current one.
             // Start from a copy: every choice that skips coin i still works.
             vector<vector<bool>> next = reach;
@@ -106,27 +113,27 @@ int main(){
             // Reading from the OLD table (reach) guarantees coin i is used at
             // most once.
             for(int c = 1; c <= k; c++){
-                for(int s = v; s <= total; s++){
+                for(int s = v; s <= total; s++){    // s >= v so s-v >= 0
                     if(reach[c-1][s-v]){
                         next[c][s] = true;
                     }
                 }
             }
-            reach = next;
+            reach = next;               // the new table becomes the current one
         }
 
         // Every sum exactly k coins can make is a possible share for Mina.
         int best = total;   // the worst case: one side gets everything
         for(int s = 0; s <= total; s++){
             if(reach[k][s]){
-                int diff = abs(total - 2 * s);
+                int diff = abs(total - 2 * s);   // abs = absolute value
                 if(diff < best){
                     best = diff;
                 }
             }
         }
 
-        cout << best << endl;
+        cout << best << endl;           // smallest possible difference
     }
 
     // O(n * k * total) time per test case, O(k * total) memory.

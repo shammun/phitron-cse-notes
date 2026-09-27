@@ -39,16 +39,22 @@ Time limit: 1 second
  * Every value moves twice: O(n) time, O(n) extra space.
  */
 
-#include <bits/stdc++.h> 
-stack<int> pushAtBottom(stack<int>& st, int x) 
+// <bits/stdc++.h> = GCC's "include everything" header; it brings in std::stack.
+// Code360's hidden template already has `using namespace std;`, which is why
+// plain `stack<int>` works here without std:: (and there is no main - the judge has it).
+#include <bits/stdc++.h>
+// Receives the stack by reference (&): we work on the caller's own stack, not a copy.
+// Returns the updated stack (a copy of st) as the problem asks.
+stack<int> pushAtBottom(stack<int>& st, int x)
 {
     // Write your code here.
-    stack<int> new_st;
+    stack<int> new_st;      // temporary stack to hold everything that sits above the bottom
     int val;   // declared but never used
     // 1. Empty st into new_st (this reverses the order).
+    // One pass = move the current top of st onto new_st; stops when st is empty.
     while (!st.empty()) {
-        new_st.push(st.top());
-        st.pop();
+        new_st.push(st.top());  // copy the top across (top() only reads it)
+        st.pop();               // then remove it from st
     }
     // 2. st is empty now, so x lands at the very bottom.
     st.push(x);
@@ -57,5 +63,6 @@ stack<int> pushAtBottom(stack<int>& st, int x)
         st.push(new_st.top());
         new_st.pop();
     }
+    // Trace [7 1 4 5], x 9: new_st = [5 4 1 7] -> st = [9] -> st = [9 7 1 4 5].
     return st;
 }

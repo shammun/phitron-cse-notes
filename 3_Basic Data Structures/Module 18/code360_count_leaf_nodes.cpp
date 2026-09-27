@@ -22,7 +22,12 @@ https://www.naukri.com/code360/problems/count-leaf-nodes_893055
                 right = NULL;
         }
     };
-    
+
+    (template <typename T> means the node can hold any type T;
+    BinaryTreeNode<int> is a node that holds an int. The judge's hidden
+    code defines this class and calls our function - so this file has no
+    #include and no main.)
+
 ***********************************************************/
 
 /*
@@ -37,6 +42,7 @@ https://www.naukri.com/code360/problems/count-leaf-nodes_893055
  * Example: 1 with children 2 and 3, and 2 has a left child 4.
  *   leaves are 4 and 3, so the answer is 2.
  */
+// root points at the tree's top node; returns how many leaves the tree has.
 int noOfLeafNodes(BinaryTreeNode<int> *root){
     // Write your code here.
     // An empty subtree has no leaves.
@@ -48,7 +54,8 @@ int noOfLeafNodes(BinaryTreeNode<int> *root){
         return 1;
     }
     // Otherwise the node is not a leaf itself; its leaves are all below it.
+    // Each recursive call trusts that it returns the leaf count of that subtree.
     int l = noOfLeafNodes(root->left);   // leaves on the left side
     int r = noOfLeafNodes(root->right);  // leaves on the right side
-    return l + r;
+    return l + r;                        // all leaves under this node
 }

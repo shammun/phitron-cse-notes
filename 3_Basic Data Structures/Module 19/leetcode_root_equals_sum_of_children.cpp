@@ -14,6 +14,9 @@ https://leetcode.com/problems/root-equals-sum-of-children/
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines this struct and calls checkTree from its own hidden
+ * main, so there are no #includes or main here.)
  */
 /*
  * Root equals sum of children: the tree always has exactly 3 nodes, a root
@@ -25,8 +28,10 @@ https://leetcode.com/problems/root-equals-sum-of-children/
  * Example: [10, 4, 6] -> 4 + 6 = 10 -> true;  [5, 3, 1] -> 3 + 1 = 4 -> false.
  */
 class Solution {
-public:
+public:   // LeetCode calls checkTree from outside the class
     bool checkTree(TreeNode* root) {
+        // + is done before ==, so this is root->val == (left + right).
+        // root->left->val: from the root go to the left child, read its value.
         return root->val == root->left->val + root->right->val;
     }
 };

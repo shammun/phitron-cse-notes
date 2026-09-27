@@ -37,25 +37,32 @@
  * We cannot choose real addresses in C++, so the program builds the same six
  * nodes with `new` and uses the pointer `q` (the node "at 1020") wherever the
  * sheet compares with address 1020.
+ *
+ * Output:
+ *   Head->next->next->val = 1
+ *   Sum = -1
  */
 
-#include <iostream>
-using namespace std;
+#include <iostream> // cout
+using namespace std; // lets us drop the std:: prefix
 
 // The same node the module builds: a value and a pointer to the next node.
 class Node {
-    public:
-        int val;
-        Node* next;
+    public: // usable from main()
+        int val; // the data stored in this node
+        Node* next; // address of the next node (NULL at the end)
 
+        // Constructor: runs on every new Node(x). `this` points at the node being
+        // built; this->val is the member, plain val is the parameter.
         Node(int val) {
-            this->val = val;
+            this->val = val; // store the value
             this->next = NULL;   // no next node until we link one
         }
 };
 
-int main() {
+int main() { // the program starts running here
     // Create the six nodes on the heap.
+    // new Node(x) makes a node with value x and returns its address.
     Node* head = new Node(5);    // the node at "500"
     Node* a = new Node(7);       // "1000"
     Node* b = new Node(1);       // "1050"
@@ -64,27 +71,32 @@ int main() {
     Node* d = new Node(11);      // "3000"
 
     // Link them in the drawn order. The last node keeps next = NULL.
-    head->next = a;
-    a->next = b;
-    b->next = c;
-    c->next = q;
-    q->next = d;
+    // p->next is short for (*p).next.
+    head->next = a; // 5 -> 7
+    a->next = b; // 7 -> 1
+    b->next = c; // 1 -> 14
+    c->next = q; // 14 -> 3
+    q->next = d; // 3 -> 11
 
     // Question e: two hops from head, then read the value.
-    cout << "Head->next->next->val = " << head->next->next->val << endl;
+    cout << "Head->next->next->val = " << head->next->next->val << endl; // 1
 
     // Question f: follow the pseudocode step by step.
-    int sum = 0;
-    Node* temp = head;
+    int sum = 0; // running total
+    Node* temp = head; // walker pointer, starts at the first node
+    // Stop when the NEXT node is q; comparing pointers compares addresses.
     while(temp->next != q){      // "while temp->next != 1020"
         sum += temp->val;        // adds 5, then 7, then 1
-        temp = temp->next;
+        temp = temp->next; // step to the next node
     }
     // The loop stops at the node whose next is q: the node holding 14.
     // Its value was never added, and now it is taken away.
     sum -= temp->val;            // 13 - 14
+    // sum is now -1.
 
-    cout << "Sum = " << sum << endl;
+    cout << "Sum = " << sum << endl; // prints Sum = -1
 
-    return 0;
+    // (The nodes are never deleted; the operating system frees them when the
+    // program ends.)
+    return 0; // program finished successfully
 }

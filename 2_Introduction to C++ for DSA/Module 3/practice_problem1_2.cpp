@@ -18,9 +18,14 @@ Then compare those 3 objects and print who got the highest math_marks and print 
 #include <string.h> // Include string.h for strcpy(), used inside the constructor
 using namespace std; // Use the standard namespace to avoid prefixing 'std::'
 
+// Idea: same task as practice_problem1.cpp, but a constructor fills every object
+// in one line. Then three comparisons decide who has the highest math_marks.
+// Output here: Rahim
+
 // Define a class named 'Student' to encapsulate the properties of a student
+// A class is a blueprint for a new data type; each object made from it has its own copy of every member.
 class Student {
-    public:
+    public: // members and the constructor can be used from main
     char name[100]; // Character array to store the student's name
     int roll; // Integer to store the student's roll number
     char section; // Character to store the student's section
@@ -32,20 +37,24 @@ class Student {
     // `const char*` because a quoted name like "Rahim" is read-only text.
     // The parameters have the same names as the members, so `this->name` means
     // "the object's own name" and plain `name` means the parameter.
+    // A constructor has the same name as the class and no return type.
+    // `this` is a pointer holding the address of the object being built, and
+    // this->x (same as (*this).x) reaches that object's member x.
     Student(const char* name, int roll, char section, int math_marks, int cls){
-        strcpy(this->name, name); // a char array can't be assigned with =, so copy it
-        this->roll = roll;
-        this->section = section;
-        this->math_marks = math_marks;
-        this->cls = cls;
+        strcpy(this->name, name); // a char array can't be assigned with =, so copy it (letters + '\0')
+        this->roll = roll; // object's roll = the roll parameter
+        this->section = section; // object's section = parameter (a single char like 'A')
+        this->math_marks = math_marks; // object's math_marks = parameter
+        this->cls = cls; // object's cls = parameter
     }
 };
 
 int main() {
     // Create three static objects of the 'Student' class; the constructor fills each one in a single line
-    Student rahim("Rahim", 1, 'A', 99, 7);
-    Student karim("Karim", 2, 'A', 98, 7);
-    Student rafiq("Rafiq", 3, 'A', 96, 7);
+    // Values in brackets go to the constructor parameters in order: name, roll, section, math_marks, cls.
+    Student rahim("Rahim", 1, 'A', 99, 7); // math_marks 99
+    Student karim("Karim", 2, 'A', 98, 7); // math_marks 98
+    Student rafiq("Rafiq", 3, 'A', 96, 7); // math_marks 96
 
 
     // Compare the math marks of the objects and print the name of the student with the highest math marks.

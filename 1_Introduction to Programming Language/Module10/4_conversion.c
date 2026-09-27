@@ -26,27 +26,37 @@ HAPPY nEWyEAR ENJOY
 
 */
 
-# include <stdio.h>
+/* Idea: go through the string one character at a time and print a converted
+   character right away: ',' becomes ' ', small letters become capital, and
+   capital letters become small. The string itself is never changed. */
 
-int main() {
+# include <stdio.h> // standard input/output library: scanf and printf
+
+int main() { // program execution starts here
     /* |S| can be 100000, so 100005 slots hold the string and the '\0' at its end.
-       The string never contains a space, so scanf with %s reads all of it. */
+       The string never contains a space, so scanf with %s reads all of it.
+       (%s stops reading at the first space or newline.) */
     char s[100005];
-    scanf("%s", s);
+    scanf("%s", s); // read the whole string; s (array name) is already an address, so no & is needed
 
+    /* One pass looks at one character s[i]. i starts at 0 and the loop stops
+       when it reaches the '\0' that marks the end of the string. */
     for(int i = 0; s[i] != '\0'; i++){
-        if(s[i] == ','){
+        if(s[i] == ','){ // a comma: print a space in its place
             printf(" ");
         }
         /* Letters are numbers underneath: 'a' is 32 more than 'A'.
-           So subtracting 32 makes a small letter capital, and adding 32 does the opposite. */
+           So subtracting 32 makes a small letter capital, and adding 32 does the opposite.
+           (In the ASCII table 'A' = 65 and 'a' = 97; 97 - 65 = 32.)
+           s[i] >= 'a' && s[i] <= 'z' is true only for small letters,
+           because 'a'..'z' are consecutive numbers (97..122). */
         else if(s[i] >= 'a' && s[i] <= 'z'){
-            printf("%c", s[i] - 32);
+            printf("%c", s[i] - 32); // e.g. 'h' (104) - 32 = 72 = 'H'; %c prints the number as a character
         }
-        else {
-            printf("%c", s[i] + 32);
+        else { // not a comma and not small, so (by the problem rules) it is a capital letter
+            printf("%c", s[i] + 32); // e.g. 'N' (78) + 32 = 110 = 'n'
         }
     }
 
-    return 0;
+    return 0; // program ended successfully
 }

@@ -25,6 +25,8 @@ work placed before the recursive call happens in call order, and work placed
 after it happens in reverse call order.
 */
 
+// stdio.h ("standard input output") declares printf and scanf; #include
+// pastes it in before compiling so the compiler knows those names.
 #include <stdio.h>
 
 /*
@@ -38,21 +40,24 @@ Return value: none (void)
 void print_N_to_1(int x, int n){
     // Same base case as the other file: past n, nothing left to do.
     if(x > n){
-        return;
+        return;     // leave this call at once
     }
     // Go all the way down first. This call does not return until every
     // number above x has been printed.
     print_N_to_1(x+1, n);
     // ... and only then print x. The deepest call, the one holding x = n,
     // reaches its printf first, so n comes out first and 1 comes out last.
-    printf("%d ", x);
+    printf("%d ", x);       // %d is replaced by x; then one space
 }
 
+// Every C program starts running at main.
 int main(){
-    int n;
+    int n;      // the largest number (a whole number)
+    // A prompt for a human; an online judge would count it as wrong output.
     printf("Enter the value of n: ");
+    // %d = read a whole number; &n = the address of n, where it is stored.
     scanf("%d", &n);
     // The chain still starts at x = 1, even though 1 is printed last.
     print_N_to_1(1, n);
-    return 0;
+    return 0;   // 0 = the program finished normally
 }

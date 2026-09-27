@@ -67,39 +67,42 @@ Sample Output 2
 // Example 1 4 5 -> sorted 5 4 1 -> take 5, then 4, then 1 -> 10.
 // Example 1 1 2 1 -> sorted 2 1 1 1 -> take 2, 1, then 0, 0 -> 3.
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // vector
+#include <algorithm>    // sort, min, max
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 int main(){
-    int n;
+    int n;                      // number of bags
     cin >> n;
 
-    vector<long long> a(n);
+    vector<long long> a(n);     // n slots for the bag sizes
     for(int i = 0; i < n; i++){
         cin >> a[i];
     }
 
     // greater<long long>() sorts from big to small.
+    // (sort's default order is small to big; greater<> flips the comparison.)
     sort(a.begin(), a.end(), greater<long long>());
 
     // total can reach about 2*10^5 values of 10^9, far beyond int: long long.
     long long total = 0;
     long long allowed = a[0];   // the most the current bag may give
 
-    for(int i = 0; i < n; i++){
+    for(int i = 0; i < n; i++){ // bags from biggest to smallest
         // Give as much as the bag has, but never more than allowed.
         long long take = min(a[i], allowed);
         total += take;
 
         // The value `take` is now used, so the next bag must give less.
         // 0 is the floor: many bags may give 0 together.
+        // 0LL is the number 0 typed as long long, so max() gets two values of
+        // the same type (max(long long, int) would not compile).
         allowed = max(take - 1, 0LL);
     }
 
-    cout << total << endl;
+    cout << total << endl;      // the most balls we can collect
 
     // Sorting dominates: O(n log n).
     return 0;

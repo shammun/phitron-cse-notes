@@ -19,6 +19,8 @@ OutputCopy
 2 5
 */
 
+/* Note on the statement: "105" is 10^5 (the exponent lost its formatting when it was copied). */
+
 // Include standard input/output library for printf and scanf functions
 #include <stdio.h>
 
@@ -36,14 +38,15 @@ Note: We use pointers because:
     - Functions in C pass arguments by value (make copies)
     - To modify original values, we need their memory addresses
     - Pointers allow us to access and modify values at those addresses
+Trace with 5 2: temp = 5, main's x becomes 2, main's y becomes 5.
 */
 void swap(int *x, int *y){
     // Store first number in temporary variable
     int temp = *x;  // *x means "value at address x"
-    
+
     // Copy second number to first position
     *x = *y;        // Now first number becomes second number
-    
+
     // Copy temporary (original first number) to second position
     *y = temp;      // Now second number becomes first number
 }
@@ -60,15 +63,15 @@ Purpose: Entry point of program that:
 int main(){
     // Declare variables to store the two numbers
     int x, y;
-    
+
     // Read two integers from user
     // &x and &y give the memory addresses where values should be stored
     scanf("%d %d", &x, &y);
-    
+
     // Call swap function with addresses of x and y
     // & operator gets the memory address of a variable
     swap(&x, &y);
-    
+
     // Print the swapped values
     // After swap, x contains original y and y contains original x
     printf("%d %d\n", x, y);

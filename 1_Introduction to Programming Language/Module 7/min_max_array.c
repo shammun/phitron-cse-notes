@@ -8,21 +8,25 @@
   value seen so far in a variable, and replace it whenever something better
   turns up. When the loop ends, the variable holds the best of the whole
   array. Nothing is sorted and nothing is searched twice.
+
+  Example run:  input 5 / 3 9 -2 7 4  ->  Minimum = -2, Maximum = 9
 */
 
+/* stdio.h ("standard input output") declares scanf and printf. */
 #include <stdio.h>
 #include <limits.h>
 /* <limits.h> only supplies names: INT_MAX is the largest number an int can
    hold, INT_MIN the smallest. */
 
-int main()
+int main()          /* the program starts running here */
 {
-    int n;
+    int n;          /* how many numbers */
     
-    scanf("%d", &n);
+    scanf("%d", &n);    /* %d = read a whole number; &n = where to put it */
     
-    int a[n];
+    int a[n];       /* n boxes, a[0] .. a[n-1] (size from input, C99) */
     
+    /* Pass i reads one number into a[i]; &a[i] is that box's address. */
     for (int i = 0; i < n; i++) {
         scanf("%d", &a[i]);
     }
@@ -33,7 +37,8 @@ int main()
        positive, nothing would ever be smaller than 0 and the program would
        report a minimum of 0, a number that is not even in the array.
        The other safe start is min = max = a[0], with the loop beginning at
-       i = 1. */
+       i = 1.
+       INT_MAX is 2147483647 and INT_MIN is -2147483648. */
     int min = INT_MAX, max = INT_MIN;
     
     /* One pass, both jobs. The two ifs are separate questions, not an
@@ -41,15 +46,16 @@ int main()
        minimum and the maximum, and both ifs must fire. */
     for (int i = 0; i < n; i++) {
         if (a[i] < min) {
-            min = a[i];
+            min = a[i];     /* smaller than anything so far */
         }
         
         if (a[i] > max) {
-            max = a[i];
+            max = a[i];     /* bigger than anything so far */
         }
     }
     
+    /* The two %d are filled with min and max, in that order. */
     printf("Minimum = %d, Maximum = %d\n", min, max);
     
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

@@ -32,24 +32,26 @@ Consonant
 
 */
 
+/* stdio.h ("standard input output") declares scanf and printf. The
+   space in "# include" is allowed; it means the same as #include. */
 # include <stdio.h>
 
-int main() {
+int main() {        /* the program starts running here */
     /* One letter, so one char and %c. */
-    char a;
-    scanf("%c", &a);
+    char a;             /* the letter (a char holds one character) */
+    scanf("%c", &a);    /* %c = read one character; &a = where to put it */
     
     /* There are only five vowels, so the simplest test is to compare with
        each of them and join the five checks with ||: the whole condition is
        true as soon as ONE comparison matches.
        Each letter is written in single quotes: 'a' is the character a,
-       while a (no quotes) is the variable. */
+       while a (no quotes) is the variable. == asks "are they equal?". */
     if(a == 'a' || a == 'e' || a == 'i' || a == 'o' || a == 'u'){
-        printf("Vowel");
+        printf("Vowel");     /* one of the five matched */
     }
     else {
         /* Anything that is not one of the five is a consonant (the input is
            promised to be a small letter). */
         printf("Consonant");
     }
-}
+}   /* no return 0: reaching the end of main counts as returning 0 */

@@ -51,15 +51,17 @@ xzz
 // digit. So walk it two characters at a time: s[i] is the letter, s[i+1] is how
 // many copies of it to write.
 
-#include <iostream>
-#include <string>
+#include <iostream>     // cin, cout, endl
+#include <string>       // string
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
+// Returns the decoded form of s. s is taken by value (a copy).
 string decoder(string s){
-    string ans = "";
+    string ans = "";    // the decoded text, built up piece by piece
 
     // i jumps by 2, so it always lands on a letter, never on a digit.
+    // (s.size() is unsigned; comparing with int i only gives a warning.)
     for(int i=0; i<s.size(); i+=2){
         // A digit character is not its number: '3' is stored as 51. Subtracting
         // '0' (48) turns the character '3' into the number 3.
@@ -67,7 +69,7 @@ string decoder(string s){
         // Append the letter freq times. A 0 means the loop never runs, which is
         // exactly "remove this letter".
         for(int j=0; j<freq; j++){
-            ans += s[i];
+            ans += s[i];    // += on a string appends one character
         }
     }
 
@@ -76,12 +78,12 @@ string decoder(string s){
 }
 
 int main(){
-    int T;
+    int T;              // number of test cases
     cin >> T;
 
-    while(T--){
+    while(T--){         // one encoded string per test
         string S;
-        cin >> S;
+        cin >> S;       // reads one word
         cout << decoder(S) << endl;
     }
 

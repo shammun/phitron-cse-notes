@@ -35,9 +35,18 @@ The answer is guaranteed to fit within a 32-bit integer, ie. answer <= 2^31 - 1.
 // Solution idea (bottom-up DP): Fibonacci with THREE previous terms.
 // T(0) = 0, T(1) = 1, T(2) = 1, and each later term is the sum of the three
 // before it. Fill the table from the bottom so those three are always ready.
+//
+// The DP in three parts:
+//   meaning     dp[i] = T(i)
+//   base cases  dp[0] = 0, dp[1] = 1, dp[2] = 1
+//   transition  dp[i] = dp[i-1] + dp[i-2] + dp[i-3]
+// Trace for n = 4: dp[3] = 1+1+0 = 2, dp[4] = 2+1+1 = 4 -> returns 4.
+//
+// No #include or main: LeetCode supplies them and calls tribonacci itself.
 
+// LeetCode's required class.
 class Solution {
-    public:
+    public:   // callable from outside
         int tribonacci(int n) {
             // The three given starting values.
             if(n == 0){
@@ -48,7 +57,7 @@ class Solution {
             }
 
             int dp[40] = {0};   // n <= 37; "= {0}" zeroes the whole array
-            dp[0] = 0;
+            dp[0] = 0;          // base cases
             dp[1] = 1;
             dp[2] = 1;
 

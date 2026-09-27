@@ -51,16 +51,20 @@ with count 1 must fall to 0 (one more deletion). Total 2.
 
 */
 
+// <bits/stdc++.h>: g++'s "include the whole standard library" header.
 #include <bits/stdc++.h>
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
+// LeetCode's required class; minDeletions is what the judge calls.
 class Solution {
-public:
+public:   // usable from outside the class
     int minDeletions(string s) {
         /* Only 26 letters exist, so a plain frequency array is enough - no map needed. */
-        int freq[26] = {0};
+        int freq[26] = {0};   // "= {0}" sets all 26 counts to 0
         for (int i = 0; i < (int)s.size(); i++) {
+            // s[i] - 'a' turns a letter into 0..25 ('a' -> 0, 'b' -> 1, ...),
+            // because characters are stored as numbers and a..z are consecutive.
             freq[s[i] - 'a']++;
         }
 
@@ -77,12 +81,13 @@ public:
            count should be allowed to stay the biggest, because lowering a big count costs
            exactly as much as lowering a small one, and leaving big values high keeps more
            room free underneath for everybody else. */
+        // greater<int>() makes sort go from big to small.
         sort(counts.begin(), counts.end(), greater<int>());
 
-        int deletions = 0;
+        int deletions = 0;        // answer so far
         int allowed = counts[0];  // the first count is free to keep everything it has
 
-        for (int i = 0; i < (int)counts.size(); i++) {
+        for (int i = 0; i < (int)counts.size(); i++) {   // letters, biggest count first
             /* This letter may keep at most `allowed` characters. If it already has fewer,
                it keeps all of them; every extra character above the cap is a deletion. */
             int keep = counts[i];
@@ -103,12 +108,13 @@ public:
     }
 };
 
+// Small driver so the file runs on its own.
 int main() {
-    string s;
+    string s;             // the input string
     cin >> s;
 
-    Solution sol;
+    Solution sol;         // object to call minDeletions on
     cout << sol.minDeletions(s) << endl;
 
-    return 0;
+    return 0;   // success
 }

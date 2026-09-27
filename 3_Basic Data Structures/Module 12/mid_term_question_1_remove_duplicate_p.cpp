@@ -2,7 +2,7 @@
 
 Problem Statement
 
-You will be given a linked list of integer values as input. You need to remove duplicate 
+You will be given a linked list of integer values as input. You need to remove duplicate
 values from the linked list and finally print the linked list in ascending order.
 
 Note: You need to solve this using STL List, otherwise you will not get marks.
@@ -22,25 +22,25 @@ Sample Input 0
 1 2 3 4 5 -1
 Sample Output 0
 
-1 2 3 4 5 
+1 2 3 4 5
 Sample Input 1
 
 1 2 4 2 3 5 1 4 5 2 6 1 -1
 Sample Output 1
 
-1 2 3 4 5 6 
+1 2 3 4 5 6
 Sample Input 2
 
 5 5 1 1 2 4 2 4 1 3 5 0 -1
 Sample Output 2
 
-0 1 2 3 4 5 
+0 1 2 3 4 5
 Sample Input 3
 
 10 10 10 20 20 20 10 20 -1
 Sample Output 3
 
-10 20 
+10 20
 
 */
 
@@ -57,30 +57,32 @@ Sample Output 3
 // Practice copy of mid_term_question_1_remove_duplicate.cpp: the same code,
 // only the list is called `myList`.
 
-#include <iostream>
-#include <list>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+#include <list>         // std::list - the STL doubly linked list
+using namespace std;    // write list/cin/cout without std::
 
 int main(){
-    list<int> myList;
-    int val;
+    list<int> myList;   // empty linked list of ints
+    int val;            // holds one input value
     // Read values until -1 and append each one at the back.
-    while(true){
-        cin >> val;
-        if(val==-1){
+    while(true){                // repeat until break
+        cin >> val;             // read one number
+        if(val==-1){            // end marker
             break;
         }
-        myList.push_back(val);
+        myList.push_back(val);  // new node at the end, O(1)
     }
 
     myList.sort();     // equal values become neighbours, smallest first
     myList.unique();   // drop every value equal to the one before it
+    // Trace 10 10 10 20 20 20 10 20: sort -> 10 10 10 10 20 20 20 20, unique -> 10 20.
 
     // Range-for walks the list from front to back.
+    // `int val` is a fresh loop variable (hides the outer val) holding a copy of each element.
     for(int val : myList){
         cout << val << " ";
     }
-    cout << endl;
+    cout << endl;       // end the output line
 
-    return 0;
+    return 0;           // normal exit
 }

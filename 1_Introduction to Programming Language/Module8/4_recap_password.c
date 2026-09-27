@@ -35,21 +35,31 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
+int main() {                    /* the program starts running here */
+    /* const = this variable can never be changed after this line; the
+       compiler stops any attempt. Giving 1999 a name makes the test below
+       read as what it means. */
     const int CORRECT = 1999;
-    int x;
+    int x;                      /* one password attempt */
 
-    /* Keep reading attempts until we see the correct password. */
+    /* Keep reading attempts until we see the correct password.
+       scanf returns how many values it managed to read: 1 when a number
+       was read, and something else (EOF, -1) when the input has run out.
+       So "== 1" means "keep going while there is another number".
+       Trace 2002, 1234, 1999, 5555: Wrong, Wrong, Correct - and 5555 is
+       never read. */
     while (scanf("%d", &x) == 1) {
         if (x == CORRECT) {
             printf("Correct\n");
             break;                  /* stop on first correct entry */
         } else {
-            printf("Wrong\n");
+            printf("Wrong\n");      /* then go round and read the next one */
         }
     }
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

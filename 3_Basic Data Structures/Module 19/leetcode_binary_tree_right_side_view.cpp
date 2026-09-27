@@ -15,12 +15,16 @@ https://leetcode.com/problems/binary-tree-right-side-view/
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines this struct and calls rightSideView from its own hidden
+ * main. After ':' comes an initializer list: val(x) sets val to x, and
+ * nullptr is the C++11 name for a null pointer.)
  */
 
-#include <iostream>
-#include <queue>
-#include <utility>
-#include <utility>
+#include <iostream>     // cin/cout (not really needed on LeetCode)
+#include <queue>        // queue
+#include <utility>      // pair
+#include <utility>      // (included twice by accident; harmless, the header guards itself)
 
 /*
  * Right side view: standing on the right of the tree, you see only the last
@@ -37,26 +41,28 @@ https://leetcode.com/problems/binary-tree-right-side-view/
  * child pushed first.
  */
 class Solution {
-public:
+public:   // LeetCode calls rightSideView from outside the class
     vector<int> rightSideView(TreeNode* root) {
         vector<int> ans;                 // one value per level
         bool freq[105] = {false};        // freq[L] = true once level L is answered
-        queue<pair<TreeNode*, int>> q;   // {node, level it sits on}
-        if(root){
+                                         // (= {false} sets EVERY element to false)
+        queue<pair<TreeNode*, int>> q;   // {node, level it sits on}; .first = node, .second = level
+        if(root){                        // a pointer is "true" when it is not NULL
             q.push({root, 1});           // the root is level 1
         }
 
+        // One pass handles one node; stops when no node is waiting.
         while(!q.empty()){
-            pair<TreeNode*, int> parent = q.front();
+            pair<TreeNode*, int> parent = q.front();   // oldest waiting entry
             q.pop();
 
-            TreeNode* node = parent.first;
-            int level = parent.second;
+            TreeNode* node = parent.first;   // the node
+            int level = parent.second;       // its level
 
             // First node out on this level = the rightmost one (see below).
             if(freq[level] == false){
-                ans.push_back(node->val);
-                freq[level] = true;
+                ans.push_back(node->val);    // push_back adds at the end of the vector
+                freq[level] = true;          // this level is done
             }
 
             // Right child first, so it leaves the queue before its left sibling.
@@ -67,6 +73,6 @@ public:
                 q.push({node->left, level + 1});
             }
         }
-        return ans;
+        return ans;                          // the right view, top level first
     }
 };

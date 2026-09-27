@@ -1,12 +1,17 @@
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: printf
 
 /* This is a C program that demonstrates the use of 2D arrays and memory addressing.
  *
  * Note on the name: this file used to be saved as basic.py by mistake. It was
  * always C code - Python could never run it - so it is basic.c now.
+ *
+ * What to notice in the output: the addresses go up by 4 (the size of one
+ * int) from one cell to the next, and the last cell of a row is followed
+ * directly by the first cell of the next row. A 2D array is stored in memory
+ * as one long line of cells, row after row ("row-major order").
  */
 
-int main() {
+int main() { // program execution starts here
     /* Declaring and initializing a 2D array of size 3x5
      * - First dimension (3) represents rows
      * - Second dimension (5) represents columns
@@ -14,6 +19,7 @@ int main() {
      * Row 1: 1,2,3,4,5
      * Row 2: 6,7,8,9,10
      * Row 3: 11,12,13,14,15
+     * (in code the rows are numbered 0, 1, 2 - see the notes on each line)
      */
     int arr[3][5] = {
         {1, 2, 3, 4, 5},     /* Row 0 values */
@@ -24,6 +30,7 @@ int main() {
     /* Using nested loops to iterate through the 2D array
      * - Outer loop (i) iterates through rows (0 to 2)
      * - Inner loop (j) iterates through columns (0 to 4)
+     * For every one row i, the inner loop visits all 5 columns, so 15 cells in total.
      */
     for(int i=0; i < 3; i++){
         for(int j=0; j<5; j++){
@@ -78,4 +85,4 @@ int main() {
         /* Print newline after each row for better formatting */
         printf("\n");
     }
-}
+} // end of main; in C99 and later, reaching the end of main means return 0

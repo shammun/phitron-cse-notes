@@ -20,15 +20,15 @@ The input must already be a valid min heap.
 
 */
 
-#include<iostream>
-#include <vector>
+#include<iostream>      // cin and cout
+#include <vector>       // vector (swap also comes along with the standard headers)
 
-using namespace std;
+using namespace std;    // write cout, vector, swap without std::
 
 int main(){
     int n;
-    cin >> n;
-    vector<int> v(n);
+    cin >> n;                   // how many values the existing heap has
+    vector<int> v(n);           // n slots, all 0, filled below
 
     // The existing min heap, in array order.
     for(int i=0; i<n; i++){
@@ -36,17 +36,17 @@ int main(){
     }
 
     int val;
-    cin >> val;
+    cin >> val;                 // the value to insert
     v.push_back(val);           // the only free slot in a complete tree
-    int cur_idx = v.size() - 1;
+    int cur_idx = v.size() - 1; // index where the new value sits now (the last one)
     while(cur_idx != 0){        // index 0 is the root: nowhere left to climb
-        int par_idx = (cur_idx - 1) / 2;
+        int par_idx = (cur_idx - 1) / 2;    // parent's index (integer division)
         // `<` instead of `>` -- the whole difference from the max heap.
         // A value smaller than its parent breaks the min-heap rule, so it
         // moves up one level and the check repeats from there.
         if(v[cur_idx] < v[par_idx]){
-            swap(v[cur_idx], v[par_idx]);
-            cur_idx = par_idx;
+            swap(v[cur_idx], v[par_idx]);   // exchange the two values
+            cur_idx = par_idx;              // follow the new value up
         } else{
             break;              // parent is already smaller; the path is fine
         }
@@ -55,10 +55,11 @@ int main(){
     // For heap 10 20 30 40 50 60 and value 5: 5 lands at index 6, beats its
     // parent 30 (index 2), then beats 10 (index 0), so it becomes the new
     // smallest value at the top -- 5 20 10 40 50 60 30.
+    // Range-for: x takes each value of v in turn.
     for(int x : v){
         cout << x << " ";
     }
-    cout << endl;
+    cout << endl;               // endl = newline + flush
 
-    return 0;
+    return 0;                   // program finished normally
 }

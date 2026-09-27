@@ -26,6 +26,10 @@ root = [4,2,7,1,3], val = 5   ->   []
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines this struct and calls our function from its own hidden
+ * main, so there are no #includes or main here. After ':' comes an
+ * initializer list: val(x) sets val to x; nullptr is the C++11 null pointer.)
  */
 
 /*
@@ -45,7 +49,7 @@ root = [4,2,7,1,3], val = 5   ->   []
  * -> NULL.
  */
 class Solution {
-public:
+public:   // LeetCode calls searchBST from outside the class
     TreeNode* searchBST(TreeNode* root, int val) {
         if (root == NULL) {
             return NULL;                          // fell off the tree

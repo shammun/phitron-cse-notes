@@ -41,10 +41,11 @@ solve using sort() function
 using namespace std; // Use the standard namespace to avoid prefixing 'std::' before cin, cout, etc.
 
 int main(){
-    int N;
+    int N; // number of elements
     cin >> N;
 
-    int A[N];
+    int A[N]; // variable-length array sized by the input (g++ allows it; N < 1000 is small)
+    // Read the N numbers into A[0] .. A[N-1].
     for(int i=0; i<N; i++){
         cin >> A[i];
     }
@@ -54,13 +55,15 @@ int main(){
     // the last, so this range is the whole array.
     // (The judge suggests writing bubble sort by hand; the practice sheet asks
     // for sort(), which is what this module teaches.)
+    // Example: {5, 2, 7, 3} becomes {2, 3, 5, 7}.
     sort(A, A+N);
 
+    // Print the sorted numbers, each followed by a space (the judge accepts the trailing space).
     for(int i=0; i<N; i++){
         cout << A[i] << " ";
     }
 
-    cout << endl;
+    cout << endl; // finish the output line
 
-    return 0;
+    return 0; // program finished normally
 }

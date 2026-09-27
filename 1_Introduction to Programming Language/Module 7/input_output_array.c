@@ -21,34 +21,38 @@
   The other files in this module write `int a[n]`, with n read from the input
   first. That is the same idea; only the number of boxes is decided while the
   program runs instead of being typed into the source.
+
+  Example run:  input 4 8 15 16 23   ->   output "4 8 15 16 23 "
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main()
+int main()          /* the program starts running here */
 {
-    int a[5];
+    int a[5];       /* five int boxes: a[0], a[1], a[2], a[3], a[4] */
     
     /* Reading. scanf needs the address of the place to put the number, and
        that place is the box a[i], so it is handed &a[i] - exactly as it is
        handed &n for a plain variable. i takes the values 0, 1, 2, 3, 4 and
        the loop ends when i reaches 5. */
     for (int i = 0; i < 5; i++) {
-        // i
+        // i  (the box number this pass fills)
         scanf("%d", &a[i]);
     }
     
     /* Left over from the lesson: one box on its own behaves like any other
        int, so it is printed with %d. a[1] is the second number, not the
        first. */
-    // printf("%d", a[1]);
+    // printf("%d", a[1]);     (switched off with //, so it does not run)
     
     /* Printing. The same boxes, walked in the same order. Each number is
        followed by a space, so the line ends with a trailing space and there
        is no newline at all. */
     for (int i = 0; i < 5; i++) {
-        printf("%d ", a[i]);
+        printf("%d ", a[i]);   /* the value in box i, then a space */
     }
     
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

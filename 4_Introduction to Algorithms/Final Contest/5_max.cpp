@@ -73,32 +73,36 @@ it is greater than 10. After printing 12, remove ⌊4/2⌋ = 2 means erase 2 occ
 // Whenever a count changes, the old pair is erased and the new pair inserted,
 // so the set always agrees with the map.
 
-#include <iostream>
-#include <map>
-#include <set>
+#include <iostream>     // cin, cout
+#include <map>          // map
+#include <set>          // set
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 int main(){
     // The input is large: fast I/O, and "\n" instead of endl.
+    // sync_with_stdio(false) stops cin/cout from keeping in step with
+    // scanf/printf (much faster); cin.tie(nullptr) stops cin from flushing
+    // cout before every read.
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int Q;
+    int Q;                      // number of queries
     cin >> Q;
 
     map<int, int> cnt;          // cnt[x] = occurrences of x in the array
     set<pair<int, int>> order;  // {cnt[x], x} for every x with cnt[x] > 0
 
-    while(Q--){
-        int type;
+    while(Q--){                 // handle one query per pass
+        int type;               // 1 = add, 2 = report and remove
         cin >> type;
 
         if(type == 1){
-            int x;
+            int x;              // the value to add
             cin >> x;
             // x's count goes up by one: take out its old pair (if it had one)
             // and put in the new one.
+            // (cnt[x] on a missing key creates it with value 0.)
             if(cnt[x] > 0){
                 order.erase({cnt[x], x});
             }
@@ -106,23 +110,24 @@ int main(){
             order.insert({cnt[x], x});
         }
         else{
-            if(order.empty()){
+            if(order.empty()){              // nothing in the array
                 cout << "empty" << "\n";
-                continue;
+                continue;                   // go straight to the next query
             }
 
             // prev(order.end()) is the last, i.e. biggest, pair.
+            // (end() points one PAST the last element; prev steps back one.)
             // In the sample: {4, 10} and {4, 12} tie on count, and {4, 12}
             // comes later because 12 > 10, so 12 is printed.
-            pair<int, int> top = *prev(order.end());
-            int c = top.first;
-            int x = top.second;
+            pair<int, int> top = *prev(order.end());   // * reads the element
+            int c = top.first;      // its count
+            int x = top.second;     // its value
             cout << x << "\n";
 
             // Remove max(1, c / 2) copies: with 4 copies, 2 go; with 1 copy,
             // 1 goes (c / 2 would be 0, hence the max with 1).
             int remove = max(1, c / 2);
-            order.erase(top);
+            order.erase(top);       // old pair out
             cnt[x] -= remove;
             // Put x back only if some copies are left; a value with count 0
             // is no longer in the array.
@@ -130,7 +135,7 @@ int main(){
                 order.insert({cnt[x], x});
             }
             else{
-                cnt.erase(x);
+                cnt.erase(x);       // forget x entirely
             }
         }
     }

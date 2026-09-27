@@ -20,19 +20,21 @@ This is a re-typed practice copy of leetcode_implement_queue_using_stacks.cpp;
 only the indentation differs.
 
 */
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <stack>
+#include <iostream>     // not needed by the class (LeetCode has its own main)
+#include <vector>       // not used (template leftover)
+#include <algorithm>    // not used (template leftover)
+#include <string>       // not used (template leftover)
+#include <stack>        // std::stack
 
-using namespace std;
+using namespace std;    // write stack instead of std::stack
 
+// The queue class LeetCode asks for.
 class MyQueue {
-    public:
+    public:     // callable by the judge
         // One stack holds everything. Its TOP is the newest value, so its
         // BOTTOM is the oldest -- and the bottom is what a queue wants.
         stack<int> st;
+        // Constructor: nothing to set up.
         MyQueue(){
 
         }
@@ -44,7 +46,7 @@ class MyQueue {
 
         // Remove and return the oldest value, i.e. the bottom of `st`.
         int pop(){
-            stack<int> st2;
+            stack<int> st2;     // holds the values above the bottom for a moment
             int val;
             // Take values off the top one at a time. `val` always holds the
             // one just taken, so when `st` runs empty, `val` is the bottom
@@ -67,6 +69,7 @@ class MyQueue {
                 st.push(st2.top());
                 st2.pop();
             }
+            // Trace push 1, push 2: pop() moves 2 to st2, drops 1, puts 2 back -> returns 1.
 
             return val;
         }

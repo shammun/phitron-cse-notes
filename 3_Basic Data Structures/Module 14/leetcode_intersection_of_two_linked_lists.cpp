@@ -25,22 +25,25 @@ nodes can hold equal values. O(n*m) time, O(1) memory.
  *     ListNode(int x) : val(x), next(NULL) {}
  * };
  */
+// (LeetCode defines ListNode as above and supplies includes and main.)
 class Solution {
-public:
+public:     // callable by the judge
+    // Returns the address of the first shared node, or NULL.
     ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
         // Outer walk: every node of list A.
         ListNode* tempA = headA;
-        while(tempA != NULL){
+        while(tempA != NULL){           // stops after A's last node
             // Inner walk: restart at the head of B for each node of A.
             ListNode* tempB = headB;
-            while(tempB != NULL){
+            while(tempB != NULL){       // stops after B's last node
                 // Same address = same node = the lists meet here.
+                // A is walked in order, so the first match is the first shared node.
                 if(tempA == tempB){
                     return tempA;
                 }
-                tempB = tempB->next;
+                tempB = tempB->next;    // '->' reads a member through a pointer
             }
-            tempA = tempA->next;
+            tempA = tempA->next;        // this A node is not shared; try the next
         }
         // No node of A appears in B: the lists never meet.
         return NULL;

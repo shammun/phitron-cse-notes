@@ -18,35 +18,42 @@ and `int size()` cannot share a name. Rename the counter to `sz`, as
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here (template leftover)
+#include <algorithm>    // not used here (template leftover)
+#include <string>       // not used here (template leftover)
+using namespace std;    // write cin/cout without std::
 
+// One person in the line, linked both ways.
 class Node {
     public:
-        int val;
+        int val;     // the stored value
         Node* next;  // towards the back of the line
         Node* prev;  // towards the front of the line
 
+    // Constructor, runs on `new Node(val)`. `this` points to the node being built;
+    // this->val is the member, plain val is the parameter.
     Node(int val) {
         this->val = val;
-        this->next = NULL;
+        this->next = NULL;  // not linked to anything yet
         this->prev = NULL;
     }
 };
 
+// Queue on a doubly linked list: push at the tail, pop at the head.
 class myQueue{
     public:
         Node* head = NULL;  // front: pop() removes here
         Node* tail = NULL;  // back: push() adds here
         // The counter that clashes with the size() method below.
+        // BUG: data member and member function both named `size` -> compile error.
+        // Fix: `int sz = 0;` and use sz in push/pop/size.
         int size = 0;
 
+        // push: join the back of the line, O(1).
         void push(int val){
             size++;
-            Node* newNode = new Node(val);
+            Node* newNode = new Node(val);  // `new` builds the node on the heap
             if(head == NULL){          // first value: front and back at once
                 head = newNode;
                 tail = newNode;
@@ -57,11 +64,12 @@ class myQueue{
             tail = newNode;            // the new arrival is now the back
         }
 
+        // pop: the front leaves, O(1). Only call when not empty.
         void pop(){
             size--;
             Node* deleteNode = head;   // the oldest value leaves first
-            head = head->next;
-            delete deleteNode;
+            head = head->next;         // the one behind becomes the front
+            delete deleteNode;         // free the old front's memory
             if(head==NULL){            // the line is now empty, so the back
                 tail = NULL;           // pointer must not survive either
                 return;
@@ -71,14 +79,17 @@ class myQueue{
             head->prev = NULL;
         }
 
+        // front: the oldest value (next to leave).
         int front(){
             return head->val;
         }
 
+        // back: the newest value.
         int back(){
             return tail->val;
         }
 
+        // size: count of values (the clashing name, see BUG above).
         int size(){
             return size;
         }
@@ -87,15 +98,15 @@ class myQueue{
         // check has to come first.
         bool empty(){
             return head == NULL;
-            // return size == 0;
+            // return size == 0;    // equivalent test using the counter
         }
 };
 
 int main(){
-    myQueue q;
-    int n;
-    cin >> n;
-    for(int i=0; i<n; i++){
+    myQueue q;          // an empty queue
+    int n;              // how many values
+    cin >> n;           // cin >> skips whitespace and reads one number
+    for(int i=0; i<n; i++){     // n passes, one value each
         int val;
         cin >> val;
         q.push(val);
@@ -106,7 +117,8 @@ int main(){
 
     // and then 10 20 30 40, one per line -- arrival order, as a queue should.
     while(!q.empty()){
-        cout << q.front() << endl;
+        cout << q.front() << endl;  // endl = newline + flush
         q.pop();
     }
+    // (main without `return 0;` still returns 0 automatically in C++.)
 }

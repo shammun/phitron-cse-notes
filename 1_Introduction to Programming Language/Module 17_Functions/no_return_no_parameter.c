@@ -6,14 +6,18 @@ This program demonstrates functions that:
 Such functions are useful when:
 - We want to perform some tasks without needing to return data
 - We want to handle input/output within the function itself
+
+A function must be defined (or at least declared) ABOVE the place where it is
+called, so that the compiler already knows it when it reads main(). That is
+why add() and greetings() are written before main().
 */
 
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: scanf and printf
 
-/* 
+/*
 Function: add()
 - Return type: void (doesn't return any value)
-- Parameters: none 
+- Parameters: none
 - Purpose: Takes two numbers from user, adds them and prints the sum
 - Note: Uses scanf() to get input inside function rather than through parameters
 */
@@ -24,7 +28,7 @@ void add(){
     printf("Function called\n");    // Confirmation message
     int sum = a + b;               // Calculate sum
     printf("Sum: %d\n", sum);      // Display result
-}
+} // a void function simply ends at its closing brace; no return value is needed
 
 /*
 Function: greetings()
@@ -32,9 +36,10 @@ Function: greetings()
 - Parameters: none
 - Purpose: Simply prints a greeting message
 - Note: Demonstrates simplest form of function with no input/output
+  (no values go in through parameters and no value comes back)
 */
 void greetings(){
-    printf("Hello\n");
+    printf("Hello\n"); // the only job of this function
 }
 
 /*

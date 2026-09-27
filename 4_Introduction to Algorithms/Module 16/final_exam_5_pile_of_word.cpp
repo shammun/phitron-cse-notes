@@ -46,15 +46,16 @@ YES
 // their letters in one fixed order, so after sorting they must be identical.
 // ("tea" and "eat" both sort to "aet".)
 
-#include <iostream>
-#include <string>
-#include <algorithm>
+#include <iostream>     // cin, cout, endl
+#include <string>       // string
+#include <algorithm>    // sort
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 // s1 and s2 are taken by value (copies), so sorting them here does not
 // disturb the caller's strings.
 bool pileOfWord(string s1, string s2){
+    // sort(begin, end) puts the characters in increasing (alphabetical) order.
     sort(s1.begin(), s1.end());
     sort(s2.begin(), s2.end());
 
@@ -65,20 +66,21 @@ bool pileOfWord(string s1, string s2){
     }
 
     // Compare the sorted words letter by letter; one mismatch is enough to say no.
+    // (s1 == s2 would do the same comparison in one step.)
     for(int i = 0; i < s1.length(); i++){
         if(s1[i] != s2[i]){
             return false;
         }
     }
 
-    return true;
+    return true;       // every letter matched
 }
 
 int main(){
-    int t;
+    int t;             // number of test cases
     cin >> t;
 
-    while(t--){
+    while(t--){        // one pass per test case
         string s1, s2;
         cin >> s1 >> s2;   // the two words sit on one line, split by a space
 

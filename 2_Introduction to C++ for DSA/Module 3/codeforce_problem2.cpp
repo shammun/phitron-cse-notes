@@ -37,30 +37,38 @@ Output
 
 */
 
-#include <iostream> // Include the iostream library for input/output operations
+// Idea: read A, the operator, B, the '=' sign and C. Work out A op B ourselves.
+// If it equals C, print "Yes"; otherwise print the correct value.
+
+#include <iostream> // Include the iostream library for input/output operations (cin, cout)
 using namespace std; // Use the standard namespace to avoid prefixing 'std::' before standard library components
 
 int main(){
-    int a, b, c;
+    int a, b, c; // A and B are 0..100, so even A*B (at most 10000) fits in an int; C is the claimed answer
     char s, q; // s is the operator (+, - or *), q just swallows the '=' sign
     // "2 * 10 = 19" is read as a=2, s='*', b=10, q='=', c=19 (cin skips the spaces)
+    // Reading into a char takes exactly one non-space character, so '*' and '=' are read as chars.
     cin >> a >> s >> b >> q >> c;
 
     // First: is the written answer c correct for this operator?
-    if(s == '+' && a + b == c){
+    // Each test says "the operator is X AND the X-result equals c" (&& = both must be true).
+    if(s == '+' && a + b == c){ // "5 + 10 = 15": 5+10 is 15 -> Yes
         cout << "Yes";
-    } else if(s == '-' && a - b == c){
+    } else if(s == '-' && a - b == c){ // "3 - 1 = 2": 3-1 is 2 -> Yes
         cout << "Yes";
     } else if(s == '*' && a * b == c){
         cout << "Yes";
     } else {
         // Wrong answer: print the correct result instead, worked out with the same operator
+        // "2 * 10 = 19": 2*10 = 20, not 19 -> we land here and print 20
         if(s == '+'){
-            cout << a + b;
+            cout << a + b; // correct sum
         } else if(s == '-'){
-            cout << a - b;
+            cout << a - b; // correct difference (may be negative, e.g. 1 - 5 = -4)
         } else if(s == '*'){
-            cout << a * b;
+            cout << a * b; // correct product
         }
     }
+    // No "return 0;" here: main is special, and reaching its closing brace
+    // automatically returns 0 (success). Other functions do not get this rule.
 }

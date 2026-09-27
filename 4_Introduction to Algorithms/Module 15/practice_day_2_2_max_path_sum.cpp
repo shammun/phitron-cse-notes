@@ -44,24 +44,37 @@ Output
 // corner. From (i, j) you step down or right, so
 //     best(i, j) = A[i][j] + max(best(i+1, j), best(i, j+1)).
 // The same cell is reached along many routes, so dp[i][j] stores each answer.
+//
+// The DP in three parts:
+//   meaning     dp[i][j] = best sum of a path from (i, j) to (n-1, m-1)
+//   base case   at (n-1, m-1) the path is that cell alone
+//   transition  A[i][j] + max(down, right); only one option on the last
+//               row / last column
+// Sample: 5 -> 1 -> 9 -> 2 -> 7 = 24.
 
-#include <iostream>
-#include <algorithm>
+#include <iostream>     // cin, cout, endl
+#include <algorithm>    // max
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
-int n, m;
+int n, m;             // rows, columns
 int matrix[11][11];   // N, M <= 10
 int dp[11][11];       // dp[i][j] = maxPathSum(i, j); -1 = not computed
 
+// Best sum of a path from (i, j) to the bottom-right corner.
 int maxPathSum(int i, int j){
     // Base case: at the goal, the path is just this one cell.
     if(i == n-1 && j == m-1){
         return matrix[i][j];
     }
 
+    // BUG: -1 is used as "not computed", but cells can be negative
+    // (down to -10^5), so a real best sum can be exactly -1. Such a cell is
+    // then recomputed every time it is visited. The answer stays correct, only
+    // the memo stops helping for it. Fix: a separate bool computed[11][11]
+    // array, or a marker no sum can reach, such as INT_MIN.
     if(dp[i][j] != -1){
-        return dp[i][j];
+        return dp[i][j];      // already solved
     }
 
     // On the last row you can only go right...
@@ -76,18 +89,18 @@ int maxPathSum(int i, int j){
     }
 
     // Two real choices: go down, or go right. Keep the better one.
-    int op1 = matrix[i][j] + maxPathSum(i+1, j);
-    int op2 = matrix[i][j] + maxPathSum(i, j+1);
+    int op1 = matrix[i][j] + maxPathSum(i+1, j);   // step down
+    int op2 = matrix[i][j] + maxPathSum(i, j+1);   // step right
 
-    dp[i][j] = max(op1, op2);
+    dp[i][j] = max(op1, op2);   // store before returning
     return dp[i][j];
 }
 
 int main(){
-    cin >> n >> m;
+    cin >> n >> m;                 // matrix size
 
-    for(int i=0; i<n; i++){
-        for(int j=0; j<m; j++){
+    for(int i=0; i<n; i++){        // read row i
+        for(int j=0; j<m; j++){    // column j
             cin >> matrix[i][j];
         }
     }

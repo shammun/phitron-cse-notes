@@ -65,8 +65,8 @@
  *      <math.h>    math functions   (sqrt, sin, pow, ...)
  * ============================================================================
  */
-#include <stdio.h>
-#include <math.h>
+#include <stdio.h>   /* printf, scanf                          */
+#include <math.h>    /* sqrt, used in main below               */
 /* #include <abcd.h>   <-- this was in the lesson only as an EXAMPLE of
                           where a third-party or custom header would go.
                           "abcd.h" does not actually exist, so the line is
@@ -97,8 +97,8 @@
  *       directive, not a C statement.
  * ============================================================================
  */
-#define PI 3.1416
-#define ll long long
+#define PI 3.1416     /* every PI below becomes 3.1416          */
+#define ll long long /* every ll below becomes long long       */
 
 
 /*
@@ -156,20 +156,47 @@ int sum(int x, int y);      /* a prototype — full definition is below */
  *  command-line arguments. You'll meet that form later.
  * ============================================================================
  */
-int main(void)
+int main(void)          /* the program starts here; (void) = no inputs */
 {
     /* ---- a tiny demo so this file actually does something visible ---- */
 
+    /* Expected output of this demo:
+     *     Hello, C!
+     *     sum(7, 5) = 12
+     *     PI * N    = 314.160000
+     *     big       = 1000000000000000000
+     *     sqrt(2)   = 1.414214
+     */
+
+    /* int = a whole number (no decimal point), usually 4 bytes, range
+     * about -2.1e9 .. 2.1e9. "local" = it lives only inside main. */
     int a = 7, b = 5;                   /* two local variables         */
+    /* sum(a, b) runs the sum function with x = 7, y = 5; the value it
+     * returns (12) is stored in s. */
     int s = sum(a, b);                  /* call our helper function    */
+    /* double = a number that can have a decimal part (about 15 correct
+     * digits). PI is replaced by 3.1416 before compiling, N is the
+     * global 100, so area = 3.1416 * 100 = 314.16. */
     double area = PI * N;               /* uses the PI macro and N     */
+    /* ll is replaced by "long long": an 8-byte whole number, range about
+     * -9.2e18 .. 9.2e18. */
     ll big = 1000000000;                /* uses the 'll' macro shortcut */
+    /* 1e9 * 1e9 = 1e18. That is far above the int limit (~2.1e9), but
+     * it still fits in long long. */
     big = big * big;                    /* 1e18 — would overflow a 32-bit int */
 
+    /* printf prints text; \n moves to the next line. */
     printf("Hello, C!\n");
+    /* Each %d is a placeholder for an int; they are filled from the
+     * values after the format, in order: a, then b, then s. */
     printf("sum(%d, %d) = %d\n", a, b, s);
+    /* %f prints a float or double, with 6 digits after the point by
+     * default: 314.160000. */
     printf("PI * N    = %f\n", area);
+    /* %lld = "long long decimal": the placeholder for a long long.
+     * Using plain %d here would print a wrong number. */
     printf("big       = %lld\n", big);
+    /* sqrt(x) returns the square root of x as a double: 1.414214. */
     printf("sqrt(2)   = %f\n", sqrt(2.0));   /* from <math.h> */
 
     return 0;   /* 0 tells the OS: "all good, program exited cleanly" */
@@ -199,9 +226,12 @@ int main(void)
  *  prototype entirely — both styles are valid.
  * ============================================================================
  */
+/* sum: takes two whole numbers x and y (the "parameters"; they receive
+ * copies of whatever the caller passes, here 7 and 5) and returns their
+ * total as an int. */
 int sum(int x, int y)
 {
-    return x + y;
+    return x + y;   /* compute x + y and send it back to the caller */
 }
 
 

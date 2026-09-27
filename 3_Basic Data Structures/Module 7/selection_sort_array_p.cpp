@@ -24,22 +24,22 @@ Input: first n, then n numbers.
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std;
+#include <iostream>   // cin and cout
+#include <vector>     // std::vector - not used here
+#include <algorithm>  // has std::swap too; our own non-template swap is preferred
+#include <string>     // std::string - not used here
+using namespace std;  // lets us write cin/cout without `std::`
 
 // Swap two ints. The parameters are references, so this really exchanges the
 // caller's two values instead of two copies.
 void swap(int &a, int &b){
-    int temp = a;
-    a = b;
-    b = temp;
+    int temp = a;   // keep a's old value
+    a = b;          // a gets b
+    b = temp;       // b gets a's old value
 }
 
 int main(){
-    int n;
+    int n;          // how many numbers
     cin >> n;
     // An array whose size is only known while the program runs. Standard C++
     // asks for a constant size here; g++ allows this as an extension, which
@@ -47,6 +47,7 @@ int main(){
     int arr[n];
     // Read the n values. The next line is the typo: `>` instead of `>>`.
     for(int i=0; i<n; i++){
+        // BUG: `>` is "greater than", not "read into". Fix: cin >> arr[i];
         cin > arr[i];
     }
 
@@ -68,4 +69,5 @@ int main(){
     for(int i=0; i<n; i++){
         cout << arr[i] << " ";
     }
+    // No `return 0;`: main alone may omit it and then returns 0 automatically.
 }

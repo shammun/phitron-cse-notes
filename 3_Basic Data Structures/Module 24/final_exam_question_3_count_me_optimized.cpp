@@ -39,9 +39,9 @@ papa 3
 
 */
 
-#include <bits/stdc++.h>
+#include <bits/stdc++.h>    // GCC shortcut: includes the whole standard library (string, map, sstream, ...)
 
-using namespace std;
+using namespace std;        // write string, map, cout ... without std::
 
 
 
@@ -59,15 +59,16 @@ using namespace std;
 int main()
 {
     int T;
-    cin >> T;
+    cin >> T;               // number of sentences
     // cin >> T leaves the end of that line in the input. ignore() skips it,
     // otherwise the first getline would read an empty sentence.
     cin.ignore();
 
+    // while(T--) runs the body T times; one pass = one sentence.
     while(T--){
         // Read the whole sentence (with its spaces) in one go...
         string S;
-        getline(cin, S);
+        getline(cin, S);    // getline reads up to the end of the line, spaces included
         // ...and let a stringstream split it into words with >>.
         stringstream ss(S);
 
@@ -78,18 +79,20 @@ int main()
         int count_max = 0;   // its count
         string word;
 
+        // `ss >> word` pulls out the next word and is false when none are
+        // left, which ends the loop. One pass = one word.
         while(ss >> word){
             // One more sighting of this word (a new word starts at 0).
             word_freq[word] = word_freq[word] + 1;
             // Strictly greater: this word is now ahead of every other word.
             if(word_freq[word] > count_max){
-                result = word;
-                count_max = word_freq[word];
+                result = word;                  // new leader
+                count_max = word_freq[word];    // and its count
             }
         }
 
-        cout << result << " " << count_max << endl;
+        cout << result << " " << count_max << endl;   // endl = newline + flush
     }
 
-    return 0;
+    return 0;               // program finished normally
 }

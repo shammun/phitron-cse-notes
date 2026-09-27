@@ -61,18 +61,23 @@ Sample Output 2:
  * O(n) time, O(n) extra space for the stack.
  */
 
-#include <bits/stdc++.h> 
+// <bits/stdc++.h> = GCC's "include everything" header (queue, stack, ...).
+// Code360's template supplies `using namespace std;` and main().
+#include <bits/stdc++.h>
+// q is passed BY VALUE (no &): the function reverses its own copy and returns it.
 queue<int> reverseQueue(queue<int> q)
 {
     // Write your code here.
     // Move every value from the front of q onto the stack.
     stack<int> st;
+    // One pass = one value: read the front, push it on the stack, remove it from q.
     while(!q.empty()){
-        st.push(q.front());
-        q.pop();
+        st.push(q.front());     // front() reads the oldest value
+        q.pop();                // queue pop removes the FRONT
     }
 
     // Pop the stack back into q: the order is now reversed.
+    // q.push() adds at the BACK; the stack hands out the newest value first.
     while(!st.empty()){
         q.push(st.top());
         st.pop();

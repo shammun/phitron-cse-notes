@@ -21,33 +21,39 @@ program with the counter renamed to `sz`, so look there to see it run.
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here (template leftover)
+#include <algorithm>    // not used here (template leftover)
+#include <string>       // not used here (template leftover)
+using namespace std;    // write cin/cout without std::
 
+// One person in the line: a value and the address of the one behind.
 class Node {
     public:
-        int val;
+        int val;     // the stored value
         Node* next;  // the next value in the line, behind this one
 
+    // Constructor, runs on `new Node(val)`; this->val = member, val = parameter.
     Node(int val) {
         this->val = val;
         this->next = NULL;  // a fresh node ends the chain until it is linked
     }
 };
 
+// Queue on a singly linked list.
 class myQueue{
     public:
         Node* head = NULL;  // front: the oldest value, the next to leave
         Node* tail = NULL;  // back: the newest value
         // The counter that clashes with the size() method below.
+        // BUG: same name for a data member and a function -> compile error.
+        // Fix: `int sz = 0;` and use sz (see queue_input_output_singly_list.cpp).
         int size = 0;
 
+        // push: join the back.
         void push(int val){ // O(1)
             size++;
-            Node* newNode = new Node(val);
+            Node* newNode = new Node(val);  // node on the heap
             // An empty queue: the first value is both front and back.
             if(head == NULL){
                 head = newNode;
@@ -55,15 +61,16 @@ class myQueue{
                 return;
             }
             // Otherwise join the back of the line and become the new back.
-            tail->next = newNode;
+            tail->next = newNode;   // '->' = member through a pointer
             tail = newNode;
         }
 
+        // pop: the front leaves. Only call when not empty.
         void pop(){ // O(1)
             size--;
             Node* deleteNode = head;   // the front leaves first -- FIFO
             head = head->next;         // the one behind becomes the front
-            delete deleteNode;
+            delete deleteNode;         // free the memory
             // The queue just became empty, so tail points at freed memory.
             // Clear it, or the next push() would write through it.
             if(head==NULL){
@@ -71,14 +78,17 @@ class myQueue{
             }
         }
 
+        // front: oldest value.
         int front(){ // O(1)
             return head->val;
         }
 
+        // back: newest value.
         int back(){ // O(1)
             return tail->val;
         }
 
+        // size: count of values (the clashing name).
         int size(){ // O(1)
             return size;
         }
@@ -93,10 +103,10 @@ class myQueue{
 };
 
 int main(){
-    myQueue q;
+    myQueue q;          // an empty queue
     int n;
-    cin >> n;
-    for(int i=0; i<n; i++){
+    cin >> n;           // how many values follow
+    for(int i=0; i<n; i++){     // n passes
         int val;
         cin >> val;
         q.push(val);
@@ -112,4 +122,5 @@ int main(){
         cout << q.front() << endl;
         q.pop();
     }
+    // (Reaching the end of main without `return 0;` returns 0 automatically.)
 }

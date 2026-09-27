@@ -4,7 +4,8 @@ https://www.naukri.com/code360/problems/special-binary-tree_920502?leftPanelTabV
 
 */
 
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h>
+// <bits/stdc++.h>: GCC shortcut that includes the whole standard library.
 /*************************************************************
 
     Following is the Binary Tree node structure
@@ -23,6 +24,10 @@ https://www.naukri.com/code360/problems/special-binary-tree_920502?leftPanelTabV
         }
     };
 
+    (A template class: BinaryTreeNode<int> stores an int in `data`. The
+    judge's hidden code defines it and calls isSpecialBinaryTree - there is
+    no main in this file.)
+
 *************************************************************/
 
 /*
@@ -36,6 +41,7 @@ https://www.naukri.com/code360/problems/special-binary-tree_920502?leftPanelTabV
  * Example: 1 / 2 3 / 4 5 (under 2)          -> true
  *          1 / 2 3 / 4 (only 4 under 2)     -> false, 2 has one child.
  */
+// Returns true if every node in the tree under root has 0 or 2 children.
 bool isSpecialBinaryTree(BinaryTreeNode<int>* root)
 {
     // Write your code here.
@@ -52,8 +58,9 @@ bool isSpecialBinaryTree(BinaryTreeNode<int>* root)
         return false;
     }
     // This node is fine (0 or 2 children); now every node below must be too.
+    // Each call trusts isSpecialBinaryTree(child) to judge that whole subtree.
     bool l = isSpecialBinaryTree(root->left);
     bool r = isSpecialBinaryTree(root->right);
-    
-    return l && r;
+
+    return l && r;          // && is "and": true only if both sides are special
 }

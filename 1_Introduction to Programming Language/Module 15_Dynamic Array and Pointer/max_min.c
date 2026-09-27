@@ -22,11 +22,14 @@ OutputCopy
 -5 20
 */
 
-#include <stdio.h>
+/* Note on the statement: "105" is 10^5 (the exponent lost its formatting when
+   it was copied), so the numbers are between -100000 and 100000 and fit in an int. */
 
-int main(){
-    int A, B, C;
-    scanf("%d %d %d", &A, &B, &C);
+#include <stdio.h> // standard input/output library: scanf and printf
+
+int main(){ // program execution starts here
+    int A, B, C; // the three numbers
+    scanf("%d %d %d", &A, &B, &C); // & gives scanf the address of each variable
 
     /* Start both answers at A, then let B and C challenge them. This is the
        "best so far" idea from the array lessons, written out for three
@@ -34,11 +37,12 @@ int main(){
     int min = A, max = A;
 
     /* Each value gets two separate ifs (not if/else): one value could be
-       both the new minimum and the new maximum. */
-    if(B < min){
+       both the new minimum and the new maximum.
+       Trace with 10 20 -5: start min=10 max=10; B=20 -> max=20; C=-5 -> min=-5 -> "-5 20". */
+    if(B < min){ // B is smaller than the smallest so far
         min = B;
     }
-    if(B > max){
+    if(B > max){ // B is larger than the largest so far
         max = B;
     }
     if(C < min){
@@ -48,7 +52,7 @@ int main(){
         max = C;
     }
 
-    printf("%d %d", min, max);
+    printf("%d %d", min, max); // minimum, a space, then maximum
 
-    return 0;
+    return 0; // program ended successfully
 }

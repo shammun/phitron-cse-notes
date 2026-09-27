@@ -4,7 +4,7 @@ Print Leaf Nodes in Descending Order
 
 Problem Statement
 
-You will be given a binary tree as input in level order. You need to print the values 
+You will be given a binary tree as input in level order. You need to print the values
 of leaf nodes in descending order.
 
 For example:
@@ -17,7 +17,7 @@ Input will contain the binary tree in level order. -1 means there is no node ava
 
 Constraints
 
-1. 1<= Maximum number of nodes <= 10^5 
+1. 1<= Maximum number of nodes <= 10^5
 2. 1<= Node's value <= 1000
 
 Output Format
@@ -32,29 +32,36 @@ Sample Output 0
 
 60 50 40
 
+The sample tree:
+            10
+           /  \
+         20    30
+        /  \     \
+      40    50    60
+
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <queue>
+#include <iostream>     // cin and cout
+#include <vector>       // vector
+#include <algorithm>    // sort
+#include <string>       // not used here
+#include <queue>        // STL queue, for level-order input
 
 
-using namespace std;
+using namespace std;    // write cout, vector, sort ... without std::
 
 // A binary tree node: a value and two child pointers (NULL = no child).
 class Node {
     public:
-        int val;     
-        Node* left;  
-        Node* right; 
+        int val;        // the value stored here
+        Node* left;     // address of the left child
+        Node* right;    // address of the right child
 
-    
+    // Constructor, runs on `new Node(x)`: store x, no children yet.
     Node(int val) {
-        this->val = val; 
-        this->left = NULL; 
-        this->right = NULL; 
+        this->val = val;        // this->val = member, val = parameter
+        this->left = NULL;
+        this->right = NULL;
     }
 };
 
@@ -68,15 +75,16 @@ Node* input_tree(){
     if(val == -1){
         root = NULL;
     } else {
-        root = new Node(val);
+        root = new Node(val);    // `new` builds the node on the heap and returns its address
     }
 
     // Nodes whose two children have not been read yet.
     queue<Node*> q;
-    if(root){
+    if(root){                    // a pointer is "true" when it is not NULL
         q.push(root);
     }
 
+    // One pass reads one node's two children; stops when no node is waiting.
     while(!q.empty()){
         Node* p = q.front();     // oldest node still waiting for its children
         q.pop();
@@ -97,7 +105,7 @@ Node* input_tree(){
             myRight = new Node(r);
         }
 
-        p->left = myLeft;
+        p->left = myLeft;        // attach the children (-> = member through a pointer)
         p->right = myRight;
 
         // Only real children wait in the queue for their own pair of values.
@@ -120,6 +128,9 @@ Node* input_tree(){
  * into the vector v, which is passed by reference so all calls fill the same
  * vector. Then main sorts it from big to small with greater<int>().
  * Example (sample): leaves 40 50 60 are found, printed as 60 50 40.
+ *
+ * Base case: NULL adds nothing. The recursive calls trust all_leaf_nodes to
+ * add every leaf of that subtree to v.
  */
 vector<int> all_leaf_nodes(Node* root, vector<int> &v){
     if(root == NULL){            // empty subtree: nothing to add
@@ -127,9 +138,10 @@ vector<int> all_leaf_nodes(Node* root, vector<int> &v){
     }
     // A leaf: store its value.
     if(root->left == NULL && root->right == NULL){
-        v.push_back(root->val);
+        v.push_back(root->val);  // push_back adds at the end of the vector
     }
     // Look for leaves on both sides (for a leaf both calls return at once).
+    // Their return values (copies) are ignored; the real work is done in v.
     all_leaf_nodes(root->left, v);
     all_leaf_nodes(root->right, v);
     return v;                    // a copy of the filled vector
@@ -139,16 +151,18 @@ vector<int> all_leaf_nodes(Node* root, vector<int> &v){
 int main()
 {
     // Write your code here
-    Node* root = input_tree(); 
+    Node* root = input_tree();                  // build the tree
 
-    vector<int> v;
-    vector<int> ans = all_leaf_nodes(root, v);
+    vector<int> v;                              // empty; the function fills it
+    vector<int> ans = all_leaf_nodes(root, v);  // ans gets a copy of the leaves
     // greater<int>() puts the biggest value first (descending order).
+    // Without it, sort would put the smallest first.
     sort(ans.begin(), ans.end(), greater<int>());
 
+    // i walks over every index of ans; print each value followed by a space.
     for(int i=0; i<ans.size(); i++){
         cout << ans[i] << " ";
     }
-    
-    return 0;
+
+    return 0;                                   // program finished normally
 }

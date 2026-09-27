@@ -24,13 +24,13 @@ pile by eye. The next file reads them from input.
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <list>
+#include <iostream>     // cout and endl
+#include <vector>       // std::vector - a resizable array; our storage
+#include <algorithm>    // not used here (template leftover)
+#include <string>       // not used here (template leftover)
+#include <list>         // not used here (template leftover)
 
-using namespace std;
+using namespace std;    // write vector/cout without std::
 
 
 /* Our own stack. Inside it is just a vector; the whole class is about
@@ -40,19 +40,19 @@ using namespace std;
    last box, so they are O(1). Adding or removing at the front would shift
    every other element one place, which is O(n). The back is the top. */
 class myStack{
-    public:
-        vector<int> v;
+    public:             // callable from main
+        vector<int> v;  // the storage; v.back() is the top of the stack
 
         // push: a new value joins at the back, which is the top of the pile.
         void push(int val){
-            v.push_back(val);
+            v.push_back(val);   // append at the end, growing the vector by one
         }
 
         // pop: remove the last box. That is the newest value -- LIFO.
         // Note it returns nothing; read the value with top() first if you
         // need it.
         void pop(){
-            v.pop_back();
+            v.pop_back();       // drop the last element
         }
 
         // top: look at the newest value without removing it. `v.back()` is
@@ -61,8 +61,9 @@ class myStack{
             return v.back();
         }
 
+        // size: number of values in the stack.
         int size(){
-            return v.size();
+            return v.size();    // vector::size() returns an unsigned count; it converts to int here
         }
 
         // empty: the guard for the two dangerous operations. `top()` on an
@@ -70,12 +71,12 @@ class myStack{
         // one that is not there -- undefined behaviour, usually a crash or a
         // junk number. So always ask this first.
         bool empty(){
-            return v.empty();
+            return v.empty();   // true when the vector has 0 elements
         }
 };
 
 int main(){
-    myStack s;
+    myStack s;          // an empty stack object
 
     // The pile grows upward: 10 at the bottom, 60 on the top.
     s.push(10);
@@ -83,9 +84,9 @@ int main(){
     s.push(30);
     s.push(40);
     s.push(50);
-    s.push(60);
+    s.push(60);         // v is now {10,20,30,40,50,60}
 
-    cout << s.top() << endl;   // 60 -- the last one pushed
+    cout << s.top() << endl;   // 60 -- the last one pushed (endl = newline + flush)
     s.pop();                   // 60 is gone; 50 is now the top
     cout << s.top() << endl;   // 50
 
@@ -107,10 +108,10 @@ int main(){
     // top, pop it, repeat while something is left. The values come out
     // newest first, so this prints 40 30 20 10 -- the reverse of the order
     // they were pushed in.
-    while(!s.empty()){
+    while(!s.empty()){          // one pass = one value printed and removed
         cout << s.top() << endl;
         s.pop();
     }
 
-    return 0;
+    return 0;                   // normal exit
 }

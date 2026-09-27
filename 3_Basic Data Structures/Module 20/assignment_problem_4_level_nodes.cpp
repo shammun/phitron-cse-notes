@@ -4,9 +4,12 @@ Level Nodes
 
 Problem Statement
 
-You will be given a binary tree as input in level order. Also you will be given a 
-level . You need to print all the node's values in that level from left to right. 
+You will be given a binary tree as input in level order. Also you will be given a
+level . You need to print all the node's values in that level from left to right.
 Assume that level starts from .
+
+(The blanks lost their symbols when copied: the level is called X, and
+levels start from 0, so the root is on level 0. -1 means no node.)
 
 For example:
 If X = 2, then the output for the above tree will be: 40 50 60
@@ -19,8 +22,8 @@ Input will contain the binary tree in level order.  means there is no node avail
 
 Constraints
 
-1. 1<= Maximum number of nodes <= 10^5 
-2. 1<= Node's value <= 1000 
+1. 1<= Maximum number of nodes <= 10^5
+2. 1<= Node's value <= 1000
 3. 0 <= X <= 10^5
 
 Output Format
@@ -59,24 +62,24 @@ Invalid
 
 */
 
-#include <iostream>
-#include <queue>
-#include <utility>
-#include <vector>
-using namespace std;
+#include <iostream>     // cin and cout
+#include <queue>        // STL queue
+#include <utility>      // pair
+#include <vector>       // vector
+using namespace std;    // write cout, queue, pair ... without std::
 
 // A binary tree node: a value and two child pointers (NULL = no child).
 class Node {
     public:
-        int val;     
-        Node* left;  
-        Node* right; 
+        int val;        // the value stored here
+        Node* left;     // address of the left child
+        Node* right;    // address of the right child
 
-    
+    // Constructor, runs on `new Node(x)`: store x, no children yet.
     Node(int val) {
-        this->val = val; 
-        this->left = NULL; 
-        this->right = NULL; 
+        this->val = val;        // this->val = member, val = parameter
+        this->left = NULL;
+        this->right = NULL;
     }
 };
 
@@ -90,15 +93,16 @@ Node* input_tree(){
     if(val == -1){
         root = NULL;
     } else {
-        root = new Node(val);
+        root = new Node(val);    // `new` builds the node on the heap and returns its address
     }
 
     // Nodes whose two children have not been read yet.
     queue<Node*> q;
-    if(root){
+    if(root){                    // a pointer is "true" when it is not NULL
         q.push(root);
     }
 
+    // One pass reads one node's two children; stops when no node is waiting.
     while(!q.empty()){
         Node* p = q.front();     // oldest node still waiting for its children
         q.pop();
@@ -119,7 +123,7 @@ Node* input_tree(){
             myRight = new Node(r);
         }
 
-        p->left = myLeft;
+        p->left = myLeft;        // attach the children (-> = member through a pointer)
         p->right = myRight;
 
         // Only real children wait in the queue for their own pair of values.
@@ -147,22 +151,23 @@ Node* input_tree(){
  * for "no such level" (safe, because real values are at least 1).
  */
 vector<int> level_nodes(Node* root, int X) {
-    vector<int> ans;
-    queue<pair<Node*, int>> q;
+    vector<int> ans;                 // values found on level X
+    queue<pair<Node*, int>> q;       // {node, its level}; .first = node, .second = level
     if(root){
-        q.push({root, 0});       // the root is on level 0
+        q.push({root, 0});       // the root is on level 0 ({a, b} builds the pair)
     }
 
+    // One pass handles one node; the whole tree is walked.
     while(!q.empty()){
-        pair<Node*, int> parent = q.front();
+        pair<Node*, int> parent = q.front();    // oldest waiting entry
         q.pop();
 
-        Node* node = parent.first;
-        int level = parent.second;
+        Node* node = parent.first;      // the node
+        int level = parent.second;      // its level
 
         // On the wanted level: keep it.
         if(level == X){
-            ans.push_back(node->val);
+            ans.push_back(node->val);   // push_back adds at the end of the vector
         }
 
         // Children are one level deeper.
@@ -172,7 +177,7 @@ vector<int> level_nodes(Node* root, int X) {
 
         if(node->right){
             q.push({node->right, level + 1});
-        } 
+        }
     }
     // No node on level X: send back the "invalid" signal.
     if(ans.empty()){
@@ -184,21 +189,22 @@ vector<int> level_nodes(Node* root, int X) {
 int main()
 {
     // Write your code here
-    Node* root = input_tree(); 
+    Node* root = input_tree();          // build the tree
 
     int X;
-    cin >> X;
+    cin >> X;                           // the level to print
 
     vector<int> ans = level_nodes(root, X);
 
     // The signal value means level X does not exist.
     if(ans.size() == 1 && ans[0] == -999){
-        cout << "Invalid" << endl;
+        cout << "Invalid" << endl;      // endl = newline + flush
     } else {
+        // Range-for: val takes each value of ans in turn.
         for(int val : ans){
             cout << val << " ";
         }
     }
-    
-    return 0;
+
+    return 0;                           // program finished normally
 }

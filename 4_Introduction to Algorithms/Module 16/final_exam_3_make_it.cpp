@@ -48,27 +48,34 @@ YES
 // question Module 2 answered with BFS: start the queue at 1 and see whether N
 // is ever visited. Both moves only make the number bigger, so any value above
 // N is a dead end and is never pushed, which keeps the graph at most N nodes.
+//
+// Trace for N = 5: queue [1] -> pop 1, push 4 and 2 -> pop 4 (7 and 8 are
+// > 5, skipped) -> pop 2, push 5 (2*2 = 4 already seen) -> pop 5 = N -> YES.
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <stack>
-#include <queue>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // not used here
+#include <stack>        // not used here
+#include <queue>        // queue
+// (memset below comes from <cstring>, which is not included; it compiles only
+// because one of the headers above pulls it in with g++.)
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 bool vis[100005];   // vis[x] = has x already been put in the queue? (N <= 10^5)
 
+// BFS from 1: returns true if n can be produced.
 bool make_it(int n){
-    queue<int> q;
+    queue<int> q;       // numbers waiting to be expanded (first in, first out)
     q.push(1);          // every attempt starts from the value 1
 
-    vis[1] = true;
+    vis[1] = true;      // 1 is already in the queue
 
+    // One pass: take the oldest number and push its two unseen children.
     while(!q.empty()){
-        int par = q.front();
-        q.pop();
+        int par = q.front();   // oldest number in the queue
+        q.pop();               // remove it
 
         // We have produced n: it is reachable.
         if(par == n){
@@ -98,11 +105,11 @@ bool make_it(int n){
 }
 
 int main(){
-    int t;
+    int t;              // number of test cases
     cin >> t;
 
-    while(t--){
-        int n;
+    while(t--){         // one pass per test case
+        int n;          // the target N
         cin >> n;
         // Fresh visited marks for every test case, or the previous case's marks
         // would block numbers this case still needs to explore.

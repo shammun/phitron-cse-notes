@@ -21,9 +21,11 @@
  * The recursion is a different shape from factorial.c: there the answer was
  * built up with a multiplication after the call returned, here the answer is
  * simply passed back up unchanged once a decision has been made.
+ *
+ * Input: n, then n numbers. Output: YES or NO.
  */
 
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: scanf and printf
 
 /* int *a is the address of the caller's array; writing int a[] would mean
  * the same thing. No size is passed, because i and j already say which
@@ -41,26 +43,26 @@ int isPalindrome(int *a, int i, int j){
      * && stops as soon as its left side is false, so the first mismatch
      * returns 0 straight away and the recursive call is never made - there
      * is no point inspecting the inside of an array that has already
-     * failed. */
+     * failed. (A comparison like a[i] == a[j] itself gives 1 or 0.) */
     return a[i] == a[j] && isPalindrome(a, i+1, j-1);
 }
 
-int main(){
-    int n;
-    scanf("%d", &n);
+int main(){ // program execution starts here
+    int n; // number of elements
+    scanf("%d", &n); // &n = address where scanf stores n
 
-    int a[n];
+    int a[n]; // the array (size from input: C99 variable length array)
 
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n; i++){ // read the n numbers
         scanf("%d", &a[i]);
     }
 
     /* Start with the whole array: first index 0, last index n-1. */
-    if(isPalindrome(a, 0, n-1)){
+    if(isPalindrome(a, 0, n-1)){ // non-zero (1) counts as true
         printf("YES\n");
     } else{
         printf("NO\n");
     }
 
-    return 0;
+    return 0; // program ended successfully
 }

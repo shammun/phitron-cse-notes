@@ -14,11 +14,11 @@
 // This first file only does the climbing half (find). Joining two groups comes
 // later, in union.cpp.
 
-#include <iostream>
-#include <queue>
+#include <iostream>  // cout, endl
+#include <queue>     // not used here
 #include <cstring>   // for memset
-#include <vector>
-using namespace std;
+#include <vector>    // not used here
+using namespace std; // write cout instead of std::cout
 
 // One parent slot per node. It is global, so it starts as all zeros - which would
 // wrongly mean "everyone's parent is node 0", hence the memset in main().
@@ -30,10 +30,10 @@ int par[1005];
 // Otherwise ask the same question one step up and pass the answer back down.
 // Cost: one call per step, so O(height of the tree).
 int find(int node){
-    if(par[node] == -1){
+    if(par[node] == -1){      // base case: node is the leader
         return node;
     }
-    return find(par[node]);
+    return find(par[node]);   // my leader = my parent's leader
 }
 
 int main(){
@@ -42,27 +42,28 @@ int main(){
     // par[i] to -1: at the start each node is alone and is its own leader.
     // (The same trick with 1 instead of -1 does NOT work - see union.cpp.)
     memset(par, -1, sizeof(par));
-    par[0] = 1;
-    par[1] = -1;
-    par[2] = 1;
-    par[3] = 1;
-    par[4] = 5;
-    par[5] = 3;
+    par[0] = 1;    // parent of 0 is 1
+    par[1] = -1;   // 1 has no parent: the leader
+    par[2] = 1;    // parent of 2 is 1
+    par[3] = 1;    // parent of 3 is 1
+    par[4] = 5;    // parent of 4 is 5
+    par[5] = 3;    // parent of 5 is 3
 
     // Now a small group is built by hand, to have something to climb:
     //
     //            1            <- leader, par[1] = -1
-    //           /|\
+    //           /|.
     //          0 2 3
     //              |
     //              5
     //              |
     //              4
     //
+    // (The "." above stands for the right-hand branch from 1 down to 3.)
     // find(4) walks 4 -> 5 -> 3 -> 1 and stops at 1, because par[1] is -1.
     // Four calls, four steps: that is why a tall tree makes find slow, and why the
     // next two files work on making it shorter.
-    cout << find(4) << endl;
+    cout << find(4) << endl;   // prints 1
 
-    return 0;
+    return 0;   // success
 }

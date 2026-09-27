@@ -27,26 +27,31 @@ Sample
  * Do this for both strings, then compare the two stacks letter by letter.
  * Two stacks of chars can be compared with ==, which checks size and every
  * element, so no extra loop is needed.
+ *
+ * Trace "ab#c":  push a -> [a], push b -> [a b], '#' pops b -> [a], push c -> [a c]
+ *
+ * Note: no #include or main() - LeetCode's hidden code includes the STL,
+ * creates a Solution object and calls backspaceCompare.
  */
 
 class Solution {
-public:
+public:   // LeetCode must be able to call these functions from outside
     // Types the string into a stack and returns what is left on screen.
     stack<char> typed(string s){
-        stack<char> st;
-        for(char c : s){
-            if(c == '#'){
+        stack<char> st;               // the text box: bottom = first letter, top = last letter
+        for(char c : s){              // range-for: c is each character of s, left to right
+            if(c == '#'){             // a backspace press
                 // Backspace on an empty box does nothing, so check first:
                 // pop() on an empty stack is undefined behaviour.
                 if(!st.empty()){
-                    st.pop();
+                    st.pop();         // delete the last letter typed
                 }
             }
             else{
-                st.push(c);
+                st.push(c);           // a normal letter is typed at the end
             }
         }
-        return st;
+        return st;                    // returns (a copy of) the final text as a stack
     }
 
     bool backspaceCompare(string s, string t) {

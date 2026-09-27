@@ -30,32 +30,40 @@ Sample
  *      of them once (pop from the front, push at the back):  3 2 1 | 4 5
  *
  * Every value is moved a constant number of times, so it is O(n).
+ *
+ * Note: no #include or main() - the judge's hidden code includes <queue>
+ * and <stack> and calls this function.
  */
 
+// q is taken by value (a copy of the judge's queue); we change the copy and
+// return it.
 queue<int> reverseElements(queue<int> q, int k)
 {
-    stack<int> st;
+    stack<int> st;      // turns the first k values around
     int n = q.size();   // remember n now; the size changes while we work
 
     // Phase 1: the first k values go into the stack (1 at the bottom, k-th on top).
+    // i counts how many values have been moved; the loop runs exactly k times.
     for(int i = 0; i < k; i++){
-        st.push(q.front());
-        q.pop();
+        st.push(q.front());    // front() reads the value at the front of the queue
+        q.pop();               // pop() on a queue removes the FRONT value
     }
 
     // Phase 2: pour them back. The k-th value comes out first, so the block
     // re-enters the queue in reverse order, behind the untouched values.
+    // With 1 2 3 4 5, k = 3: queue becomes 4 5 3 2 1.
     while(!st.empty()){
-        q.push(st.top());
+        q.push(st.top());      // push() on a queue adds at the BACK
         st.pop();
     }
 
     // Phase 3: the n - k values that were never meant to move are at the
     // front now. Send each of them to the back once, keeping their order.
+    // With 4 5 3 2 1: move 4 -> 5 3 2 1 4, move 5 -> 3 2 1 4 5.
     for(int i = 0; i < n - k; i++){
-        q.push(q.front());
-        q.pop();
+        q.push(q.front());     // copy the front value to the back
+        q.pop();               // and remove it from the front
     }
 
-    return q;
+    return q;                  // the queue with its first k values reversed
 }

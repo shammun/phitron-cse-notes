@@ -7,16 +7,27 @@
 // n x (max_weight + 1) different situations, so the cost falls from O(2^n) to
 // O(n x W).
 //
-// Read this file next to knapsack.cpp; the comments here cover only what is new.
+// Read this file next to knapsack.cpp; the comments here cover mostly what is new.
+//
+// The DP in brief:
+//   meaning     dp[i][w] = best total value using only items 0..i with w kilos
+//               of room left
+//   base cases  no items left (i < 0) or no room (w <= 0) -> 0
+//   transition  dp[i][w] = max(val[i] + dp[i-1][w - weight[i]],  (take i)
+//                              dp[i-1][w])                       (leave i)
+//               and only the "leave" option if item i does not fit.
+// Input order here: n, then n values, then n weights, then the capacity.
+// Example: 3 / 30 50 60 / 3 4 5 / 8 -> the right answer is 90 (weights 3+5),
+// but this file prints 0 because of the BUG in main (see below).
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // max
+#include <string>       // not used here
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
-int val[1005], weight[1005];
+int val[1005], weight[1005];   // val[i], weight[i] = value and weight of item i
 
 // The notebook. dp[i][w] is the answer to exactly one question: "using only items
 // 0..i, with w kilos of room left, what is the best value I can reach?" - the two
@@ -32,7 +43,7 @@ int dp[1005][1005];
 int knapsack(int i, int max_weight){
     // Nothing left to offer, or no room left: the best you can do is take
     // nothing, which is worth 0.
-    if(i < 0 || max_weight <= 0){
+    if(i < 0 || max_weight <= 0){   // base case
         return 0;
     }
 
@@ -40,8 +51,8 @@ int knapsack(int i, int max_weight){
     // This is the line that turns 2^n into n x W: the plain recursion reaches the
     // same (i, w) pair over and over on different branches, and now every repeat
     // stops here.
-    if(dp[i][max_weight] != -1){
-        return dp[i][max_weight];
+    if(dp[i][max_weight] != -1){    // already solved?
+        return dp[i][max_weight];   // reuse the stored answer
     }
 
     if(weight[i] <= max_weight){ // when we still have space in the bag, we can either take 
@@ -53,28 +64,28 @@ int knapsack(int i, int max_weight){
         int op2 = knapsack(i-1, max_weight); // not taking the current item
         // Keep whichever choice ended up better, and write it down before
         // returning so this state is never recomputed.
-        dp[i][max_weight] = max(op1, op2);
+        dp[i][max_weight] = max(op1, op2);   // remember the better choice
         return dp[i][max_weight];
     } else{
         // Item i is heavier than the room left, so there is no choice to make:
         // leaving it is the only legal move. Still worth storing.
-        dp[i][max_weight] = knapsack(i-1, max_weight);
+        dp[i][max_weight] = knapsack(i-1, max_weight);   // only "leave" is possible
         return dp[i][max_weight];
     }
 }
 
 int main(){
-    int n, max_weight;
+    int n, max_weight;             // number of items, bag capacity
 
-    cin >> n;
-    
-    for(int i=0; i<n; i++){
+    cin >> n;                      // how many items
+
+    for(int i=0; i<n; i++){        // all n values first...
         cin >> val[i];
     }
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n; i++){        // ...then all n weights...
         cin >> weight[i];
     }
-    cin >> max_weight;
+    cin >> max_weight;             // ...then the capacity
 
     // Mark every state "not solved yet".
     //
@@ -85,13 +96,17 @@ int main(){
     // instead of -1, decides the state is already solved, and returns 0 without
     // doing any work at all. That is why this program prints 0 instead of 90.
     // One character fixes it: j <= max_weight.
-    for(int i=0; i<n; i++){
-        for(int j=0; j<max_weight; j++){
+    // -1 is the "not solved yet" marker: a real best value is never negative,
+    // so -1 can never be confused with a stored answer. (0 would be a bad
+    // marker - 0 IS a real answer when nothing fits.)
+    for(int i=0; i<n; i++){                    // every item index 0..n-1
+        for(int j=0; j<max_weight; j++){       // BUG: should be j <= max_weight - column max_weight stays 0
             dp[i][j] = -1;
         }
     }
 
-    cout << knapsack(n-1, max_weight) << endl;
+    // Start with every item on offer (0..n-1) and the full capacity.
+    cout << knapsack(n-1, max_weight) << endl; // BUG: prints 0 because dp[n-1][max_weight] was never set to -1
 
-    return 0;
+    return 0;   // success
 }

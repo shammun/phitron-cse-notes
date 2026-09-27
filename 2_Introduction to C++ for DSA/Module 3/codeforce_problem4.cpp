@@ -51,14 +51,17 @@ So the smallest possible result is 7.
 using namespace std; // Use the standard namespace to avoid prefixing 'std::' before standard library components
 
 int main(){
-    int T;
+    int T; // number of test cases
     cin >> T;
 
+    // while(T--) runs the body exactly T times: it tests the current T (non-zero = true),
+    // then lowers it by 1. T=2 -> runs with T becoming 1, then 0, then the test sees 0 and stops.
     while(T--){
-        int N;
+        int N; // number of elements in this test case
         cin >> N;
 
-        int a[100];
+        int a[100]; // N is at most 100, so a fixed array of 100 boxes is always big enough
+        // Read the N numbers into a[0] .. a[N-1].
         for(int i=0; i<N; i++){
             cin >> a[i];
         }
@@ -69,9 +72,18 @@ int main(){
         // For a fixed j, the best i is simply the one before j with the
         // smallest a[i] - i. So one pass is enough: remember the smallest
         // a[i] - i seen so far, and try it with every new j.
+        // Indexes here start at 0 instead of the problem's 1, but j - i is the same either way.
+        // INT_MAX (from <climits>) is the largest value an int can hold, 2147483647.
+        // Starting a "minimum so far" at INT_MAX means the first real value always replaces it.
+        // Values stay safe: |a| <= 10^6 and index <= 100, so no sum comes near INT_MAX.
         int min_ai_minus_i = INT_MAX; // smallest a[i] - i among indexes before j
         int smallest_sum = INT_MAX;   // best answer so far (INT_MAX = "nothing yet")
 
+        // Trace with 20 1 9 4 (0-based):
+        //   j=0: no i yet; min_ai_minus_i = 20-0 = 20
+        //   j=1: try 20 + (1+1) = 22 -> best 22; min_ai_minus_i = min(20, 1-1=0) = 0
+        //   j=2: try 0 + (9+2) = 11 -> best 11; min_ai_minus_i = min(0, 9-2=7) = 0
+        //   j=3: try 0 + (4+3) = 7  -> best 7                      -> prints 7
         for(int j=0; j<N; j++){
             if(j > 0){ // j needs at least one i before it
                 // min() keeps the smaller of the old best and this pair's value
@@ -84,5 +96,5 @@ int main(){
         cout << smallest_sum << endl; // one answer per test case
     }
 
-    return 0;
+    return 0; // program finished normally
 }

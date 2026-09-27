@@ -58,9 +58,9 @@ tamim 35 65
 
 */
 
-#include <bits/stdc++.h>
+#include <bits/stdc++.h>    // GCC shortcut: includes the whole standard library (queue, vector, string, ...)
 
-using namespace std;
+using namespace std;        // write priority_queue, cout ... without std::
 
 
 
@@ -77,11 +77,13 @@ using namespace std;
 
 // One student's record.
 class Student{
-    public:
+    public:                 // usable from outside the class
         string name;
         int roll;
         int marks;
 
+        // Constructor: `Student obj(name, roll, marks);` runs this.
+        // this->name is the member; plain name is the parameter.
         Student(string name, int roll, int marks){
             this->name = name;
             this->roll = roll;
@@ -90,6 +92,8 @@ class Student{
 };
 
 
+// The compare class: the priority queue calls cmp()(l, r) to learn which of
+// two students has LOWER priority. l and r are references (&): no copies.
 class cmp{
     public:
         bool operator()(Student &l, Student &r){
@@ -109,20 +113,21 @@ int main(){
     // The top of pq is always the student the question wants printed.
     priority_queue<Student, vector<Student>, cmp> pq;
     int N;
-    cin >> N;
+    cin >> N;               // how many students at the start
 
     // Read the starting list of students into the heap.
     for(int i=0; i<N; i++){
         string name;
         int roll, marks;
         cin >> name >> roll >> marks;
-        Student obj(name, roll, marks);
-        pq.push(obj);
+        Student obj(name, roll, marks);     // build the Student
+        pq.push(obj);                       // a copy goes into the heap, O(log n)
     }
 
     int Q;
-    cin >> Q;
+    cin >> Q;               // number of commands
 
+    // One pass handles one command; i just counts the Q commands.
     for(int i=0; i<Q; i++){
         // The command number: 0, 1 or 2.
         int x;
@@ -134,7 +139,7 @@ int main(){
             int roll2, marks2;
             cin >> name2 >> roll2 >> marks2;
             Student obj2(name2, roll2, marks2);
-            pq.push(obj2);
+            pq.push(obj2);      // the heap is not empty now, so top() is safe
             cout << pq.top().name << " " << pq.top().roll << " " << pq.top().marks << endl;
         }
         // 1: show the top student, or Empty.
@@ -151,10 +156,10 @@ int main(){
         if(x == 2){
             if(pq.empty()){
                 cout << "Empty" << endl;
-                continue;
+                continue;       // go to the next command
             }
 
-            pq.pop();
+            pq.pop();           // remove the top student
             if(pq.empty()){
                 cout << "Empty" << endl;
             } else {
@@ -164,5 +169,5 @@ int main(){
     }
 
 
-    return 0;
+    return 0;               // program finished normally
 }

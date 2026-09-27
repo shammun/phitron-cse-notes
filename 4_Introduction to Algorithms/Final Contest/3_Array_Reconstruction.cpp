@@ -59,19 +59,20 @@ Sample Output 0
 // and then y = S - x is forced, so there are exactly S + 1 pairs.
 // In the example S = 15 - 11 = 4, and the pairs are (0,4) ... (4,0): 5 ways.
 
-#include <iostream>
+#include <iostream>     // cin, cout, endl
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 // Reads one test case (the n-2 remaining values and the original sum) and
 // returns the number of ways.
 long long possible_ways(int n){
+    // The n-2 values still in the array (variable length array, g++ extension).
     long long rest[n-2];
     // Sum of the values still in the array. (The name says "deleted", but it
     // is the total of the elements that were NOT deleted.)
     long long deleted_sum = 0;
 
-    for(int i=0; i<n-2; i++){
+    for(int i=0; i<n-2; i++){       // read and add up each remaining value
         cin >> rest[i];
         deleted_sum += rest[i];
     }
@@ -88,11 +89,11 @@ long long possible_ways(int n){
 }
 
 int main() {
-    int t;
+    int t;              // number of test cases
     cin >> t;
 
     while (t--) {
-        int n;
+        int n;          // array size before the deletion
         cin >> n;
 
         long long result = possible_ways(n);

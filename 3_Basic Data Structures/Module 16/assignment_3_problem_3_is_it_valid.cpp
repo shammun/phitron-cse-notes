@@ -10,6 +10,10 @@ An input string is valid if the string is empty after doing some operatios. The 
  can delete its previous available character  along with itself. If there is no  available to delete, it will not delete itself.
 Note: You need to solve it using STL Stack or Queue only.
 
+(The blanks above lost their symbols when copied: the string S has only
+'0' and '1'; a '0' can delete the '1' just before it, and a '1' can delete
+the '0' just before it.)
+
 Input Format
 
 First line will contain , the number of test cases.
@@ -66,34 +70,37 @@ YES
  *   "0001":  0 | 00 | 000 | 1 cancels one 0 -> 00 left          -> NO
  */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>    
-#include <string>
-#include <stack>
+#include <iostream>     // cin and cout
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // string, to hold each test's text
+#include <stack>        // STL stack
 
-using namespace std;
+using namespace std;    // write cout, string, stack without the std:: prefix
 
 int main(){
-    int t;
+    int t;              // number of test cases
     cin >> t;
 
+    // while(t--): checks t, then lowers it by 1, so the body runs exactly
+    // t times (it stops when t reaches 0). One pass = one test case.
     while(t--){
         string s;
-        cin >> s;
+        cin >> s;       // cin >> reads one word (stops at a space or newline)
 
         stack<char> st;   // characters still standing; top = nearest one on the left
+                          // (created inside the loop, so every test starts with an empty stack)
 
+        // Range-for: c is each character of s, left to right.
         for(char c : s){
-            // Valid means everything got deleted.
         if(st.empty()){
                 // Nothing to delete: c stays.
                 st.push(c);
             } else{
                 // Opposite digits next to each other delete each other.
-                if(c == '0' && st.top() == '1'){
-                    st.pop();
-                } else if(c == '1' && st.top() == '0'){
+                if(c == '0' && st.top() == '1'){          // a 0 right after a surviving 1
+                    st.pop();                             // both vanish: drop the 1, never push the 0
+                } else if(c == '1' && st.top() == '0'){   // a 1 right after a surviving 0
                     st.pop();
                 } else{
                     // Same digit: no deletion, c stays.
@@ -102,12 +109,13 @@ int main(){
             }
         }
 
+        // Valid means everything got deleted.
         if(st.empty()){
-            cout << "YES" << endl;
+            cout << "YES" << endl;   // endl = newline + flush
         } else {
             cout << "NO" << endl;
         }
     }
 
-    return 0;
+    return 0;           // program finished normally
 }

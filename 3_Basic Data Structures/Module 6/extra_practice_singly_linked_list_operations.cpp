@@ -42,44 +42,46 @@ Example
  * itself by reference and not a copy of it.
  */
 
-#include <iostream>
+#include <iostream> // cin and cout
 using namespace std; // Allows us to avoid prefixing standard library objects with `std::`.
 
+// One node: a value plus the address of the next node.
 class Node {
-    public:
+    public: // usable from outside the class
         int val;     // the data
         Node* next;  // address of the next node, NULL for the last one
 
+        // Constructor: runs on every new Node(x); `this` points at the node being built.
         Node(int val) {
-            this->val = val;
+            this->val = val; // store the value in the member
             this->next = NULL; // not linked to anything yet
         }
 };
 
 // Operation: size. Walk from head to NULL and count the nodes. O(n)
 int get_size(Node* head){
-    int size = 0;
+    int size = 0; // count so far
     Node* tmp = head;          // a copy: moving tmp does not move head
-    while(tmp != NULL){
-        size++;
-        tmp = tmp->next;
+    while(tmp != NULL){ // on a real node
+        size++; // count it
+        tmp = tmp->next; // step forward
     }
-    return size;
+    return size; // number of nodes
 }
 
 // Operation: display. Same walk, printing each value. O(n)
 void print_linked_list(Node* head){
-    Node* tmp = head;
-    while(tmp != NULL){
-        cout << tmp->val << " ";
-        tmp = tmp->next;
+    Node* tmp = head; // walker
+    while(tmp != NULL){ // until past the last node
+        cout << tmp->val << " "; // value and a space
+        tmp = tmp->next; // step forward
     }
-    cout << endl;
+    cout << endl; // end the line
 }
 
 // Operation: insert at head. O(1)
 void insert_at_head(Node* &head, Node* &tail, int val){
-    Node* newNode = new Node(val);
+    Node* newNode = new Node(val); // new node on the heap
     newNode->next = head;      // the new node points at the old first node
     head = newNode;            // and becomes the first node itself
     if(tail == NULL){
@@ -89,72 +91,75 @@ void insert_at_head(Node* &head, Node* &tail, int val){
 
 // Operation: insert at tail. O(1), because `tail` remembers the last node.
 void insert_at_tail(Node* &head, Node* &tail, int val){
-    Node* newNode = new Node(val);
+    Node* newNode = new Node(val); // new node on the heap
     if(head == NULL){
         // Empty list: the new node is both the first and the last node.
         head = newNode;
         tail = newNode;
-        return;
+        return; // done
     }
     tail->next = newNode;      // hang it after the old last node
     tail = newNode;            // it is the new last node
 }
 
 // Operation: insert at a position. Walk to the node just BEFORE idx. O(idx)
+// (The caller has already checked 0 <= idx <= size.)
 void insert_at_any_index(Node* &head, Node* &tail, int idx, int val){
     // Index 0 and index size are the head and tail cases above.
-    if(idx == 0){
+    if(idx == 0){ // new first node
         insert_at_head(head, tail, val);
-        return;
+        return; // done
     }
-    if(idx == get_size(head)){
+    if(idx == get_size(head)){ // right after the last node (keeps tail correct)
         insert_at_tail(head, tail, val);
-        return;
+        return; // done
     }
 
-    Node* newNode = new Node(val);
-    Node* tmp = head;
+    Node* newNode = new Node(val); // the node to insert in the middle
+    Node* tmp = head; // walker at index 0
     for(int i = 1; i < idx; i++){   // idx-1 steps: tmp stops at index idx-1
-        tmp = tmp->next;
+        tmp = tmp->next; // step forward
     }
     newNode->next = tmp->next;      // first keep hold of the rest of the list
     tmp->next = newNode;            // then link the new node in after tmp
 }
 
-int main(){
-    Node* head = NULL;
-    Node* tail = NULL;
+int main(){ // the program starts running here
+    Node* head = NULL; // empty list
+    Node* tail = NULL; // no last node yet
 
     // Operation: create. Read values until -1 and append each one.
-    int val;
+    // (`cin >> val` is false when input ends, so this also stops at end of input.)
+    int val; // each value read
     while(cin >> val && val != -1){
-        insert_at_tail(head, tail, val);
+        insert_at_tail(head, tail, val); // append it
     }
 
     // Commands until the input runs out.
-    int cmd;
-    while(cin >> cmd){
-        if(cmd == 1){
-            cin >> val;
+    int cmd; // the command number 1..5
+    while(cin >> cmd){ // false once there is nothing left to read
+        if(cmd == 1){ // insert at head
+            cin >> val; // the value
             insert_at_head(head, tail, val);
-        } else if(cmd == 2){
-            cin >> val;
+        } else if(cmd == 2){ // insert at tail
+            cin >> val; // the value
             insert_at_tail(head, tail, val);
-        } else if(cmd == 3){
-            int idx;
-            cin >> idx >> val;
+        } else if(cmd == 3){ // insert at index
+            int idx; // the position
+            cin >> idx >> val; // position, then value
             // Valid places are 0..size (size itself means "after the tail").
-            if(idx < 0 || idx > get_size(head)){
+            if(idx < 0 || idx > get_size(head)){ // || = "or"
                 cout << "Invalid" << endl;
             } else{
                 insert_at_any_index(head, tail, idx, val);
             }
-        } else if(cmd == 4){
+        } else if(cmd == 4){ // print size
             cout << get_size(head) << endl;
-        } else if(cmd == 5){
+        } else if(cmd == 5){ // display
             print_linked_list(head);
         }
+        // Any other number is silently ignored.
     }
 
-    return 0;
+    return 0; // program finished successfully
 }

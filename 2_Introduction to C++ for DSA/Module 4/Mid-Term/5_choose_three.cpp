@@ -49,20 +49,29 @@ In the third case, it is possible to make 6 by using three different indexed val
 */
 
 #include <iostream> // cin and cout
+// <string.h> is the C header for char-array functions (strlen, strcpy...); it does NOT
+// declare the C++ `string` type. `string` is available here only because <iostream>
+// happens to include it on this compiler; #include <string> is the proper header.
 #include <string.h> // (string itself comes in with iostream on this compiler)
-using namespace std; // write cin/cout instead of std::cin/std::cout
+using namespace std; // write cin/cout/string instead of std::cin/std::cout/std::string
 
-int main() {
-    int T;
-    cin >> T;
+int main() { // program starts here
+    int T;     // number of test cases
+    cin >> T;  // read T
 
+    // CAUTION: 100000 strings is far more than T <= 100 needs, and as a local
+    // array it takes about 3 MB of stack (each string object is 32 bytes here).
+    // That is fine on Linux (8 MB stack) and on this site's runner, but on Windows'
+    // default 1 MB stack the program crashes at start. results[100] would be enough.
     string results[100000]; // "YES" or "NO" for each test case, printed at the end
 
+    // One pass of this loop = one whole test case
     for(int i=0; i<T; i++){
-        int N, S;
-        cin >> N >> S;
+        int N, S;        // array size and target sum
+        cin >> N >> S;   // read both from the first line of the test case
 
-        int A[100];
+        int A[100]; // N <= 100, so 100 slots are always enough
+        // Read the N values (this loop's i hides the outer i until it ends)
         for(int i=0; i<N; i++){
             cin >> A[i];
         }
@@ -73,26 +82,29 @@ int main() {
         // Try every choice of three positions i, j, k. N is at most 100, so
         // 100 * 100 * 100 = 10^6 checks per test case is fast enough.
         // (These loops reuse the name i; inside them it hides the outer i.)
-        for(int i=0; i<N; i++){
-            for(int j=0; j<N; j++){
-                for(int k=0; k<N; k++){
+        for(int i=0; i<N; i++){           // first position
+            for(int j=0; j<N; j++){       // second position
+                for(int k=0; k<N; k++){   // third position
                     // "three distinct indexed values": the positions must differ,
                     // the values may be equal (2 2 2 can make 6)
-                    if(i != j && i != k && j != k){
-                        if(A[i] + A[j] + A[k] == S){
-                            answer = "YES";
+                    if(i != j && i != k && j != k){ // && = and: all three differences must hold
+                        if(A[i] + A[j] + A[k] == S){ // these three add up to S?
+                            answer = "YES"; // found one (the loops keep going, but the answer stays YES)
                         }
                     }
                 }
             }
         }
+        // Trace, test 1: A={1,2,3,4,5}, S=10 -> i=0,j=3,k=4 gives 1+4+5=10 -> YES
+        // Test 5: N=1, so i,j,k can never all differ -> stays NO
 
         results[i] = answer; // the inner loops are over, so this i is the test-case number again
     }
 
+    // Print all answers, one per line, in input order
     for(int i=0; i<T; i++){
         cout << results[i] << endl;
     }
 
-    return 0;
+    return 0; // program ended normally
 }

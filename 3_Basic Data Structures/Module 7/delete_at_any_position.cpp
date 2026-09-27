@@ -21,49 +21,70 @@ change the `next` of the node standing in front of it.
 Input: the values of the list, ended by -1. The index to delete (2) is fixed
 in the code.
 
+Example: input 10 20 30 40 50 -1
+    before: 10 -> 20 -> 30 -> 40 -> 50 -> NULL
+    after : 10 -> 20 -> 40 -> 50 -> NULL      (index 2, the 30, is gone)
+
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std; // Allows us to avoid prefixing standard library objects with `std::`.
+#include <iostream>   // cin (keyboard input) and cout (screen output)
+#include <vector>     // std::vector - not used in this file, left over from a template
+#include <algorithm>  // sort, max, min ... - not used here either
+#include <string>     // std::string - not used here
+using namespace std; // Allows us to avoid prefixing standard library objects with `std::` (we write cout, not std::cout).
 
 // Node class represents a single element in a linked list.
+// Each node is a small "box" in memory holding one value plus the address of
+// the next box. The boxes can live anywhere in memory; only the `next`
+// arrows chain them together in order.
 class Node {
-    public:
+    public:              // members below can be used from outside the class (e.g. from main)
         int val;     // Value stored in the node (data).
-        Node* next;  // Pointer to the next node in the linked list.
+        Node* next;  // Pointer to the next node in the linked list (NULL for the last node).
 
         // Constructor for the Node class to initialize 'val' and set 'next' to NULL.
+        // It runs automatically when we write `new Node(5)`.
     Node(int val) {
+        // `this` is a pointer to the object being built. The parameter is also
+        // called `val`, so `this->val` means "the member", plain `val` means
+        // "the parameter". `->` reads a member through a pointer.
         this->val = val;  // Assign the provided value to the 'val' member.
         this->next = NULL; // Initialize 'next' to NULL, meaning no next node by default.
     }
-};
+};   // a class definition must end with a semicolon
 
 // The Module 6 helper, unchanged: add a value at the end of the list. It is
 // O(1) because `tail` is remembered, so there is no walk. `head` and `tail`
 // are taken by reference (`&`), which is what lets `main` see the new ends.
+// (Without `&` the function would get copies of the two pointers, and
+// changing the copies would not change main's `head` and `tail`.)
 void insert_at_tail(Node* &head, Node* &tail, int val){
+    // `new Node(val)` asks the heap for one Node, runs the constructor, and
+    // returns its address. Heap memory stays alive after the function ends.
     Node* newNode = new Node(val);
+    // Empty list: the new node is both the first and the last node.
     if(head == NULL){
         head = newNode;
         tail = newNode;
-        return;
+        return;          // done - skip the code below
     }
-    
+
+    // Non-empty list: hook the new node after the current last node...
     tail->next = newNode;
+    // ...and move the `tail` bookmark onto it.
     tail = newNode; // or tail = tail->next
 }
 
 // Walk from the head and print every value. `tmp` is a copy of the pointer,
 // so moving `tmp` never moves `head` itself.
 void print_linked_list(Node* head){
-    Node* tmp = head;
+    Node* tmp = head;              // start at the first node
+    // One pass = print one node, then step to the next. Stops after the last
+    // node, when `tmp` becomes NULL.
     while(tmp != NULL){
-        cout << tmp-> val << endl;
-        tmp = tmp->next;
+        // `endl` prints a newline and flushes the output buffer.
+        cout << tmp-> val << endl;   // `tmp-> val` is the same as `tmp->val` (spaces are ignored)
+        tmp = tmp->next;             // follow the arrow to the next node
     }
 }
 
@@ -76,9 +97,9 @@ void print_linked_list(Node* head){
 // Trap: an empty list crashes here. A safe version starts with
 // `if(head == NULL) return;`.
 void delete_head(Node* &head){
-    Node* deleteNode = head;
-    head = head->next;
-    delete deleteNode;
+    Node* deleteNode = head;   // 1. remember the old first node
+    head = head->next;         // 2. the second node becomes the first
+    delete deleteNode;         // 3. `delete` gives the node's memory back to the heap
 }
 
 // Remove the node at 0-based index `idx`.
@@ -88,12 +109,12 @@ void delete_head(Node* &head){
 // you must call `delete_head` instead, which takes `Node* &head`.
 // Cost: O(idx) - one step per node walked - so O(n) in the worst case.
 void delete_at_any_position(Node* head, int idx){
-    Node* tmp = head;
+    Node* tmp = head;          // walker, starts on index 0
     // Counting starts at 1 and stops *before* `idx`, so `tmp` ends on index
     // idx-1: the node just in front of the victim. With idx = 2 the body runs
     // once and `tmp` stands on index 1, the node holding 20.
     for(int i=1; i<idx; i++){
-        tmp = tmp->next;
+        tmp = tmp->next;       // one step forward
     }
     // Step 1: remember the box, before any arrow moves away from it.
     Node* deleteNode = tmp->next;
@@ -115,16 +136,17 @@ int main(){
     // An empty list: no first node and no last node yet.
     Node* head = NULL;
     Node* tail = NULL;
-    
-    int val;
+
+    int val;   // holds each number as it is read
     // Read values until the sentinel -1 arrives. -1 is only a stop sign; it
-    // is never stored in the list.
+    // is never stored in the list. `while(true)` loops forever; only `break`
+    // gets us out.
     while(true){
-        cin >> val;
+        cin >> val;          // `cin >>` skips spaces/newlines and reads the next integer
         if(val == -1){
-            break;
+            break;           // leave the loop, -1 is not added
         }
-        insert_at_tail(head, tail, val);
+        insert_at_tail(head, tail, val);   // append, keeping the input order
     }
 
     print_linked_list(head);   // 10 20 30 40 50, one per line
@@ -134,5 +156,5 @@ int main(){
 
     print_linked_list(head);   // 10 20 40 50 - the 30 is gone
 
-    return 0;
+    return 0;   // 0 tells the operating system the program finished normally
 }

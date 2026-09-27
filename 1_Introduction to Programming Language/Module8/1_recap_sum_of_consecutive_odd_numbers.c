@@ -39,31 +39,39 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
-    int t;
-    scanf("%d", &t);
+int main() {        /* the program starts running here */
+    int t;              /* number of test cases */
+    scanf("%d", &t);    /* %d = read a whole number; &t = where to put it */
 
+    /* while (t--) runs the body exactly t times: the test uses the CURRENT
+       t (true while it is not 0) and then subtracts 1. With t = 2: test 2
+       (true) -> body, test 1 (true) -> body, test 0 (false) -> stop. */
     while (t--) {
-        int x, y;
+        int x, y;                   /* the two ends of the range */
         scanf("%d %d", &x, &y);
 
         /* Ensure x < y so the loop bounds make sense. */
         if (x > y) {
+            /* Swap via a temporary box: keep x in tmp, copy y into x, then
+               put the saved value into y. e.g. x=9,y=5 -> tmp=9, x=5, y=9. */
             int tmp = x; x = y; y = tmp;
         }
 
-        long long sum = 0;
+        long long sum = 0;      /* running total; must start at 0 */
         /* Strictly between: start at x+1, stop before y. */
         for (int i = x + 1; i < y; i++) {
-            if (i % 2 != 0) {
-                sum += i;
+            if (i % 2 != 0) {       /* remainder 1 when divided by 2: odd */
+                sum += i;           /* short for sum = sum + i */
             }
         }
 
+        /* %lld = print a long long. Trace x=5, y=12: odd numbers 7,9,11 -> 27. */
         printf("%lld\n", sum);
     }
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

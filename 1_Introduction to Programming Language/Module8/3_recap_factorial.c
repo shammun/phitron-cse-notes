@@ -40,24 +40,31 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
-    int t;
-    scanf("%d", &t);
+int main() {        /* the program starts running here */
+    int t;              /* number of test cases */
+    scanf("%d", &t);    /* %d = read a whole number; &t = where to put it */
 
+    /* while (t--) repeats the body t times: it tests the current t (true
+       while not 0), then lowers t by 1. */
     while (t--) {
-        int n;
+        int n;              /* this test case's N */
         scanf("%d", &n);
 
         /* Compute n! iteratively. Starts at 1 (correct for n=0). */
         long long fact = 1;
+        /* Multiply in 2, 3, ..., n (multiplying by 1 changes nothing, so
+           start at 2). For n = 0 or 1 the loop never runs and fact stays 1.
+           Trace n = 5: 1*2=2, *3=6, *4=24, *5=120. */
         for (int i = 2; i <= n; i++) {
-            fact *= i;
+            fact *= i;          /* short for fact = fact * i */
         }
 
-        printf("%lld\n", fact);
+        printf("%lld\n", fact);     /* %lld = print a long long */
     }
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

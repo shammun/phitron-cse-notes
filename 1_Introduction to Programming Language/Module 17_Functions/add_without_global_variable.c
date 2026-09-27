@@ -8,11 +8,21 @@ Key differences from previous examples:
 - Returns sum instead of printing it (more flexible)
 - Can store result in variables for later use
 - Shows function reusability with multiple calls
+
+Example run (input "2 3" and then "10 20"):
+  Before calling function sum()
+  function called
+  After calling function sum()
+  Result: 5
+  function called
+  After calling function sum()
+  Result: 30
+(The messages say "sum()", but the function is actually named add().)
 */
 
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: scanf and printf
 
-/* 
+/*
 Function: add()
 - Return type: int (returns the calculated sum)
 - Parameters: none (gets input inside function)
@@ -22,13 +32,15 @@ Function: add()
   2. Gets two numbers from user using scanf
   3. Prints confirmation message
   4. Calculates and returns sum
+- a and b here are LOCAL variables: they exist only while add() runs and
+  are created fresh on every call.
 */
 int add(){
     int a, b;                      // Variables for storing user input
-    scanf("%d %d", &a, &b);        // Get two numbers from user
+    scanf("%d %d", &a, &b);        // Get two numbers from user (& = address, so scanf can fill them)
     printf("function called\n");    // Confirmation of function execution
     int sum = a + b;               // Calculate sum
-    return sum;                    // Return result to caller
+    return sum;                    // Return result to caller (the call add() is replaced by this value)
 }
 
 /*
@@ -49,11 +61,11 @@ int main(){
     printf("Before calling function sum()\n");
     int result = add();            // First call to add(), storing result
     printf("After calling function sum()\n");
-    printf("Result: %d\n", result);
-    
+    printf("Result: %d\n", result); // print the stored sum
+
     int result2 = add();           // Second call to add(), storing in different variable
     printf("After calling function sum()\n");
     printf("Result: %d\n", result2);
 
-    return 0;
+    return 0; // program ended successfully
 }

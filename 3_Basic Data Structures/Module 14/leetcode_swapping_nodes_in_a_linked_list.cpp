@@ -23,30 +23,34 @@ and swap their VALUES (no relinking needed). O(n) time, O(1) memory.
  *     ListNode(int x, ListNode *next) : val(x), next(next) {}
  * };
  */
+// (LeetCode defines ListNode as above and supplies includes and main.)
 class Solution {
-public:
+public:     // callable by the judge
+    // Swaps the values of the k-th node from each end; returns the same head.
     ListNode* swapNodes(ListNode* head, int k) {
         // Count the nodes.
         int length = 0;
         ListNode* currentNode = head;
-        while(currentNode){
+        while(currentNode){             // "while not NULL"
             length++;
             currentNode = currentNode->next;
         }
 
         // set the front node: k-1 steps from the head
         ListNode* frontNode = head;
-        for(int i=1; i< k; i++){
+        for(int i=1; i< k; i++){        // i = 1 .. k-1 -> k-1 steps
             frontNode = frontNode->next;
         }
 
         // set the end node: length-k steps from the head
         ListNode* endNode = head;
-        for(int i=1; i<= length-k; i++){
+        for(int i=1; i<= length-k; i++){    // i = 1 .. length-k -> length-k steps
             endNode = endNode->next;
         }
+        // Example length 5, k 2: frontNode = the 2, endNode = the 4.
 
         // Swap only the values; the links stay as they are.
+        // std::swap(a, b) exchanges the two values.
         swap(frontNode->val, endNode->val);
         return head;
     }

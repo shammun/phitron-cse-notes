@@ -21,8 +21,9 @@ from the judge (and from the test harness the site uses to run it here).
 
 */
 
+// LeetCode's answer class, with two helpers.
 class Solution {
-public:
+public:     // callable by the judge
     /* Reverse the list that starts at `tmp`, recursively.
 
        `head` is passed by reference (`ListNode* &`) because the caller's head
@@ -30,6 +31,7 @@ public:
        new first node. */
     void reverse(ListNode* &head, ListNode* tmp){
         // Deepest call: `tmp` is the last node, so it becomes the new head.
+        // (Base case of the recursion.)
         if(tmp->next == NULL){
             head = tmp;
             return;
@@ -43,40 +45,43 @@ public:
         // ...and `tmp` must stop pointing forwards, or the two nodes would
         // point at each other and the list would loop forever.
         tmp->next = NULL;
+        // Trace 1 2 3: deepest call sets head = 3; then 3->2, 2->NULL; then 2->1, 1->NULL.
     }
 
     // Add a value at the end of a list. `tail` is kept so this is O(1) and
     // the copy comes out in the same order as the original. Both pointers are
     // by reference because an empty list has to set them both.
     void insert_at_tail(ListNode* &head, ListNode* &tail, int val){
-        ListNode* newNode = new ListNode(val);
-        if(head==NULL){
+        ListNode* newNode = new ListNode(val);  // `new` builds the node on the heap
+        if(head==NULL){             // empty list: new node is head and tail
             head = newNode;
             tail = newNode;
             return;
         }
-        tail->next = newNode;
-        tail = newNode;
+        tail->next = newNode;       // link after the old last node
+        tail = newNode;             // it is the last node now
     }
 
+    // Returns true if the list reads the same both ways.
     bool isPalindrome(ListNode* head) {
-        ListNode* newHead = NULL;
+        ListNode* newHead = NULL;   // the copy, empty for now
         ListNode* newTail = NULL;
 
         // Step 1: copy the list. New nodes are built, so reversing the copy
         // in step 2 leaves the original list untouched -- the judge (and the
         // comparison below) still needs it in its original order.
         ListNode* tmp = head;
-        while(tmp != NULL){
+        while(tmp != NULL){                     // one pass per original node
             insert_at_tail(newHead, newTail, tmp->val);
             tmp = tmp->next;
         }
         // Step 2: reverse the copy. Both arguments start at newHead: one is
         // the head pointer to update, the other is where the walk begins.
+        // (LeetCode guarantees at least one node, so newHead is not NULL.)
         reverse(newHead, newHead);
 
         // Step 3: walk both lists together. The lists have the same length,
-        // so one counter is enough.
+        // so checking one of them for NULL is enough to stop both walks.
         tmp = head;
         ListNode* tmp2 = newHead;
 
@@ -85,9 +90,10 @@ public:
             if(tmp->val != tmp2->val){
                 return false;
             }
-            tmp = tmp->next;
+            tmp = tmp->next;        // both walkers step together
             tmp2 = tmp2->next;
         }
+        // Example 1 2 2 1: reversed copy 1 2 2 1, all pairs equal -> true.
         // Every pair matched, so the list reads the same in both directions.
         return true;
     }

@@ -50,10 +50,10 @@ Query (4,4): Tree 4 alone → 5
 // everything up once: sum[i] = fruits on trees 1..i. Then the fruits on trees
 // L..R are "everything up to R" minus "everything before L", one subtraction.
 
-#include <iostream>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+using namespace std;    // no std:: prefix
 
-int fruits[1000005];
+int fruits[1000005];    // fruits[i] = fruits on tree i (1-based)
 // sum[i] = fruits[1] + ... + fruits[i]. It is global for two reasons: a global
 // array starts at all zeros, so sum[0] = 0 as the formula needs, and 8 MB is
 // too big to sit safely on the stack inside main.
@@ -61,7 +61,7 @@ int fruits[1000005];
 long long sum[1000005];
 
 int main(){
-    int N, Q;
+    int N, Q;               // trees, queries
     cin >> N >> Q;
 
     // 1-based on purpose: tree i sits at fruits[i], matching the query numbers.
@@ -75,12 +75,13 @@ int main(){
         sum[i] = sum[i-1] + fruits[i];
     }
 
-    while(Q--){
-        int L, R;
+    while(Q--){             // answer each query
+        int L, R;           // the range of trees
         cin >> L >> R;
 
         // Trees L..R = (trees 1..R) - (trees 1..L-1).
         // Query 2 5: sum[5] - sum[1] = 15 - 2 = 13. With L = 1 it uses sum[0] = 0.
+        // (With 10^5 queries, "\n" would be faster than endl, which flushes.)
         cout << sum[R] - sum[L-1] << endl;
     }
 

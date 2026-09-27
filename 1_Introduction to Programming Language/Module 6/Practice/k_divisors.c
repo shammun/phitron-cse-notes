@@ -1,3 +1,4 @@
+// stdio.h ("standard input output") declares scanf and printf.
 #include <stdio.h>
 
 // Find the number of k divisors of number n
@@ -13,20 +14,25 @@
 //
 // i <= n, not i < n: n divides itself, so n is a divisor and must be tested.
 //
+// Example: input 6 -> 1, 2, 3, 6 (6 % 4 = 2 and 6 % 5 = 1, so 4 and 5 are
+// skipped).
+//
 // This does n tests. That is fine for the small n here; the usual speed-up
 // is to stop at the square root of n, because every divisor i below it pairs
 // with a second divisor n / i above it.
 //
-// As in even_numbers.c, main ends without `return 0;`, which C allows.
-int main() {
+// main ends without `return 0;`, which C allows for main alone (it then
+// returns 0 by itself).
+int main() {        // the program starts running here
 
-    int n;
-    scanf("%d", &n);
+    int n;              // the number whose divisors we want
+    scanf("%d", &n);    // %d = read a whole number; &n = where to store it
 
+    // Try every candidate i = 1, 2, ..., n; one pass tests one candidate.
     for(int i = 1; i <= n; i++) {
-        if(n % i == 0){
-            printf("%d\n", i);
+        if(n % i == 0){             // remainder 0: i divides n exactly
+            printf("%d\n", i);      // print it on its own line
         }
     }
 
-}
+}   // end of main

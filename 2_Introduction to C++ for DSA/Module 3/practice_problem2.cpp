@@ -17,16 +17,24 @@ Note: At first try to do this, kohli=dhoni and see if it gives the correct outpu
 using namespace std; // Use the standard namespace to avoid prefixing 'std::'
 
 // Define a class named 'Cricketer' to encapsulate the properties of a cricketer
+// A class is a blueprint for a new data type. It has no constructor, so the problem's
+// "fill the data by yourself" means we assign each member after creating the object.
 class Cricketer {
-    public:
-    int jersey_no;
-    char country[100];
-};
+    public: // members usable from main
+    int jersey_no; // shirt number, e.g. 7
+    char country[100]; // country name as a char array (up to 99 letters + '\0')
+}; // semicolon ends the class definition
 
+// Output: The jersey number of Kohli is 7 and he is from India
 int main(){
     // Create a dynamic object named 'dhoni' of the 'Cricketer' class
+    // new Cricketer makes one Cricketer object on the HEAP and returns its address.
+    // dhoni is a pointer (Cricketer*) that stores that address. The object lives until delete.
+    // Because dhoni is a pointer, its members are reached with the arrow: dhoni->jersey_no
+    // (same as (*dhoni).jersey_no).
     Cricketer* dhoni = new Cricketer;
     dhoni->jersey_no = 7; // Assign the jersey number 7 to 'dhoni'
+    // A char array cannot be assigned with =, so strcpy(destination, source) copies the letters and '\0'.
     strcpy(dhoni->country, "India"); // Copy the country name "India" to the 'country' attribute of 'dhoni'
 
     // Create a dynamic object named 'kohli' of the 'Cricketer' class
@@ -38,6 +46,8 @@ int main(){
     strcpy(kohli->country, dhoni->country); // Copy the country of 'dhoni' to 'kohli'
 
     // Delete the dynamic object 'dhoni' to free the allocated memory
+    // delete destroys the heap object dhoni points at. kohli is untouched because it
+    // is a separate object that already holds its own copy of the data.
     delete dhoni;
 
     // Print the jersey number and country of 'kohli'
@@ -46,6 +56,6 @@ int main(){
     // Delete the dynamic object 'kohli' to free the allocated memory
     delete kohli;
 
-    return 0;
+    return 0; // program finished normally
 
 }

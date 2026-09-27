@@ -7,7 +7,7 @@ Given two numbers X and Y. Print X and Y after swapping them.
 Note: Solve this problem using function.
 
 Input
-Only one line contains two numbers X and Y (0 ≤ X, Y ≤ 105).
+Only one line contains two numbers X and Y (0 <= X, Y <= 10^5).
 
 Output
 Print X and Y separated by a space after swapping.
@@ -36,6 +36,14 @@ Note: We use pointers because:
     - Functions in C pass arguments by value (make copies)
     - To modify original values, we need their memory addresses
     - Pointers allow us to access and modify values at those addresses
+
+Reading the first line:  void swap(int *x, int *y)
+    void    - swap returns no value
+    int *x  - x is a POINTER to an int: it holds the address of an int
+              (here the address of main's x), not a number itself.
+    *x      - used in the body, means "the int stored at address x".
+
+Trace with 5 2: temp = 5; main's x becomes 2; main's y becomes 5.
 */
 void swap(int *x, int *y){
     // Store first number in temporary variable
@@ -46,7 +54,7 @@ void swap(int *x, int *y){
     
     // Copy temporary (original first number) to second position
     *y = temp;      // Now second number becomes first number
-}
+}   // end of swap: main's x and y really are exchanged now
 
 /*
 Function name: main
@@ -56,12 +64,13 @@ Purpose: Entry point of program that:
     1. Takes two numbers as input
     2. Calls swap function to exchange their values
     3. Prints the swapped numbers
+Every C program starts running at main.
 */
 int main(){
     // Declare variables to store the two numbers
     int x, y;
     
-    // Read two integers from user
+    // Read two integers from user (%d = whole number)
     // &x and &y give the memory addresses where values should be stored
     scanf("%d %d", &x, &y);
     

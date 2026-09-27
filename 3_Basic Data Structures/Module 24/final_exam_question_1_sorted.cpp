@@ -52,10 +52,13 @@ Sample Output 0
  * print the set from begin() to end().
  *
  * With 3 10 0 6 9 5 10 10 the set holds {0 3 5 6 9 10}.
+ *
+ * Cost: N inserts of O(log N) each, so O(N log N) per test case.
+ * (int is enough: values are between -10^9 and 10^9, inside int's range.)
  */
 
-#include <iostream>
-#include <set>
+#include <iostream>     // cin and cout
+#include <set>          // set
 
 // Without this line cin, cout and set would have to be written std::cin,
 // std::cout and std::set.
@@ -66,14 +69,16 @@ using namespace std;
 int main()
 {
     int T;
-    cin >> T;
+    cin >> T;               // number of test cases
 
+    // while(T--) checks T and then lowers it by 1, so the body runs exactly
+    // T times. One pass = one test case.
     while(T--){
         // A fresh, empty set for every test case.
         set<int> A;
         int N;
-        cin >> N;
-        for(int i=0; i<N; i++){
+        cin >> N;           // how many values in this test case
+        for(int i=0; i<N; i++){     // one value per pass
             int x;
             cin >> x;
             // insert puts x in its sorted place; a duplicate is ignored.
@@ -81,11 +86,13 @@ int main()
         }
 
         // Walking a set with an iterator visits the values in ascending order.
+        // `it` points at one value, *it is that value; A.end() is one step
+        // past the last value. auto = let the compiler work out the type.
         for(auto it=A.begin(); it!=A.end(); it++){
             cout << *it << " ";
         }
-        cout << endl;
+        cout << endl;       // end this test case's line (endl = newline + flush)
     }
 
-    return 0;
+    return 0;               // program finished normally
 }

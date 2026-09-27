@@ -11,13 +11,22 @@
 //
 // Three tiny functions below show the pattern, and in particular what changes
 // when the work is done BEFORE the call rather than AFTER it.
+//
+// Output of this program:
+//   1
+//   2
+//   3
+//   4
+//   5
+//   5
+//   Sum from 1 to 5 is 15
 
-#include <iostream>
-#include <vector>
-#include <algorithm>    
-#include <string>
+#include <iostream>     // cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // not used here
 
-using namespace std;
+using namespace std;    // write cout instead of std::cout
 
 // Add up n, n+1, ... , 5.
 // Base case: once n has gone past 5 there is nothing left to add, so 0 - the
@@ -25,10 +34,10 @@ using namespace std;
 // trusts the next call with the rest.
 // sum(1) = 1 + sum(2) = 1 + 2 + sum(3) = ... = 15, after 6 calls.
 int sum_from_1_to_5(int n){
-    if(n > 5){
+    if(n > 5){                            // base case
         return 0;
     }
-    return n + sum_from_1_to_5(n + 1);
+    return n + sum_from_1_to_5(n + 1);    // my number + the sum of the rest
 }
 
 // Print 1 to 5
@@ -37,11 +46,11 @@ int sum_from_1_to_5(int n){
 // 1, then 2, ... The call tree is a straight chain 1 -> 2 -> 3 -> 4 -> 5 -> 6,
 // and the last call does nothing but return.
 void print_one_to_five(int n){
-    if(n > 5){
+    if(n > 5){                    // base case: past 5, stop
         return;
     }
-    cout << n << endl;
-    print_one_to_five(n + 1);
+    cout << n << endl;            // work first...
+    print_one_to_five(n + 1);     // ...then the call for the rest
 }
 
 // Exactly the same two lines, swapped. The call goes first, so nothing is
@@ -49,22 +58,22 @@ void print_one_to_five(int n){
 // the stack unwinds, biggest first. Two lines in a different order, and the
 // output is reversed - that is the one idea this function is here to show.
 void print_five_to_one(int n){
-    if(n > 5){
+    if(n > 5){                    // base case
         return;
     }
-    print_five_to_one(n + 1);
-    cout << n << endl;
+    print_five_to_one(n + 1);     // call first...
+    cout << n << endl;            // ...print while coming back
 }
 
 int main(){
-    print_one_to_five(1);
+    print_one_to_five(1);         // prints 1 2 3 4 5, one per line
     // Careful: the name promises 5, 4, 3, 2, 1, but the count still runs UPWARDS
     // from the number given. Starting at 5 makes just one call, so only "5" is
     // printed - which is what this program's output shows. print_five_to_one(1)
     // is the call that prints 5 4 3 2 1. The code is left as it was written.
     print_five_to_one(5);
 
-    int sum = sum_from_1_to_5(1);
+    int sum = sum_from_1_to_5(1);                    // 1+2+3+4+5 = 15
     cout << "Sum from 1 to 5 is " << sum << endl;
-    return 0;
+    return 0;                                        // success
 }

@@ -38,38 +38,39 @@ Sample Output 1
 NO
 */
 
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: scanf and printf
 
-int main(){
-    int N;
-    scanf("%d", &N);
+int main(){ // program execution starts here
+    int N; // the matrix is N x N
+    scanf("%d", &N); // &N = address where scanf stores N
 
-    int values[N][N];
+    int values[N][N]; // the matrix (size from input: C99 variable length array)
 
     /* flag = 1 means "still looks like a unit matrix". One wrong cell is
        enough to switch it to 0 for good. */
     int flag = 1;
 
-    for(int i=0; i<N; i++){
-        for(int j=0; j<N; j++){
+    for(int i=0; i<N; i++){ // read row i ...
+        for(int j=0; j<N; j++){ // ... one column at a time
             scanf("%d", &values[i][j]);
         }
     }
 
     /* Check every cell. A cell is on the main diagonal when its row number
        equals its column number (i == j); there it must be 1. Everywhere else
-       it must be 0. */
+       it must be 0.
+       In Sample 1 the cell at row 2, column 4 is 1 but is off the diagonal -> NO. */
     for(int i=0; i<N; i++){
         for(int j=0; j<N; j++){
-            if(i==j){
+            if(i==j){ // main diagonal cell
                 if(values[i][j] != 1){
                     flag = 0;
-                    break;
+                    break; // leave this row
                 }
-            }else{
+            }else{ // off-diagonal cell
                 if(values[i][j] != 0){
                     flag = 0;
-                    break;
+                    break; // leave this row
                 }
             }
         }
@@ -78,11 +79,11 @@ int main(){
            0); it only costs a little time. */
     }
 
-    if(flag == 1){
+    if(flag == 1){ // no wrong cell found
         printf("YES");
     }else{
         printf("NO");
     }
 
-    return 0;
+    return 0; // program ended successfully
 }

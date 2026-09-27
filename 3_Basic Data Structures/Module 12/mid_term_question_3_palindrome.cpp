@@ -56,20 +56,23 @@ NO
  * Without the second test an even list would walk right off both ends.
  */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std; 
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here (template leftover)
+#include <algorithm>    // not used here (template leftover)
+#include <string>       // not used here (template leftover)
+using namespace std;    // write cin/cout without std::
 
+// One node of a DOUBLY linked list: a value plus arrows both ways.
 class Node {
-    public:
-        int val;     
-        Node* next;
-        Node* prev;
+    public:             // members usable from outside the class
+        int val;        // the number stored
+        Node* next;     // right neighbour (NULL at the tail)
+        Node* prev;     // left neighbour (NULL at the head)
 
+    // Constructor, runs on `new Node(val)`. `this` points to the node being built;
+    // this->val is the member, plain val is the parameter with the same name.
     Node(int val) {
-        this->val = val; 
+        this->val = val;
         this->next = NULL;
         this->prev = NULL;
     }
@@ -77,39 +80,47 @@ class Node {
 
 
 // Append at the end in O(1), because `tail` is remembered.
+// `Node* &head` = reference to main's pointer, so main's head/tail get updated.
 void insert_at_tail(Node* &head, Node* &tail, int val){
-    Node* newNode = new Node(val);
-    if(head==NULL){
+    Node* newNode = new Node(val);  // `new` makes the node on the heap
+    if(head==NULL){                 // empty list: node is head and tail
         head = newNode;
         tail = newNode;
         return;
     }
-    tail->next = newNode;
-    newNode->prev = tail;
-    tail = newNode;
+    tail->next = newNode;           // old tail -> new
+    newNode->prev = tail;           // old tail <- new
+    tail = newNode;                 // new tail
 }
 
+// Returns true if the values read the same from both ends.
 bool is_palindrome(Node* head, Node* tail){
     bool flag = true;   // a palindrome until a mismatch is found
+    // A for loop with TWO variables: `Node *i=head, *j=tail` declares both (each needs
+    // its own *), and `i=i->next, j=j->prev` moves both each pass (the comma runs
+    // both steps). Keep going while they have not met (i != j) and not crossed
+    // (i->prev != j). A single-node list stops at once because i == j.
     for(Node *i=head, *j=tail; i!=j && i->prev != j; i=i->next, j=j->prev){
         // Compare the two mirror positions.
         if(i->val != j->val){
             flag = false;   // one mismatch is enough
-            break;
+            break;          // leave the loop early
         }
     }
+    // Trace 1 2 3 1: (i,j) = (1,1) equal; (2,3) differ -> NO.
+    // Trace 1 2 2 1: (1,1), (2,2) equal; then i = 2nd 2, j = 1st 2 -> i->prev == j -> stop, YES.
     return flag;
 }
 
 int main(){
-    Node* head1 = NULL;
+    Node* head1 = NULL;     // empty list to start
     Node* tail1 = NULL;
 
     int val;
     // Read values until -1.
-    while(true){
-        cin >> val;
-        if(val==-1){
+    while(true){                // repeat until break
+        cin >> val;             // read one number (whitespace skipped)
+        if(val==-1){            // end marker
             break;
         }
         insert_at_tail(head1, tail1, val);
@@ -117,12 +128,12 @@ int main(){
 
     bool result = is_palindrome(head1, tail1);
 
-    if(result){
+    if(result){                 // true -> palindrome
         cout << "YES" << endl;
     }
     else{
         cout << "NO" << endl;
     }
 
-    return 0;
+    return 0;                   // normal exit
 }

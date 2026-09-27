@@ -31,6 +31,10 @@ root = []             ->   []
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines this struct and calls our function from its own hidden
+ * main, so there are no #includes or main here. After ':' comes an
+ * initializer list: val(x) sets val to x; nullptr is the C++11 null pointer.)
  */
 
 /*
@@ -46,18 +50,18 @@ root = []             ->   []
  * values from smallest to biggest.
  */
 class Solution {
-public:
+public:   // LeetCode calls inorderTraversal from outside the class
     void inorder(TreeNode* node, vector<int> &ans) {
         if (node == NULL) {
             return;                    // empty subtree: nothing to add
         }
         inorder(node->left, ans);      // 1. the whole left subtree first
-        ans.push_back(node->val);      // 2. then this node
+        ans.push_back(node->val);      // 2. then this node (push_back adds at the end)
         inorder(node->right, ans);     // 3. then the whole right subtree
     }
 
     vector<int> inorderTraversal(TreeNode* root) {
-        vector<int> ans;
+        vector<int> ans;               // starts empty
         inorder(root, ans);            // fills ans
         return ans;
     }

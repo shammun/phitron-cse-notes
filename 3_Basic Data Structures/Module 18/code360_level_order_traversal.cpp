@@ -5,7 +5,9 @@ https://www.naukri.com/code360/problems/level-order-traversal_796002?leftPanelTa
 */
 
 
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h>
+// <bits/stdc++.h>: GCC shortcut header that includes the whole standard
+// library (vector, queue, ...) in one line.
 /************************************************************
 
     Following is the BinaryTreeNode class structure
@@ -23,6 +25,9 @@ https://www.naukri.com/code360/problems/level-order-traversal_796002?leftPanelTa
             right = NULL;
         }
     };
+
+    (A template class: BinaryTreeNode<int> holds an int in `val`. The
+    judge's hidden code defines it and calls getLevelOrder - no main here.)
 
 ************************************************************/
 /*
@@ -45,18 +50,21 @@ vector<int> getLevelOrder(BinaryTreeNode<int> *root)
     }
 
     // Start the queue with the root, the only node on level 0.
+    // The queue stores pointers to nodes.
     queue<BinaryTreeNode<int>*> q;
     q.push(root);
 
+    // One pass visits one node; stops when no node is waiting.
     while (!q.empty()) {
         // Take the oldest waiting node and record its value.
         BinaryTreeNode<int> *current = q.front();
         q.pop();
 
-        result.push_back(current->val);
+        result.push_back(current->val);   // push_back adds the value at the end of the vector
 
         // Queue its children, left before right, so they come out in that
         // order after everything already waiting on the level above.
+        // (A pointer in an if is true when it is not NULL.)
         if (current->left) {
             q.push(current->left);
         }
@@ -65,5 +73,5 @@ vector<int> getLevelOrder(BinaryTreeNode<int> *root)
         }
     }
 
-    return result;
+    return result;               // all values in level order
 }

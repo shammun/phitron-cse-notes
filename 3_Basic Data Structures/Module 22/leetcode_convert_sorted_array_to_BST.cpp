@@ -27,6 +27,10 @@ nums = [1,3]           ->  [3,1]  or  [1,null,3]
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines TreeNode and calls our function from its own hidden
+ * main, so there are no #includes or main here. After ':' comes an
+ * initializer list: val(x) sets val to x; nullptr is the C++11 null pointer.)
  */
 
 /*
@@ -46,7 +50,8 @@ nums = [1,3]           ->  [3,1]  or  [1,null,3]
  * [l, r] of the part we are working on.
  */
 class Solution {
-public:
+public:   // LeetCode calls sortedArrayToBST from outside the class
+    // nums is a reference (&), so the vector is never copied.
     // Builds a balanced BST from nums[l..r] and returns its root.
     TreeNode* build(vector<int>& nums, int l, int r) {
         // No elements in this range: the subtree is empty.
@@ -55,8 +60,9 @@ public:
         }
 
         int mid = (l + r) / 2;                    // the middle of the range
-        TreeNode* root = new TreeNode(nums[mid]); // it becomes the root
+        TreeNode* root = new TreeNode(nums[mid]); // it becomes the root (`new` makes the node on the heap)
 
+        // Each recursive call trusts build() to return a balanced BST of its half.
         root->left = build(nums, l, mid - 1);     // smaller values
         root->right = build(nums, mid + 1, r);    // bigger values
 
@@ -65,6 +71,7 @@ public:
 
     TreeNode* sortedArrayToBST(vector<int>& nums) {
         // The whole array: indexes 0 to n-1.
+        // (nums has at least 1 value, so nums.size() - 1 cannot underflow.)
         return build(nums, 0, nums.size() - 1);
     }
 };

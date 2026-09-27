@@ -16,19 +16,20 @@ Left and Right Sum Differences
  *          -> answer [15,1,11,22].
  */
 class Solution {
-public:
+public:   // LeetCode calls leftRightDifference from outside the class
     vector<int> leftRightDifference(vector<int>& nums) {
-        vector<int> leftSum;
-        vector<int> rightSum;
+        vector<int> leftSum;        // leftSum[i]  = sum of the elements before i
+        vector<int> rightSum;       // rightSum[i] = sum of the elements after i
 
         // Left sums are a running (prefix) sum shifted by one place:
         // nothing is left of index 0, and only nums[0] is left of index 1.
         leftSum.push_back(0);
         leftSum.push_back(nums[0]);
-        int sum1 = nums[0];
+        int sum1 = nums[0];         // running total of the elements seen so far
 
         // Each next left sum adds one more element. The loop stops one early
         // because the last element is never to the left of anything.
+        // (nums.size() is unsigned; with one element size()-1 is 0 and the loop simply does not run.)
         for(int i=1; i<nums.size()-1; i++){
             sum1 += nums[i];
             leftSum.push_back(sum1);
@@ -41,11 +42,11 @@ public:
         // total - leftSum - nums[i], as in the pivot index problem) would
         // give O(n).
         for(int i=1; i<nums.size(); i++){
-            int sum2 = nums[i];
+            int sum2 = nums[i];                 // start the sum at nums[i]
             for(int j =i+1; j<nums.size(); j++){
                 sum2 += nums[j];
             }
-            rightSum.push_back(sum2);
+            rightSum.push_back(sum2);           // this is rightSum[i-1]
         }
         // Nothing is to the right of the last index.
         rightSum.push_back(0);
@@ -54,7 +55,7 @@ public:
         vector<int> result;
 
         for(int i=0; i<nums.size(); i++){
-            result.push_back(abs(leftSum[i] - rightSum[i]));
+            result.push_back(abs(leftSum[i] - rightSum[i]));   // abs() drops the minus sign
         }
 
 

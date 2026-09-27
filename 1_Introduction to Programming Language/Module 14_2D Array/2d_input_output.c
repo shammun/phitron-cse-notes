@@ -1,29 +1,38 @@
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: scanf and printf
 
-/* This program demonstrates reading, modifying and printing a 2D array */
-int main(){
+/* This program demonstrates reading, modifying and printing a 2D array
+ * A 2D array is a table (a grid): a[i][j] is the cell in row i, column j.
+ * The program reads an n x m table, overwrites two cells, and prints the table.
+ */
+int main(){ // program execution starts here
     /* Declare variables to store dimensions of 2D array
      * n = number of rows
-     * m = number of columns 
+     * m = number of columns
      */
     int n, m;
-    
+
     /* Read dimensions from user input using scanf
      * %d format specifier is used for reading integers
      * &n, &m are addresses where the input values will be stored
      * Space between %d %d means we expect user to input two numbers separated by space
+     * (in fact %d already skips any spaces/newlines before a number, so the two
+     * numbers may also be on separate lines)
      */
     scanf("%d %d", &n, &m);
 
     /* Declare 2D array with extra buffer space
      * Size is (n+5)x(m+5) to avoid any potential buffer overflow
      * Array indices will go from 0 to n-1 for rows and 0 to m-1 for columns
+     * The size depends on n and m, which are only known while the program runs:
+     * this is a "variable length array" (a C99 feature).
      */
     int a[n+5][m+5];
 
     /* Read array elements using nested loops
      * Outer loop (i) iterates through rows (0 to n-1)
      * Inner loop (j) iterates through columns (0 to m-1)
+     * For each row i, the inner loop fills the whole row left to right,
+     * so the numbers are read in "row by row" order.
      */
     for(int i=0; i<n; i++){
         for(int j=0; j<m; j++){
@@ -37,10 +46,13 @@ int main(){
 
     /* Modify specific elements in the array
      * a[1][2] = element at row 1, column 2 (0-based indexing)
-     * a[2][3] = element at row 2, column 3 
+     * a[2][3] = element at row 2, column 3
+     * (so they are the 2nd row / 3rd column and the 3rd row / 4th column when
+     * counting from 1; the input must have at least 3 rows and 4 columns for
+     * these cells to be part of the table that is printed)
      */
-    a[1][2] = 100;
-    a[2][3] = 200;
+    a[1][2] = 100; // replaces 7 in the sample below
+    a[2][3] = 200; // replaces 12 in the sample below
 
     /* Print the modified array using nested loops
      * Outer loop (i) iterates through rows
@@ -57,7 +69,7 @@ int main(){
         /* Print newline after each row for matrix-like output */
         printf("\n");
     }
-}
+} // end of main; in C99 and later, reaching the end of main means return 0
 
 /*
 Input:
@@ -65,8 +77,8 @@ Input:
 1 2 3 4 5 6 7 8 9 10 11 12
 
 Output:
-1 2 3 4 
-5 6 100 8 
+1 2 3 4
+5 6 100 8
 9 10 11 200
 
 Input:
@@ -76,7 +88,7 @@ Input:
 9 10 11 12
 
 Output:
-1 2 3 4 
-5 6 100 8 
-9 10 11 200 
+1 2 3 4
+5 6 100 8
+9 10 11 200
 */

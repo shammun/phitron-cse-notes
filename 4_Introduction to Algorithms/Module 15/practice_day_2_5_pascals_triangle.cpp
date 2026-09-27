@@ -28,30 +28,36 @@ Constraints:
 // Every row starts and ends with 1. Each inside number is the sum of the two
 // numbers just above it: row[j] = previous[j-1] + previous[j].
 // The finished rows are the table, and each new row reads only the last one.
+//
+// Trace: row 3 = [1, ?, ?, 1] from row 2 = [1, 2, 1]:
+//   row[1] = 1 + 2 = 3, row[2] = 2 + 1 = 3 -> [1, 3, 3, 1].
 
-#include <iostream>
-#include <algorithm>
-#include <cstring>
-#include <vector>
+#include <iostream>     // cout, endl
+#include <algorithm>    // not used here
+#include <cstring>      // not used here
+#include <vector>       // vector
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 
+// LeetCode's required class.
 class Solution {
-    public:
+    public:   // callable from outside
+        // Returns the triangle as a vector of rows; each row is a vector<int>.
         vector<vector<int>> generate(int numRows) {
             vector<vector<int>> result;   // result[i] = row i of the triangle
 
-            for(int i=0; i<numRows; i++){
+            for(int i=0; i<numRows; i++){   // build row i
                 // Row i has i+1 numbers. Start them all at 1: that already
                 // makes both ends right, and rows 0 and 1 are then finished.
+                // vector<int> row(count, value) makes count copies of value.
                 vector<int> row(i+1, 1);
 
                 // Fill the inside positions 1..i-1 from the row above.
                 for(int j=1; j<i; j++){
                     row[j] = result[i-1][j-1] + result[i-1][j];
                 }
-                result.push_back(row);
+                result.push_back(row);      // append the finished row
             }
             return result;
             // Cost: O(numRows^2), one step per number in the triangle.
@@ -60,18 +66,26 @@ class Solution {
 
     // The file's own test: build 5 rows and print one row per line.
     int main() {
-        Solution sol;
+        Solution sol;          // object to call generate() on
         int numRows = 5;
 
+        // auto = let the compiler work out the type (vector<vector<int>>).
         auto triangle = sol.generate(numRows);
 
         // Print the result
+        // "const auto& row": each row by reference (no copy), read-only.
         for (const auto& row : triangle) {
-            for (int num : row) {
+            for (int num : row) {       // each number in the row
                 cout << num << " ";
             }
-            cout << endl;
+            cout << endl;               // one row per line
         }
+        // Output:
+        // 1
+        // 1 1
+        // 1 2 1
+        // 1 3 3 1
+        // 1 4 6 4 1
 
-        return 0;
+        return 0;   // success
     }

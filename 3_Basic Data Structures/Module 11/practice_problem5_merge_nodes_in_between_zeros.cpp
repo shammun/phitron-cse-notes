@@ -31,72 +31,78 @@ Input for this program: the list values ended by -1.
  * new node is appended in O(1).
  */
 
-#include <iostream>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+using namespace std;    // no need to write std:: before cin/cout
 
 // Definition for singly-linked list (the one LeetCode gives you).
 struct ListNode {
-    int val;
-    ListNode *next;
-    // Default constructor.
+    int val;            // the number in this node
+    ListNode *next;     // address of the next node (nullptr = end of list)
+    // Default constructor; ": val(0), next(nullptr)" sets the members up front.
     ListNode() : val(0), next(nullptr) {}
-    // Constructor with a value.
+    // Constructor with a value: new ListNode(4) -> node 4, next = nullptr.
     ListNode(int x) : val(x), next(nullptr) {}
     // Constructor with a value and a pointer to the next node.
     ListNode(int x, ListNode *next) : val(x), next(next) {}
 };
 
+// LeetCode's answer class.
 class Solution {
-public:
+public:     // callable from main
+    // Builds and returns a NEW list of group sums; the input list is only read.
     ListNode* mergeNodes(ListNode* head) {
         // The answer list, empty for now.
-        ListNode* newHead = NULL;
-        ListNode* newTail = NULL;
+        ListNode* newHead = NULL;   // first node of the answer
+        ListNode* newTail = NULL;   // last node of the answer (for O(1) appends)
 
-        int sum = 0;
+        int sum = 0;                // running total of the current group
         // Skip the opening 0: the first group starts right after it.
         ListNode* tmp = head->next;
+        // One pass per input node; stops after the closing 0 (its next is NULL).
         while(tmp != NULL){
             if(tmp->val == 0){
                 // A zero closes the current group: its sum becomes a node.
                 ListNode* newNode = new ListNode(sum);
                 if(newHead == NULL){
                     newHead = newNode;        // first node of the answer
-                    newTail = newNode;
+                    newTail = newNode;        // it is also the last one
                 }
                 else{
                     newTail->next = newNode;  // append after the tail
-                    newTail = newNode;
+                    newTail = newNode;        // the new node is the tail now
                 }
                 sum = 0;                      // the next group starts fresh
             }
             else{
                 sum += tmp->val;              // still inside a group
             }
-            tmp = tmp->next;
+            tmp = tmp->next;                  // move to the next input node
         }
+        // Trace 0 3 1 0 4 5 2 0: sum 3, 4, zero -> node 4; sum 4, 9, 11, zero -> node 11.
 
-        return newHead;
+        return newHead;             // head of "4 11"
     }
 };
 
 // Append at the end in O(1), because `tail` is remembered.
+// `ListNode* &head` = reference to main's pointer, so main sees the changes.
 void insert_at_tail(ListNode* &head, ListNode* &tail, int val){
-    ListNode* newNode = new ListNode(val);
-    if(head == NULL){
+    ListNode* newNode = new ListNode(val);  // new node on the heap
+    if(head == NULL){       // empty list: new node is head and tail
         head = newNode;
         tail = newNode;
         return;
     }
-    tail->next = newNode;
-    tail = newNode;
+    tail->next = newNode;   // hook it after the last node
+    tail = newNode;         // and remember it as the last node
 }
 
 // Helper function to print the linked list.
 void printList(ListNode* head) {
-    if(head == NULL){
+    if(head == NULL){           // nothing in the list
         cout << "(empty)";
     }
+    // Print each value and a space; head is a copy, so moving it is harmless.
     while(head != NULL) {
         cout << head->val << " ";
         head = head->next;
@@ -105,27 +111,27 @@ void printList(ListNode* head) {
 }
 
 int main() {
-    ListNode* head = NULL;
+    ListNode* head = NULL;      // empty input list
     ListNode* tail = NULL;
 
     // Read the list until -1.
     int x;
-    while(true){
-        cin >> x;
-        if(x == -1){
+    while(true){                // repeat until `break`
+        cin >> x;               // read one number
+        if(x == -1){            // -1 marks the end of input
             break;
         }
         insert_at_tail(head, tail, x);
     }
 
     cout << "Before: ";
-    printList(head);
+    printList(head);            // Before: 0 3 1 0 4 5 2 0
 
-    Solution sol;
-    ListNode* merged = sol.mergeNodes(head);
+    Solution sol;               // object to call mergeNodes on
+    ListNode* merged = sol.mergeNodes(head);    // a separate, new list
 
     cout << "After merging: ";
-    printList(merged);
+    printList(merged);          // After merging: 4 11
 
-    return 0;
+    return 0;                   // normal exit
 }

@@ -21,12 +21,14 @@ course, so this file solves the version asked here: one ordinary number.)
 
 */
 
+/* stdio.h ("standard input output") declares scanf and printf. The
+   space in "# include" is allowed; it means the same as #include. */
 # include <stdio.h>
 
-int main() {
+int main() {            /* the program starts running here */
     /* long long so that a number with up to 18 digits still fits. */
     long long n;
-    scanf("%lld", &n);
+    scanf("%lld", &n);      /* %lld = read a long long; &n = where to put it */
 
     /* The digit sum starts at 0 and grows by one digit per pass. */
     int sum = 0;
@@ -39,12 +41,12 @@ int main() {
            5 -> 1330,  0 -> 133,  3 -> 13,  3 -> 1,  1 -> 0 (stop)
        and 5 + 0 + 3 + 3 + 1 = 12. */
     while(n > 0){
-        sum += n % 10;
-        n = n / 10;
+        sum += n % 10;      /* add the last digit */
+        n = n / 10;         /* and chop it off */
     }
 
     /* For N = 0 the loop never runs and the sum stays 0, which is right. */
-    printf("%d\n", sum);
+    printf("%d\n", sum);    /* %d = int; \n = newline */
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

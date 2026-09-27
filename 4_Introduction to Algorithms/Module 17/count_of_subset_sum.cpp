@@ -11,18 +11,26 @@
 //
 // Note the count is of subsets by POSITION, not by content: values 1 1 1 with
 // target 2 give 3, because the three 1s sit at three different indexes.
+//
+// The DP in three parts:
+//   meaning     dp[i][s] = number of subsets of items 0..i adding up to s
+//   base case   i < 0: 1 if s == 0 (the empty choice), else 0
+//   transition  dp[i][s] = dp[i-1][s - val[i]]  (take, if val[i] <= s)
+//                        + dp[i-1][s]           (leave)
+// Example: values 2 3 5 6 8 10, target 10 -> {2,8}, {10}, {2,3,5} = 3 ways
+// (this program prints 0 instead, because of the BUG in main).
 
-#include <iostream>
-#include <vector>
-#include <algorithm>    
-#include <string>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // not used here
 
-using namespace std;
-int val[1005];
+using namespace std;    // no std:: prefix
+int val[1005];          // the numbers; global, read by subset_sum()
 // dp[i][s] = how many subsets of items 0..i add up to exactly s.
 // The two indexes are the two arguments of subset_sum(); -1 marks "not counted
 // yet", and is safe because a count is never negative.
-int dp[1005][1005]; 
+int dp[1005][1005];
 
 //   i   = highest item still on offer
 //   sum = how much of the target is still to be made
@@ -52,29 +60,30 @@ int subset_sum(int i, int sum){ // O(N * sum)
         return dp[i][sum];
     }
     else{
+        // Item i is bigger than what is left: it cannot be taken.
         dp[i][sum] = subset_sum(i-1, sum);
         return dp[i][sum];
     }
 }
 
 int main(){
-    int n;
+    int n;              // how many numbers
 
     cin >> n;
     // BUG, left in place. This declares a SECOND array called val, local to main.
     // Inside main the name val now means this local one, so the loop below fills
     // it - while subset_sum() above still reads the global val[1005], which stays
-    // all zeros. The function therefore answers a question about n zeros, and the
-    // only target it can reach is 0. That is why the program prints NO for input
-    // that plainly has an answer.
+    // all zeros. The function therefore answers a question about n zeros: for
+    // any target above 0 there is no way, so the program prints 0 (and for
+    // target 0 it prints 2^n, since every subset of zeros adds up to 0).
     // The fix is to delete this one line, so that the input lands in the global
     // array the function actually reads.
-    int val[n];
+    int val[n];         // BUG: shadows the global val - delete this line
     for(int i=0; i<n; i++){
-        cin >> val[i];
+        cin >> val[i];  // fills the LOCAL array only
     }
 
-    int sum;
+    int sum;            // the target
     cin >> sum;
 
     // Mark every state as uncounted. Both bounds are <=, so the column j == sum
@@ -88,5 +97,5 @@ int main(){
     cout << subset_sum(n-1, sum) << endl; // n-1 as we are starting from the last index and
     // n is the size of the array
 
-    return 0;
+    return 0;   // success
 }

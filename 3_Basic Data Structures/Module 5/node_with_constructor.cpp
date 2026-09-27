@@ -1,17 +1,27 @@
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
+// Same three-node list as creating_a_node.cpp, but each node is set up by a
+// constructor, so one line both creates the node and gives it its value.
+// Output:
+//   The value of a is: 10
+//   The value of b is: 20
+//   The value of c is: 30
+
+#include <iostream>  // cout
+#include <vector>    // not needed here, kept from the template
+#include <algorithm> // not needed here
+#include <string>    // not needed here
 using namespace std; // Allows us to avoid prefixing standard library objects with `std::`.
 
 // Node class represents a single element in a linked list.
 class Node {
-    public:
+    public: // usable from main()
         int val;     // Value stored in the node (data).
         Node* next;  // Pointer to the next node in the linked list.
 
         // Constructor for the Node class to initialize 'val' and set 'next' to NULL.
+        // It runs automatically whenever a Node is created, e.g. Node a(10).
         Node(int val) {
+            // `this` is a pointer to the node being created. The parameter val hides
+            // the member val, so this->val is needed to mean the member.
             this->val = val;  // Assign the provided value to the 'val' member.
             this->next = NULL; // Initialize 'next' to NULL, meaning no next node by default.
         }
@@ -21,23 +31,25 @@ class Node {
 int main() {
     // Step 1: Create three nodes using the constructor.
     // Here, the constructor is called with the values 10, 20, and 30 respectively.
+    // (These are ordinary stack variables, not created with new.)
     Node a(10), b(20), c(30);
 
     // Step 2: Link the nodes to form a chain (linked list).
+    // &b = the address of b. c.next is already NULL thanks to the constructor.
     a.next = &b;  // The 'next' pointer of the first node points to the address of the second node.
     b.next = &c;  // The 'next' pointer of the second node points to the address of the third node.
 
     // Step 3: Output the values of the nodes to verify the linked list structure.
     cout << "The value of a is: " << a.val << endl; // Output the value of the first node.
     // Access the value of the second node using the 'next' pointer of the first node.
-    cout << "The value of b is: " << a.next->val << endl; 
+    cout << "The value of b is: " << a.next->val << endl;
     // Explanation: 'a.next' is a pointer to the second node, and 'a.next->val' accesses its value.
 
     // Step 4: Demonstrate alternative syntax for accessing the value of the third node.
     // 'a.next->next' points to the third node, and 'a.next->next->val' accesses its value.
-    cout << "The value of c is: " << a.next->next->val << endl; 
+    cout << "The value of c is: " << a.next->next->val << endl;
     // Equivalent expression using dereferencing: (*(*a.next).next).val
-    // Explanation: 'a.next' gives the address of the second node, 
+    // Explanation: 'a.next' gives the address of the second node,
     // '*a.next' dereferences it to access the second node itself,
     // and '.next' accesses the pointer to the third node. Finally, '*(*a.next).next' dereferences it.
 

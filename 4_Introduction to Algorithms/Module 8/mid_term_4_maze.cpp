@@ -98,23 +98,34 @@ Sample Output 3
 // The fixed move order (right, left, up, down) matters because several shortest
 // routes can exist; trying the directions in the order the problem states makes
 // BFS pick the same one the judge expects.
+//
+// Sample 1 trace: R is at (1,1), D at (0,3). BFS reaches (1,2) (right of R),
+// then (1,3), then D = (0,3) from (1,3) by moving up. Parent links:
+// D <- (1,3) <- (1,2) <- R. Walking back from D marks (1,3) and (1,2) with X,
+// giving the row ".RXX.#" in the output.
 
-#include <iostream>
-#include <cstring>
-#include <vector>
-#include <queue>
-#include <algorithm>
+#include <iostream>     // cin / cout
+#include <cstring>      // memset (clears vis)
+#include <vector>       // vector (the list of directions)
+#include <queue>        // queue: the BFS "to do" list, first in first out
+#include <algorithm>    // reverse, min ... (not actually used here)
 
-using namespace std;
+using namespace std;    // lets us write queue, pair, cout without std::
 
-int n, m;
-char maze[1005][1005];
-bool vis[1005][1005];
+// Globals: shared by bfs() and main(); big arrays live in static memory
+// (too big for the stack) and start filled with 0 / false.
+int n, m;               // n rows, m columns
+char maze[1005][1005];  // the maze: '.', '#', 'R', 'D' (and later 'X')
+bool vis[1005][1005];   // vis[i][j] = true once BFS has put (i, j) in the queue
 // right, left, up, down: exactly the order the problem demands
+// Each pair is {row change, column change}: {0,1} = same row, one column right.
 vector<pair<int, int>> direction = {{0, 1}, {0, -1}, {-1, 0}, {1, 0}};
 // path[i][j] = the cell BFS came from when it first reached (i, j)
+// (the "parent" array of path printing, but for a grid: each parent is a
+//  {row, column} pair instead of one node number)
 pair<int, int> path[1005][1005];
 
+// true if (i, j) is inside the maze, false if it is off the edge.
 bool valid(int i, int j){
     if(i <0 || i>=n || j<0 || j>=m){
         return false;
@@ -125,6 +136,7 @@ bool valid(int i, int j){
 // An earlier attempt, kept for comparison. DFS marks cells with 'X' on the way
 // in and rubs them out when it backtracks, so it does find A route, but DFS
 // does not find the SHORTEST route. That is why the solution below uses BFS.
+// (It would also need a global "bool flag = false;" before it could compile.)
 /*
 
 void dfs(int si, int sj, int di, int dj){
@@ -161,37 +173,45 @@ void dfs(int si, int sj, int di, int dj){
 
 // BFS from R (si, sj). Returns true if D (di, dj) can be reached, and fills
 // path[][] with parent links along the way.
+// Because BFS reaches cells in order of distance (all 1-step cells, then all
+// 2-step cells, ...), the parent links it records always describe a SHORTEST
+// route back to R.
 bool bfs(int si, int sj, int di, int dj){
     // {-1, -1} = "no parent yet"
+    // Outer loop = rows, inner loop = columns: every cell of the maze.
     for(int i=0; i<n; i++){
         for(int j=0; j<m; j++){
-            path[i][j] = {-1, -1};
+            path[i][j] = {-1, -1};   // {a, b} builds a pair
         }
     }
 
-    queue<pair<int, int>> q;
-    q.push({si, sj});
-    vis[si][sj] = true;
+    queue<pair<int, int>> q;   // cells found but not yet expanded, {row, col}
+    q.push({si, sj});          // start from R
+    vis[si][sj] = true;        // R is seen; never push it again
 
+    // One pass: take the oldest cell, push each new walkable neighbour.
+    // Ends when the queue is empty (D unreachable) or D is taken out.
     while(!q.empty()){
-        pair<int, int> par = q.front();
-        q.pop();
+        pair<int, int> par = q.front();   // oldest cell in the queue
+        q.pop();                          // remove it
 
-        int par_i = par.first;
-        int par_j = par.second;
+        int par_i = par.first;            // its row
+        int par_j = par.second;           // its column
 
         if(par_i == di && par_j == dj){
             return true;   // reached the exit; the parent links are complete
         }
 
+        // Try the 4 moves in the required order: right, left, up, down.
         for(int i=0; i<4; i++){
-            int ci = par_i + direction[i].first;
-            int cj = par_j + direction[i].second;
+            int ci = par_i + direction[i].first;    // neighbour's row
+            int cj = par_j + direction[i].second;   // neighbour's column
 
             // Anything but a wall '#' is walkable ('.', and 'D' itself).
+            // valid() first: && stops early, so no out-of-range reads.
             if(valid(ci, cj) && !vis[ci][cj] && maze[ci][cj] != '#'){
-                q.push({ci, cj});
-                vis[ci][cj] = true;
+                q.push({ci, cj});                 // expand it later
+                vis[ci][cj] = true;               // mark when pushed, so no duplicates
                 path[ci][cj] = {par_i, par_j};   // remember where we came from
             }
         }
@@ -203,24 +223,26 @@ bool bfs(int si, int sj, int di, int dj){
 
 
 int main(){
-    cin >> n >> m;
+    cin >> n >> m;       // maze size
 
-    int s_i=0, s_j=0, d_i=0, d_j=0;
+    int s_i=0, s_j=0, d_i=0, d_j=0;   // R = (s_i, s_j), D = (d_i, d_j)
 
     // Read the maze and note where R (start) and D (exit) are.
+    // cin >> char skips newlines, so each row gives m separate characters.
     for(int i=0; i<n; i++){
         for(int j=0; j<m; j++){
             cin >> maze[i][j];
             if(maze[i][j] == 'R'){
-                s_i = i;
+                s_i = i;         // remember the start
                 s_j = j;
             } else if(maze[i][j] == 'D'){
-                d_i = i;
+                d_i = i;         // remember the exit
                 d_j= j;
             }
         }
     }
 
+    // Set every byte of vis to 0 (false). Already false as a global; a habit.
     memset(vis, false, sizeof(vis));
 
 
@@ -229,7 +251,7 @@ int main(){
     if(s_i == -1 || d_i == -1) {
         for(int i = 0; i < n; i++) {
             for(int j = 0; j < m; j++) {
-                cout << maze[i][j];
+                cout << maze[i][j];      // print the maze unchanged
             }
             cout << endl;
         }
@@ -238,8 +260,11 @@ int main(){
 
     if(bfs(s_i, s_j, d_i, d_j)){
         // Walk back from D along the parent links until we get to R.
+        // (d2_i, d2_j) = the cell we are standing on during the walk; it
+        // starts at D, and D itself is never overwritten with X.
         int d2_i = d_i;
         int d2_j = d_j;
+        // Keep going while we are not yet standing on R.
         while(!(s_i == d2_i && s_j == d2_j)){
             pair<int, int> par = path[d2_i][d2_j];   // one step back towards R
             if(par.first == s_i && par.second == s_j){
@@ -248,17 +273,18 @@ int main(){
             if(maze[par.first][par.second] == '.'){
                 maze[par.first][par.second] = 'X';   // this cell is on the route
             }
-            d2_i = par.first;
+            d2_i = par.first;    // step back onto the parent cell
             d2_j = par.second;
         }
     }
     // If BFS failed, nothing was marked: the maze is printed unchanged.
 
+    // Print the maze row by row, one character per cell, no spaces.
     for(int i=0; i<n; i++){
         for(int j=0; j<m; j++){
             cout << maze[i][j];
         }
-        cout << endl;
+        cout << endl;            // end of the row
     }
 
     // O(N * M) for the BFS, plus at most N * M steps to walk the route back.

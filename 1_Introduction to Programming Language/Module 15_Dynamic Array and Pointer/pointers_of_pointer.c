@@ -1,6 +1,15 @@
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: printf
 
-int main(){
+/* Pointer to a pointer.
+ *     a  holds 5
+ *     x  holds the address of a      (type int *  : pointer to int)
+ *     y  holds the address of x      (type int ** : pointer to pointer to int)
+ * Each * in front of a name follows one arrow: *y lands on x, **y lands on a.
+ * The addresses in the comments come from sample runs and change every run;
+ * what stays true is that the two values on each line are equal.
+ */
+
+int main(){ // program execution starts here
     // Declare an integer variable 'a' and initialize it with value 5
     int a = 5;
 
@@ -35,6 +44,6 @@ int main(){
     // Both print the same integer value
     printf("Value of **y and *x are the same: %d and %d\n", **y, *x);
     // Value of **y and *x are the same: 5 and 5
-    
-    return 0;
+
+    return 0; // program ended successfully
 }

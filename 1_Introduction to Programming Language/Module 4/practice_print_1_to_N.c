@@ -7,7 +7,7 @@ Given a number N. Print numbers from 1 to N in separate lines.
 Note: Solve this problem using recursion.
 
 Input
-Only one line containing a number N (1 ≤ N ≤ 103).
+Only one line containing a number N (1 <= N <= 10^3).
 
 Output
 Print N lines according to the required above.
@@ -57,19 +57,23 @@ Why \n is used instead of space:
     - Problem requires numbers to be printed in separate lines
     - \n creates a new line after each number
     - Using space would print all numbers on same line
+
+void means the function returns no value; its whole job is printing.
+x and n are copies: each call gets its own private x and n.
 */
 void print_1_to_N(int x, int n){
     // Base case: if x exceeds n, stop recursion
     if(x > n){
-        return;
+        return;     // leave this call at once, printing nothing
     }
     
     // Print current number followed by newline
     printf("%d\n", x);
     
     // Recursive call with next number (x+1)
+    // (trust it to print x+1 .. n; this call only had to print x)
     print_1_to_N(x+1, n);
-}
+}   // end of print_1_to_N
 
 /*
 Function name: main
@@ -79,6 +83,7 @@ Purpose: Entry point of program that:
     1. Takes number n as input
     2. Calls print_1_to_N to print numbers 1 to n
     3. Returns 0 for successful execution
+Every C program starts running at main.
 */
 int main(){
     // Declare variable to store input number
@@ -90,6 +95,7 @@ int main(){
     scanf("%d", &n);
     
     // Call print_1_to_N starting from 1 up to n
+    // e.g. n = 5 prints 1, 2, 3, 4, 5 on separate lines
     print_1_to_N(1, n);
     
     // Return 0 to indicate successful program execution

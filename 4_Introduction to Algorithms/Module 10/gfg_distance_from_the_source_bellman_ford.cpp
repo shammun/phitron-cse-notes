@@ -42,35 +42,47 @@ there the edge 0 -> 1 costs 5, so vertex 1 sits at 1 + 5 = 6.
 
 */
 
+// <bits/stdc++.h>: g++'s "include everything" header (iostream, vector, ...).
 #include <bits/stdc++.h>
+// Use standard names (cout, vector) without the std:: prefix.
 using namespace std;
 
+// GeeksforGeeks wants the answer inside a class called Solution with a member
+// function of a fixed name; their own main creates an object and calls it.
 class Solution {
-    public:
+    public:   // "public:" = the members below can be used from outside the class
       /*  Function to implement Bellman Ford
        *   edges: vector of vectors which represents the graph
        *   src: source vertex
        *   V: number of vertices
        */
+      // Returns a vector<int> of V distances, or {-1} for a negative cycle.
+      // "vector<vector<int>>& edges": the & passes the edge list by reference,
+      // so the whole list is not copied when the function is called.
       vector<int> bellmanFord(int V, vector<vector<int>>& edges, int src) {
           const int INF = 100000000;   // the value the judge asks for
 
+          // dist[x] = cheapest known cost from src to x; all "unknown" at first.
           vector<int> dist(V, INF);
-          dist[src] = 0;
+          dist[src] = 0;               // the source is 0 away from itself
 
           /* A shortest path that does not repeat a vertex uses at most V-1
              edges, and one full pass over the edge list fixes at least one
              more edge of every such path. V-1 passes are therefore enough. */
-          for(int i = 0; i < V - 1; i++) {
+          for(int i = 0; i < V - 1; i++) {        // i just counts the passes
+              // Range-for over the edge list: "edge" is one {u, v, w} vector.
+              // auto = let the compiler write the type (vector<int>). Without &
+              // each edge is copied; fine for 3 ints.
               for(auto edge : edges) {
-                  int u = edge[0];
-                  int v = edge[1];
-                  int w = edge[2];
+                  int u = edge[0];   // edge starts here
+                  int v = edge[1];   // and ends here
+                  int w = edge[2];   // its weight (may be negative)
                   /* The dist[u] != INF guard matters: u may be unreachable,
                      and a negative w would otherwise turn the fake INF into a
                      smaller number and make v look reachable. */
+                  // Relaxation: is src -> ... -> u -> v cheaper than dist[v]?
                   if(dist[u] != INF && dist[u] + w < dist[v]) {
-                      dist[v] = dist[u] + w;
+                      dist[v] = dist[u] + w;   // yes, remember the better cost
                   }
               }
           }
@@ -83,34 +95,40 @@ class Solution {
               int v = edge[1];
               int w = edge[2];
               if(dist[u] != INF && dist[u] + w < dist[v]) {
+                  // {-1} builds a vector holding the single number -1.
                   return {-1};
               }
           }
 
-          return dist;
+          return dist;   // all distances are final. Time O(V * E).
       }
 };
 
+// Small test driver so the file can be run on its own.
 int main() {
-    int V, E;
+    int V, E;          // vertices, edges
     cin >> V >> E;
 
+    // E rows, each a vector of 3 ints {u, v, w}.
     vector<vector<int>> edges(E, vector<int>(3));
-    for(int i = 0; i < E; i++) {
+    for(int i = 0; i < E; i++) {   // read edge i
         cin >> edges[i][0] >> edges[i][1] >> edges[i][2];
     }
 
-    int src;
+    int src;           // the starting vertex
     cin >> src;
 
-    Solution ob;
+    Solution ob;       // create an object of the class
+    // Call the member function with the dot operator: object.function(...)
     vector<int> dist = ob.bellmanFord(V, edges, src);
 
     cout << "dist =";
+    // Print each distance with a space before it. "int x : dist" = x takes
+    // each value in dist in order.
     for(int x : dist) {
         cout << " " << x;
     }
-    cout << endl;
+    cout << endl;      // newline + flush
 
-    return 0;
+    return 0;          // success
 }

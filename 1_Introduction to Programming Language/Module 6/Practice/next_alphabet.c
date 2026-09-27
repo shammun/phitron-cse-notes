@@ -1,3 +1,4 @@
+// stdio.h ("standard input output") declares scanf and printf.
 #include<stdio.h>
 
 // Given a character, print the next alphabet
@@ -14,13 +15,15 @@
 // For 'c': 2 + 1 = 3, 3 % 26 = 3, 3 + 'a' = 'd'.
 
 // First way to do it: the same idea, but the result is first stored in an
-// int and then cast back to char for printing.
+// int and then cast back to char for printing. (Switched off with //; it
+// would behave exactly like the second way. (char)ch_val is a "cast": it
+// turns the int into a char.)
 
 // int main() {
 //     char ch;
 //     scanf("%c", &ch);
 //     int ch_val;
-    
+
 //     if (ch >= 'a' && ch <= 'z') {
 //         ch_val = ((ch - 'a' + 1) % 26) + 'a';
 //         printf("%c", (char)ch_val);
@@ -32,14 +35,15 @@
 // Second way to do it: print the result straight away. %c prints the
 // character whose number it is given, so no cast is needed.
 
-int main() {
-    char ch;
-    scanf("%c", &ch);
-    
+int main() {            // the program starts running here
+    char ch;            // one character
+    scanf("%c", &ch);   // %c = read exactly one character into ch
+
     // Only small letters are handled; anything else prints nothing.
+    // && means "and": ch must be between 'a' and 'z' inclusive.
     if (ch >= 'a' && ch <= 'z') {
-        printf("%c", ((ch - 'a' + 1) % 26) + 'a');
+        printf("%c", ((ch - 'a' + 1) % 26) + 'a');  // e.g. 'z' -> 'a'
     }
 
-    return 0;
+    return 0;           // 0 = the program finished normally
 }

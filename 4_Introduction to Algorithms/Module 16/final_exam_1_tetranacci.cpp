@@ -54,31 +54,37 @@ T5 = T4 + T3 + T2 + T1 = 4 + 2 + 1 + 1 = 8
 // solved exactly like fibonacci_with_memoization.cpp (Module 14): a recursive
 // function that stores every answer it works out in dp[], so each T(k) is
 // computed once instead of an exponential number of times.
+//
+// The DP in three parts:
+//   meaning     dp[k] = T(k)
+//   base cases  T0 = 0, T1 = 1, T2 = 1, T3 = 2
+//   transition  T(n) = T(n-1) + T(n-2) + T(n-3) + T(n-4)
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <cmath>
-#include <cstdio>
-#include <vector>
-#include <cstring>
-#include <string>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <cmath>        // not used here
+#include <cstdio>       // not used here
+#include <vector>       // included twice - harmless, headers guard against it
+#include <cstring>      // memset
+#include <string>       // not used here
 
-using namespace std;
+using namespace std;    // no std:: prefix
 // dp[k] = T(k) once it is known, -1 while it is still unknown.
 // n is at most 30, so 35 boxes are plenty.
 int dp[35];
 
+// Returns T(n), top-down with memoization.
 int tetranacci(int n){
     // Base cases: the four starting values are given, not computed.
     // T0 = 0 and T1 = 1 are just n itself, so one test covers both.
     if(n <= 1){ // or, we can also write if(n == 0 || n == 1)
         return n;
     }
-    if(n== 2){
+    if(n== 2){          // T2 = 1
         return 1;
     }
-    if(n == 3){
+    if(n == 3){         // T3 = 2
         return 2;
     }
     // Memo check: if T(n) was already worked out on another branch of the
@@ -94,8 +100,9 @@ int tetranacci(int n){
 
 int main(){
     // Mark every box "unknown". -1 is safe because no Tetranacci number is negative.
+    // memset fills bytes: 0xFF in all four bytes of an int is -1.
     memset(dp, -1, sizeof(dp));
-    int n;
+    int n;              // which term
     cin >> n;
     // With n = 5: T5 = T4 + T3 + T2 + T1 = 4 + 2 + 1 + 1 = 8.
     cout << tetranacci(n) << endl;

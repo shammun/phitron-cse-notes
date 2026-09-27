@@ -37,42 +37,48 @@ egypt
 
 */
 
-#include <iostream>
-#include <string>
-using namespace std;
+#include <iostream> // Gives us cin (read from keyboard) and cout (print to screen)
+#include <string> // Gives us std::string with size(), [] and +=
+using namespace std; // Lets us write cin, cout, string instead of std::cin, std::cout, std::string
 
 int main() {
-    int n;
-    cin >> n;
+    int n; // number of test cases
+    cin >> n; // read it
 
+    // while(n--) runs exactly n times: it checks n (non-zero = true), then subtracts 1.
+    // With n = 2: checks 2 (run), checks 1 (run), checks 0 (stop).
     while(n--) {
-        string s, t;
-        cin >> s >> t;
+        string s, t; // the two words of this test case
+        cin >> s >> t; // cin >> reads one word each, the space between them is skipped
 
         /* The answer grows one letter at a time. In C this needed a fixed
            char array big enough for both words; a C++ string grows by itself,
            so `answer += c` is all that is needed. */
-        string answer = "";
+        string answer = ""; // start empty
 
         /* Walk as far as the longer word. Each step adds the letter of S and
            the letter of T, but only if that word still has one at position i.
            That single guard is what handles words of different lengths. */
-        int longer = s.size();
+        int longer = s.size(); // assume s is the longer word
+        // s.size() returns an unsigned number; (int) turns it into a normal int
+        // so the comparison with the int "longer" is between two ints.
         if((int)t.size() > longer) {
-            longer = t.size();
+            longer = t.size(); // t is longer after all
         }
 
+        // One pass handles position i of both words.
+        // Trace for s = "ey", t = "gpt": i=0 -> "eg", i=1 -> "egyp", i=2 (only t has one) -> "egypt".
         for(int i = 0; i < longer; i++) {
-            if(i < (int)s.size()) {
-                answer += s[i];
+            if(i < (int)s.size()) { // does s still have a letter at position i?
+                answer += s[i]; // add it
             }
-            if(i < (int)t.size()) {
-                answer += t[i];
+            if(i < (int)t.size()) { // does t still have a letter at position i?
+                answer += t[i]; // add it
             }
-        }
+        } // end of the for loop
 
-        cout << answer << endl;
-    }
+        cout << answer << endl; // print this test's answer, endl = newline
+    } // end of the while loop over test cases
 
-    return 0;
-}
+    return 0; // the program ended successfully
+} // end of main

@@ -8,13 +8,16 @@
 //
 // As in Module 15, this first file is the plain recursion with nothing
 // remembered; subset_sum_using_dp.cpp adds the table.
+//
+// Example: numbers 6 2 3, target 5 -> take 2 and 3 -> YES. Target 4 -> NO.
+// (This program prints NO for both, because of the BUG in main.)
 
-#include <iostream>
-#include <vector>
-#include <algorithm>    
-#include <string>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // not used here
 
-using namespace std;
+using namespace std;    // no std:: prefix
 // The numbers, global so every recursive call can read them.
 // Note carefully: main declares its own val as well, which is the bug this file
 // is known for - see the comment down there.
@@ -57,7 +60,7 @@ bool subset_sum(int i, int sum){ // O(2^n)
 }
 
 int main(){
-    int n;
+    int n;              // how many numbers
 
     cin >> n;
     // BUG, left in place. This declares a SECOND array called val, local to main.
@@ -68,20 +71,20 @@ int main(){
     // that plainly has an answer.
     // The fix is to delete this one line, so that the input lands in the global
     // array the function actually reads.
-    int val[n];
+    int val[n];         // BUG: shadows the global val - delete this line
     for(int i=0; i<n; i++){
-        cin >> val[i];
+        cin >> val[i];  // fills the LOCAL array only
     }
 
-    int sum;
+    int sum;            // the target
     cin >> sum;
     // Small blemish: "YES\n" already ends the line and endl ends it again, so the
     // output carries a stray blank line. One or the other is enough.
-    if(subset_sum(n-1, sum)){
+    if(subset_sum(n-1, sum)){       // start with every item on offer
         cout << "YES\n" << endl;
     } else{
         cout << "NO\n" << endl;
     }
 
-    return 0;
+    return 0;   // success
 }

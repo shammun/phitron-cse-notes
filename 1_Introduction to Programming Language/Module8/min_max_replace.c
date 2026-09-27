@@ -21,15 +21,18 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main()
+int main()              /* the program starts running here */
 {
-    int n;
-    scanf("%d", &n);
+    int n;              /* how many numbers */
+    scanf("%d", &n);    /* %d = read a whole number; &n = where to put it */
     
-    int a[n];
+    int a[n];       /* n boxes a[0] .. a[n-1]; size from the input (C99) */
     
+    /* Pass i reads one number into a[i]; &a[i] is that box's address. */
     for (int i = 0; i < n; i++) {
         scanf("%d", &a[i]);
     }
@@ -50,23 +53,24 @@ int main()
     for (int i = 0; i < n; i++) {
         
         if (a[i] < min) {
-            min = a[i];
-            min_pos = i;
+            min = a[i];     /* new smallest value */
+            min_pos = i;    /* and where it is */
         }
         
         
         if (a[i] > max) {
-            max = a[i];
-            max_pos = i;
+            max = a[i];     /* new largest value */
+            max_pos = i;    /* and where it is */
         }
     }
     
     
     /* First line: the two values. Second line: where they were found,
-       counted from 0 like every array index. */
+       counted from 0 like every array index.
+       Example: 5 numbers 4 1 9 1 9 -> "1 9" then "1 2". */
     printf("%d %d\n", min, max);
     
     printf("%d %d\n", min_pos, max_pos);
     
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

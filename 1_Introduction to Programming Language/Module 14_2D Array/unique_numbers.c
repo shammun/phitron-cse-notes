@@ -16,15 +16,17 @@
   unique_characters.c did the same thing for letters, where the index was
   str[i] - 'a'. Here the numbers are already small enough to be indexes
   themselves, so no conversion is needed.
+
+  Example: 5 numbers 1 2 1 3 2 -> the distinct values are 1, 2, 3 -> prints 3.
 */
 
-#include<stdio.h>
+#include<stdio.h> // standard input/output library: scanf and printf
 
-int main(){
-    int n;
-    scanf("%d", &n);
+int main(){ // program execution starts here
+    int n; // how many numbers
+    scanf("%d", &n); // &n = address of n, where scanf stores it
 
-    int arr[n];
+    int arr[n]; // the numbers; size read at run time (C99 variable length array)
     /* One box per possible value, 0 to 100000, which matches the task's
        limit A[i] <= 10^5. Note what decides the size: the LARGEST value the
        input may contain, not n. A thousand numbers still need a hundred
@@ -39,7 +41,7 @@ int main(){
     /* The answer, built up as the second loop goes along. */
     int unique_count = 0;
 
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n; i++){ // read the n numbers into arr[0] .. arr[n-1]
         scanf("%d", &arr[i]);
     }
 
@@ -48,15 +50,15 @@ int main(){
        value finds the 1 already there and changes nothing, so each distinct
        value is counted exactly once, however often it appears. */
     for(int i=0; i<n; i++){
-        if(freq[arr[i]] == 0){
-            freq[arr[i]] = 1;
-            unique_count++;
+        if(freq[arr[i]] == 0){ // first time we meet this value
+            freq[arr[i]] = 1; // remember it has been counted
+            unique_count++; // one more distinct value
         }
     }
 
     /* No "\n" after the number. */
     printf("%d", unique_count);
 
-    return 0;
+    return 0; // program ended successfully
 
 }

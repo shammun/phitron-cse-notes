@@ -16,6 +16,10 @@ https://leetcode.com/problems/minimum-absolute-difference-in-bst/description/
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines TreeNode and calls our function from its own hidden
+ * main, so there are no #includes or main here. After ':' comes an
+ * initializer list: val(x) sets val to x; nullptr is the C++11 null pointer.)
  */
 /*
  * Task in short: find the smallest difference between the values of any two
@@ -27,12 +31,14 @@ https://leetcode.com/problems/minimum-absolute-difference-in-bst/description/
  * Sorted order here: 1 2 3 4 6 -> gaps 1 1 1 2 -> the smallest is 1.
  */
 class Solution {
-public:
+public:   // LeetCode calls getMinimumDifference from outside the class
 
     // Member variables, shared by all the recursive calls:
     TreeNode* prev = NULL;    // the node visited just before the current one
     int min_diff = INT_MAX;   // smallest gap found so far (starts "infinite")
+                              // INT_MAX = the largest int, about 2.1 * 10^9
 
+    // In-order walk that updates min_diff. Base case: NULL (!node is true).
     void inorderTraversal(TreeNode* node){
         if(!node){
             return;
@@ -44,6 +50,7 @@ public:
         // Compare with the previous value in sorted order. The very first
         // node has no previous one (prev is NULL), so it is skipped.
         if(prev){
+            // abs() = absolute value (drops the minus sign); min() = the smaller of two.
             min_diff = min(min_diff, abs(node->val - prev->val));
         }
 
@@ -55,7 +62,7 @@ public:
     }
 
     int getMinimumDifference(TreeNode* root) {
-        inorderTraversal(root);
+        inorderTraversal(root);     // fills min_diff
         return min_diff;
     }
 };

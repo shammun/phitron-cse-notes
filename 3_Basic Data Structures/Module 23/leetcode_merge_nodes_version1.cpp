@@ -14,6 +14,9 @@ https://leetcode.com/problems/merge-nodes-in-between-zeros/
  *     ListNode(int x) : val(x), next(nullptr) {}
  *     ListNode(int x, ListNode *next) : val(x), next(next) {}
  * };
+ *
+ * (LeetCode defines ListNode - int val, ListNode *next - and calls
+ * mergeNodes from its own hidden main, so there is no main here.)
  */
 /*
  * Task in short: the list starts and ends with 0, with more 0s in between.
@@ -26,18 +29,19 @@ https://leetcode.com/problems/merge-nodes-in-between-zeros/
  * straight to the first node of the next block (skipping the rest).
  */
 class Solution {
-public:
+public:   // LeetCode calls mergeNodes from outside the class
     ListNode* mergeNodes(ListNode* head) {
         // head is always a 0, so the first block starts at head->next.
         ListNode* modify = head->next;
         ListNode* nextSum = modify;
 
+        // One pass handles one block; stops when nextSum falls off the end (NULL).
         while(nextSum){
             // Add the values up to (not including) the next 0.
-            int sum = 0;
+            int sum = 0;            // total of this block
             while(nextSum->val != 0){
-                sum = sum + nextSum->val;
-                nextSum = nextSum->next;
+                sum = sum + nextSum->val;   // add this value
+                nextSum = nextSum->next;    // move to the next node
             }
 
             // nextSum now stands on that 0. Store the block's sum in its

@@ -38,26 +38,31 @@ r : 1
 
 */
 
-# include <stdio.h>
-# include <string.h>
+/* Idea: a frequency (counting) array with 26 boxes, one per letter. Each
+   letter of S adds 1 to its own box; then the boxes are printed a..z. */
+
+# include <stdio.h>  // standard input/output library: scanf and printf
+# include <string.h> // string library: strlen
 
 /* |S| can be 10^7, which is far too big for a local array: a local array lives
    in the small stack area. Declared here, above main, the array is global, so
    it has room, and a global array also starts filled with zeros. */
 char s[10000005];
 
-int main() {
-    scanf("%s", s);
+int main() { // program execution starts here
+    scanf("%s", s); // read the whole word; s is an array name (an address), so no &
 
-    /* One box per lowercase letter. Box 0 belongs to 'a', box 25 to 'z'. */
+    /* One box per lowercase letter. Box 0 belongs to 'a', box 25 to 'z'.
+       `= {0}` sets every box to 0 (this array is local, so it needs it). */
     int freq[26] = {0};
 
     /* Count the length once, before the loop. */
-    int length = strlen(s);
+    int length = strlen(s); // strlen walks the string up to the '\0'
 
-    for(int i = 0; i < length; i++) {
+    for(int i = 0; i < length; i++) { // one pass = one letter of S
         /* s[i] - 'a' turns the letter into its box number:
-           'a' - 'a' is 0, 'b' - 'a' is 1, and so on. */
+           'a' - 'a' is 0, 'b' - 'a' is 1, and so on.
+           ++ adds 1 to that box. Trace with "aaabbc": freq[0]=3, freq[1]=2, freq[2]=1. */
         freq[s[i] - 'a']++;
     }
 
@@ -65,10 +70,10 @@ int main() {
        on its own, whatever order they came in inside S. A letter that never
        appeared still holds 0, so it is skipped. */
     for(int i = 0; i < 26; i++) {
-        if(freq[i] > 0) {
-            printf("%c : %d\n", i + 'a', freq[i]);
+        if(freq[i] > 0) { // this letter appeared at least once
+            printf("%c : %d\n", i + 'a', freq[i]); // i + 'a' turns the box number back into its letter; %c prints it
         }
     }
 
-    return 0;
+    return 0; // program ended successfully
 }

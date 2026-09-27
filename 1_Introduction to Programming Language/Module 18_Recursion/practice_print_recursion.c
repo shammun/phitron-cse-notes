@@ -25,20 +25,22 @@ I love Recursion
 
 /*
 Function name: printRecursion
-Parameter: 
+Parameter:
     - n: Number of times to print the message (integer)
 Purpose: Prints "I love Recursion" n times using recursion
 How it works:
     1. Base case: If n becomes 0, return (stop recursion)
     2. Print message once
     3. Call itself with n-1 to print remaining n-1 times
-    
+    (The recursive call trusts that printRecursion(n-1) prints the line
+    exactly n-1 times; one print here plus n-1 there makes n.)
+
 Why recursion is used here:
     - The problem requires recursive solution
     - Each recursive call reduces n by 1
     - When n reaches 0, recursion stops
     - The function calls itself n times, printing once in each call
-    
+
 Call stack visualization for n=3:
     printRecursion(3)
         prints once
@@ -52,12 +54,12 @@ Call stack visualization for n=3:
 void printRecursion(int n){
     // Base case: if n becomes 0, stop recursion
     if(n == 0){
-        return;
+        return; // nothing left to print
     }
-    
+
     // Print the message once
     printf("I love Recursion\n");
-    
+
     // Recursive call with n-1 to print remaining times
     printRecursion(n-1);
 }
@@ -74,7 +76,7 @@ Purpose: Entry point of program that:
 int main(){
     // Declare variable to store input number
     int n;
-    
+
     // Read integer from user
     // %d is format specifier for integer
     // &n gives address where input should be stored

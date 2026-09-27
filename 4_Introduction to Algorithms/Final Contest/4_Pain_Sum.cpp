@@ -58,9 +58,9 @@ R = 9, it represents the values [1,1,2,2,2,3,3,3] which belongs from the positio
 //   leftovers      : r * (k + 1)
 // Then, exactly as with a prefix-sum array, sum(L..R) = prefix(R) - prefix(L-1).
 
-#include <iostream>
+#include <iostream>     // cin, cout
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 // Sum of the first p numbers of 1,1,1,2,2,2,3,3,3,...
 // long long everywhere: k can be about 3 * 10^8, and k * (k + 1) is near 10^17.
@@ -69,21 +69,25 @@ long long prefix(long long p){
     long long r = p % 3;    // 0, 1 or 2 copies of the next value
     // Example p = 7: k = 2, r = 1 -> 3*(1+2) + 1*3 = 9 + 3 = 12,
     // and indeed 1+1+1+2+2+2+3 = 12.
+    // k * (k + 1) is always even (one of two neighbours is even), so / 2 is exact.
     return 3 * (k * (k + 1) / 2) + r * (k + 1);
 }
 
 int main(){
     // Up to 2 * 10^5 queries: switch off the slow C/C++ stream syncing
     // and print "\n" instead of endl (endl flushes the output every time).
+    // sync_with_stdio(false): cin/cout stop staying in step with scanf/printf,
+    // which makes them much faster (do not mix the two styles afterwards).
+    // cin.tie(nullptr): cin no longer flushes cout before every read.
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    long long N;
-    int Q;
+    long long N;     // length of the sequence (up to 10^9)
+    int Q;           // number of queries
     cin >> N >> Q;   // N itself is not needed: every L..R already lies inside it
 
     while(Q--){
-        long long L, R;
+        long long L, R;     // 1-based positions
         cin >> L >> R;
         // Positions L..R = (first R positions) - (first L-1 positions).
         // Query 2 9 on N = 9: prefix(9) - prefix(1) = 18 - 1 = 17.

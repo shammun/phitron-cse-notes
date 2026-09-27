@@ -11,18 +11,20 @@ then answers each question by halving the search range.
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std;
+#include <iostream>  // cin and cout
+#include <vector>    // not needed here, kept from the template
+#include <algorithm> // sort()
+#include <string>    // not needed here
+using namespace std; // lets us drop the std:: prefix
 
-int main() {
-    int n, q;
-    cin >> n >> q;
+int main() { // the program starts running here
+    int n, q; // n = array size, q = number of questions
+    cin >> n >> q; // read both
+    // Variable-length array (size known only at run time): a g++ extension,
+    // not standard C++; vector<int> a(n) is the standard version.
     int a[n];
-    for(int i=0; i<n; i++){
-        cin >> a[i];
+    for(int i=0; i<n; i++){ // read the n numbers
+        cin >> a[i]; // into slot i
     }
 
     // The one line that changes everything. sort() from <algorithm> puts a[0..n-1] in
@@ -35,10 +37,11 @@ int main() {
     // on an unsorted array and it will answer "not found" for values that are there.
     sort(a, a+n);
 
+    // One pass = one question.
     for(int i=0; i<q; i++){
-        int x;
-        cin >> x;
-        int flag = 0;
+        int x; // value asked about
+        cin >> x; // read it
+        int flag = 0; // 0 = not found (yet), 1 = found; reset for each query
 
         // The search window: the answer, if it exists at all, is somewhere in
         // a[l..r] inclusive. It starts as the whole array.
@@ -54,8 +57,8 @@ int main() {
             // with l = 0, r = 3 mid is 1 - that is fine, either half is a fair guess.
             int mid = (l + r) / 2;
 
-            if(a[mid] == x){
-                flag = 1;
+            if(a[mid] == x){ // the middle is x
+                flag = 1; // answer is yes
                 break;                 // found it, stop this query
             } else if(a[mid] < x){
                 // The middle is too small. The array is sorted, so everything at mid
@@ -72,10 +75,10 @@ int main() {
             // pick the same mid for ever and the program would hang.
         }
 
-        if(flag == 1){
-            cout << "found" << endl;
+        if(flag == 1){ // found during the search
+            cout << "found" << endl; // endl = new line + flush
         }
-        else{
+        else{ // window emptied without a match
             cout << "not found" << endl;
         }
     }
@@ -94,7 +97,7 @@ int main() {
     //   l=0 r=4  mid=2  a[2]=3 < 5  -> l=3      (boxes 0..2 thrown away)
     //   l=3 r=4  mid=3  a[3]=6 > 5  -> r=2
     //   l=3 > r=2 -> window empty, loop ends, flag is still 0 -> "not found"
-    // Three steps instead of five comparisons here; on a big array, 17 instead of 10^5.
+    // Two steps instead of five comparisons here; on a big array, 17 instead of 10^5.
 
-    return 0;
+    return 0; // program finished successfully
 }

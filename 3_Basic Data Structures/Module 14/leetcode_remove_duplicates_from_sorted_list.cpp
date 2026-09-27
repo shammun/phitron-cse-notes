@@ -23,10 +23,13 @@ move on. O(n) time, O(1) memory.
  *     ListNode(int x, ListNode *next) : val(x), next(next) {}
  * };
  */
+// (LeetCode defines ListNode as above and supplies includes and main.)
 class Solution {
-public:
+public:     // callable by the judge
+    // Returns the head (unchanged: the first node is always kept).
     ListNode* deleteDuplicates(ListNode* head) {
-        ListNode* temp = head;
+        ListNode* temp = head;      // the node we stand on
+        // Both temp and temp->next must exist to compare them.
         while(temp!= NULL && temp->next!=NULL){
             if(temp->val == temp->next->val){
                 // Duplicate: skip the next node. Stay on temp, because the
@@ -37,6 +40,7 @@ public:
                 temp = temp->next;
             }
         }
+        // Trace 1 1 2 3 3: skip second 1; move to 2; move to 3; skip second 3; stop.
         return head;
     }
 };

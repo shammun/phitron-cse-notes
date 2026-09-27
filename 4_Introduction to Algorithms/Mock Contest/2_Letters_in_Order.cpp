@@ -40,20 +40,21 @@ abn
 // It keeps only one copy of each value, and it keeps its values sorted. So
 // pour every letter into a set<char> and print the set from start to end.
 
-#include <iostream>
-#include <string>
-#include <set>
+#include <iostream>     // cin, cout, endl
+#include <string>       // string
+#include <set>          // set
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 int main(){
-    string S;
-    cin >> S;
+    string S;           // the word
+    cin >> S;           // reads one word (stops at whitespace)
 
-    set<char> unique_letters;
+    set<char> unique_letters;   // sorted, no duplicates
 
     // Inserting a letter that is already there changes nothing,
     // so "hello" leaves the set holding e, h, l, o.
+    // Range-for: c takes each character of S in turn.
     for(char c : S){
         unique_letters.insert(c);
     }
@@ -63,7 +64,7 @@ int main(){
         cout << c;
     }
 
-    cout << endl;
+    cout << endl;       // finish the line
 
     // Each insert is O(log 26), so the whole thing is O(|S|).
     return 0;

@@ -12,7 +12,7 @@ The output for the above tree will be: 60
 
 Input Format
 
-Input will contain the binary tree in level order. -1 means there is no node 
+Input will contain the binary tree in level order. -1 means there is no node
 available.
 
 Constraints
@@ -32,28 +32,35 @@ Sample Output 0
 
 60
 
+The sample tree:
+            10
+           /  \
+         20    30
+        /  \     \
+      40    50    60
+
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <queue>
+#include <iostream>     // cin and cout
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // not used here
+#include <queue>        // STL queue, for level order
 
-using namespace std;
+using namespace std;    // write cout, queue ... without std::
 
 // A binary tree node: a value and two child pointers (NULL = no child).
 class Node {
     public:
-        int val;     
-        Node* left;  
-        Node* right; 
+        int val;        // the value stored here
+        Node* left;     // address of the left child
+        Node* right;    // address of the right child
 
-    
+    // Constructor, runs on `new Node(x)`: store x, no children yet.
     Node(int val) {
-        this->val = val; 
-        this->left = NULL; 
-        this->right = NULL; 
+        this->val = val;        // this->val = member, val = parameter
+        this->left = NULL;
+        this->right = NULL;
     }
 };
 
@@ -67,15 +74,16 @@ Node* input_tree(){
     if(val == -1){
         root = NULL;
     } else {
-        root = new Node(val);
+        root = new Node(val);    // `new` builds the node on the heap and returns its address
     }
 
     // Nodes whose two children have not been read yet.
     queue<Node*> q;
-    if(root){
+    if(root){                    // a pointer is "true" when it is not NULL
         q.push(root);
     }
 
+    // One pass reads one node's two children; stops when no node is waiting.
     while(!q.empty()){
         Node* p = q.front();     // oldest node still waiting for its children
         q.pop();
@@ -96,7 +104,7 @@ Node* input_tree(){
             myRight = new Node(r);
         }
 
-        p->left = myLeft;
+        p->left = myLeft;        // attach the children (-> = member through a pointer)
         p->right = myRight;
 
         // Only real children wait in the queue for their own pair of values.
@@ -119,16 +127,19 @@ Node* input_tree(){
  * NOT a leaf when it has a left child or a right child, so only then is its
  * value added. Example (sample): 10, 20 and 30 have children, 40 50 60 do not,
  * so the answer is 10 + 20 + 30 = 60.
+ *
+ * int is enough: at most 10^5 nodes * 1000 = 10^8, below int's limit (~2.1 * 10^9).
  */
 int sum_without_leaf(Node* root){
-    if(!root){                   // empty tree: the sum is 0
+    if(!root){                   // empty tree: the sum is 0 (!root is true when root is NULL)
         return 0;
     }
-    
-    queue<Node*> q;
+
+    queue<Node*> q;              // nodes waiting to be checked
     q.push(root);
 
-    int sum = 0;
+    int sum = 0;                 // running total of non-leaf values
+    // One pass checks one node; stops when every node has been checked.
     while(!q.empty()){
         Node* parent = q.front();
         q.pop();
@@ -153,7 +164,7 @@ int sum_without_leaf(Node* root){
 int main()
 {
     // Write your code here
-    Node* root = input_tree(); 
-    cout << sum_without_leaf(root) << endl;    // print the answer
-    return 0;
+    Node* root = input_tree();                 // build the tree from the input
+    cout << sum_without_leaf(root) << endl;    // print the answer (endl = newline + flush)
+    return 0;                                  // program finished normally
 }

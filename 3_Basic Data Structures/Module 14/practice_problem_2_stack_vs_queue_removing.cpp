@@ -1,6 +1,6 @@
 /*
 
-Take a stack of size N and a queue of size M as input. Then check if both of them are 
+Take a stack of size N and a queue of size M as input. Then check if both of them are
 the same or not in the order of removing. You should use STL to solve this problem.
 
 Input
@@ -45,13 +45,14 @@ YES
  * The check is a walk: compare st.top() with q.front(), pop both, repeat.
  */
 
-#include <iostream>
-#include <stack>
-#include <queue>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+#include <stack>        // std::stack (LIFO)
+#include <queue>        // std::queue (FIFO)
+using namespace std;    // write stack/queue/cout without std::
 
 // st and q are passed BY VALUE: the function works on copies, so popping
 // here does not empty the caller's stack and queue.
+// Returns true when both give the same values in the same removal order.
 bool compareStackQueue(stack<int> st, queue<int> q){
     // Different counts can never give the same removal order. Checking it
     // first also means the loop below never pops an empty queue.
@@ -65,9 +66,10 @@ bool compareStackQueue(stack<int> st, queue<int> q){
             return false;   // one mismatch is enough: stop right here
         }
         // Both matched, so remove them and look at the next pair.
-        st.pop();
-        q.pop();
+        st.pop();           // stack pop removes the top
+        q.pop();            // queue pop removes the front
     }
+    // Sample 3: stack gives 50 40 30 20 10, queue gives 50 40 30 20 10 -> YES.
 
     // Every pair matched.
     return true;
@@ -76,9 +78,9 @@ bool compareStackQueue(stack<int> st, queue<int> q){
 int main(){
     // n values pushed onto the stack: the last one typed ends up on top.
     int n;
-    cin >> n;
+    cin >> n;           // cin >> skips whitespace and reads one number
     stack<int> st;
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n; i++){     // n passes
         int val;
         cin >> val;
         st.push(val);
@@ -88,17 +90,17 @@ int main(){
     int m;
     cin >> m;
     queue<int> q;
-    for(int i=0; i<m; i++){
+    for(int i=0; i<m; i++){     // m passes
         int val;
         cin >> val;
-        q.push(val);
+        q.push(val);            // queue push adds at the back
     }
 
     if(compareStackQueue(st, q)){
-        cout << "YES" << endl;
+        cout << "YES" << endl;  // endl = newline + flush
     } else {
         cout << "NO" << endl;
     }
 
-    return 0;
+    return 0;           // normal exit
 }

@@ -48,33 +48,36 @@ output
 
 */
 
+// <bits/stdc++.h>: g++'s "include the whole standard library" header.
 #include <bits/stdc++.h>
-using namespace std;
+using namespace std;    // no std:: prefix
 
 int main() {
     // The input can be large, so turn off the sync with C stdio and never
     // use endl (it flushes on every line).
+    // cin.tie(nullptr): cin no longer flushes cout before each read.
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int n, q;
+    int n, q;               // array length, number of queries
     cin >> n >> q;
 
     // pre[0] = 0 lets a query that starts at position 1 use the same
     // formula as every other query, with no special case.
+    // vector<long long>(n + 1, 0): n+1 cells, all 0.
     vector<long long> pre(n + 1, 0);
 
-    for (int i = 1; i <= n; i++) {
+    for (int i = 1; i <= n; i++) {  // read value i and extend the running sum
         long long x;
         cin >> x;
         pre[i] = pre[i - 1] + x;
     }
 
-    while (q--) {
-        int a, b;
+    while (q--) {           // answer each query in O(1)
+        int a, b;           // 1-based range, ends included
         cin >> a >> b;
         cout << pre[b] - pre[a - 1] << "\n";
     }
 
-    return 0;
+    return 0;   // success
 }

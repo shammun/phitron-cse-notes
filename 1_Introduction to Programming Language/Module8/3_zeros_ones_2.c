@@ -43,13 +43,17 @@ Sample Output 1
 
  */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
-    int n;
-    scanf("%d", &n);
-    int position;
-    int numbers[n];
+int main() {                /* the program starts running here */
+    int n;                  /* how many values */
+    scanf("%d", &n);        /* %d = read a whole number; &n = where to put it */
+    int position;           /* X, read after the array */
+    int numbers[n];         /* n boxes numbers[0..n-1]; size from input (C99) */
+
+    /* Pass i reads one value into numbers[i]. */
 
     for(int i = 0; i < n; i++){
         scanf("%d", &numbers[i]);
@@ -62,11 +66,12 @@ int main() {
        - position - 1 turns the 1-based X into a 0-based array index, so
          X = 1 means numbers[0].
        - 1 - value toggles a 0/1 value without any if: 1 - 0 = 1 and
-         1 - 1 = 0. */
+         1 - 1 = 0.
+       Sample: 0 1 1 0 0 with X = 4 -> numbers[3] = 1 - 0 = 1 -> 0 1 1 1 0. */
     numbers[position - 1] = 1 - numbers[position - 1];
     
     /* Print the whole array, one space after each value. */
     for(int i = 0; i < n; i++){
-        printf("%d ", numbers[i]);
+        printf("%d ", numbers[i]);     /* value, then a space */
     }
-}
+}   /* no return 0: reaching the end of main counts as returning 0 */

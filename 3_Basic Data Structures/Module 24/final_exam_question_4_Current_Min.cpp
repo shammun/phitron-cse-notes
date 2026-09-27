@@ -85,9 +85,9 @@ Sample Output 1
 
 */
 
-#include <bits/stdc++.h>
+#include <bits/stdc++.h>    // GCC shortcut: includes the whole standard library (queue, vector, string, ...)
 
-using namespace std;
+using namespace std;        // write priority_queue, cout ... without std::
 
 
 
@@ -103,21 +103,23 @@ using namespace std;
 int main()
 {
     int N;
-    cin >> N;
+    cin >> N;               // size of the starting list
 
     // greater<int> turns the default max-heap into a min-heap.
+    // Template arguments: stored type, the container the heap lives in, the comparison.
     priority_queue<int, vector<int>, greater<int>> pq;
 
     // The starting list goes straight into the heap.
     for(int i=0; i<N; i++){
         int x;
         cin >> x;
-        pq.push(x);
+        pq.push(x);         // O(log n)
     }
 
     int Q;
-    cin >> Q;
+    cin >> Q;               // number of commands
 
+    // while(Q--) runs the body Q times; one pass = one command.
     while(Q--){
         // x is the command number: 0, 1 or 2.
         int x;
@@ -129,12 +131,12 @@ int main()
             int val;
             cin >> val;
             pq.push(val);
-            cout << pq.top() << endl;
+            cout << pq.top() << endl;   // top() = the smallest value (endl = newline + flush)
         } else if(x == 1){
             // 1: just show the minimum (or Empty).
             if(pq.empty()){
                 cout << "Empty" << endl;
-                continue;
+                continue;       // skip the rest of this pass, go to the next command
             }
             cout << pq.top() <<endl;
         } else if(x == 2){
@@ -143,7 +145,7 @@ int main()
                 cout << "Empty" << endl;
                 continue;
             }
-            pq.pop();
+            pq.pop();           // remove the smallest value
             // Show the new minimum; the pop may have removed the last value.
             if(pq.empty()){
                 cout << "Empty" << endl;
@@ -153,5 +155,5 @@ int main()
         }
     }
 
-    return 0;
+    return 0;               // program finished normally
 }

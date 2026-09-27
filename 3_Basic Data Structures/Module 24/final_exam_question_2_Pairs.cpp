@@ -61,9 +61,9 @@ tasfia 2
 */
 
 
-#include <bits/stdc++.h>
+#include <bits/stdc++.h>    // GCC shortcut: includes the whole standard library (string, queue, vector, ...)
 
-using namespace std;
+using namespace std;        // write string, priority_queue, cout ... without std::
 
 
 
@@ -78,14 +78,20 @@ using namespace std;
  * AFTER r (l has lower priority). So:
  *   l.name > r.name  -> true : the bigger name waits, smaller names go first.
  *   l.val  < r.val   -> true : on a name tie, the smaller number waits.
+ *
+ * Strings compare with < and > in dictionary (alphabetical) order:
+ * "afia" < "asfia" because at the second letter 'f' < 's'.
+ * Cost: N pushes and N pops, O(log N) each -> O(N log N).
  */
 
 // One (name, number) item of the list.
 class Pair{
-    public:
-        string name;
-        int val;
+    public:                 // usable from outside the class
+        string name;        // the string S
+        int val;            // the integer I
 
+        // Constructor: `Pair obj(name, val);` runs this.
+        // this->name is the member; plain name is the parameter.
         Pair(string name, int val){
             this->name = name;
             this->val = val;
@@ -93,6 +99,10 @@ class Pair{
 };
 
 
+// The compare class: the priority queue calls cmp()(l, r) whenever it needs
+// to know which of two pairs has LOWER priority. (A class with operator()
+// can be called like a function.) l and r are taken by reference (&), so
+// the pairs are not copied for every comparison.
 class cmp{
     public:
         bool operator()(Pair &l, Pair &r){
@@ -113,22 +123,23 @@ int main(){
     // priority_queue<type, container that stores it, compare class>
     priority_queue<Pair, vector<Pair>, cmp> pq;
     int N;
-    cin >> N;
+    cin >> N;               // size of the list
 
     // Read every pair and push it; the heap keeps the "first to print" on top.
     for(int i=0; i<N; i++){
         string name;
         int val;
-        cin >> name >> val;
-        Pair obj(name, val);
-        pq.push(obj);
+        cin >> name >> val;         // e.g. "sakib 5"
+        Pair obj(name, val);        // build the Pair with the constructor
+        pq.push(obj);               // a copy goes into the heap, O(log N)
     }
 
     // Print the top and remove it, until nothing is left: that prints the
     // whole list in the required order.
     while(!pq.empty()){
         cout << pq.top().name << " " << pq.top().val << endl;
-        pq.pop();
+        pq.pop();                   // remove the pair just printed
     }
 
+    // No `return 0;`: main may leave it out and then returns 0 automatically.
 }

@@ -1,9 +1,18 @@
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: printf
 
-int main(){
+/* Pointers and arrays, and pointer arithmetic.
+ * Key facts shown here:
+ *  - an array's name, used in an expression, gives the address of its first element
+ *  - adding 1 to a pointer moves it by the size of ONE element of its type
+ *    (4 bytes for int, 1 byte for char), not by 1 byte
+ * The addresses in the comments come from one run; they change every run,
+ * but the DIFFERENCES between them (4 and 1) stay the same.
+ */
+
+int main(){ // program execution starts here
     // Declare an integer array with 5 elements and initialize it
     int arr[5] = {1, 2, 3, 4, 5};
-    
+
     // Create a pointer p that points to the first element of array
     // Note: Array name itself acts as pointer to its first element
     int *p = arr;  // Same as int *p = &arr[0]
@@ -17,23 +26,26 @@ int main(){
     // Print address of next element (p+1)
     // Since p is integer pointer, p+1 will add sizeof(int) bytes to current address
     // If p points to address 1000 and sizeof(int) is 4, p+1 will point to 1004
+    // (so p+1 is &arr[1], and *(p+1) would be the value 2)
     printf("Address of the next element of the array: %p\n", p+1);
     // Address of the next element of the array: 0x7ffeb0e5ff64
 
 
     // Declare integer variable and pointer to demonstrate pointer arithmetic
     int a = 6;
-    int *x = &a;
+    int *x = &a; // x holds the address of a
 
     // Print current address (x) and next address (x+1)
     // Notice the difference between addresses is sizeof(int) bytes (typically 4)
+    // (x+1 is only an address here; nothing is stored there that belongs to us,
+    // so it is printed but never dereferenced)
     printf("The value of x and x+1 are: %p and %p\n", x, x+1);
     // The value of x and x+1 are: 0x7ffeb0e5ff44 and 0x7ffeb0e5ff48
 
 
     // Demonstrate pointer arithmetic with different data type (char)
     char ch = 'a';
-    char *y = &ch;
+    char *y = &ch; // y is a pointer to char
 
     // Print current address (y) and next address (y+1)
     // Since char size is 1 byte, difference between y and y+1 is only 1 byte
@@ -41,6 +53,6 @@ int main(){
     printf("The value of y and y+1 are: %p and %p\n", y, y+1);
     // The value of y and y+1 are: 0x7ffeb0e5ff43 and 0x7ffeb0e5ff44
 
-    
-    return 0;
+
+    return 0; // program ended successfully
 }

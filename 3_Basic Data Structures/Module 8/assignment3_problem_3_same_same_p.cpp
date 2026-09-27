@@ -50,106 +50,115 @@ NO
  * the same list, and it also guarantees the next step is safe. Then walk both
  * lists side by side with two pointers, one step each per round, and compare
  * the values under them. The first mismatch means NO; no mismatch means YES.
+ *
+ * Sample 2: sizes 4 and 4 are equal, but position 0 holds 10 vs 40 -> NO.
+ * Cost: O(N1 + N2) - a few straight walks.
  */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <limits.h>
-#include <climits>
+#include <iostream>   // cin and cout
+#include <vector>     // std::vector - not used here
+#include <algorithm>  // sort/max/min - not used here
+#include <string>     // std::string - not used here
+#include <limits.h>   // INT_MIN / INT_MAX - not used here
+#include <climits>    // C++ name of the same header - not used here
 using namespace std; // Allows us to avoid prefixing standard library objects with `std::`.
 
+// One node of a singly linked list.
 class Node {
-    public:
-        int val;
-        Node* next;
+    public:   // members below are usable from outside the class
+        int val;       // the data
+        Node* next;    // next node's address; NULL for the last node
 
+        // Constructor: `this->val` is the member, `val` the parameter.
         Node(int val){
-            this->val = val;
-            this->next = NULL;
+            this->val = val;     // store the value
+            this->next = NULL;   // not linked yet
         }
 };
 
 // O(1) append: `tail` remembers the last node, so there is no walk.
+// `Node* &` = reference, so the caller's own head/tail are updated.
 void insert_at_tail(Node* &head, Node* &tail, int val){
-    Node* newNode = new Node(val);
-    if(head == NULL){
-        head = newNode;
-        tail = newNode;
-        return;
+    Node* newNode = new Node(val);   // `new` builds the node on the heap, returns its address
+    if(head == NULL){                // empty list: first and last node
+        head = newNode;   // the new node is the first node...
+        tail = newNode;   // ...and the last node
+        return;   // leave the function now
     }
 
     // Link the new node after the old last node, then move `tail` onto it.
-    tail->next = newNode;
-    tail = newNode;
+    tail->next = newNode;   // old last node now points at the new node
+    tail = newNode;   // the new node is now the last node
 }
 
 // Count the nodes from head to NULL.
 int get_size(Node* head){
-    int size = 0;
-    Node* tmp = head;
-    while(tmp!=NULL){
-        tmp = tmp->next;
-        size++;
+    int size = 0;          // counter
+    Node* tmp = head;      // walker
+    while(tmp!=NULL){      // one pass per node
+        tmp = tmp->next;   // step over a node...
+        size++;            // ...and count it
     }
-    return size;
+    return size;   // number of nodes counted
 }
 
 // Prints YES when both lists hold the same values in the same order.
+// It prints the answer itself, so it returns nothing (`void`).
 void is_similar(Node* head1, Node* head2){
-    int size1 = get_size(head1);
-    int size2 = get_size(head2);
+    int size1 = get_size(head1);   // length of list 1
+    int size2 = get_size(head2);   // length of list 2
 
     // Different lengths: they cannot be equal.
     if(size1 != size2){
-        cout << "NO" << endl;
-        return;
+        cout << "NO" << endl;   // endl = newline + flush
+        return;                 // stop: nothing more to check
     }
 
     // Equal lengths, so both pointers reach NULL together: walk them in step.
-    Node* tmp1 = head1;
-    Node* tmp2 = head2;
+    Node* tmp1 = head1;   // walker on list 1
+    Node* tmp2 = head2;   // walker on list 2
 
+    // Checking only tmp1 is enough: same length, so tmp2 is NULL at the same time.
     while(tmp1 != NULL){
         if(tmp1->val != tmp2->val){
-            cout << "NO" << endl;
-            return;
+            cout << "NO" << endl;   // first mismatch decides it
+            return;   // leave the function now
         }
         // Both pointers move one node forward.
-        tmp1 = tmp1->next;
-        tmp2 = tmp2->next;
+        tmp1 = tmp1->next;   // list 1: next position
+        tmp2 = tmp2->next;   // list 2: next position
     }
 
     // Every position matched.
-    cout << "YES" << endl;
+    cout << "YES" << endl;   // endl = newline + flush
 }
 
 int main(){
-    Node* head1 = NULL;
-    Node* tail1 = NULL;
+    Node* head1 = NULL;   // list 1, empty for now
+    Node* tail1 = NULL;   // last node of list 1 (none yet)
 
-    int val;
-    // First list: values until -1.
+    int val;   // holds each number as it is read
+    // First list: values until -1 (a stop sign, not stored).
     while(true){
-        cin >> val;
+        cin >> val;          // next integer; spaces/newlines skipped
         if(val == -1){
-            break;
+            break;   // leave the loop; the -1 is not stored
         }
-        insert_at_tail(head1, tail1, val);
+        insert_at_tail(head1, tail1, val);   // append to list 1
     }
 
     // Second list, read the same way into its own head/tail.
-    Node* head2 = NULL;
-    Node* tail2 = NULL;
+    Node* head2 = NULL;   // list 2: first node (none yet)
+    Node* tail2 = NULL;   // list 2: last node (none yet)
 
     while(true){
-        cin >> val;
+        cin >> val;   // read the next integer (spaces/newlines are skipped)
         if(val == -1){
-            break;
+            break;   // leave the loop; the -1 is not stored
         }
-        insert_at_tail(head2, tail2, val);
+        insert_at_tail(head2, tail2, val);   // append to list 2
     }
 
-    is_similar(head1, head2);
+    is_similar(head1, head2);   // prints YES or NO
+    // No `return 0;` - main alone may leave it out; it then returns 0 automatically.
 }

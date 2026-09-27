@@ -1,14 +1,19 @@
+/* Header files (pasted in by #include before compiling):
+     stdio.h  - scanf and printf (the only one this program needs)
+     string.h - text functions (unused here)
+     math.h   - maths functions (unused here)
+     stdlib.h - general utilities (unused here) */
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
 
-/* 
+/*
 
 Problem Statement
 
-You've learned about variables, right? Now its time to practice them. 
-You need to take an integer A, a very big integer B, a floating value C and 
+You've learned about variables, right? Now its time to practice them.
+You need to take an integer A, a very big integer B, a floating value C and
 a character D as input and output them serially.
 
 Input Format
@@ -39,34 +44,42 @@ Sample Output 0
 A
 
 */
-int main() {
-    int A;
-    long long B;
-    double C;
-    char D;
+/* The idea: pick for each value the type whose box is big enough, and use
+   the matching format specifier (%d, %lld, %lf, %c) to read and print it. */
+int main() {        /* the program starts here */
+    int A;          /* int: whole number up to about 2.1e9 - enough for 1e9 */
+    long long B;    /* long long: whole number up to about 9.2e18 - B can be 1e18 */
+    double C;       /* double: a number with a decimal part, e.g. 23.5675 */
+    char D;         /* char: exactly one character, e.g. A */
 
+    /* Each scanf waits for input; the & gives the address of the
+       variable so scanf can store the value in it. */
     scanf("%d", &A); // Input the integer A
     scanf("%lld", &B); // Input the long long integer B
-    scanf("%lf", &C); // Input the floating value C
-    scanf(" %c", &D); // Input the character D (Note: This will read the newline character left by previous scanf, so we need to consume it first)
+    scanf("%lf", &C); // Input the floating value C (%lf = double in scanf)
+    scanf(" %c", &D); // Input the character D (Note: the space before %c skips the newline left behind by the previous scanf, so D gets the real letter)
     /*
-    The leading space tells scanf to skip any whitespace (spaces, tabs, newlines) 
-    before reading the character. This is a classic C beginner trap, and it only 
-    affects %c, the other format specifiers (%d, %lld, %lf) automatically skip 
+    The leading space tells scanf to skip any whitespace (spaces, tabs, newlines)
+    before reading the character. This is a classic C beginner trap, and it only
+    affects %c, the other format specifiers (%d, %lld, %lf) automatically skip
     leading whitespace.
+    Without the space, D would receive the '\n' from pressing Enter after
+    23.5675, and the letter A would never be read.
     */
 
-    printf("%d\n", A); // Output the integer A
+    printf("%d\n", A); // Output the integer A (\n = newline after it)
     printf("%lld\n", B); // Output the long long integer B
     printf("%.2lf\n", C); // Output the floating value C with 2 decimal places
     /*
-    lf (Specifier): Stands for long float (used for double). In modern 
-    C (C99 and later), both %f and %lf behave identically inside 
-    printf because float arguments are automatically promoted to double, 
+    .2 means "exactly 2 digits after the decimal point", rounded:
+    23.5675 -> 23.57.
+    lf (Specifier): Stands for long float (used for double). In modern
+    C (C99 and later), both %f and %lf behave identically inside
+    printf because float arguments are automatically promoted to double,
     but %lf explicitly signals that the variable is a double.
     */
-    
+
     printf("%c\n", D); // Output the character D
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

@@ -53,23 +53,29 @@ Sample Output 0
  * end, X is not in the list: -1.
  *
  * There are T test cases, so every case starts a brand-new empty list.
+ *
+ * Trace of case 1: list 1 2 3 4 5, X = 3.
+ *   index 0: 1 != 3 -> step;  index 1: 2 != 3 -> step;  index 2: 3 == 3 -> answer 2.
+ * Cost: O(N) per test case (one walk).
  */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <limits.h>
-#include <climits>
+#include <iostream>   // cin and cout
+#include <vector>     // std::vector - not used here
+#include <algorithm>  // sort/max/min - not used here
+#include <string>     // std::string - not used here
+#include <limits.h>   // INT_MIN / INT_MAX - not used here
+#include <climits>    // C++ name of the same header - not used here
 using namespace std; // Allows us to avoid prefixing standard library objects with `std::`.
 
 
+// One node of a singly linked list: a value and the address of the next node.
 class Node {
-    public:
+    public:          // usable from outside the class
         int val;     // Value stored in the node (data).
         Node* next;  // Pointer to the next node in the linked list.
 
         // Constructor for the Node class to initialize 'val' and set 'next' to NULL.
+        // Runs on `new Node(x)`; `this->val` is the member, `val` the parameter.
         Node(int val) {
             this->val = val;  // Assign the provided value to the 'val' member.
             this->next = NULL; // Initialize 'next' to NULL, meaning no next node by default.
@@ -77,16 +83,17 @@ class Node {
 };
 
 // O(1) append: `tail` remembers the last node, so there is no walk.
+// `Node* &head` is a reference to main's pointer, so main sees the change.
 void insert_at_tail(Node* &head, Node* &tail, int val){
-    Node* newNode = new Node(val);
-    if(head == NULL){
-        head = newNode;
-        tail = newNode;
-        return;
+    Node* newNode = new Node(val);   // `new` builds the node on the heap, returns its address
+    if(head == NULL){                // empty list: first and last node at once
+        head = newNode;   // the new node is the first node...
+        tail = newNode;   // ...and the last node
+        return;   // leave the function now
     }
     
     // Link the new node after the old last node, then move `tail` onto it.
-    tail->next = newNode;
+    tail->next = newNode;   // old last node now points at the new node
     tail = newNode; // or tail = tail->next
 }
 
@@ -94,49 +101,53 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
 int find_index(Node* head, int val){
     if(head == NULL){
         // Empty list: nothing can match.
-        return -1;
+        return -1;   // -1 = "not found / nothing there"
     }
-    Node* temp = head;
-    int index = 0;
+    Node* temp = head;   // walker, starts on index 0
+    int index = 0;       // index of the node `temp` stands on
 
+    // One pass per node: check it, then step forward and add 1 to index.
+    // Ends when temp falls off the end (NULL).
     while(temp != NULL){
         if(temp->val == val){
             // First match: stop here, this is the leftmost position.
-            return index;
+            return index;   // index of the first match
         }
-        temp = temp->next;
-        index++;
+        temp = temp->next;   // next node...
+        index++;             // ...whose index is one more
     }
-    return -1;
+    return -1;               // walked the whole list, no match
 }
 
 int main(){
     
-    int T;
-    cin >> T;
+    int T;       // number of test cases
+    cin >> T;   // number of test cases
 
     // One test case per round; a fresh head/tail makes a new empty list.
+    // `while(T--)` tests T, then lowers it by 1: the body runs exactly T times.
     while(T--){
-        Node* head = NULL;
-        Node* tail = NULL;
+        Node* head = NULL;   // new empty list for this case
+        Node* tail = NULL;   // last node (none yet)
+        // (The previous case's nodes are never deleted - a leak, harmless in a short program.)
         
-        int V;
+        int V;   // one value of the list
         // Read this case's values until -1.
         while(true){
-            cin >> V;
+            cin >> V;          // next integer; spaces/newlines skipped
             if(V == -1){
-                break;
+                break;         // -1 ends this case's list and is not stored
             }
-            insert_at_tail(head, tail, V);
+            insert_at_tail(head, tail, V);   // append at the end, keeping input order
         }
     
-        int X;
-        cin >> X;
+        int X;         // the value to search for
+        cin >> X;   // the value to search for
 
-        int index = find_index(head, X);
-        cout << index << endl;
+        int index = find_index(head, X);   // first index of X, or -1
+        cout << index << endl;             // one answer per line; endl = newline + flush
 
     }
 
-    return 0;
+    return 0;   // normal exit
 }

@@ -18,23 +18,32 @@ Then compare those 3 objects and print who got the highest math_marks and print 
 #include <string.h> // Include string.h for strcpy(), used to put a name into a char array
 using namespace std; // Use the standard namespace to avoid prefixing 'std::'
 
+// Idea: this first version fills each object member by member (no constructor yet;
+// practice_problem1_2.cpp does the same job with a constructor). Then three
+// comparisons decide who has the highest math_marks. Output here: Rahim
+
 // Define a class named 'Student' to encapsulate the properties of a student
+// A class is a blueprint for a new data type; each object made from it has its own copy of every member.
 class Student {
-    public:
+    public: // members can be read and written from main with the dot, e.g. rahim.roll
     char name[100]; // Character array to store the student's name
     int roll; // Integer to store the student's roll number
     char section; // Character to store the student's section
     int math_marks; // Integer to store the student's math marks
-    int cls; // Integer to store the student's class
-};
+    int cls; // Integer to store the student's class ("class" is a keyword, so the member is cls)
+}; // semicolon ends the class definition
 
 int main() {
     // Create three static objects of the 'Student' class
+    // "Static" here means ordinary objects on the stack (not made with new).
+    // With no constructor, their members start as garbage until we assign them below.
     Student rahim;
     Student karim;
     Student rafiq;
 
     // Assign values to the attributes of the objects
+    // A char array cannot be assigned with = (rahim.name = "Rahim"; does not compile),
+    // so strcpy(destination, source) copies the letters plus the ending '\0'.
     strcpy(rahim.name, "Rahim"); // Copy the name "Rahim" to the 'name' attribute of 'rahim'
     rahim.roll = 1; // Assign the roll number 1 to 'rahim'
     rahim.section = 'A'; // Assign the section 'A' to 'rahim'

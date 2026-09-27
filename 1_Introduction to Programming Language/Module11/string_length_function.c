@@ -12,11 +12,11 @@
   The answer is 8.
 */
 
-#include <stdio.h>
-#include <string.h>
+#include <stdio.h>  // standard input/output library: gives us printf
+#include <string.h> // string library
 /* strlen lives in <string.h>, together with strcpy, strcat and strcmp. */
 
-int main() {
+int main() { // program execution starts here
     /* 8 characters plus the '\0' is 9 of the 10 slots. The longest string
        that fits in `char str[10]` is 9 characters long, because one slot
        always belongs to the end marker. */
@@ -31,7 +31,7 @@ int main() {
        strlen hands back a size_t, an unsigned count; storing it in an int is
        fine for short strings like this one. */
     int length = strlen(str);
-    printf("%d", length);
+    printf("%d", length); // prints 8; %d prints an int
 
-    return 0;
+    return 0; // program ended successfully
 }

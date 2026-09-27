@@ -21,7 +21,9 @@ Note
 Make sure don't print any leading or trailing spaces.
 */
 
-#include <stdio.h>
+/* Note on the statement: "103" is 10^3 (the exponent lost its formatting when it was copied). */
+
+#include <stdio.h> // standard input/output library: scanf and printf
 
 /*
 Function name: print_N_to_1
@@ -32,14 +34,16 @@ Purpose: Prints numbers from n down to x using recursion in descending order
 
 How it works:
     1. Base case: If x > n, return (stop recursion)
-    2. Make recursive call first with x+1 
+    2. Make recursive call first with x+1
     3. Then print current number x
-    
+    (The recursive call trusts that print_N_to_1(x+1, n) prints n down to
+    x+1; this call only has to print x after it.)
+
 Why this order matters:
     - To print in descending order (N to 1), we need to reach N first
     - Making recursive call before printing ensures we reach N first
     - Then while returning from recursion, numbers get printed in reverse
-    
+
 Call stack visualization for n=4, starting x=1:
     print_N_to_1(1, 4)
         calls print_N_to_1(2, 4)
@@ -60,15 +64,16 @@ Why space is used instead of newline:
 void print_N_to_1(int x, int n){
     // Base case: if x exceeds n, stop recursion
     if(x > n){
-        return;
+        return; // leave this call; nothing to print
     }
-    
+
     // First make recursive call to reach N
     print_N_to_1(x+1, n);
 
     // After returning from recursion, print current number
-    // Print space only if it's not the first number (x > 1)
-    // This avoids trailing space at the end
+    // Every number except 1 is followed by a space. 1 is printed LAST (its
+    // call is the outermost one, so it finishes last), so leaving the space
+    // off after 1 avoids a trailing space at the end of the line.
     if(x > 1){
         printf("%d ", x);
     } else {
@@ -80,7 +85,7 @@ void print_N_to_1(int x, int n){
 Function name: main
 Parameters: None
 Return value: 0 for successful execution
-Purpose: 
+Purpose:
     - Takes input N from user
     - Calls print_N_to_1 to print numbers N to 1
     - Returns 0 to indicate successful execution
@@ -88,15 +93,15 @@ Purpose:
 int main(){
     // Declare variable to store input number
     int n;
-    
+
     // Read integer from user
     // %d is format specifier for integer
     // &n gives address where input should be stored
     scanf("%d", &n);
-    
+
     // Call print_N_to_1 starting from 1 up to n
     print_N_to_1(1, n);
-    
+
     // Return 0 to indicate successful program execution
     return 0;
 }

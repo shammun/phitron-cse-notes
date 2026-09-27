@@ -26,13 +26,15 @@ InputCopy
 4
 2 0 0 5
 OutputCopy
-2 5 0 0 
+2 5 0 0
 InputCopy
 5
 1 5 0 7 4
 OutputCopy
-1 5 7 4 0 
+1 5 7 4 0
 */
+
+/* Note on the statement: "103" is 10^3 (the exponent lost its formatting when it was copied). */
 
 /*
  * This program shifts all zeros in an array to the right while maintaining
@@ -43,13 +45,15 @@ OutputCopy
  * 3. In-place array modification
  */
 
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: scanf and printf
 
 /* Function that shifts zeros to right in an array:
  * Parameters:
  * arr[]: Integer array to be modified
+ *        (it receives the address of the caller's first element, so the
+ *        changes are made in the caller's own array)
  * n: Size of array
- * 
+ *
  * Algorithm:
  * 1. Keep track of position where next non-zero should go
  * 2. Scan array and move non-zeros to front
@@ -69,11 +73,12 @@ void shiftZeros(int arr[], int n){
 
     /* First pass: Move all non-zero elements to front
      * Maintains relative order of non-zero elements
+     * (i is always >= nonZeroIndex, so we never overwrite a number we have not read yet)
      */
     for(int i=0; i<n; i++){
         if(arr[i] != 0){
-            arr[nonZeroIndex] = arr[i];
-            nonZeroIndex++;
+            arr[nonZeroIndex] = arr[i]; // copy this non-zero to the next free front position
+            nonZeroIndex++; // move the front position one step right
         }
     }
 
@@ -85,16 +90,17 @@ void shiftZeros(int arr[], int n){
     }
 }
 
-int main(){
-    int n;
+int main(){ // program execution starts here
+    int n; // number of elements
     /* scanf with %d format specifier:
      * %d is used for reading integer value
      * &n passes address where input should be stored
      */
     scanf("%d", &n);
-    
+
     /* Create array of size n
      * Will store input numbers
+     * (size known only at run time: a C99 variable length array)
      */
     int arr[n];
 
@@ -107,7 +113,7 @@ int main(){
     }
 
     /* Call function to shift zeros right
-     * Array is passed by reference so original array is modified
+     * The function receives the address of arr, not a copy, so the original array is modified
      */
     shiftZeros(arr, n);
 
@@ -120,5 +126,5 @@ int main(){
     }
     printf("\n");  // Add newline after printing array
 
-    return 0;
+    return 0; // program ended successfully
 }

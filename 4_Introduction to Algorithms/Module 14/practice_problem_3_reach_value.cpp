@@ -45,32 +45,41 @@ YES
 // simpler: if N was made by "times 10", then N / 10 must be reachable; if by
 // "times 20", then N / 20 must be. Only try a division when it is exact.
 // Reaching exactly 1 means YES; anything that cannot be divided further is NO.
+//
+// Trace for N = 200:
+//   200 % 10 == 0 -> try 20:  20 % 10 == 0 -> try 2: 2 is not 1 and not a
+//   multiple of 10 or 20 -> false. Back in 20: 20 % 20 == 0 -> try 1 -> true.
+//   So 200 -> YES (1 * 10 * 20).
+// N = 25: not a multiple of 10 or 20 -> NO.
 
-#include <iostream>
-#include <set>
+#include <iostream>     // cin, cout, endl
+#include <set>          // set - a sorted collection of unique values
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 // Values already tried in this test case (a memo of failures). A value we see
 // a second time has already been answered "no", or we would have stopped.
 set<long long> visited;
 
+// Returns true if target can be built from 1 by multiplying by 10s and 20s.
 bool canReach(long long target){
     if(target == 1){
         return true;    // back at the starting value: a path exists
     }
     if(target < 1){
-        return false;
+        return false;   // cannot happen with exact divisions, but safe
     }
 
     // Already explored from here and it did not lead to 1.
+    // set::find returns an iterator to the value, or end() if it is absent.
     if(visited.find(target) != visited.end()){
         return false;
     }
 
-    visited.insert(target);
+    visited.insert(target);   // remember we have been here
 
     // Undo a "times 10" step, if N really is a multiple of 10.
+    // (&& stops early: canReach is only called when the division is exact.)
     if(target % 10 == 0 && canReach(target / 10)){
         return true;
     }
@@ -83,10 +92,10 @@ bool canReach(long long target){
 }
 
 int main(){
-    int t;
+    int t;              // number of test cases
     cin >> t;
 
-    while(t--){
+    while(t--){         // one pass per test
         long long n;   // N is up to 10^12, too big for int
         cin >> n;
 

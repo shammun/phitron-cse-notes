@@ -46,15 +46,18 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
-    int n;
-    scanf("%d", &n);
+int main() {                /* the program starts running here */
+    int n;                  /* how many numbers are coming */
+    scanf("%d", &n);        /* %d = read a whole number; &n = where to put it */
 
     /* One box per number, read with the usual loop. */
-    int a[n];
+    int a[n];       /* n boxes a[0] .. a[n-1]; size from the input (C99) */
 
+    /* Pass i reads one number into a[i]; &a[i] is that box's address. */
     for (int i = 0; i < n; i++) {
         scanf("%d", &a[i]);
     }
@@ -65,9 +68,9 @@ int main() {
        the two %d placeholders. */
     for (int i = 0; i < n; i++) {
         if (a[i] <= 10) {
-            printf("A[%d] = %d\n", i, a[i]);
+            printf("A[%d] = %d\n", i, a[i]);    /* e.g. A[3] = 0 */
         }
     }
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

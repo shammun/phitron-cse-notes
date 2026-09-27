@@ -22,22 +22,24 @@ uses them afterwards; a function that must keep them would take copies.
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <list>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here (template leftover)
+#include <algorithm>    // not used here (template leftover)
+#include <string>       // not used here (template leftover)
+#include <list>         // not used here (template leftover)
+using namespace std;    // write cin/cout without std::
 
+// One node of a doubly linked list: a value plus links both ways.
 class Node {
     public:
-        int val;
-        Node* next;
-        Node* prev;
+        int val;        // the stored value
+        Node* next;     // node above (towards the top)
+        Node* prev;     // node below (towards the bottom)
 
+    // Constructor, runs on `new Node(val)`; this->val = member, val = parameter.
     Node(int val) {
         this->val = val;
-        this->next = NULL;
+        this->next = NULL;  // not linked yet
         this->prev = NULL;
     }
 };
@@ -48,26 +50,28 @@ class myStack{
     public:
         Node* head = NULL;  // bottom
         Node* tail = NULL;  // top -- push and pop both work here
-        int sz = 0;
+        int sz = 0;         // number of values
 
+        // push: new value on top.
         void push(int val){ // O(1)
             sz++;
-            Node* newNode = new Node(val);
+            Node* newNode = new Node(val);  // `new` builds the node on the heap
             if(head == NULL){       // first node is both ends at once
                 head = newNode;
                 tail = newNode;
                 return;
             }
-            tail->next = newNode;
-            newNode->prev = tail;
+            tail->next = newNode;   // old top -> new
+            newNode->prev = tail;   // old top <- new
             tail = newNode;         // the newest value is the new top
         }
 
+        // pop: remove the top. Only call when not empty.
         void pop(){ // O(1)
             sz--;
-            Node* deleteNode = tail;
+            Node* deleteNode = tail;    // remember the old top
             tail = tail->prev;      // prev is why this is O(1) and not a walk
-            delete deleteNode;
+            delete deleteNode;      // free its memory
             if(tail==NULL){         // the stack is empty now
                 head=NULL;
                 return;
@@ -75,34 +79,38 @@ class myStack{
             tail->next = NULL;      // nothing above the new top
         }
 
+        // top: read the newest value.
         int top(){
             return tail->val; // O(1) -- the last value pushed (LIFO)
         }
 
+        // size: how many values.
         int size(){
             return sz; // O(1)
         }
 
+        // empty: true when nothing is inside.
         bool empty(){
             return sz==0; // O(1)
-            // return head==NULL; // O(1)
+            // return head==NULL; // O(1)   (equivalent test without the counter)
         }
 };
 
 
 int main(){
-    myStack s1;
+    myStack s1;         // the first stack
 
     // get the input for stack
     // n values into the first stack; the last one typed ends up on top.
     int n;
-    cin >> n;
-    for(int i=0; i<n; i++){
+    cin >> n;           // cin >> skips whitespace and reads one number
+    for(int i=0; i<n; i++){     // n passes
         int x;
         cin >> x;
         s1.push(x);
     }
 
+    // The second stack, read the same way (m values).
     myStack s2;
     int m;
     cin >> m;
@@ -117,12 +125,13 @@ int main(){
     // together, so s2 is never popped while it is already empty.
     if(s1.size() != s2.size()){
         cout << "NO" << endl;
-        return 0;
+        return 0;       // answer known, end the program
     }
 
     // Compare top against top, then pop both. `flag` remembers the verdict;
     // `break` leaves as soon as one pair disagrees, since no later pair can
     // rescue it.
+    // Trace s1 = 1 2 3, s2 = 1 2 3: tops 3/3, 2/2, 1/1 all equal -> YES.
     bool flag = true;
     while(!s1.empty()){
         if(s1.top() != s2.top()){
@@ -133,8 +142,9 @@ int main(){
         s2.pop();
     }
 
+    // if/else written on one line each (no braces needed for a single statement).
     if(flag) cout << "YES" << endl;
     else cout << "NO" << endl;
 
-    return 0;
+    return 0;           // normal exit
 }

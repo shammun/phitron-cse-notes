@@ -10,13 +10,18 @@
 // like - already sorted, reversed or shuffled - because the array is always cut
 // down the middle and always merged.
 // Space O(n) for the temporary halves, plus O(log n) of call stack.
+//
+// Trace for {5, 2, 4, 1}:
+//   split  {5,2} {4,1}  ->  {5} {2}  {4} {1}
+//   merge  {2,5}        {1,4}
+//   merge  {1,2,4,5}
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
+#include <iostream>     // cin, cout
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // not used here
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 // conquer(c, l, mid, r) merges two neighbouring slices of ONE array:
 //     the left half  c[l .. mid]
@@ -27,7 +32,7 @@ void conquer(int c[], int l, int mid, int r){
     // Copy the left half out into a. Positions l..mid inclusive, so mid - l + 1
     // of them - the "+ 1" is the usual off-by-one trap with inclusive ranges.
     int n = mid - l + 1;
-    int a[n];
+    int a[n];                   // temporary copy (variable length array)
     for(int i=0; i<n; i++){
         a[i] = c[l+i];
     }
@@ -55,11 +60,11 @@ void conquer(int c[], int l, int mid, int r){
         // first. That makes this sort unstable: equal values can swap places.
         // Changing it to a[i] <= b[j] would make it stable.
         if(a[i] < b[j]){
-            c[curr] = a[i];
+            c[curr] = a[i];     // left front is smaller: place it
             i++;
             curr++;
         } else{
-            c[curr] = b[j];
+            c[curr] = b[j];     // right front is smaller or equal: place it
             j++;
             curr++;
         }
@@ -81,6 +86,7 @@ void conquer(int c[], int l, int mid, int r){
 
 // divide(a, l, r) sorts the slice a[l..r], both ends included.
 // Same splitting as divide.cpp, with the merge added at the end.
+// The recursive calls are trusted to return their halves sorted.
 void divide(int a[], int l, int r){ // O(nlogn) -- this does the merge sort
     // A slice of one element (or none) is already sorted.
     if(l >= r){
@@ -102,7 +108,7 @@ int main(){
     int n, m;      // m is read but never used, a leftover from conquer.cpp -
     cin >> n >> m; // the input must still contain it or n would be misread.
 
-    int a[n];
+    int a[n];      // the values to sort
     for(int i=0; i<n; i++){
         cin >> a[i];
     }
@@ -110,9 +116,9 @@ int main(){
     // Sort the whole array: positions 0 to n-1 inclusive.
     divide(a, 0, n-1);
 
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n; i++){     // print the sorted array
         cout << a[i] << " ";
     }
 
-    return 0;
+    return 0;   // success
 }

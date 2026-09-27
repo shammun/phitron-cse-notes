@@ -22,8 +22,15 @@ the same "work after the call" shape as recursion_print_N_to_1.c.
 This file also brings in the other new thing of the module, the array: a
 list of values under one name, where a[i] picks out the one at position i,
 counting from 0.
+
+Example run:
+    input   5
+            1 2 3 4 5
+    output  15
 */
 
+// stdio.h ("standard input output") declares printf and scanf; #include
+// pastes it in before compiling so the compiler knows those names.
 #include <stdio.h>
 
 /* The array is declared outside main, which makes it global: getSum can read
@@ -52,9 +59,10 @@ int getSum(int i, int n){
     return a[i] + getSum(i+1, n);
 }
 
+// Every C program starts running at main.
 int main(){
-    int n;
-    scanf("%d", &n);
+    int n;              // how many numbers the array will hold
+    scanf("%d", &n);    // %d = read a whole number; &n = where to put it
 
     // Fill the array: one pass of the loop, one box. scanf is given &a[i],
     // the address of the box, exactly as it is given &n for a plain variable.
@@ -67,7 +75,7 @@ int main(){
     // for small values; with large ones the total would overflow and both
     // would have to become long long.
     int total_sum = getSum(0, n);
-    printf("%d\n", total_sum);
+    printf("%d\n", total_sum);      // %d is replaced by the total; newline after it
 
-    return 0;
+    return 0;   // 0 = the program finished normally
 }

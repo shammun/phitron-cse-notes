@@ -23,29 +23,31 @@ using namespace std; // write cin/cout instead of std::cin/std::cout
 // returns (that is the trap shown in return_dynamic_array.cpp). An array made
 // with `new` lives on the heap and stays until someone calls delete[].
 // The return type int* means "the address of an int" - here, of the first box.
+// Parameter n: how many numbers to read. Returns: address of the filled heap array.
 int* get_array(int n){
     int *a = new int[n]; // ask the heap for n int boxes; n is only known now, at run time
 
     // A pointer to a heap array is used exactly like an array: a[i] is box number i
-    for(int i=0; i<n; i++){
-        cin >> a[i];
+    for(int i=0; i<n; i++){ // i = 0..n-1, one number per pass
+        cin >> a[i]; // cin skips spaces/newlines and reads the next number into box i
     }
 
     return a; // hand back the address; the boxes themselves stay alive on the heap
+    // (only the pointer variable a dies here, not the boxes it points to)
 }
 
-int main(){
-    int n;
+int main(){ // the program starts running here
+    int n; // how many numbers
     cin >> n; // N is read in main, as the question asks
 
     // arr receives the address that get_array() returned, so arr[i] reads
     // the same heap boxes the function filled
     int *arr = get_array(n);
 
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n; i++){ // print every value, each followed by a space
         cout << arr[i] << " ";
     }
-    cout << endl;
+    cout << endl; // finish the line
 
     // The array was made in get_array() but main is the last one to use it,
     // so main gives the memory back. Use delete[] (with brackets) for arrays.

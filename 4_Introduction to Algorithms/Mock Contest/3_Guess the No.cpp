@@ -48,11 +48,11 @@ It is impossible to reach 2 by adding only 3 or 4.
 // reachable number gives the next block of three, forever.
 // So the answer is NO only for 1, 2 and 5.
 
-#include <iostream>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+using namespace std;    // no std:: prefix
 
 int main(){
-    int T;
+    int T;              // the target (up to 10^9 fits in an int)
     cin >> T;
 
     if(T < 3){
@@ -61,6 +61,7 @@ int main(){
     } else if(T == 3 || T == 4 || T == 6 || T == 7 || T == 8 || T == 9 || T == 10 || T == 11 || T >= 12){
         // The reachable values listed above; the only number from 3 up that
         // is missing is 5 (3 + 3 = 6 already overshoots it).
+        // (|| is logical OR: true if any one of the tests is true.)
         cout << "YES" << endl;
     } else{
         // Only T = 5 gets here.

@@ -5,13 +5,20 @@
 //
 // Nothing about the recursion changes. Only two lines are added: one that checks
 // the notebook before working, one that writes the result into it afterwards.
+//
+// The DP in three parts:
+//   meaning     dp[i] = fib(i), or -1 if not worked out yet
+//   base cases  fib(0) = 0, fib(1) = 1
+//   transition  dp[n] = fib(n-1) + fib(n-2)
+// Trace for n = 5: fib(5) -> fib(4) -> fib(3) -> fib(2) fills dp[2]=1, then
+// dp[3]=2, dp[4]=3; back in fib(5), fib(3) is simply read from dp[3]; dp[5]=5.
 
-#include <iostream>
-#include <vector>
-#include <algorithm>    
-#include <string>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // not used here
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 // The notebook. Read dp[i] as "the answer to fib(i)" - it is indexed by the
 // QUESTION, not by position in some list of results. dp[7] is fib(7), whether or
@@ -57,9 +64,9 @@ int main(){
     // (memset belongs to <cstring>, which this file does not include; it only
     // compiles because another header brings it in.)
     memset(dp, -1, sizeof(dp));
-    int n;
+    int n;                    // which Fibonacci number
     cin >> n;
-    cout << fib(n) << endl;
+    cout << fib(n) << endl;   // e.g. 40 -> 102334155, instantly
 
-    return 0;
+    return 0;                 // success
 }

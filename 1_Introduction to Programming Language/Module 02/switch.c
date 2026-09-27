@@ -8,18 +8,27 @@
  * on from there.
  *
  * Two switches here, one on a char and one on an int.
+ *
+ * Example run:
+ *     Enter your grade (A, B, C, D, F): B
+ *     Well done!
+ *     Enter your day (1-7): 3
+ *     Wednesday
  */
 
+/* stdio.h ("standard input output") declares printf and scanf. */
 #include <stdio.h>
 
-int main() {
-    char grade;
-    int day;
+int main() {        /* the program starts here */
+    char grade;     /* one character, e.g. 'A' (stored as its code, 65) */
+    int day;        /* a whole number, 1..7 expected */
 
     /* A prompt is just ordinary printed text. There is no \n at the end,
      * so what you type - and then the answer - appears on the same line
      * as the question. */
     printf("Enter your grade (A, B, C, D, F): ");
+    /* %c takes exactly one character; &grade is the address of grade,
+     * which scanf needs so it can store the character there. */
     scanf("%c", &grade);   /* %c takes exactly one character */
 
     /* switch(grade) compares grade against each case label in turn. The
@@ -34,19 +43,19 @@ int main() {
      * does not stop on its own - and why a forgotten break is such a
      * quiet bug. */
     switch(grade) {
-        case 'A':
+        case 'A':                       /* grade == 'A' jumps here */
             printf("Excellent!\n");
-            break;
-        case 'B':
+            break;                      /* leave the switch */
+        case 'B':                       /* grade == 'B' */
             printf("Well done!\n");
             break;
-        case 'C':
+        case 'C':                       /* grade == 'C' */
             printf("Good!\n");
             break;
-        case 'D':
+        case 'D':                       /* grade == 'D' */
             printf("Sufficient!\n");
             break;
-        case 'F':
+        case 'F':                       /* grade == 'F' */
             printf("Failed!\n");
             break;
         default:
@@ -57,7 +66,7 @@ int main() {
             printf("Invalid grade!\n");
     }
 
-    printf("Enter your day (1-7): ");
+    printf("Enter your day (1-7): ");   /* second prompt */
 
     /* Pressing Enter after the grade left a newline sitting in the
      * input, unread. A second %c would have taken that newline as "the
@@ -70,27 +79,28 @@ int main() {
 
     /* The same idea on an int. Seven else-ifs would say this too, but
      * the switch makes it obvious at a glance that all seven are exact
-     * comparisons against one variable. */
+     * comparisons against one variable. Each case prints one day name
+     * and then break leaves the switch. */
     switch(day) {
-        case 1:
+        case 1:                         /* day == 1 */
             printf("Monday\n");
             break;
-        case 2:
+        case 2:                         /* day == 2 */
             printf("Tuesday\n");
             break;
-        case 3:
+        case 3:                         /* day == 3 */
             printf("Wednesday\n");
             break;
-        case 4:
+        case 4:                         /* day == 4 */
             printf("Thursday\n");
             break;
-        case 5:
+        case 5:                         /* day == 5 */
             printf("Friday\n");
             break;
-        case 6:
+        case 6:                         /* day == 6 */
             printf("Saturday\n");
             break;
-        case 7:
+        case 7:                         /* day == 7 */
             printf("Sunday\n");
             break;
         default:
@@ -99,4 +109,4 @@ int main() {
              * silence. */
             printf("Invalid day!\n");
     }
-}
+}   /* no return 0; - reaching the end of main counts as returning 0 */

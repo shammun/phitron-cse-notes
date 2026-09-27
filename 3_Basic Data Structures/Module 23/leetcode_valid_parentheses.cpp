@@ -33,8 +33,9 @@ Example
  * At the end every opening bracket must have been closed, so the stack must
  * be empty. "((" leaves two brackets on the stack -> false.
  */
+// (LeetCode's hidden main includes <stack> and <string> and calls isValid.)
 class Solution {
-public:
+public:   // LeetCode calls isValid from outside the class
     // Is `open` the opening partner of the closing bracket `close`?
     bool isPair(char open, char close) {
         return (open == '(' && close == ')') ||
@@ -45,6 +46,7 @@ public:
     bool isValid(string s) {
         stack<char> st;   // opening brackets still waiting for their partner
 
+        // Range-for: c is each character of s, left to right.
         for (char c : s) {
             if (c == '(' || c == '{' || c == '[') {
                 st.push(c);            // wait for its closing bracket

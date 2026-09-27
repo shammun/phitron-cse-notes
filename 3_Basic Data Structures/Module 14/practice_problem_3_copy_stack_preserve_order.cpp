@@ -1,7 +1,7 @@
 /*
 
-Take a stack of size N as input and copy those elements to another stack to get the 
-values in the order they were inserted and print them. You should use STL to solve 
+Take a stack of size N as input and copy those elements to another stack to get the
+values in the order they were inserted and print them. You should use STL to solve
 this problem.
 
 Input
@@ -26,16 +26,16 @@ Output
  * (Pouring a second time would flip them back and print 50 first again.)
  */
 
-#include <iostream>
-#include <stack>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+#include <stack>        // std::stack
+using namespace std;    // write stack/cin/cout without std::
 
 int main() {
     // Read n values into st1. The last value typed sits on top.
     stack<int> st1;
     int n;
-    cin >> n;
-    for(int i=0; i<n; i++){
+    cin >> n;           // cin >> skips whitespace and reads one number
+    for(int i=0; i<n; i++){     // n passes, one value each
         int val;
         cin >> val;
         st1.push(val);
@@ -45,8 +45,8 @@ int main() {
     // 50 goes in first (bottom of st2), 10 goes in last (top of st2).
     stack<int> st2;
     while(!st1.empty()){
-        st2.push(st1.top());
-        st1.pop();
+        st2.push(st1.top());    // top() reads without removing
+        st1.pop();              // pop() removes (returns nothing)
     }
 
     // Popping st2 now gives the values oldest-first: 10 20 30 40 50.
@@ -55,7 +55,7 @@ int main() {
         st2.pop();
     }
 
-    cout << endl;
+    cout << endl;       // finish the line
 
-    return 0;
+    return 0;           // normal exit
 }

@@ -18,9 +18,15 @@
   Notice that the adding happens after the recursive call returns, so the
   additions actually run from the back of the array forwards - the same
   "work after the call" shape as recursion_print_N_to_1.c.
+
+  Example input:
+      5
+      4 8 15 16 23
+  Output:
+      66
 */
 
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: scanf and printf
 
 /* The array is declared outside main, which makes it global: getSum can read
    it without being handed it. A global array is also filled with zeros to
@@ -30,6 +36,8 @@
    way to do this, and it keeps the function self-contained.) */
 int a[100000];
 
+/* getSum(i, n): returns a[i] + a[i+1] + ... + a[n-1].
+   Parameters: i = index to start from, n = number of elements. */
 int getSum(int i, int n){
     /* Base case: i has reached n, one past the last element, so there is
        nothing left to add. Note it is i == n and not i == n-1: the element
@@ -43,13 +51,13 @@ int getSum(int i, int n){
     return a[i] + getSum(i+1, n);
 }
 
-int main(){
-    int n;
-    scanf("%d", &n);
+int main(){ // program execution starts here
+    int n; // number of elements
+    scanf("%d", &n); // &n = address where scanf stores n
 
     /* The usual read loop. n must be at most 100000, the size of a. */
     for(int i=0; i<n; i++){
-        scanf("%d", &a[i]);
+        scanf("%d", &a[i]); // store element i
     }
 
     /* Start at index 0, which means "sum the whole array".
@@ -57,7 +65,7 @@ int main(){
        for small values; with large ones the total would overflow, and both
        would have to become long long. */
     int total_sum = getSum(0, n);
-    printf("%d\n", total_sum);
+    printf("%d\n", total_sum); // print the sum
 
-    return 0;
+    return 0; // program ended successfully
 }

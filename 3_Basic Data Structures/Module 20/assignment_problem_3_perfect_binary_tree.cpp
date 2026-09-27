@@ -2,18 +2,18 @@
 
 Problem Statement
 
-You will be given a binary tree as input in level order. You need to tell if the 
-binary tree is perfect or not. A binary tree is called perfect if all leaf nodes 
+You will be given a binary tree as input in level order. You need to tell if the
+binary tree is perfect or not. A binary tree is called perfect if all leaf nodes
 are at the maximum depth of the tree, and the tree is completely filled with no gaps.
 
 
-Also there is formula available to tell if a binary tree is perfect or not. The 
+Also there is formula available to tell if a binary tree is perfect or not. The
 formula is :
 
 Total number of nodes = 2^(max_depth) - 1
 
-Note: Here depth is counted from 1. In the above image maximum depth is 4, so total 
-number of nodes are 2^4 - 1. So there should be 15 nodes to call it a perfect binary 
+Note: Here depth is counted from 1. In the above image maximum depth is 4, so total
+number of nodes are 2^4 - 1. So there should be 15 nodes to call it a perfect binary
 tree.
 
 
@@ -24,7 +24,7 @@ Input will contain the binary tree in level order. -1 means there is no node ava
 
 Constraints
 
-1. 1<= Maximum number of nodes <= 10^5 
+1. 1<= Maximum number of nodes <= 10^5
 2. 1<= Node's value <= 1000
 
 Output Format
@@ -64,28 +64,28 @@ Sample Output 3
 YES
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <queue>
-#include <cmath>
+#include <iostream>     // cin and cout
+#include <vector>       // not used here
+#include <algorithm>    // max
+#include <string>       // not used here
+#include <queue>        // STL queue, for level-order input
+#include <cmath>        // pow
 
 
-using namespace std;
+using namespace std;    // write cout, max, pow ... without std::
 
 // A binary tree node: a value and two child pointers (NULL = no child).
 class Node {
     public:
-        int val;     
-        Node* left;  
-        Node* right; 
+        int val;        // the value stored here
+        Node* left;     // address of the left child
+        Node* right;    // address of the right child
 
-    
+    // Constructor, runs on `new Node(x)`: store x, no children yet.
     Node(int val) {
-        this->val = val; 
-        this->left = NULL; 
-        this->right = NULL; 
+        this->val = val;        // this->val = member, val = parameter
+        this->left = NULL;
+        this->right = NULL;
     }
 };
 
@@ -99,15 +99,16 @@ Node* input_tree(){
     if(val == -1){
         root = NULL;
     } else {
-        root = new Node(val);
+        root = new Node(val);    // `new` builds the node on the heap and returns its address
     }
 
     // Nodes whose two children have not been read yet.
     queue<Node*> q;
-    if(root){
+    if(root){                    // a pointer is "true" when it is not NULL
         q.push(root);
     }
 
+    // One pass reads one node's two children; stops when no node is waiting.
     while(!q.empty()){
         Node* p = q.front();     // oldest node still waiting for its children
         q.pop();
@@ -128,7 +129,7 @@ Node* input_tree(){
             myRight = new Node(r);
         }
 
-        p->left = myLeft;
+        p->left = myLeft;        // attach the children (-> = member through a pointer)
         p->right = myRight;
 
         // Only real children wait in the queue for their own pair of values.
@@ -156,6 +157,7 @@ Node* input_tree(){
  */
 
 // Number of nodes = left count + right count + 1 (this node).
+// Base case NULL -> 0; each call trusts count_nodes(child) for that subtree.
 int count_nodes(Node* root){
     if(root == NULL){
         return 0;
@@ -171,20 +173,27 @@ int max_depth(Node* root){
         return 0;
     }
 
-    int l = max_depth(root->left);
-    int r = max_depth(root->right);
+    int l = max_depth(root->left);      // depth of the left subtree
+    int r = max_depth(root->right);     // depth of the right subtree
 
-    return max(l, r) + 1;
+    return max(l, r) + 1;               // max(a, b) = the larger one; + 1 for this node
 }
 
+// True if the tree is perfect.
 bool is_perfect(Node* root){
     if(root == NULL){
-        return true;
+        return true;                    // an empty tree has no gaps
     }
     int total_nodes = count_nodes(root);        // how many nodes there are
     int max_depth_of_tree = max_depth(root);    // how many levels there are
 
     // How many nodes a perfect tree with that many levels must have.
+    // pow(2, d) returns a double (2.0^d); assigning it to an int keeps the
+    // whole number (exact for the small depths a real perfect tree can have).
+    // Careful: a very tall, thin tree (depth near 10^5) makes pow return a
+    // number far too big for int, and converting it to int is undefined
+    // behaviour. (A perfect tree with 10^5 nodes has depth at most 17, so
+    // checking "depth > 17 -> NO" first would make this safe.)
     int total_nodes_for_perfect_tree = pow(2, max_depth_of_tree) - 1;
 
     // Perfect exactly when nothing is missing.
@@ -194,15 +203,15 @@ bool is_perfect(Node* root){
 int main()
 {
     // Write your code here
-    Node* root = input_tree(); 
+    Node* root = input_tree();          // build the tree
 
-    bool ans = is_perfect(root);
+    bool ans = is_perfect(root);        // true or false
 
     if(ans){
-        cout << "YES" << endl;
+        cout << "YES" << endl;          // endl = newline + flush
     } else{
         cout << "NO" << endl;
     }
-    
-    return 0;
+
+    return 0;                           // program finished normally
 }

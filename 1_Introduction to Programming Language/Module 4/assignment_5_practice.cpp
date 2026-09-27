@@ -2,11 +2,13 @@
 //
 // A re-typing of assignment_5_printing_X.cpp, with the same logic. The
 // problem statement and the sample pictures are at the top of that file.
+// (For N = 3 the output is three rows: a back-slash, a space, a slash;
+// then a space and X; then a slash, a space, a back-slash.)
 //
 // Pattern problems all come down to one question: for row i, how many of
 // each thing? Every row of the upper half has the shape
 //
-//     [i spaces] \ [gap spaces] / [i spaces]
+//     [i spaces] (back-slash) [gap spaces] / [i spaces]
 //
 // The two strokes start at the outside edges and walk inwards, so going down
 // one row adds one space in front and takes two away from the gap. Row 0 has
@@ -17,8 +19,9 @@
 // division: for N = 5 it is 2, which is both the number of rows above the
 // middle and the indent of the X.
 //
-// The lower half is the mirror image. The strokes swap round to / then \,
-// the outside spaces shrink by one per row and the gap grows by two.
+// The lower half is the mirror image. The strokes swap round to / then the
+// back-slash, the outside spaces shrink by one per row and the gap grows by
+// two.
 //
 // Every row is padded with trailing spaces so that all rows are the same
 // width, which is what the expected output shows.
@@ -30,6 +33,10 @@
 // Two harmless oddities left over from typing this out: a doubled semicolon
 // after one cout, and no `return 0;` at the end of main. C++ allows main
 // alone to end without one - it returns 0 by itself.
+//
+// C++ pieces used: #include <iostream> gives cin >> (read) and cout <<
+// (print); endl ends the line. <vector>, <algorithm> and <string> are not
+// used. using namespace std; lets us write cin/cout without std::.
 
 #include <iostream>
 #include <vector>
@@ -37,16 +44,16 @@
 #include <string>
 using namespace std;
 
-int main(){
-    int N;
-    cin >> N;
+int main(){         // the program starts here
+    int N;          // height of the X (odd)
+    cin >> N;       // read it
 
     // N = 1 has no arms at all, just the X. Handling it separately keeps the
     // loops below free of special cases; with N = 1 the gap would start at
     // -1, which no loop could draw.
     if(N == 1){
         cout << "X" << endl;
-        return 0;
+        return 0;   // finished: leave main now
     }
 
     // The gap between the two strokes on the very first row: the whole width
@@ -61,6 +68,8 @@ int main(){
             cout << " ";
         }
 
+        // Print one back-slash. The second ; is an empty statement - legal
+        // and harmless.
         cout << "\\";;
 
         // the gap between the two arms
@@ -68,14 +77,14 @@ int main(){
             cout << " ";
         }
 
-        cout << "/";
+        cout << "/";    // the right-hand arm
 
         // i spaces after the "/" as well, so every row is the same width
         for(int k=0; k<i; k++){
             cout << " ";
         }
 
-        cout << endl;
+        cout << endl;   // end of this row
 
         // Both arms move one step inwards on the next row, so the gap loses
         // two, not one.
@@ -87,39 +96,39 @@ int main(){
         cout << " ";
     }
 
-    cout << "X" << endl;
+    cout << "X" << endl;    // the centre, then a new line
 
     // Lower half of the X
 
     // Lower half. On the first row below the middle the arms sit one step in
     // from each edge and one space apart; from there the outside shrinks and
     // the gap grows, so the X opens out again.
-    int space_before_after = N/2 - 1;
-    int space_between = 1;
+    int space_before_after = N/2 - 1;   // spaces outside each arm
+    int space_between = 1;              // spaces between the arms
 
     // Counting i from N/2 + 1 up to N-1 is just a way of running the N/2
     // rows that are left; i itself is never used inside the loop.
     for(int i=N/2 + 1; i <N; i++){
-        for(int j=0; j<space_before_after; j++){
-            cout << " ";
-        }
-        
-        cout << "/";
-
-        for(int k=0;k<space_between; k++){
+        for(int j=0; j<space_before_after; j++){    // left padding
             cout << " ";
         }
 
-        cout << "\\";
+        cout << "/";                                // left arm
 
-        for(int l=0; l<space_before_after; l++){
+        for(int k=0;k<space_between; k++){          // the gap
             cout << " ";
         }
 
-        cout << endl;
+        cout << "\\";                               // right arm: one back-slash
+
+        for(int l=0; l<space_before_after; l++){    // right padding
+            cout << " ";
+        }
+
+        cout << endl;   // end of this row
         // The arms move outwards: one less space in front of them, two more
         // between them.
         space_before_after--;
         space_between += 2;
     }
-}
+}   // no return 0: in C++ main alone may end without it and returns 0

@@ -2,7 +2,7 @@
 
 Problem Statement
 
-You will be given an array A of size N. Print "YES" if there is any duplicate value in 
+You will be given an array A of size N. Print "YES" if there is any duplicate value in
 the array, "NO" otherwise.
 
 Input Format
@@ -26,26 +26,26 @@ NO
 Sample Input 1
 
 6
-2 1 3 5 2 1 
+2 1 3 5 2 1
 Sample Output 1
 
 YES
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std;
+#include <iostream>  // cin and cout
+#include <vector>    // vector
+#include <algorithm> // sort()
+#include <string>    // not needed here
+using namespace std; // lets us drop the std:: prefix
 
-int main() {
-    int n;
-    cin >> n;
+int main() { // the program starts running here
+    int n; // number of elements
+    cin >> n; // read n
 
-    vector<int> A(n);
-    for(int i=0; i<n; i++){
-        cin >> A[i];
+    vector<int> A(n); // n slots; values up to 10^9 fit in an int
+    for(int i=0; i<n; i++){ // read the array
+        cin >> A[i]; // into slot i
     }
 
     /*
@@ -55,11 +55,12 @@ int main() {
      * Comparing every pair with two loops would be O(n^2) = 10^10 for
      * n = 10^5; sorting first costs only O(n log n).
      */
-    sort(A.begin(), A.end());
+    sort(A.begin(), A.end()); // sort the whole vector in increasing order
 
+    // Compare each element with the one just before it.
     for(int i=1; i<n; i++){
         // Start at 1 so that A[i-1] is always a real element.
-        if(A[i] == A[i-1]){
+        if(A[i] == A[i-1]){ // two equal neighbours -> a duplicate
             cout << "YES" << endl;
             return 0;        // one duplicate is enough, stop here
         }
@@ -67,5 +68,5 @@ int main() {
 
     // No two neighbours were equal, so every value is different.
     cout << "NO" << endl;
-    return 0;
+    return 0; // program finished successfully
 }

@@ -37,27 +37,33 @@ dequeue() -> 7, isEmpty() -> true, dequeue() -> -1
  * is fine here, because the judge only makes a limited number of calls.
  */
 
-#include <bits/stdc++.h>
-using namespace std;
+#include <bits/stdc++.h>    // GCC shortcut: includes the whole standard library (vector, ...)
+using namespace std;        // write vector instead of std::vector
 
+// Members before `public:` are private (the class default).
 class Queue {
     vector<int> v;   // every value ever enqueued, in arrival order
     int f;           // index of the current front inside v
 
-public:
+public:              // the judge calls everything below
+    // Constructor: runs when the judge creates the Queue.
     Queue() {
         f = 0;       // nothing removed yet, so the front is index 0
     }
 
+    // True when no value is waiting in the queue.
     bool isEmpty() {
         // Everything before f was already removed; nothing left from f on.
+        // (int) turns v.size(), which is unsigned, into an int so both sides match.
         return f == (int)v.size();
     }
 
+    // Add data at the back.
     void enqueue(int data) {
         v.push_back(data);   // new values join at the back
     }
 
+    // Remove the front value and return it; -1 if empty.
     int dequeue() {
         if (isEmpty()) {
             return -1;       // the problem asks for -1 on an empty queue
@@ -67,9 +73,10 @@ public:
         return data;
     }
 
+    // The front value without removing it; -1 if empty.
     int front() {
         if (isEmpty()) {
-            return -1;
+            return -1;       // nothing at the front
         }
         return v[f];         // look, don't remove
     }

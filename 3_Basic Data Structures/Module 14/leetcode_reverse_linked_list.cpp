@@ -13,9 +13,11 @@ O(n) time, O(n) recursion depth.
 
 */
 
+// (LeetCode defines ListNode and supplies includes and main.)
 class Solution {
-public:
+public:     // callable by the judge
     // `head` is a reference so the caller's head pointer can be changed.
+    // The recursive call trusts: when it returns, everything after tmp is reversed.
     void reverse(ListNode* &head, ListNode* tmp){
         // Base case: tmp is the last node, so it becomes the new head.
         if(tmp->next == NULL){
@@ -28,13 +30,15 @@ public:
         tmp->next->next = tmp;
         // ... and cut tmp's forward link (the old first node ends with NULL).
         tmp->next = NULL;
+        // Trace 1 2 3: head = 3; 3->2, 2->NULL; 2->1, 1->NULL -> 3 2 1.
     }
+    // Returns the head of the reversed list.
     ListNode* reverseList(ListNode* head) {
         // An empty list is already reversed (and tmp->next would crash).
         if(head == NULL){
             return head;
         }
-        reverse(head, head);
+        reverse(head, head);    // head is updated through the reference
         return head;
     }
 };

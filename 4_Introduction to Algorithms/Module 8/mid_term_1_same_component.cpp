@@ -58,42 +58,68 @@ YES
 // and stepping only on '.', can we reach D? That is a reachability search, so
 // one DFS from S (Module 3's dfs_on_2d_grid.cpp) answers it. This version stops
 // early: the moment the DFS stands on D it returns true all the way up.
+//
+// The grid as a graph: every cell is a node, and each cell is joined to its 4
+// side neighbours (up, down, left, right). '-' cells are simply never entered.
+// A "component" is a group of '.' cells that can all reach each other.
+//
+// Sample 0 trace: S = (0,1). From (0,1) we can go to (0,0) only; row 1 is
+// "---." so we cannot go down. The DFS runs out of cells without touching
+// D = (3,2), so the answer is NO. In sample 1 row 0 is "...." and (0,3) leads
+// down the right edge to row 3, then left to (3,2): YES.
 
-#include <iostream>
-#include <vector>
-#include <cstring>
-using namespace std;
+#include <iostream>     // cin / cout
+#include <vector>       // vector (holds the list of directions)
+#include <cstring>      // memset (fills the vis array with false)
+using namespace std;    // lets us write cout, vector, pair without std::
 
+// Globals: declared outside main so every function can use them, and so the
+// big arrays sit in static memory (a 1005 x 1005 local array could overflow
+// the stack). Globals also start at 0 / false automatically.
 char grid[1005][1005];   // the map: '.' open, '-' blocked
 bool vis[1005][1005];    // cells the DFS has already stood on
 // right, left, up, down as {row change, column change}
+// e.g. from (2,3): {0,1} -> (2,4) right, {-1,0} -> (1,3) up.
+// pair.first = change to the row (i), pair.second = change to the column (j).
 vector<pair<int, int>> direction = {{0,1}, {0,-1}, {-1,0}, {1, 0}};
-int n, m;
+int n, m;               // n = number of rows, m = number of columns
 
 // Is (i, j) inside the grid?
+// Rows are 0..n-1 and columns 0..m-1, so anything outside that is off the map.
 bool valid(int i, int j){
     if(i<0 || i>=n || j<0 || j>=m){
-        return false;
+        return false;   // off the edge of the grid
     }
-    return true;
+    return true;        // a real cell
 }
 
 // DFS from (si, sj). Returns true as soon as the destination (di, dj) is reached.
+// Parameters: (si, sj) = the cell we stand on now, (di, dj) = the target D.
+// DFS = "depth first search": go as deep as possible down one direction,
+// and only when stuck come back (return) and try the next direction. The
+// "coming back" is done for us by the recursion: each call waits on the
+// call stack until the deeper call returns.
+// Base cases: we are on D (return true), or no unvisited open neighbour is
+// left (the loop ends and we return false).
 bool dfs(int si, int sj, int di, int dj){
-    vis[si][sj] = true;
+    vis[si][sj] = true;   // mark first, so no later call walks back onto us
 
     if(si == di && sj == dj){
         return true;   // standing on D: found it
     }
 
+    // Try the 4 neighbours, one direction per pass (i = 0..3).
     for(int i=0; i<4; i++){
-        int ci = si + direction[i].first;
-        int cj = sj + direction[i].second;
+        int ci = si + direction[i].first;    // neighbour's row
+        int cj = sj + direction[i].second;   // neighbour's column
 
+        // Step there only if it is on the map, not seen yet, and open.
+        // valid() is checked FIRST: && stops at the first false, so vis and
+        // grid are never read with an index outside the grid.
         if(valid(ci, cj) && !vis[ci][cj] && grid[ci][cj] == '.'){
             // Explore from the neighbour. If that search found D, there is no
             // need to try the other directions: pass true straight back up.
-            bool found = dfs(ci, cj, di, dj);
+            bool found = dfs(ci, cj, di, dj);   // trust it: true iff D reachable from there
             if(found){
                 return true;
             }
@@ -104,24 +130,28 @@ bool dfs(int si, int sj, int di, int dj){
 }
 
 int main(){
-    cin >> n >> m;
-    for(int i=0; i<n; i++){
-        for(int j=0; j<m; j++){
+    cin >> n >> m;                   // grid size: n rows, m columns
+    // Read the grid one character at a time. cin >> char skips spaces and
+    // newlines, so each row line "..-." gives 4 separate characters.
+    for(int i=0; i<n; i++){          // row i
+        for(int j=0; j<m; j++){      // column j
             cin >> grid[i][j];
         }
     }
 
-    int si, sj, di, dj;
+    int si, sj, di, dj;              // S = (si, sj), D = (di, dj)
 
     cin >> si >> sj;   // start cell S
     cin >> di >> dj;   // destination cell D
 
+    // Set every byte of vis to false (0). sizeof(vis) = its size in bytes.
+    // (Globals are already false, so this is just a safe habit.)
     memset(vis, false, sizeof(vis));
 
     // A blocked S or D cannot be part of any component of '.' cells.
     if(grid[si][sj] == '-' || grid[di][dj] == '-'){
-        cout << "NO" << endl;
-        return 0;
+        cout << "NO" << endl;        // endl prints a newline
+        return 0;                    // stop the program right here
     }
 
     // S and D are the same open cell: trivially the same component.
@@ -130,14 +160,16 @@ int main(){
         return 0;
     }
 
-    bool found_or_not = dfs(si, sj, di, dj);
+    bool found_or_not = dfs(si, sj, di, dj);   // run the search from S
 
     if(found_or_not){
-        cout << "YES" << endl;
+        cout << "YES" << endl;       // D was reached: same component
     } else{
-        cout << "NO" << endl;
+        cout << "NO" << endl;        // D was never reached
     }
 
     // At most every cell is visited once: O(N * M).
+    // (With N = M = 1000 the recursion can go up to 10^6 calls deep, which
+    //  needs a big stack; online judges usually allow it.)
     return 0;
 }

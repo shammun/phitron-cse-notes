@@ -20,16 +20,17 @@ Find Pivot Index
  * so every index is checked in O(1).
  */
 class Solution {
-public:
+public:   // LeetCode calls pivotIndex from outside the class
     int pivotIndex(vector<int>& nums) {
         // Pass 1: total of all elements.
         int total = 0;
-        for(int num : nums){
+        for(int num : nums){        // range-for: num is each element in turn
             total += num;
         }
 
         // Pass 2: leftSum = sum of nums[0..i-1] (0 before the first index).
         int leftSum = 0;
+        // i is the index being tested as the pivot.
         for(int i=0; i< nums.size(); i++){
             // Everything that is not on the left and not nums[i] is on the right.
             int rightSum = total - leftSum - nums[i];

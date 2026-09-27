@@ -60,42 +60,68 @@ n == image[i].length
 // DFS at (sr, sc) and repaint every pixel it can reach through pixels of the
 // ORIGINAL colour. No vis array is needed: once a pixel is repainted it no
 // longer has the original colour, so the colour test itself stops a revisit.
+//
+// Trace on Example 1 (origColor 1, newColor 2), start (1,1):
+//   paint (1,1); right (1,2) is 0 -> skip; left (1,0) is 1 -> paint, go deep:
+//   from (1,0): up (0,0) is 1 -> paint; from (0,0): right (0,1) -> paint;
+//   from (0,1): right (0,2) -> paint ... The corner (2,2) touches only 0-pixels,
+//   so it is never reached and stays 1.
+//
+// LeetCode style: there is no main() and no #include lines. LeetCode's own
+// judge includes the standard headers (vector, etc.), adds "using namespace std",
+// creates a Solution object and calls floodFill() with its test data. So this
+// file does not compile on its own; it is meant to be pasted into LeetCode.
 
+// A class groups data and functions. LeetCode requires the answer to be the
+// member function floodFill of a class named Solution.
 class Solution {
-public:
+public:     // members below can be used from outside the class (LeetCode calls them)
     // The 4 moves: right, left, up, down, as {row change, column change}.
+    // vector<pair<int,int>>: a list of int pairs; .first = row change, .second = column change.
     vector<pair<int, int>> direction = {{0, 1}, {0, -1}, {-1, 0}, {1, 0}};
 
     // Is (i, j) inside an n x m picture?
+    // n = number of rows, m = number of columns (passed in, since there are no globals).
     bool valid(int i, int j, int n, int m){
-        if(i < 0 || i >= n || j < 0 || j >= m){
-            return false;
+        if(i < 0 || i >= n || j < 0 || j >= m){   // row or column out of range
+            return false;                         // not a pixel of the picture
         }
-        return true;
+        return true;                              // a real pixel
     }
 
+    // Repaint (row, col) and, recursively, every connected pixel of origColor.
+    // image is passed by reference (&), so the changes are made to the caller's
+    // picture itself, not to a copy. vector<vector<int>> is a 2D table: a vector
+    // of rows, each row a vector of ints.
+    // Base case: when no neighbour is inside and still origColor, the loop does
+    // nothing and the call returns.
     void dfs(vector<vector<int>>& image, int row, int col, int origColor, int newColor){
         image[row][col] =  newColor;    // paint first: this doubles as "visited"
 
         // Try each of the 4 sides.
         for(int i = 0; i < 4; i++){
-            int newRow = row + direction[i].first;
-            int newCol = col + direction[i].second;
+            int newRow = row + direction[i].first;    // neighbour's row
+            int newCol = col + direction[i].second;   // neighbour's column
 
             // Only step onto pixels inside the picture that still carry the
             // original colour; valid() is checked first so image[][] is never
-            // read out of range.
+            // read out of range. image.size() = number of rows, image[0].size() =
+            // number of columns (length of the first row). && stops at the first
+            // false, so image[newRow][newCol] is only read for an inside pixel.
             if(valid(newRow, newCol, image.size(), image[0].size()) && image[newRow][newCol] == origColor){
-                dfs(image, newRow, newCol, origColor, newColor);
+                dfs(image, newRow, newCol, origColor, newColor);   // go deep from that pixel
             }
         }
     }
 
+    // The function LeetCode calls. Parameters: the picture, the start pixel
+    // (sr = start row, sc = start column) and the new colour. Returns the picture.
     vector<vector<int>> floodFill(vector<vector<int>>& image, int sr, int sc, int color) {
         // If the start pixel already has the new colour there is nothing to do.
         // This check matters: with origColor == newColor a painted pixel would
         // still "match", and the DFS would bounce between pixels forever.
         if(image[sr][sc] != color){
+            // image[sr][sc] is read BEFORE any painting, so it is the original colour.
             dfs(image, sr, sc, image[sr][sc], color);
         }
         return image;     // Cost: O(n * m), each pixel painted at most once

@@ -37,6 +37,10 @@ The number of nodes in the tree is in the range [1, 5000].
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines TreeNode and calls our function from its own hidden
+ * main, so there are no #includes or main here. After ':' comes an
+ * initializer list; nullptr is the C++11 name for a null pointer.)
  */
 /*
  * Idea: the BST search from BST_search.cpp, but returning the node itself.
@@ -50,7 +54,7 @@ The number of nodes in the tree is in the range [1, 5000].
  * whole subtree under it.
  */
 class Solution {
-public:
+public:   // LeetCode calls searchBST from outside the class
 
     // Walks down the BST and returns the node holding val, or NULL.
     TreeNode* search(TreeNode* root, int val){
@@ -80,10 +84,10 @@ public:
         if(node == NULL){
             return NULL;
         }
-        TreeNode* leftNode = sub_tree(node->left);
-        TreeNode* rightNode = sub_tree(node->right);
-        node->left = leftNode;
-        node->right = rightNode;
+        TreeNode* leftNode = sub_tree(node->left);     // the (unchanged) left subtree
+        TreeNode* rightNode = sub_tree(node->right);   // the (unchanged) right subtree
+        node->left = leftNode;      // same pointer as before
+        node->right = rightNode;    // same pointer as before
         return node;
     }
 
@@ -92,6 +96,6 @@ public:
         TreeNode* node_found = search(root, val);
         // Step 2: return the subtree rooted at that node.
         TreeNode* tree = sub_tree(node_found);
-        return tree;
+        return tree;                // NULL if val was not found
     }
 };

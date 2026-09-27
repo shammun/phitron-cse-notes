@@ -62,45 +62,48 @@ Output:
 //
 // Example 4: 10 nodes, pieces {1,2,3} {0,4} {5,6} and the lonely 7, 8, 9 -> 6.
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
+#include <iostream>     // cin and cout
+#include <vector>       // vector, for the adjacency lists
+#include <algorithm>    // not used here; part of the usual template
 #include <cstring>      // memset
 
-using namespace std;
+using namespace std;    // write vector, cout... without std::
 
-vector<int> adj_list[1005];
-bool vis[1005];
+vector<int> adj_list[1005];   // adj_list[u] = neighbours of u (array of vectors)
+bool vis[1005];               // vis[u] = u already belongs to a piece we counted
 
 // Plain recursive DFS: marks every node of src's piece.
+// Base case: no unvisited neighbour -> loop does nothing, the call returns.
 void dfs(int src){
-    vis[src] = true;
+    vis[src] = true;                  // mark this node
 
-    for(int child : adj_list[src]){
-        if(!vis[child]){
-            dfs(child);
+    for(int child : adj_list[src]){   // each neighbour of src
+        if(!vis[child]){              // not marked yet?
+            dfs(child);               // mark it and everything behind it
         }
     }
 }
 
 int main(){
     int n, e;
-    cin >> n >> e;
+    cin >> n >> e;             // n nodes (0..n-1), e edges
 
-    while(e--){
+    while(e--){                // repeat e times
         int a, b;
-        cin >> a >> b;
-        adj_list[a].push_back(b);
-        adj_list[b].push_back(a);
+        cin >> a >> b;         // edge a - b
+        adj_list[a].push_back(b);   // b is a neighbour of a
+        adj_list[b].push_back(a);   // a is a neighbour of b (undirected)
     }
 
-    memset(vis, false, sizeof(vis));
+    memset(vis, false, sizeof(vis));   // every byte 0 -> every entry false
 
-    int count = 0;
+    // count is a local here, so it hides std::count from <algorithm> inside
+    // main and there is no clash; a name like num_components would be clearer.
+    int count = 0;             // pieces found so far
     // Go over ALL n nodes, not only the ones named in edges: a node with no
     // edges at all is still a component of size 1.
     for(int i = 0; i<n; i++){
-        if(!vis[i]){
+        if(!vis[i]){     // first node of a piece we have not seen
             dfs(i);      // swallow i's whole piece
             count++;     // ...and count that piece once
         }
@@ -108,5 +111,5 @@ int main(){
 
     cout << count << endl;   // Cost: O(V + E), every node and edge seen once
 
-    return 0;
+    return 0;                // normal end of program
 }

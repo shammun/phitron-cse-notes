@@ -18,6 +18,10 @@ Example: push 4, push 9, getTop() -> 9, pop(), getTop() -> 4, getSize() -> 1.
  * The top of the stack is the HEAD of the list. Adding and removing at the
  * head needs no walk at all, so push and pop are O(1) with a singly linked
  * list and no tail pointer. `size` is kept as a counter so getSize() is O(1).
+ * A stack is Last-In-First-Out: the value pushed last is the first one out.
+ *
+ * Note: this file has no #include and no main - Code360 pastes it into its own
+ * program, which already defines the Node class shown below.
  */
 
 /****************************************************************
@@ -49,6 +53,7 @@ Example: push 4, push 9, getTop() -> 9, pop(), getTop() -> 4, getSize() -> 1.
 
 *****************************************************************/
 
+// The stack class. Members before `public:` are private (only the class uses them).
 class Stack
 {
     //Write your code here
@@ -56,6 +61,7 @@ class Stack
     int size;     // how many values are in the stack
 
     public:
+        // Constructor: runs when a Stack is created; starts empty.
         Stack()
         {
             //Write your code here
@@ -63,29 +69,34 @@ class Stack
             size = 0;
         }
 
+        // Number of values in the stack, O(1) thanks to the counter.
         int getSize()
         {
             //Write your code here
             return size;
         }
 
+        // True when the stack holds nothing.
         bool isEmpty()
         {
             //Write your code here
             return head == NULL;
         }
 
+        // Put data on top.
         void push(int data)
         {
             //Write your code here
             // Insert at head: the new node points to the old top and
             // becomes the new top.
-            Node* newNode = new Node(data);
-            newNode->next =head;
-            head = newNode;
+            Node* newNode = new Node(data);     // `new` builds the node on the heap
+            newNode->next =head;                // new -> old top ('->' = member through pointer)
+            head = newNode;                     // new node is the top
             size++;
+            // Trace: push 4, push 9 -> list 9 -> 4, head on 9.
         }
 
+        // Remove the top value (does nothing on an empty stack).
         void pop()
         {
             //Write your code here
@@ -95,10 +106,11 @@ class Stack
             // Delete at head: move head down one node, free the old top.
             Node* tmp = head;
             head = head->next;
-            delete tmp;
+            delete tmp;         // give the old top's memory back
             size--;
         }
 
+        // Read the top value; -1 when the stack is empty.
         int getTop()
         {
             //Write your code here

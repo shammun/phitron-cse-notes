@@ -27,17 +27,19 @@ Example: push 1, push 2, peek() -> 1, pop() -> 1, empty() -> false.
  * Cost: push and empty are O(1); pop and peek are O(n).
  */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <stack>
+#include <iostream>     // not needed by the class (LeetCode supplies its own main)
+#include <vector>       // not used (template leftover)
+#include <algorithm>    // not used (template leftover)
+#include <string>       // not used (template leftover)
+#include <stack>        // std::stack
 
-using namespace std;
+using namespace std;    // write stack instead of std::stack
 
+// The queue class LeetCode asks for.
 class MyQueue {
-public:
+public:     // callable by the judge
     stack<int> st;   // top = newest value, bottom = oldest value (the queue's front)
+    // Constructor: nothing to do, st starts empty by itself.
     MyQueue() {
 
     }
@@ -48,9 +50,10 @@ public:
     }
 
     // Remove and return the oldest value: the bottom of `st`.
+    // (LeetCode only calls pop/peek on a non-empty queue.)
     int pop() {
-        stack<int> st2;
-        int val;
+        stack<int> st2;     // temporary holder for everything above the bottom
+        int val;            // the value most recently taken off st
         while(!st.empty()){
             // Take the top value off; `val` always holds the one just taken.
             val = st.top();
@@ -62,6 +65,7 @@ public:
             }
             st2.push(val);
         }
+        // Trace st = 1 2 3 (3 on top): st2 gets 3, 2; val = 1 is dropped.
 
         // Pour st2 back into st. This second reversal puts the remaining
         // values back in their original order.
@@ -69,12 +73,13 @@ public:
             st.push(st2.top());
             st2.pop();
         }
+        // st = 2 3 (3 on top) again; the oldest, 1, is returned.
         return val;
     }
 
     // Read the oldest value without removing it.
     int peek() {
-        stack<int> st3;
+        stack<int> st3;     // temporary holder
         int val;
         // Move everything, bottom value included, into st3. The last value
         // taken off st is the bottom one, so `val` ends up as the oldest.

@@ -42,16 +42,25 @@ Sample Output 1
 1
 0
 */
-#include <stdio.h>
 
-int main(){
+/* Idea: M = A * B * C * X, so X = M / (A * B * C) - but only if that division
+   is exact. If M is not a multiple of A * B * C, no whole number X exists
+   and the answer is -1.
+   Trace: 20 1 2 2 -> A*B*C = 4, 20 % 4 = 0 -> X = 5.
+          10 2 2 1 -> A*B*C = 4, 10 % 4 = 2 -> -1.
+          0 3 10 15 -> 0 % 450 = 0 -> X = 0. */
+
+#include <stdio.h> // standard input/output library: scanf and printf
+
+int main(){ // program execution starts here
     // T represents the number of test cases
     int T;
     // Using %d format specifier since T is an integer
-    scanf("%d", &T);
-    
+    scanf("%d", &T); // &T = address where scanf stores T
+
     // Using long long array to store results since the multiplication can be very large (up to 10^18)
     // Array size is 100005 to accommodate maximum possible test cases (100000) with buffer
+    // (all answers are stored first and printed at the end)
     long long results[100005];
 
     // Loop through each test case
@@ -59,12 +68,15 @@ int main(){
         // M is the multiplication of all 4 numbers (can be up to 10^18)
         // A, B, C are 3 of the 4 numbers (up to 10^6 each)
         // Using %lld format specifier for long long data type
+        // (A, B, C are long long too, so A*B*C - up to 10^18 - is computed
+        // in long long and does not overflow; with int it would)
         long long M, A, B, C;
         scanf("%lld %lld %lld %lld", &M, &A, &B, &C);
 
         // Calculate if M is perfectly divisible by product of A, B, and C
         // If it is, then the quotient is our missing number
         // Using modulo (%) operator to check divisibility
+        // (A, B, C are at least 1, so A*B*C is never 0 and the % is safe)
         long long remainder = M % (A*B*C);
 
         if(remainder == 0){
@@ -83,4 +95,4 @@ int main(){
     for(int i=0; i<T; i++){
         printf("%lld\n", results[i]);
     }
-}
+} // end of main; in C99 and later, reaching the end of main means return 0

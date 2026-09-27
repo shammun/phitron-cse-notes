@@ -31,7 +31,7 @@ Note
 
 */
 
-# include <stdio.h>
+# include <stdio.h> // standard input/output library: scanf and printf
 
 /* The counting array: freq[v] will hold how many times v was seen.
    It is global (declared above main) for the same reason as the big array in
@@ -40,26 +40,27 @@ Note
    10^5, with a little room to spare. */
 int freq[100005];
 
-int main() {
-    int n, m;
-    scanf("%d %d", &n, &m);
+int main() { // program execution starts here
+    int n, m; // n = how many numbers, m = the largest possible value
+    scanf("%d %d", &n, &m); // & gives scanf the addresses of n and m
 
     /* Read the numbers one at a time and tally each straight away. The value
        itself is the box number, so freq[x]++ finds the right counter in one
        step - no searching through what came before. The numbers are not
-       needed afterwards, so they are not kept in an array. */
+       needed afterwards, so they are not kept in an array.
+       Trace with 1 2 3 4 5 3 2 1 5 3: freq[1]=2, freq[2]=2, freq[3]=3, freq[4]=1, freq[5]=2. */
     for(int i = 0; i < n; i++) {
-        int x;
+        int x; // the number just read
         scanf("%d", &x);
-        freq[x]++;
+        freq[x]++; // add 1 to the counter for the value x
     }
 
     /* Walk the boxes 1 .. m in order. Box 0 is never used, because the
        values start at 1. A value that never appeared still holds 0, and 0 is
        exactly what must be printed for it. */
-    for(int v = 1; v <= m; v++) {
-        printf("%d\n", freq[v]);
+    for(int v = 1; v <= m; v++) { // "<=" so that m itself is included
+        printf("%d\n", freq[v]); // one count per line
     }
 
-    return 0;
+    return 0; // program ended successfully
 }

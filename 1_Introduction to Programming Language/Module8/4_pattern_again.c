@@ -51,18 +51,20 @@ Sample Output 1
 
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
-    int n;
-    scanf("%d", &n);
+int main() {            /* the program starts running here */
+    int n;              /* the input number N */
+    scanf("%d", &n);    /* %d = read a whole number; &n = where to put it */
 
     /* Top half, n rows: row i prints 1, 2, ..., i with no spaces between. */
     for(int i = 1; i <= n; i++) {
         for(int j = 1; j <= i; j ++) {
-            printf("%d", j);
+            printf("%d", j);       /* the digit j, no space after it */
         }
-        printf("\n");
+        printf("\n");               /* row done: new line */
     }
 
     /* Bottom half, n - 1 rows (the longest row is not repeated).
@@ -71,14 +73,14 @@ int main() {
        space on the left. For n = 4: " 123", "  12", "   1". */
     for(int i = 1; i < n; i++) {
         for(int j = 0; j < i; j ++) {
-            printf(" ");
+            printf(" ");           /* i leading spaces */
         }
         /* j < n - i + 1 is the same as j <= n - i. */
         for(int j = 1; j < n - i + 1; j++) {
-            printf("%d", j);
+            printf("%d", j);       /* 1 .. n-i */
         }
-        printf("\n");
+        printf("\n");               /* row done: new line */
     }
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

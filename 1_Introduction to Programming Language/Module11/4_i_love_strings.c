@@ -37,36 +37,44 @@ egypt
 
 */
 
-# include <stdio.h>
-# include <string.h>
+/* Idea: we never build the new string in memory; we just print its letters
+   in the right order: S[0], T[0], S[1], T[1], ... skipping a string once it has
+   no more letters. */
 
-int main() {
-    int n;
-    scanf("%d", &n);
+# include <stdio.h>  // standard input/output library: scanf and printf
+# include <string.h> // string library: strlen
 
+int main() { // program execution starts here
+    int n; // number of test cases
+    scanf("%d", &n); // &n = address of n, where scanf stores the value
+
+    /* One pass of this loop solves one test case; k counts them 0 .. n-1. */
     for(int k = 0; k < n; k++){
-        /* Each string has at most 50 letters, so 55 slots are enough. */
-        char s[55];
-        char t[55];
-        scanf("%s %s", s, t);
+        /* Each string has at most 50 letters, so 55 slots are enough
+           (letters + the '\0' end marker). */
+        char s[55]; // string S
+        char t[55]; // string T
+        scanf("%s %s", s, t); // read both words from the line; array names are addresses, so no &
 
-        int length_s = strlen(s);
-        int length_t = strlen(t);
+        int length_s = strlen(s); // number of letters in S
+        int length_t = strlen(t); // number of letters in T
 
         /* Run i up to the longer length. On each step print S's letter at i
            and then T's letter at i, but only if that string still has a letter there.
            When the shorter string runs out, the longer one simply keeps printing,
            which adds "the rest of the letters" at the end. */
-        int longer = length_s;
-        if(length_t > longer){
+        int longer = length_s; // assume S is the longer one ...
+        if(length_t > longer){ // ... and switch if T is actually longer
             longer = length_t;
         }
 
+        /* i is the position inside both strings. Trace with S = "ey", T = "gpt":
+           i = 0 -> 'e' 'g', i = 1 -> 'y' 'p', i = 2 -> S has no letter, T gives 't' -> "egypt". */
         for(int i = 0; i < longer; i++){
-            if(i < length_s){
-                printf("%c", s[i]);
+            if(i < length_s){ // S still has a letter at position i
+                printf("%c", s[i]); // %c prints one character
             }
-            if(i < length_t){
+            if(i < length_t){ // T still has a letter at position i
                 printf("%c", t[i]);
             }
         }
@@ -75,5 +83,5 @@ int main() {
         printf("\n");
     }
 
-    return 0;
+    return 0; // program ended successfully
 }

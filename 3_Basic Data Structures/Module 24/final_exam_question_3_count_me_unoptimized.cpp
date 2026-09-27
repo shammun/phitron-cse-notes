@@ -41,9 +41,9 @@ papa 3
 
 
 
-#include <bits/stdc++.h>
+#include <bits/stdc++.h>    // GCC shortcut: includes the whole standard library (string, map, sstream, ...)
 
-using namespace std;
+using namespace std;        // write string, map, cout ... without std::
 
 
 
@@ -59,25 +59,29 @@ using namespace std;
 int main()
 {
     int T;
-    cin >> T;
+    cin >> T;               // number of sentences
     // Skip the rest of the line after T, so getline reads the sentence.
-    cin.ignore();
+    cin.ignore();           // (cin >> T leaves the newline behind; ignore() throws that one character away)
 
+    // while(T--) runs the body T times; one pass = one sentence.
     while(T--){
         string S;
-        getline(cin, S);
+        getline(cin, S);    // the whole line, spaces included
 
         // (word, count) pairs in the order the words first appeared.
         vector<pair<string, int>> word_freq;
-        stringstream ss(S);
+        stringstream ss(S); // lets >> read the sentence word by word
         string word;
 
-        string result = "";
-        int count_max = 0;
+        string result = "";  // the winning word so far
+        int count_max = 0;    // its count
 
+        // One pass = one word; `ss >> word` is false when no words are left.
         while(ss >> word){
             // flag becomes true if the word is already in the vector.
             bool flag = false;
+            // Linear search: `it` points at one (word, count) pair;
+            // it->first is the word, it->second its count.
             for(auto it=word_freq.begin(); it!=word_freq.end(); it++){
                 if(it->first == word){
                     // Seen before: one more sighting.
@@ -89,13 +93,13 @@ int main()
                         count_max = it->second;
                     }
                     flag = true;
-                    break;
+                    break;      // found it: stop searching
                 }
             }
             // First sighting: add it with count 1. (The best is not updated
             // here, so a count of 1 never becomes the answer inside the loop.)
             if(flag == false){
-                word_freq.push_back({word, 1});
+                word_freq.push_back({word, 1});     // {a, b} builds the pair
             }
         }
 
@@ -110,8 +114,8 @@ int main()
             }
         }
 
-        cout << result << " " << count_max << endl;
+        cout << result << " " << count_max << endl;   // endl = newline + flush
     }
 
-    return 0;
+    return 0;               // program finished normally
 }

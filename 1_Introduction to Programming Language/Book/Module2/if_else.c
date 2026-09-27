@@ -8,17 +8,27 @@
  * From here a block of lines can be skipped altogether, and which block
  * runs is decided while the program is running, from a value you typed a
  * moment earlier.
+ *
+ * Example runs:
+ *     input 8  ->  Even number
+ *     input 7  ->  Odd number
  */
 
-#include<stdio.h>   /* printf and scanf live here */
+/* stdio.h ("standard input output") declares printf and scanf. The
+ * #include line copies it in so the compiler knows those names. */
+#include<stdio.h>
 
-int main() {
-    int n;              /* a box for the number you are about to type */
-    scanf("%d", &n);    /* wait for it; &n says where to put it */
+int main() {            /* execution starts here */
+    int n;              /* a box for a whole number (int = integer) */
+    /* Wait for the user to type a number and press Enter.
+     * %d = "read a whole number"; &n = "the address of n", so scanf
+     * knows which box to put it in. */
+    scanf("%d", &n);
 
     /* n % 2 is the remainder after dividing n by 2. It is 0 when n
      * splits into pairs exactly and 1 when one is left over, so
      * "remainder is 0" is another way of asking "is n even".
+     *   8 % 2 = 0  (8 = 4*2 + 0)      7 % 2 = 1  (7 = 3*2 + 1)
      *
      * Note the doubled = sign. A single = would put 2 into n; == asks
      * whether the two sides are equal. Mixing the two up is the classic

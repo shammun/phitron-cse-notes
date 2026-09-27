@@ -24,22 +24,28 @@ Example: s = "ab#c", t = "ad#c" -> both become "ac" -> true.
  * Build one stack for each string and compare them. Two STL stacks can be
  * compared with ==: they are equal when they hold the same values in the
  * same order.
+ *
+ * Note: no #include here - LeetCode's hidden code already includes the
+ * standard library and `using namespace std;`, so string and stack just work.
  */
 
+// LeetCode's answer class.
 class Solution {
-public:
+public:     // the judge calls this from outside the class
+    // s and t are copies (passed by value); returns true if both type the same text.
     bool backspaceCompare(string s, string t) {
         // Type string s into stack st.
-        stack<char> st;
+        stack<char> st;         // a stack of single characters
+        // Range-for: c takes each character of s, left to right.
         for(char c : s){
-            if(c == '#'){
+            if(c == '#'){       // '#' in single quotes is one char
                 // Backspace on an empty box does nothing, so only pop when
                 // there is something to delete (popping an empty stack crashes).
                 if(!st.empty()){
                     st.pop();
                 }
             } else {
-                st.push(c);
+                st.push(c);     // a normal character is typed
             }
         }
 
@@ -56,6 +62,7 @@ public:
         }
 
         // Same final text <=> same stacks.
+        // Example: "ab#c" -> a c, "ad#c" -> a c -> equal -> true.
         return st == st2;
     }
 };

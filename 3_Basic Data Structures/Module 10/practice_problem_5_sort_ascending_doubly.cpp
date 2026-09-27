@@ -36,77 +36,79 @@ output
  * same list in descending order for free.
  */
 
-#include <iostream>
+#include <iostream>   // cin (keyboard input) and cout (screen output)
 using namespace std; // Allows us to avoid prefixing standard library objects with `std::`.
 
 // A doubly linked node: the value, an arrow forward and an arrow back.
-class Node {
-    public:
-        int val;
-        Node* next;
-        Node* prev;
+class Node {   // one node: a value plus links to the next AND the previous node
+    public:   // members below are usable from outside the class
+        int val;   // the value this node carries
+        Node* next;   // address of the node after this one (NULL = none)
+        Node* prev;   // address of the node before this one (NULL = none)
 
-    Node(int val) {
-        this->val = val;
-        this->next = NULL;
-        this->prev = NULL;
+    Node(int val) {   // constructor: runs on `new Node(x)`
+        this->val = val;   // `this->val` = the member, plain `val` = the parameter
+        this->next = NULL;   // not linked to anything yet
+        this->prev = NULL;   // not linked to anything yet
     }
 };
 
 // Append at the end in O(1), because `tail` is remembered.
+// `Node* &head` = a reference to the caller's pointer, so main's head/tail really change.
 void insert_at_tail(Node* &head, Node* &tail, int val){
-    Node* newNode = new Node(val);
+    Node* newNode = new Node(val);   // new node on the heap; its links start as NULL
     if(head == NULL){        // empty list: the new node is head and tail
-        head = newNode;
-        tail = newNode;
-        return;
+        head = newNode;   // the only node is the first node...
+        tail = newNode;   // ...and also the last node
+        return;   // done - skip the rest of the function
     }
     tail->next = newNode;    // old tail -> new node
     newNode->prev = tail;    // new node -> old tail
-    tail = newNode;
+    tail = newNode;   // the new node is the last node now
 }
 
 // Left to right, along `next`.
-void print_forward(Node* head){
-    Node* tmp = head;
-    while(tmp != NULL){
-        cout << tmp->val << " ";
-        tmp = tmp->next;
+void print_forward(Node* head){   // print from the first node to the last, on one line
+    Node* tmp = head;   // walker from the first node
+    while(tmp != NULL){   // stop after walking off the end
+        cout << tmp->val << " ";   // print this node's value and a space
+        tmp = tmp->next;   // one node forward
     }
-    cout << endl;
+    cout << endl;   // end the line (endl = newline + flush)
 }
 
 // Selection sort by swapping values. An empty list is fine: `i` starts as
 // NULL and the outer loop never runs.
 void sort_ascending(Node* head){
-    for(Node* i = head; i != NULL; i = i->next){
+    for(Node* i = head; i != NULL; i = i->next){   // i = the node being settled, walks the whole list
         // Every node after `i` gets one chance to be compared with it.
         for(Node* j = i->next; j != NULL; j = j->next){
-            if(j->val < i->val){
+            if(j->val < i->val){   // a smaller value further on?
                 // A smaller value belongs earlier: bring it to `i`.
-                swap(i->val, j->val);
+                swap(i->val, j->val);   // std::swap exchanges the two ints (the nodes stay put)
             }
         }
         // Here `i` holds the smallest value of everything from `i` onward.
     }
 }
 
+// main: read the list until -1, sort it, print it.
 int main(){
-    Node* head = NULL;
-    Node* tail = NULL;
+    Node* head = NULL;   // first node (none yet: the list starts empty)
+    Node* tail = NULL;   // last node (none yet)
 
     // Read values until -1. `break;` leaves the loop, not the program.
-    int val;
-    while(true){
-        cin >> val;
-        if(val == -1){
-            break;
+    int val;   // holds each number as it is read
+    while(true){   // repeat until -1
+        cin >> val;   // read the next integer (spaces/newlines are skipped)
+        if(val == -1){   // -1 ends the input
+            break;   // leave the loop
         }
-        insert_at_tail(head, tail, val);
+        insert_at_tail(head, tail, val);   // append, keeping input order
     }
 
-    sort_ascending(head);
-    print_forward(head);
+    sort_ascending(head);   // sort the values in place
+    print_forward(head);   // print smallest to largest
 
-    return 0;
+    return 0;   // 0 = the program ended normally
 }

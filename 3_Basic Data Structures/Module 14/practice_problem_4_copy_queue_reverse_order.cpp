@@ -1,7 +1,7 @@
 /*
 
-Take a queue of size N as input. You need to copy those elements in another queue 
-in reverse order. You might use stack here. You should use STL to solve this problem. 
+Take a queue of size N as input. You need to copy those elements in another queue
+in reverse order. You might use stack here. You should use STL to solve this problem.
 After copying in another queue, print the elements of that queue.
 
 Input
@@ -27,16 +27,17 @@ Output
  * Printing q2 from the front gives 50 40 30 20 10.
  */
 
-#include <iostream>
-#include <queue>
-#include <stack>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+#include <queue>        // std::queue (FIFO)
+#include <stack>        // std::stack (LIFO)
+using namespace std;    // write queue/stack/cout without std::
 
 int main() {
     // Input size of queue
     int n;
-    cin >> n;
+    cin >> n;           // cin >> skips whitespace and reads one number
 
+    // Read n values; each joins the back of q.
     queue<int> q;
     for(int i=0; i<n; i++){
         int val;
@@ -48,8 +49,8 @@ int main() {
     // After this loop 10 is at the bottom of st and 50 is on top.
     stack<int> st;
     while(!q.empty()){
-        st.push(q.front());
-        q.pop();
+        st.push(q.front());     // front() reads the oldest value
+        q.pop();                // queue pop removes the front
     }
 
     // Empty the stack into the new queue. The top (50) comes out first, so it
@@ -66,7 +67,7 @@ int main() {
         q2.pop();
     }
 
-    cout << endl;
+    cout << endl;       // finish the line
 
-    return 0;
+    return 0;           // normal exit
 }

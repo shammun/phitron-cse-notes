@@ -25,36 +25,42 @@ Sample Output 0
 
 */
 
-#include <iostream>  // cin and cout
+#include <iostream>  // cin and cout (reading input and printing output)
 #include <algorithm> // sort() and greater<int>()
-using namespace std; // write cin/cout/sort instead of std::cin/...
+using namespace std; // write cin/cout/sort instead of std::cin/std::cout/std::sort
 
 // The question insists that the array is read and sorted inside sort_it()
 // and then returned to main. Returning an array means returning its address,
 // and that only works for an array made with new: it lives on the heap, so
 // it survives the end of the function (a local `int a[n]` would not).
+//   Parameter n : how many numbers to read.
+//   Returns     : int* = address of the first element of the sorted heap array.
 int* sort_it(int n){
-    int* a = new int[n];
+    int* a = new int[n]; // new int[n]: reserve n ints on the heap; a holds the address of the first one
+    // Read n numbers; pass i stores the next number in a[i]
     for(int i=0; i<n; i++){
-        cin >> a[i];
+        cin >> a[i]; // cin >> skips spaces/newlines and reads one whole number
     }
+    // sort(first, one-past-last, rule). a..a+n covers the whole array.
+    // {1,4,2,3,5} -> {5,4,3,2,1}
     sort(a, a+n, greater<int>()); // greater<int>() puts the bigger value first -> descending
     return a; // hand the address back to main
 }
 
-int main(){
+int main(){ // program starts here
 
-    int n;
-    cin >> n;
+    int n;     // size of the array
+    cin >> n;  // read N in main, as the question asks
     int* sorted_array = sort_it(n); // n is read here in main and passed in, as asked
 
-    // Print the sorted array (it is already sorted in descending order)
+    // Print the sorted array (it is already sorted in descending order).
+    // i walks 0..n-1; a pointer can be indexed just like an array.
     for(int i=0; i<n; i++){
-        cout << sorted_array[i] << " ";
+        cout << sorted_array[i] << " "; // value then a space
     }
-    cout << endl;
+    cout << endl; // end the output line
 
     delete[] sorted_array; // new[] in the function, delete[] once main is done with it
 
-    return 0;
+    return 0; // program ended normally
 }

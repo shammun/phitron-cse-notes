@@ -30,24 +30,30 @@ Sample Output 0
 4 2 3 1
 */
 
-#include <stdio.h>
+/* Trace with the sample:
+     after swapping first/last column:   4 2 3 1 / 8 6 7 5 / 2 5 4 6
+     after swapping first/last row:      2 5 4 6 / 8 6 7 5 / 4 2 3 1  (the expected output) */
+
+#include <stdio.h> // standard input/output library: scanf and printf
 
 // Function to swap two integers using pointers
 // Parameters:
 // - a: Pointer to first integer
-// - b: Pointer to second integer 
+// - b: Pointer to second integer
 // This function uses a temporary variable to exchange values
+// (pointers are needed so the change reaches the matrix cells in main;
+// with plain int parameters only copies would be swapped)
 void swap(int *a, int *b){
     int temp = *a;  // Store first value in temp
     *a = *b;        // Copy second value to first location
     *b = temp;      // Copy temp (original first value) to second location
 }
 
-int main(){
+int main(){ // program execution starts here
     // Declare variables N and M for matrix dimensions
     // N = number of rows, M = number of columns
     int N, M;
-    
+
     // Read matrix dimensions using scanf
     // %d format specifier is used since N and M are integers
     // & operator gets the address where the scanned value should be stored
@@ -96,5 +102,5 @@ int main(){
         printf("\n");
     }
 
-    return 0;
+    return 0; // program ended successfully
 }

@@ -44,12 +44,14 @@
   recursion_print_N_to_1.c.
 */
 
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: scanf and printf
 
+/* print_1_to_N(x, n): prints x, x+1, ..., n, each followed by a space.
+   Returns nothing (void). */
 void print_1_to_N(int x, int n){
     /* Base case: x has gone past n, so there is nothing left to print. */
     if(x > n){
-        return;
+        return; // leave this call right away
     }
     /* The small piece of work this particular call is responsible for. */
     printf("%d ", x);
@@ -59,14 +61,14 @@ void print_1_to_N(int x, int n){
     print_1_to_N(x+1, n);
 }
 
-int main(){
-    int n;
+int main(){ // program execution starts here
+    int n; // the last number to print
     /* A prompt for a human sitting at the keyboard. An online judge would
        count it as extra output and mark the answer wrong, which is why the
        judge versions of these programs have no prompt. */
     printf("Enter the value of n: ");
-    scanf("%d", &n);
+    scanf("%d", &n); // &n = address where scanf stores the number
     /* Start the chain at x = 1. */
     print_1_to_N(1, n);
-    return 0;
+    return 0; // program ended successfully
 }

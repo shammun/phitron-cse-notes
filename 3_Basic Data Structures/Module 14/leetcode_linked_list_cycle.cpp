@@ -22,24 +22,28 @@ going round it, and `fast` gains one node per step, so it must land on
  *     ListNode(int x) : val(x), next(NULL) {}
  * };
  */
+// (LeetCode defines ListNode as above and supplies includes and main.)
 class Solution {
-public:
+public:     // callable by the judge
+    // Returns true if the list starting at head has a cycle.
     bool hasCycle(ListNode *head) {
-        ListNode* slow = head;
-        ListNode* fast = head;
+        ListNode* slow = head;  // 1 step per round
+        ListNode* fast = head;  // 2 steps per round
         bool flag = false;   // becomes true if the pointers meet
 
         // fast needs two more nodes to jump; checking fast first protects
         // fast->next from being read on NULL.
         while(fast != NULL && fast->next != NULL){
-            slow = slow->next;
-            fast = fast->next->next;
+            slow = slow->next;          // one step
+            fast = fast->next->next;    // two steps
             // They met: only possible inside a loop.
+            // (Compare AFTER moving: at the start both sit on head.)
             if(slow == fast){
                 flag= true;
-                break;
+                break;                  // answer known, stop
             }
         }
+        // Trace 3 2 0 -4 (-4 -> 2): (slow,fast) = (2,0), (0,2), (-4,-4) -> meet -> true.
         return flag;
     }
 };

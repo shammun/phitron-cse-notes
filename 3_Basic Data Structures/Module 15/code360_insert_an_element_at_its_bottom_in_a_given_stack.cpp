@@ -32,28 +32,40 @@ Sample
  *   2. myStack is empty, so pushing x now puts it at the bottom,
  *   3. pop everything from helper back onto myStack. Reversing twice gives
  *      the original order again, now sitting on top of x.
+ *
+ * Trace with 7 1 4 5 (bottom -> top), x = 9:
+ *   step 1: helper (bottom -> top) = 5 4 1 7, myStack empty
+ *   step 2: myStack = 9
+ *   step 3: pop 7, 1, 4, 5 from helper -> myStack = 9 7 1 4 5
+ *
+ * Note: no #include or main() - the judge's hidden code includes the STL
+ * (so stack<int> is available) and calls this function.
  */
 
+// myStack is taken by reference (&): we work on the caller's stack itself,
+// not a copy. The function also returns the finished stack, as the judge wants.
 stack<int> pushAtBottom(stack<int>& myStack, int x)
 {
     stack<int> helper;   // holds the values while we dig down to the bottom
 
     // Step 1: empty myStack into helper. The old top goes in first, so it
-    // ends up at the bottom of helper.
-    while(!myStack.empty()){
-        helper.push(myStack.top());
-        myStack.pop();
+    // ends up at the bottom of helper. Each pass moves one value; the loop
+    // stops when myStack is empty.
+    while(!myStack.empty()){             // empty() is true when the stack has no values
+        helper.push(myStack.top());      // top() reads the top value (does not remove it)
+        myStack.pop();                   // pop() removes the top value (returns nothing)
     }
 
     // Step 2: myStack is empty, so x becomes its bottom.
     myStack.push(x);
 
     // Step 3: pour helper back. The old bottom comes out of helper first
-    // and lands right on top of x, so the order is restored.
+    // and lands right on top of x, so the order is restored. Stops when
+    // helper is empty.
     while(!helper.empty()){
-        myStack.push(helper.top());
-        helper.pop();
+        myStack.push(helper.top());      // copy helper's top onto myStack
+        helper.pop();                    // then remove it from helper
     }
 
-    return myStack;
+    return myStack;                      // the stack with x at the bottom
 }

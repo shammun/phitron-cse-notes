@@ -4,12 +4,16 @@
  * The mark is fixed in the code instead of being read in, so the program
  * always walks the same path. The point here is the shape of the ladder
  * and the order of its tests, not the input.
+ *
+ * Output:
+ *     A
  */
 
+/* stdio.h ("standard input output") declares printf. */
 #include <stdio.h>
 
-int main() {
-    int marks = 76;
+int main() {        /* the program starts here */
+    int marks = 76; /* a whole-number (int) box, set to 76 */
 
     /* C checks the tests from the top and stops at the first true one,
      * so the ORDER is part of the logic and not a matter of taste.
@@ -20,11 +24,11 @@ int main() {
      * With 76: the first test fails, the second passes, A is printed,
      * and everything below is skipped without being looked at. */
     if(marks >= 80){
-        printf("A+");
+        printf("A+");               /* 80 and above */
+    } else if(marks >= 70) {        /* only tried if the test above failed */
+        printf("A");                /* 70..79 */
     } else if(marks >= 70) {
-        printf("A");
-    } else if(marks >= 70) {
-        /* Bug, left in on purpose: this repeats the test on the line
+        /* BUG (left in on purpose): this repeats the test on the line
          * above. Any mark that reaches here has already failed >= 70 one
          * step earlier, so this test can never be true and A- can never
          * be printed. It was surely meant to read marks >= 60.
@@ -37,5 +41,5 @@ int main() {
 
     /* There is no final else either, so a mark below 70 prints nothing
      * at all rather than a failing grade. */
-    return 0;
+    return 0;       /* 0 = finished normally */
 }

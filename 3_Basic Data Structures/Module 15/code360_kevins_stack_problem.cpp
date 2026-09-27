@@ -25,23 +25,28 @@ Sample
  * top. Then pop them all into the answer: the last character comes out first.
  *
  *   push a, b, c  ->  stack (bottom) a b c (top)  ->  pop gives c, b, a
+ *
+ * Note: no #include or main() - the judge's hidden code includes <string>
+ * and <stack> and calls this function.
  */
 
+// s is passed by reference (&) so the string is not copied; we only read it.
 string kevinStackProblem(string &s)
 {
-    stack<char> st;
+    stack<char> st;   // a stack whose items are single characters
 
+    // Range-for: `c` takes each character of s in turn, left to right.
     // First character goes to the bottom, last character ends on top.
     for(char c : s){
         st.push(c);
     }
 
     // Pop from the top: characters come out last-first, i.e. reversed.
-    string ans = "";
-    while(!st.empty()){
-        ans += st.top();
-        st.pop();
+    string ans = "";            // start with an empty string
+    while(!st.empty()){         // one pass moves one character; stops when the stack is empty
+        ans += st.top();        // += on a string appends the character at the end
+        st.pop();               // remove the character we just used
     }
 
-    return ans;
+    return ans;                 // e.g. "abc" -> "cba"
 }

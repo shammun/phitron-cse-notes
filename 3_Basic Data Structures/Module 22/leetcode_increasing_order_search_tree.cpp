@@ -21,6 +21,10 @@ Output: [1,null,2,null,3,null,4,null,5,null,6,null,7,null,8,null,9]
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines TreeNode and calls our function from its own hidden
+ * main, so there are no #includes or main here. After ':' comes an
+ * initializer list: val(x) sets val to x; nullptr is the C++11 null pointer.)
  */
 /*
  * Task in short: rearrange the BST into a chain where no node has a left
@@ -34,11 +38,11 @@ Output: [1,null,2,null,3,null,4,null,5,null,6,null,7,null,8,null,9]
  * needs no special case. `current` is the last node of the chain so far.
  */
 class Solution {
-private:
+private:  // helper used only inside this class
     // current is passed by reference (&), so every call moves the SAME
     // "end of chain" pointer forward.
     void inorder(TreeNode* node, TreeNode* &current) {
-        if (!node){
+        if (!node){             // !node is true when node is NULL: empty subtree
             return;
         }
 
@@ -55,13 +59,13 @@ private:
         inorder(node->right, current);
     }
 
-public:
+public:   // LeetCode calls increasingBST from outside the class
     TreeNode* increasingBST(TreeNode* root) {
         // Dummy head; its value (999) is never used.
         TreeNode* start = new TreeNode(999);
-        TreeNode* current = start;
+        TreeNode* current = start;              // the chain so far is just the dummy
 
-        inorder(root, current);
+        inorder(root, current);                 // link every node in increasing order
 
         // The real chain starts right after the dummy.
         return start->right;

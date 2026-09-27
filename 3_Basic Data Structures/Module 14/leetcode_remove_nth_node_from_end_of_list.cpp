@@ -24,22 +24,25 @@ there is no node before it: the head itself moves. O(n) time, O(1) memory.
  *     ListNode(int x, ListNode *next) : val(x), next(next) {}
  * };
  */
+// (LeetCode defines ListNode as above and supplies includes and main.)
 class Solution {
-public:
+public:     // callable by the judge
+    // Deletes the n-th node from the end; returns the (maybe new) head.
     ListNode* removeNthFromEnd(ListNode* head, int n) {
         // Pass 1: count the nodes.
         int length = 0;
-        ListNode* currentNode = head; 
+        ListNode* currentNode = head;
+        // `while(currentNode)` = "while currentNode is not NULL".
         while(currentNode){
             length++;
-            currentNode = currentNode->next;
+            currentNode = currentNode->next;    // '->' = member through a pointer
         }
 
         // n-th from the end is the first node: move the head forward.
         if(n == length){
-            ListNode* toDel = head;
-            head = head->next;
-            delete toDel;
+            ListNode* toDel = head;     // remember the old head
+            head = head->next;          // second node (or NULL) is the new head
+            delete toDel;               // free the old head's memory
             return head;
         }
 
@@ -47,13 +50,14 @@ public:
         // Stop on the node before it (position length-n-1): the loop starts
         // at position 0 and moves index-1 times.
         ListNode* tmp = head;
-        int index = length - n;
-        for(int i=1; i<index; i++){
+        int index = length - n;         // 5 - 2 = 3 in the example (the 4)
+        for(int i=1; i<index; i++){     // i = 1 .. index-1
             tmp = tmp->next;
         }
+        // tmp is now on position 2 (the 3) in the example.
         // Unlink the node after tmp and free it.
         ListNode* toDelete = tmp->next;
-        tmp->next = tmp->next->next;
+        tmp->next = tmp->next->next;    // 3 now points to 5
         delete toDelete;
 
         return head;

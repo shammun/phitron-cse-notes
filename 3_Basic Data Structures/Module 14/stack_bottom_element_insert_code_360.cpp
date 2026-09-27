@@ -1,4 +1,4 @@
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h> // GCC's "include everything" header: gives std::stack
 
 /*
 
@@ -33,15 +33,20 @@ Let ‘MY_STACK’ = [7, 1, 4, 5] and ‘X’ = 9. So, ‘MY_STACK’ after inse
  * Every value moves twice: O(n) time, O(n) extra space.
  */
 
-stack<int> pushAtBottom(stack<int>& st, int x) 
+// (The #include at the very top is <bits/stdc++.h>, GCC's "include everything"
+//  header; Code360's template adds `using namespace std;` and main().)
+// st is taken by reference (&): we change the caller's own stack.
+// Returns the updated stack (a copy of st) as the problem asks.
+stack<int> pushAtBottom(stack<int>& st, int x)
 {
     // Write your code here.
-    stack<int> new_st;
+    stack<int> new_st;      // temporary holder for everything above the bottom
     int val;   // declared but never used
     // 1. Empty st into new_st (this reverses the order).
+    // One pass = move the top of st onto new_st; stops when st is empty.
     while (!st.empty()) {
-        new_st.push(st.top());
-        st.pop();
+        new_st.push(st.top());  // top() only reads the value
+        st.pop();               // pop() removes it
     }
     // 2. st is empty now, so x lands at the very bottom.
     st.push(x);
@@ -50,5 +55,6 @@ stack<int> pushAtBottom(stack<int>& st, int x)
         st.push(new_st.top());
         new_st.pop();
     }
+    // Trace [7 1 4 5], x 9: new_st = [5 4 1 7] -> st = [9] -> st = [9 7 1 4 5].
     return st;
 }

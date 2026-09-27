@@ -4,7 +4,9 @@ https://www.naukri.com/code360/problems/node-level_920383
 
 */
 
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h>
+// <bits/stdc++.h>: GCC shortcut that includes the whole standard library
+// (queue, pair, ...).
 /************************************************************
 
     Following is the TreeNode class structure
@@ -16,13 +18,16 @@ https://www.naukri.com/code360/problems/node-level_920383
         bool isOriginal;
         TreeNode<T> *left;
         TreeNode<T> *right;
-        
+
         TreeNode(T val) {
             this->val = val;
             left = NULL;
             right = NULL;
         }
     };
+
+    (TreeNode<int> stores an int in `val`. The judge's hidden code defines
+    it and calls nodeLevel - there is no main in this file.)
 
 ************************************************************/
 
@@ -37,6 +42,7 @@ https://www.naukri.com/code360/problems/node-level_920383
  *
  * Example: tree 10 / 20 30 / 40 50 60, value 50 -> level 3.
  */
+// root = top of the tree, value = the value to look for.
 int nodeLevel(TreeNode<int>* root, int value)
 {
     // Write your code here.
@@ -45,15 +51,17 @@ int nodeLevel(TreeNode<int>* root, int value)
         return 0;
     }
 
-    // level+=1;
+    // level+=1;   (left-over line from an earlier attempt; there is no `level` variable at this point)
 
+    // Queue of {node, level} pairs: .first = node pointer, .second = its level.
     queue<pair<TreeNode<int>*, int>> q;
-    q.push({root, 1});     // the root sits on level 1
+    q.push({root, 1});     // the root sits on level 1 ({a, b} builds the pair)
 
+    // One pass checks one node; stops when every node has been checked.
     while (!q.empty()) {
-        pair<TreeNode <int>*,int> parent = q.front();
+        pair<TreeNode <int>*,int> parent = q.front();   // oldest waiting entry
         q.pop();
-        
+
         TreeNode<int>* node = parent.first;   // the node itself
         int level = parent.second;            // and the level it is on
 
@@ -63,6 +71,7 @@ int nodeLevel(TreeNode<int>* root, int value)
         }
 
         // Otherwise queue the children, one level deeper.
+        // (A pointer in an if is true when it is not NULL.)
         if (node->left) {
             q.push({node->left, level + 1});
         }

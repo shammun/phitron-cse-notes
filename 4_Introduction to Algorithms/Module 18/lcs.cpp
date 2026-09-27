@@ -1,11 +1,10 @@
-// Longest common substring using recursion
-// We will be given two strings a and b. We have to find the length of the 
-// longest common substring of the two strings.
+// Longest common SUBSEQUENCE (LCS) using recursion.
+// We will be given two strings a and b. We have to find the length of the
+// longest common subsequence of the two strings.
 // We will use memoization to optimize the solution.
 //
-// CORRECTION to the three lines above: the code finds the longest common
-// SUBSEQUENCE, not the longest common substring. The difference matters and the
-// module's quiz asks about it:
+// Subsequence, not substring - the difference matters and the module's quiz
+// asks about it:
 //   * a substring is a run of neighbouring characters - "bcd" in "abcde";
 //   * a subsequence keeps the order but may skip characters - "ace" in "abcde".
 // For "abcde" and "ace" this program prints 3 (the subsequence a-c-e); the
@@ -15,15 +14,24 @@
 //
 // This is the same take-it-or-leave-it DP as Module 15 and Module 17, with two
 // strings to walk through instead of one list of items.
+//
+// The DP in three parts:
+//   meaning     dp[i][j] = LCS length of a[0..i] and b[0..j]
+//   base case   i < 0 or j < 0 (an empty prefix) -> 0
+//   transition  a[i] == b[j]: dp[i][j] = dp[i-1][j-1] + 1
+//               otherwise:    dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+// Trace for "abcde" / "ace": e == e -> 1 + lcs("abcd","ac");
+//   d != c -> max(lcs("abc","ac"), lcs("abcd","a")); c == c -> 1 + lcs("ab","a")
+//   = 1 + 1 ... total 3.
 
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
+#include <iostream>     // cin, cout
+#include <vector>       // not used here
+#include <algorithm>    // max
+#include <string>       // string
 
-using namespace std;
-string a, b;
+using namespace std;    // no std:: prefix
+string a, b;            // the two input strings (global so lcs can read them)
 // dp[i][j] is the answer to one question: "what is the LCS length of the first
 // i+1 characters of a and the first j+1 characters of b?" - that is, of the
 // PREFIXES a[0..i] and b[0..j]. The two indexes are just the two arguments of
@@ -61,7 +69,7 @@ int lcs(int i, int j){
         int op1 = lcs(i-1, j);
         //   op2 = drop b[j], keep all of a   (step only j back)
         int op2 = lcs(i, j-1);
-        dp[i][j] = max(op1, op2);
+        dp[i][j] = max(op1, op2);   // store the better one
         return dp[i][j];
     }
 }
@@ -72,12 +80,12 @@ int main(){
     // from <cstring>, which this file does not include - it compiles only because
     // another header brings it in.)
     memset(dp, -1, sizeof(dp));
-    cin >> a >> b;
-    int n = a.size();
-    int m = b.size();
+    cin >> a >> b;      // two words (cin >> stops at spaces)
+    int n = a.size();   // length of a
+    int m = b.size();   // length of b
     // Start from the last character of each string. Note there is no endl, so the
     // number is printed with no newline after it.
     cout << lcs(n-1, m-1);
 
-    return 0;
+    return 0;           // success
 }

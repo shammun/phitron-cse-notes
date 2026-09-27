@@ -26,17 +26,24 @@ Sample Output 0
 
 */
 
-#include <stdio.h>
-#include <string.h>
+/* Idea: every position can be fixed on its own. Look at the three letters at
+   position i: if all three differ, two must change; if exactly two agree,
+   one must change; if all agree, none. Add these up over all positions.
+   Trace with train / candy / bread:
+     t c b -> 2,  r a r -> 1,  a n e -> 2,  i d a -> 2,  n y d -> 2  => 9 */
 
-int main() {
+#include <stdio.h>  // standard input/output library: scanf and printf
+#include <string.h> // string library: strlen
+
+int main() { // program execution starts here
     // Declare three character arrays of size 105 to store the input strings
     // Size is 105 to accommodate strings up to length 100 plus null terminator
     char str1[105], str2[105], str3[105];
-    
+
     // Read the three input strings
+    // (%s reads one word; array names are already addresses, so no &)
     scanf("%s", str1);
-    scanf("%s", str2); 
+    scanf("%s", str2);
     scanf("%s", str3);
 
     // Get length of first string - all strings have same length as per problem
@@ -80,5 +87,5 @@ int main() {
 
     // Print the minimum number of changes needed
     printf("%d\n", total_changes);
-    return 0;
+    return 0; // program ended successfully
 }

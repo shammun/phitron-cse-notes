@@ -23,6 +23,8 @@ OutputCopy
 5
 */
 
+/* Note on the statement: "103" is 10^3 (the exponent lost its formatting when it was copied). */
+
 // Include standard input/output library for printf and scanf functions
 #include <stdio.h>
 
@@ -36,13 +38,15 @@ How it works:
     1. Base case: If x exceeds n, return (stop recursion)
     2. Print current number x
     3. Call itself with x+1 to print next number
-    
+    (The recursive call trusts that print_1_to_N(x+1, n) correctly prints
+    x+1 .. n; this call only has to print x before it.)
+
 Why recursion is used here:
     - The problem requires recursive solution
     - Each recursive call increases x by 1
     - When x exceeds n, recursion stops
     - The function calls itself (n-x+1) times
-    
+
 Call stack visualization for n=3, starting x=1:
     print_1_to_N(1, 3)
         prints 1
@@ -61,12 +65,12 @@ Why \n is used instead of space:
 void print_1_to_N(int x, int n){
     // Base case: if x exceeds n, stop recursion
     if(x > n){
-        return;
+        return; // "return;" in a void function just leaves the function
     }
-    
+
     // Print current number followed by newline
     printf("%d\n", x);
-    
+
     // Recursive call with next number (x+1)
     print_1_to_N(x+1, n);
 }
@@ -83,15 +87,15 @@ Purpose: Entry point of program that:
 int main(){
     // Declare variable to store input number
     int n;
-    
+
     // Read integer from user
     // %d is format specifier for integer
     // &n gives address where input should be stored
     scanf("%d", &n);
-    
+
     // Call print_1_to_N starting from 1 up to n
     print_1_to_N(1, n);
-    
+
     // Return 0 to indicate successful program execution
     return 0;
 }

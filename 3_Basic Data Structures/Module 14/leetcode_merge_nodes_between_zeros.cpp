@@ -27,13 +27,17 @@ node), which cuts out the rest of the group and the zero. O(n), O(1) memory.
  *     ListNode(int x, ListNode *next) : val(x), next(next) {}
  * };
  */
+// (LeetCode defines ListNode as above and supplies includes and main.)
 class Solution {
-public:
+public:     // callable by the judge
+    // Returns the head of the merged list (the same nodes, re-linked).
     ListNode* mergeNodes(ListNode* head) {
         // Skip the leading 0: the first group starts at head->next.
         ListNode* modify = head->next;   // node that will store this group's sum
         ListNode* nextSum = modify;      // walker that adds up the group
 
+        // One pass of the outer loop = one group. `while(nextSum)` means
+        // "while nextSum is not NULL".
         while(nextSum){
             // Add values until the zero that closes this group.
             int sum = 0;
@@ -41,6 +45,7 @@ public:
                 sum = sum + nextSum->val;
                 nextSum = nextSum->next;
             }
+            // nextSum now stands on the closing 0.
 
             // Store the sum in the group's first node.
             modify->val = sum;
@@ -53,6 +58,8 @@ public:
             // The next group's first node will hold the next sum.
             modify = modify->next;
         }
+        // Trace 0 3 1 0 4 5 2 0: group 1: node3 gets 4, links to node4;
+        // group 2: node4 gets 11, links to NULL. List from head->next: 4 11.
         // The leading 0 is not part of the answer.
         return head->next;
     }

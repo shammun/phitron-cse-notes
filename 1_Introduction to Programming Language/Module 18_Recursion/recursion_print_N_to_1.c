@@ -26,12 +26,14 @@
   difference between many recursive programs.
 */
 
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: scanf and printf
 
+/* print_N_to_1(x, n): prints n, n-1, ..., x, each followed by a space.
+   Returns nothing (void). */
 void print_N_to_1(int x, int n){
     /* Same base case as before: past n, nothing left to do. */
     if(x > n){
-        return;
+        return; // leave this call
     }
     /* Go all the way down first. This call does not return until every
        number above x has been printed. */
@@ -41,11 +43,11 @@ void print_N_to_1(int x, int n){
     printf("%d ", x);
 }
 
-int main(){
-    int n;
-    printf("Enter the value of n: ");
-    scanf("%d", &n);
+int main(){ // program execution starts here
+    int n; // the largest number, printed first
+    printf("Enter the value of n: "); // prompt for a human user (a judge would reject this extra text)
+    scanf("%d", &n); // &n = address where scanf stores the number
     /* The chain still starts at x = 1, even though 1 is printed last. */
     print_N_to_1(1, n);
-    return 0;
+    return 0; // program ended successfully
 }

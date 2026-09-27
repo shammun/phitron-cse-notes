@@ -61,15 +61,22 @@ IMPOSSIBLE
 
 */
 
+// DSU reminder: every group of cities has a LEADER. par[x] points one step
+// towards it, and par[x] == -1 means x is the leader. Same leader = already
+// connected.
+
+// <bits/stdc++.h>: g++'s "include the whole standard library" header.
 #include <bits/stdc++.h>
-using namespace std;
+using namespace std;    // no std:: prefix
 
-vector<int> par;
-vector<int> group_size;
+vector<int> par;          // par[x] = parent of city x; -1 = x is a leader
+vector<int> group_size;   // group_size[L] = cities in leader L's group
 
+// One road: joins a and b, costs c.
 class Edge {
-    public:
-        int a, b, c;
+    public:              // usable from outside the class
+        int a, b, c;     // ends and cost (c <= 10^9 fits in an int)
+        // Constructor; this->a is the member, plain a the parameter.
         Edge(int a, int b, int c) {
             this->a = a;
             this->b = b;
@@ -77,10 +84,12 @@ class Edge {
         }
 };
 
+// Sorting rule: true when road l should come before road r (l is cheaper).
 bool cmp(Edge l, Edge r) {
     return l.c < r.c;
 }
 
+// Leader of node's group. Base case: par == -1 means node leads.
 int find(int node) {
     if (par[node] == -1) {
         return node;
@@ -91,6 +100,7 @@ int find(int node) {
     return leader;
 }
 
+// Merge the groups of node1 and node2 (main calls it only when they differ).
 void dsu_union(int node1, int node2) {
     int leader1 = find(node1);
     int leader2 = find(node2);
@@ -106,13 +116,15 @@ void dsu_union(int node1, int node2) {
 }
 
 int main() {
-    int n, m;
+    int n, m;                    // cities, roads
     cin >> n >> m;
 
-    par.assign(n + 1, -1);
-    group_size.assign(n + 1, 1);
+    // assign(count, value): resize to count elements, all equal to value.
+    // n + 1 so cities keep their numbers 1..n.
+    par.assign(n + 1, -1);       // everyone is their own leader
+    group_size.assign(n + 1, 1); // every group has one city
 
-    vector<Edge> edge_list;
+    vector<Edge> edge_list;      // all roads
     for (int i = 0; i < m; i++) {
         int a, b, c;
         cin >> a >> b >> c;
@@ -122,19 +134,19 @@ int main() {
     // Cheapest road first: that is the whole idea of Kruskal's algorithm.
     sort(edge_list.begin(), edge_list.end(), cmp);
 
-    long long total_cost = 0;
-    int taken = 0;
+    long long total_cost = 0;    // can reach about 10^14: needs long long
+    int taken = 0;               // how many roads we kept
 
-    for (int i = 0; i < (int)edge_list.size(); i++) {
+    for (int i = 0; i < (int)edge_list.size(); i++) {   // cheapest to dearest
         Edge edge = edge_list[i];
-        int parA = find(edge.a);
-        int parB = find(edge.b);
+        int parA = find(edge.a);   // group of one city
+        int parB = find(edge.b);   // group of the other
 
         // Same leader means the two cities are already joined, so this road
         // would only close a cycle and add cost for nothing.
         if (parA != parB) {
-            dsu_union(edge.a, edge.b);
-            total_cost += edge.c;
+            dsu_union(edge.a, edge.b);   // join the two groups
+            total_cost += edge.c;        // pay for this road
             taken++;
         }
     }
@@ -147,5 +159,5 @@ int main() {
         cout << total_cost << endl;
     }
 
-    return 0;
+    return 0;   // success
 }

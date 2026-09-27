@@ -25,8 +25,10 @@ NO
  *
  * Two things stand between it and the real task:
  *
- *   * it never runs to the end. The first loop leaves `main` with `return;`
- *     the moment it reads -1, so nothing is printed. `break;` was meant.
+ *   * it does not even compile: `return;` with no value is not allowed in
+ *     `int main` ("return-statement with no value"). And the idea is wrong
+ *     too - `return` would leave `main` the moment -1 is read, so nothing
+ *     would be printed. `break;` was meant.
  *     The second loop is `while(tail2)`, and `tail2` is NULL at that point,
  *     so it would never read anything even after the first fix; it should
  *     be `while(true)` as well.
@@ -36,34 +38,36 @@ NO
  *     finishes the job: size first, then a value-by-value walk.
  */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std; 
+#include <iostream>   // cin (keyboard input) and cout (screen output)
+#include <vector>   // std::vector (a resizable array) - not used in this file
+#include <algorithm>   // sort, reverse, swap, max, min ... - not used in this file
+#include <string>   // std::string - not used in this file
+using namespace std;   // lets us write cout, list ... instead of std::cout, std::list ...
 
 // A doubly linked node: the value, an arrow forward and an arrow back.
-class Node {
-    public:
-        int val;     
-        Node* next;
-        Node* prev;
+class Node {   // one node: a value plus links to the next AND the previous node
+    public:   // members below are usable from outside the class
+        int val;   // the value this node carries
+        Node* next;   // address of the node after this one (NULL = none)
+        Node* prev;   // address of the node before this one (NULL = none)
 
-    Node(int val) {
-        this->val = val; 
-        this->next = NULL;
-        this->prev = NULL;
+    Node(int val) {   // constructor: runs on `new Node(x)`
+        this->val = val;   // `this->val` = the member, plain `val` = the parameter
+        this->next = NULL;   // not linked to anything yet
+        this->prev = NULL;   // not linked to anything yet
     }
 };
 
 
 // Append at the end. `tail` is kept so this is O(1) instead of a walk.
+// `Node* &head` = a reference to the caller's pointer (not a copy), so the
+// function can move main's own head/tail.
 void insert_at_tail(Node* &head, Node* &tail, int val){
-    Node* newNode = new Node(val);
+    Node* newNode = new Node(val);   // new node on the heap; its links start as NULL
     if(head==NULL){          // empty list: the new node is head and tail
-        head = newNode;
-        tail = newNode;
-        return;
+        head = newNode;   // the only node is the first node...
+        tail = newNode;   // ...and also the last node
+        return;   // done - skip the rest of the function
     }
     tail->next = newNode;    // old tail -> new node
     newNode->prev = tail;    // new node -> old tail (the arrow back)
@@ -72,53 +76,56 @@ void insert_at_tail(Node* &head, Node* &tail, int val){
 
 // Count the nodes by walking from head until we fall off the end.
 int get_size(Node* head){
-    int size = 0;
-    Node* tmp = head;
-    while(tmp!=NULL){
-        tmp = tmp->next;
-        size++;
+    int size = 0;   // counter
+    Node* tmp = head;   // walker
+    while(tmp!=NULL){   // one pass per node
+        tmp = tmp->next;   // step to the next node
+        size++;   // count one more node
     }
-    return size;
+    return size;   // the number of nodes
 }
 
+// main: read two lists and compare their sizes.
 int main(){
-    Node* head1 = NULL;
-    Node* tail1 = NULL;
+    Node* head1 = NULL;   // list 1: first node (none yet)
+    Node* tail1 = NULL;   // list 1: last node (none yet)
 
     // First list: read values until -1.
-    int val;
-    while(true){
-        cin >> val;
-        if(val==-1){
-            // Bug: `return;` ends the whole program here, before the second
-            // list is read or anything is printed. Use `break;`.
-            return;
+    int val;   // each value of list 1
+    while(true){   // repeat until `break`
+        cin >> val;   // read the next integer (spaces/newlines are skipped)
+        if(val==-1){   // -1 ends list 1
+            // BUG: a bare `return;` in `int main` does not compile, and even
+            // `return 0;` would end the program here, before the second list is
+            // read or anything is printed. Fix: `break;`
+            return;   // leave the function now
         }
-        insert_at_tail(head1, tail1, val);
+        insert_at_tail(head1, tail1, val);   // append to list 1
     }
 
-    Node* head2 = NULL;
-    Node* tail2 = NULL;
-    int val2;
-    // Bug: `tail2` is NULL, so this loop never starts. Use `while(true)`.
+    Node* head2 = NULL;   // list 2: first node (none yet)
+    Node* tail2 = NULL;   // list 2: last node (none yet)
+    int val2;   // each value of list 2
+    // BUG: `tail2` is NULL, so this loop never starts. Fix: `while(true)`.
     while(tail2){
-        cin >> val2;
-        if(val2==-1){
-            return;
+        cin >> val2;   // read the next integer
+        if(val2==-1){   // -1 ends list 2
+            // BUG: same bare `return;` as above. Fix: `break;`
+            return;   // leave the function now
         }
-        insert_at_tail(head2, tail2, val2);
+        insert_at_tail(head2, tail2, val2);   // append to list 2
     }
 
     // Compare only the sizes. For "same list" you would also have to walk
     // both lists together and compare each pair of values.
-    int size1 = get_size(head1);
-    int size2 = get_size(head2);
-    if(size1 == size2){
-        cout << "YES" << endl;
+    int size1 = get_size(head1);   // nodes in list 1
+    int size2 = get_size(head2);   // nodes in list 2
+    if(size1 == size2){   // only the sizes are compared
+        cout << "YES" << endl;   // endl = newline + flush
     }
     else{
-        cout << "NO" << endl;
+        cout << "NO" << endl;   // endl = newline + flush
     }
 
-    return 0;
+    return 0;   // 0 = the program ended normally
 }

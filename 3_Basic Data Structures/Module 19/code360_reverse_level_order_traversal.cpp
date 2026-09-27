@@ -22,8 +22,13 @@ https://www.naukri.com/code360/problems/reverse-level-order-traversal_764339?lef
         }
     };
 
+    (TreeNode<int> stores an int in `val`. The judge's hidden code defines
+    it and calls reverseLevelOrder - there is no main in this file.)
+
 ************************************************************/
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h>
+// <bits/stdc++.h>: GCC shortcut that includes the whole standard library
+// (vector, queue, reverse, ...).
 /*
  * Reverse level order: list the values level by level, but starting from the
  * BOTTOM level and ending with the root.
@@ -40,15 +45,16 @@ vector<int> reverseLevelOrder(TreeNode<int> *root){
     // Write your code here.
     vector<int> v;               // values in normal level order
     queue<TreeNode<int>*> q;     // nodes waiting to be visited
-    if (root) {
+    if (root) {                  // a pointer is "true" when it is not NULL
         q.push(root);
     }
 
+    // One pass visits one node; stops when no node is waiting.
     while (!q.empty()) {
         // Visit the oldest waiting node and record its value.
         TreeNode<int>* f = q.front();
         q.pop();
-        v.push_back(f->val);
+        v.push_back(f->val);     // push_back adds at the end of the vector
 
         // Its children wait behind everything already in the queue.
         if (f->left) {
@@ -59,6 +65,7 @@ vector<int> reverseLevelOrder(TreeNode<int> *root){
         }
     }
     // Flip the list: the last level visited now comes first.
+    // reverse(first, last) reverses the range; v.begin()/v.end() cover the whole vector.
     reverse(v.begin(), v.end());
     return v;
 }

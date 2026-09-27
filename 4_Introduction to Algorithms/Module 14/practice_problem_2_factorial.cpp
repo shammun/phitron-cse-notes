@@ -26,10 +26,12 @@ Output
 
 // Solution idea (recursion, this module): N! = N * (N-1)!, and 1! = 1.
 // Each call hands a smaller copy of the problem to the next call until N = 1.
+// Trace: factorial(4) = 4 * factorial(3) = 4 * 3 * factorial(2)
+//        = 4 * 3 * 2 * factorial(1) = 4 * 3 * 2 * 1 = 24.
 
-#include <iostream>
+#include <iostream>     // cin, cout, endl
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 // long long, not int: 13! is already about 6.2 * 10^9, past the int limit,
 // while 20! (about 2.4 * 10^18) still fits in a long long.
@@ -41,9 +43,9 @@ long long factorial(long long n){
 }
 
 int main(){
-    int n;
+    int n;                          // N from the input
     cin >> n;
-    cout << factorial(n) << endl;
+    cout << factorial(n) << endl;   // int n is converted to long long automatically
 
     // Cost: O(N) time and O(N) call-stack depth (at most 20 here).
     return 0;

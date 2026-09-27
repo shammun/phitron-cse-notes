@@ -49,13 +49,14 @@ Sample Output 1
 // way is a linear search - look at every position from the left and stop at
 // the first match. (Binary search would need a sorted array.)
 
-#include <iostream>
+#include <iostream>     // cin, cout, endl
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 // Returns the 0-based index of target in arr[0..n-1], or -1 if it is absent.
+// "int arr[]" as a parameter is really a pointer to main's array: no copy.
 int lostBook(int arr[], int n, int target){
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n; i++){          // look at each position in turn
         if(arr[i] == target){
             return i;   // found: stop at once, the rest does not matter
         }
@@ -65,15 +66,17 @@ int lostBook(int arr[], int n, int target){
 }
 
 int main(){
-    int n;
+    int n;              // number of books
     cin >> n;
 
+    // Variable length array (size known only at run time; a g++ extension).
+    // For n = 2*10^5 this is 800 KB on the stack - fine with g++'s default.
     int arr[n];
     for(int i=0; i<n; i++){
-        cin >> arr[i];
+        cin >> arr[i];  // book code at position i
     }
 
-    int target;
+    int target;         // the code we are looking for
     cin >> target;
 
     // 10 20 5 6 3 with target 3: the match is at index 4 (counting from 0).

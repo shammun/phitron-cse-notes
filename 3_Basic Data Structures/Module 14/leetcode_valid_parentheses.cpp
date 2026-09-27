@@ -23,13 +23,18 @@ Example: "([]{})" -> true, "(]" -> false, "([)]" -> false.
  *               stack empty at the end -> valid
  *
  * Each character is pushed or popped at most once: O(n).
+ * (No #include: LeetCode supplies the standard library and `using namespace std;`.)
  */
 
+// LeetCode's answer class.
 class Solution {
-public:
+public:     // callable by the judge
+    // Returns true if every bracket in s is properly matched and nested.
     bool isValid(string s) {
         stack<char> st;   // opening brackets that are still waiting for a partner
+        // Range-for: c takes each character of s, left to right.
         for(char c : s){
+            // || = "or": any of the three opening brackets.
             if(c == '(' || c == '{' || c == '['){
                 // An opening bracket: remember it until its partner arrives.
                 st.push(c);
@@ -48,6 +53,7 @@ public:
                         st.pop();
                     } else {
                         // Wrong type, e.g. "(]": invalid.
+                        // "([)]": at ')' the top is '[' -> false here.
                         return false;
                     }
 

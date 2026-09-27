@@ -32,21 +32,24 @@ version is in Module 14. Two mistakes to notice:
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <stack>
+#include <iostream>     // cin, cout
+#include <vector>       // not used here (template leftover)
+#include <algorithm>    // not used here (template leftover)
+#include <string>       // not used here (template leftover)
+#include <stack>        // STL stack - not used here (we build our own queue)
 
 
-using namespace std;
+using namespace std;    // write cin/cout without std::
 
 
+// One person in the line: a value plus the address of the person behind.
 class Node{
-    public:
-        int val;
+    public:             // members usable from outside the class
+        int val;        // the value this node holds
         Node* next;   // the person behind this one in the line
 
+        // Constructor, runs on `new Node(val)`. `this` points to the node being built;
+        // this->val is the member, plain `val` is the parameter.
         Node(int val){
             this->val = val;
             this->next = next;  // BUG: assigns the garbage member to itself.
@@ -55,16 +58,20 @@ class Node{
         }
 };
 
+// Our own queue on a singly linked list: push at the tail, pop at the head.
 class myQueue{
     public:
         Node* head = NULL;  // the front -- the oldest value, next to leave
         Node* tail = NULL;  // the back  -- the newest value
         // This counter clashes with the size() method below (mistake 1).
+        // BUG: a class cannot have a data member and a function both called size;
+        // the compiler rejects the class. Fix: rename this to `int sz = 0;` and use sz.
         int size = 0;
 
+    // push: add val at the back of the line. O(1).
     void push(int val){
-        size++;
-        Node* newNode = new Node(val);
+        size++;                         // one more value inside
+        Node* newNode = new Node(val);  // `new` builds the node on the heap and returns its address
         // First value in an empty queue: it is the front and the back at once.
         if(head == NULL){
             head = newNode;
@@ -72,15 +79,16 @@ class myQueue{
             return;
         }
         // Otherwise join the back of the line and become the new back.
-        tail->next = newNode;
-        tail = newNode;
+        tail->next = newNode;           // old back -> new node ('->' = member through a pointer)
+        tail = newNode;                 // new node is the back now
     }
 
+    // pop: remove the front value. O(1). Only safe when the queue is not empty.
     void pop(){
-        size--;
+        size--;                    // one value fewer
         Node* deleteNode = head;   // the front leaves first (FIFO)
         head = head->next;         // the next in line becomes the front
-        delete deleteNode;
+        delete deleteNode;         // `delete` frees the memory `new` gave us
         // If the line is now empty, tail still points at the node we just
         // deleted. Clearing it matters: the next push() would otherwise
         // write through that dangling pointer.
@@ -89,14 +97,17 @@ class myQueue{
         }
     }
 
+    // front: read the oldest value without removing it.
     int front(){
         return head->val;   // the value that will leave next
     }
 
+    // back: read the newest value.
     int back(){
         return tail->val;   // the value that arrived last
     }
 
+    // size: how many values are inside (this is the name that clashes, see BUG above).
     int size(){
         return size;
     }
@@ -104,23 +115,24 @@ class myQueue{
     // The guard. front(), back() and pop() all step through head or tail, so
     // they are only safe while this is false.
     bool empty(){
-        return head == NULL;
+        return head == NULL;    // true when there is no front node
     }
 };
 
 int main(){
-    myQueue q;
-    int n;
-    cin >> n;
+    myQueue q;          // an empty queue object
+    int n;              // how many values to read
+    cin >> n;           // cin >> skips spaces/newlines and reads one number
     // Read n values and let each one join the back of the line.
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n; i++){     // i counts 0 .. n-1, one value per pass
         int x;
         cin >> x;
         q.push(x);
     }
+    // Example input 3 / 10 20 30 -> front 10, back 30.
 
     // Nothing is printed yet -- the draining loop (print front(), pop(),
     // repeat while !empty()) arrives in Module 14.
 
-    return 0;
+    return 0;           // normal exit
 }

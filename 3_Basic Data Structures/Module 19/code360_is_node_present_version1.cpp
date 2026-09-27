@@ -25,6 +25,10 @@ https://www.naukri.com/code360/problems/code-find-a-node_5682?leftPanelTabValue=
         }
     };
 
+    (A template class: BinaryTreeNode<int> stores an int in `data`. The
+    judge's hidden code defines it and calls isNodePresent, so there is no
+    #include and no main in this file.)
+
 ************************************************************/
 
 /*
@@ -36,6 +40,8 @@ https://www.naukri.com/code360/problems/code-find-a-node_5682?leftPanelTabValue=
  *
  * Example: tree 10 / 20 30 / 40 50, x = 50 -> true;  x = 7 -> false.
  */
+// root = top of the (sub)tree to search, x = the value we look for.
+// Returns true if x is found anywhere in that (sub)tree.
 bool isNodePresent(BinaryTreeNode<int> *root, int x) {
     // Write your code here
     // Empty subtree: x cannot be here.
@@ -50,6 +56,7 @@ bool isNodePresent(BinaryTreeNode<int> *root, int x) {
 
     // Search the left side first; if it is there, stop right away
     // (the right side is never searched).
+    // The recursive call trusts isNodePresent(child, x) to answer for that whole subtree.
     bool left = isNodePresent(root->left, x);
     if (left) {
         return true;
@@ -59,7 +66,7 @@ bool isNodePresent(BinaryTreeNode<int> *root, int x) {
     if (right) {
         return true;
     }
-    
-    return false;
-    
+
+    return false;           // neither this node nor any node below holds x
+
 }

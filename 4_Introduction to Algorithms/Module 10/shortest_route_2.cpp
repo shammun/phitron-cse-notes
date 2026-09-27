@@ -9,20 +9,24 @@
 //   * the cities are numbered 1..n here, not 0..n-1;
 //   * the distances need long long. Up to 500 cities with roads of a billion each
 //     can add up past what an int holds, so a route total is stored as long long.
+//
+// Example: 4 3 3 / roads 1-2 (5), 2-3 (2), 1-3 (10) / questions (1,3) (3,1)
+// (1,4) -> prints 7, 7, -1.
 
-#include <iostream>
-#include <queue>
-#include <cstring>
-#include <vector>
+#include <iostream>    // cin, cout, endl
+#include <queue>       // not used here
+#include <cstring>     // not used here
+#include <vector>      // not used here
 #include <algorithm>   // for min()
 #include <climits>     // LLONG_MAX
 
-using namespace std;
+using namespace std;   // write cout, min without std::
 
 // The distance chart. Cities are numbered 1..n (n <= 500), so the array needs
 // index n itself: size n+1 at least, and 505 leaves a little room. It lives
 // outside main because 505 x 505 long longs is about 2 MB, which is too much
 // for the stack of a function but fine for a global.
+// adj_mat[i][j] = the cheapest known cost from city i to city j.
 long long int adj_mat[505][505];
 
 int main(){
@@ -35,9 +39,9 @@ int main(){
     for(int i=1; i<=n; i++){
         for(int j=1; j<=n; j++){
             if(i == j){
-                adj_mat[i][j] = 0;
+                adj_mat[i][j] = 0;            // city to itself: free
             } else{
-                adj_mat[i][j] = LLONG_MAX;
+                adj_mat[i][j] = LLONG_MAX;    // unknown
             }
         }
     }
@@ -50,8 +54,8 @@ int main(){
     // the right answer, but only because the line above has just set [a][b] to the
     // cheapest value and the two cells are always kept equal. Writing
     // min(adj_mat[b][a], c) would say what is meant.
-    while(e--){
-        long long int a, b, c;
+    while(e--){                       // runs e times
+        long long int a, b, c;        // city, city, length
         cin >> a >> b >> c;
         adj_mat[a][b] = min(adj_mat[a][b], c);
         adj_mat[b][a] = min(adj_mat[a][b], c); // we have undirected graph here
@@ -59,12 +63,15 @@ int main(){
 
     // The same triple loop, over 1..n. This is the expensive part and it runs
     // once, before any question is read - that is the whole point of the file.
+    // k = allowed stop-over city (outermost!), i = start, j = end.
     for(int k=1; k<=n; k++){
         for(int i=1; i<=n; i++){
             for(int j=1; j<=n; j++){
+                // Short form, but LLONG_MAX + x would overflow, so not used:
                 // adj_mat[i][j] = min(adj_mat[i][j], adj_mat[i][k] + adj_mat[k][j]);
+                // Only add the two legs when both are real routes.
                 if(adj_mat[i][k] != LLONG_MAX && adj_mat[k][j] != LLONG_MAX && adj_mat[i][k] + adj_mat[k][j] < adj_mat[i][j]){
-                    adj_mat[i][j] = adj_mat[i][k] + adj_mat[k][j];
+                    adj_mat[i][j] = adj_mat[i][k] + adj_mat[k][j];   // go via k
                 }
             }
         }
@@ -73,8 +80,10 @@ int main(){
     // Each question is now O(1): the answer is already sitting in the table.
     // A cell still at LLONG_MAX means d cannot be reached from s at all, and CSES
     // wants -1 for that case.
+    // (With up to 10^5 questions, "\n" instead of endl would be faster: endl
+    // flushes the output buffer every time.)
     while(q--){
-        int s, d;
+        int s, d;                  // start, destination
         cin >> s >> d;
         if(adj_mat[s][d] == LLONG_MAX){
             cout << "-1" << endl;
@@ -83,5 +92,5 @@ int main(){
         }
     }
 
-    return 0;
+    return 0;   // success
 }

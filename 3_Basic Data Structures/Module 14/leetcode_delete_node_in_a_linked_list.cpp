@@ -23,12 +23,16 @@ The list now reads as if this node had been removed. O(1).
  *     ListNode(int x) : val(x), next(NULL) {}
  * };
  */
+// (LeetCode defines ListNode itself, as shown above, and supplies the includes and main.)
 class Solution {
-public:
+public:     // callable by the judge
+    // node = pointer to the node to delete (never the tail). Returns nothing.
     void deleteNode(ListNode* node) {
         // Become a copy of the next node (5 -> 1 in the example) ...
+        // ('->' reads a member through a pointer.)  List is now 4 1 1 9.
         node->val = node->next->val;
         // ... then skip over that next node, which is now a duplicate.
+        // List is now 4 1 9.
         node->next = node->next->next;
     }
 };

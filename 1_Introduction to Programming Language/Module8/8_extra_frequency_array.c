@@ -31,11 +31,13 @@ Note
 
 */
 
+/* stdio.h ("standard input output") declares scanf and printf. The
+   space in "# include" is allowed; it means the same as #include. */
 # include <stdio.h>
 
-int main() {
-    int n, m;
-    scanf("%d %d", &n, &m);
+int main() {                /* the program starts running here */
+    int n, m;               /* n = how many numbers, m = largest possible value */
+    scanf("%d %d", &n, &m); /* read both; & gives each variable's address */
 
     /* The slow way would be: for each v from 1 to M, walk all N numbers and
        count the ones equal to v. That is M * N steps - with both up to
@@ -54,22 +56,22 @@ int main() {
        is set to 0 first. (int cnt[m + 1] = {0}; is not allowed when the size
        is only known at run time, so the loop does it.) */
     for(int v = 0; v <= m; v++){
-        cnt[v] = 0;
+        cnt[v] = 0;         /* box v starts empty */
     }
 
     /* Read each number and add 1 to its box. The numbers themselves are not
        needed afterwards, so they are not stored. */
     for(int i = 0; i < n; i++){
-        int x;
+        int x;              /* the number just read */
         scanf("%d", &x);
-        cnt[x]++;
+        cnt[x]++;           /* one more x: add 1 to box x. e.g. x = 3 -> cnt[3]++ */
     }
 
     /* One line per value from 1 to m, in order. A value that never came
        still has 0 in its box, and 0 is printed for it. */
     for(int v = 1; v <= m; v++){
-        printf("%d\n", cnt[v]);
+        printf("%d\n", cnt[v]);    /* how many times v appeared */
     }
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

@@ -8,6 +8,10 @@ You will be given  and  of a person who stood in a line of a ticket counter.
 You will be given only  which means the person in front of the line got the ticket and will be removed from the line. You need to print the name of that person who got that ticket. If there are no one in the line, print .
 Note: There can be multiple person in the line with same name. You need to solve it using STL Stack or Queue only.
 
+(The blanks above lost their symbols when copied: there are Q queries;
+type "0 name" means a person joins the line; type "1" means the front
+person gets the ticket; print "Invalid" if the line is empty.)
+
 Input Format
 
 First line will contain .
@@ -36,7 +40,7 @@ Sample Input 1
 1
 0 embappe
 0 neymar
-1 
+1
 1
 0 messi
 1
@@ -53,7 +57,7 @@ Sample Input 2
 6
 0 embappe
 0 embappe
-1 
+1
 1
 0 messi
 1
@@ -77,37 +81,39 @@ messi
  * (front() or pop() on an empty queue would crash).
  */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>    
-#include <string>
-#include <queue>
+#include <iostream>     // cin and cout
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // string, for the names
+#include <queue>        // STL queue
 
-using namespace std;
+using namespace std;    // write cout, queue, string without std::
 
 int main() {
-    int n;
+    int n;              // number of commands
     cin >> n;
     queue<string> q;   // the line: front = next to be served
 
+    // while(n--) runs the body n times (checks n, then subtracts 1).
+    // One pass handles one command.
     while(n--){
-        int x;;
+        int x;;         // the command type, 0 or 1 (the second ; is just an empty statement, harmless)
         cin >> x;
         if(x == 0){
             // Command 0: a person joins the back of the line.
             string s;
-            cin >> s;
-            q.push(s);
+            cin >> s;   // the name (one word, no spaces)
+            q.push(s);  // push adds at the BACK of the queue
         } else if(x == 1){
             // Command 1: serve the front person, if there is one.
             if(q.empty()){
-                cout << "Invalid" << endl;
+                cout << "Invalid" << endl;   // nobody in line
             } else{
-                cout << q.front() << endl;
-                q.pop();
+                cout << q.front() << endl;   // front() = the person who came first
+                q.pop();                     // pop removes the FRONT person
             }
         }
     }
 
-    return 0;
+    return 0;           // program finished normally
 }

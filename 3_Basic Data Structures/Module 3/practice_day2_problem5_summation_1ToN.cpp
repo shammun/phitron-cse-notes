@@ -9,13 +9,13 @@ Note: Solve this problem in O(1) Complexity.
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std;
+#include <iostream>  // cin and cout
+#include <vector>    // not needed here, kept from the template
+#include <algorithm> // not needed here
+#include <string>    // not needed here
+using namespace std; // lets us drop the std:: prefix
 
-int main() {
+int main() { // the program starts running here
     /*
      * Adding 1 + 2 + ... + n with a loop is O(n). The formula n(n+1)/2 gives
      * the same answer with one multiplication: O(1).
@@ -24,10 +24,13 @@ int main() {
      * n = 4: 4 * 5 / 2 = 10 = 1 + 2 + 3 + 4.
      */
     // n can be up to 10^9, so n * (n + 1) is about 10^18: long long is needed.
+    // (long long holds up to about 9.2 * 10^18; int only about 2.1 * 10^9.)
     long long n;
-    cin >> n;
+    cin >> n; // read N
+    // Multiply first, then divide: n * (n + 1) is always even (one of two
+    // neighbours is even), so dividing by 2 is exact.
     long long sum = (n * (n + 1)) / 2;
-    cout << sum << endl;
+    cout << sum << endl; // print the answer
 
-    return 0;
+    return 0; // program finished successfully
 }

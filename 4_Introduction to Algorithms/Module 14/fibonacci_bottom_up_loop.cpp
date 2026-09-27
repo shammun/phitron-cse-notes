@@ -10,27 +10,35 @@
 // Same O(n) time, same table, but no recursion at all: no call stack, no risk of
 // a stack overflow, and no function-call overhead. In exchange you have to work
 // out the filling order yourself, which the recursion used to do for you.
+//
+// The DP in three parts:
+//   meaning     fibo[i] = the i-th Fibonacci number
+//   base cases  fibo[0] = 0, fibo[1] = 1
+//   transition  fibo[i] = fibo[i-1] + fibo[i-2]
+// Trace for n = 6: 0, 1, 1, 2, 3, 5, 8 -> prints 8.
 
-#include <iostream>
-#include <vector>
-#include <algorithm>    
-#include <string>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // not used here
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 int main(){
-    int n;
+    int n;              // which Fibonacci number to print
     cin >> n;
     // Boxes 0..n, so n+1 of them - fibo[n] is the answer being asked for.
     // BUG, left in place: the two lines below always write fibo[1]. For n = 0 the
     // array has just one box, fibo[0], so fibo[1] is out of bounds. Sizing it
     // fibo[n+2], or handling n = 0 on its own, would fix it.
+    // (int fibo[n+1] is a variable length array - size known only at run
+    // time. g++ allows it; standard C++ does not.)
     int fibo[n+1];
 
     // The two values the definition gives outright - the same two base cases the
     // recursive version returned from, only written into the table instead.
     fibo[0] = 0;
-    fibo[1] = 1;
+    fibo[1] = 1;        // BUG: out of bounds when n = 0 (see above)
 
     // Fill upwards from 2. Going in this direction is what makes the loop legal:
     // when i is reached, i-1 and i-2 are smaller, so they were filled on earlier
@@ -38,13 +46,14 @@ int main(){
     // reading boxes that nothing has written yet.
     // `i <= n` and not `i < n`, because fibo[n] itself is the answer wanted.
     for(int i=2; i<=n; i++){
-        fibo[i] = fibo[i-1] + fibo[i-2];
+        fibo[i] = fibo[i-1] + fibo[i-2];   // the transition
     }
 
     // Only fibo[i-1] and fibo[i-2] are ever read, so the whole array is not
     // really needed: two variables, updated as the loop turns, would give the
     // same answer in O(1) memory.
+    // (int overflows from fib(47) = 2971215073 onwards; use long long for more.)
 
-    cout << fibo[n] << endl;
-    return 0;
+    cout << fibo[n] << endl;   // the answer
+    return 0;                  // success
 }

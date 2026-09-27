@@ -22,7 +22,25 @@ OutputCopy
 5
 */
 
-#include <stdio.h>
+/*
+ * NOTE: the code in this file does NOT solve the "Max Number" problem written
+ * above. It solves a different exercise: read T numbers, and for each number
+ * N print 1 2 ... N ... 2 1 on its own line. Fed the Max Number sample above
+ * (5, then 1 -3 5 4 -6), it prints five lines of counting - "1", an empty
+ * line, "1 2 3 4 5 4 3 2 1", "1 2 3 4 3 2 1" and another empty line -
+ * instead of the single answer 5.
+ * For the Max Number problem solved with recursion, see practice_max_number.c
+ * in this folder (or max_number.c in Module 19).
+ *
+ * What this code does, with input
+ *     2
+ *     3 1
+ * it prints
+ *     1 2 3 2 1
+ *     1
+ */
+
+#include <stdio.h> // standard input/output library: scanf and printf
 
 /*
  * This function prints numbers from 1 to n in ascending order
@@ -42,6 +60,7 @@ void firstPart(int n){
  * For example, if n=5, it prints: 4 3 2 1
  * Parameters:
  *   n: The number from which we start counting down (minus 1)
+ * (it starts at n-1 so that the peak n, already printed by firstPart, is not repeated)
  */
 void secondPart(int n){
     // Loop from (n-1) down to 1, decrementing by 1 each time
@@ -50,12 +69,13 @@ void secondPart(int n){
     }
 }
 
-int main(){
+int main(){ // program execution starts here
     // T represents the number of test cases
-    int T; 
+    int T;
     // Array to store N numbers, sized 10005 to handle large input
+    // (N here is an array of the T input numbers, not a single number)
     int N[10005];
-    
+
     // Read the number of test cases
     scanf("%d", &T);
 
@@ -75,5 +95,5 @@ int main(){
         printf("\n");
     }
 
-    return 0;
+    return 0; // program ended successfully
 }

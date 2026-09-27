@@ -52,19 +52,19 @@ to it, and prints the array. It does not build a heap out of arbitrary input.
 
 */
 
-#include<iostream>
-#include <vector>
+#include<iostream>      // cin and cout
+#include <vector>       // vector (swap also comes along with the standard headers)
 
-using namespace std;
+using namespace std;    // write cout, vector, swap without std::
 
 int main(){
     int n;
-    cin >> n;
-    vector<int> v(n);
+    cin >> n;                   // how many values the existing heap has
+    vector<int> v(n);           // n slots, all 0, filled below
 
     // The existing heap, in array order (level by level, left to right).
     for(int i=0; i<n; i++){
-        cin >> v[i];
+        cin >> v[i];            // cin >> skips spaces and newlines between numbers
     }
 
     // The value to insert. push_back puts it in the first free slot, which
@@ -76,12 +76,12 @@ int main(){
     // Climb while there is a parent to climb to. Index 0 is the root, so
     // reaching it means the value is the new maximum and the loop must end.
     while(cur_idx != 0){
-        int par_idx = (cur_idx - 1) / 2;
+        int par_idx = (cur_idx - 1) / 2;    // index of the parent (integer division rounds down)
         // Bigger than the parent: the max-heap rule is broken here, so swap
         // them and carry on checking from the parent's position.
         if(v[cur_idx] > v[par_idx]){
-            swap(v[cur_idx], v[par_idx]);
-            cur_idx = par_idx;
+            swap(v[cur_idx], v[par_idx]);   // swap(a, b) exchanges the two values
+            cur_idx = par_idx;              // the new value now sits at the parent's index
         } else{
             // The parent already beats it. Everything above the parent is
             // at least as big, so the whole path is fine -- stop.
@@ -93,10 +93,11 @@ int main(){
     // For heap 60 40 50 10 30 20 and value 55: 55 lands at index 6, beats
     // its parent 50 at index 2 and swaps, then stops under 60 (55 < 60),
     // giving 60 40 55 10 30 20 50.
+    // Range-for: x takes each value of v in turn.
     for(int x : v){
         cout << x << " ";
     }
-    cout << endl;
+    cout << endl;               // end the line (endl = newline + flush)
 
-    return 0;
+    return 0;                   // program finished normally
 }

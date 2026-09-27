@@ -3,6 +3,8 @@
 // A re-typing of assignment_2_get_prefix_sum.cpp, with the same logic. The
 // problem statement and the samples are at the top of that file; typing the
 // solution out again from memory is the point of this one.
+// (In short: read N, then N numbers; print the running totals from the
+// last one back to the first. Input 5 / 2 4 1 5 3 -> output 15 12 7 6 2.)
 //
 // The assignments in this module are the first C++ in the course, so the few
 // new words are worth a line each:
@@ -41,13 +43,14 @@
 #include <string>
 using namespace std;
 
-int main(){
-    int n;
-    cin >> n;
-    vector<long long> nums(n);
+int main(){                     // the program starts here
+    int n;                      // how many numbers
+    cin >> n;                   // read n from the input
+    vector<long long> nums(n);  // room for the n numbers, nums[0]..nums[n-1]
 
+    // Read the n numbers, one per round, i = 0, 1, ..., n-1.
     for(int i=0; i<n; i++){
-        cin >> nums[i];
+        cin >> nums[i];         // next number goes into box i
     }
 
     // runningSum[i] = nums[0] + nums[1] + ... + nums[i]
@@ -59,6 +62,7 @@ int main(){
     runningSum[0] = nums[0];
 
     // One addition per element: the previous total plus the next number.
+    // With 2 4 1 5 3: 2, then 2+4=6, 6+1=7, 7+5=12, 12+3=15.
     for(int i=1; i<n; i++){
         runningSum[i] = runningSum[i-1] + nums[i];
     }
@@ -67,12 +71,12 @@ int main(){
     // last index n-1 down to 0. The condition is i >= 0, not i > 0, or the
     // first element would be left out.
     for(int i=n-1; i>=0; i--){
-        cout << runningSum[i] << " ";
+        cout << runningSum[i] << " ";   // the value, then a space
     }
 
     // Ends the line (and flushes the output).
     cout << endl;
 
-    return 0;
+    return 0;   // 0 = the program finished normally
 
 }

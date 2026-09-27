@@ -8,14 +8,14 @@ You are given a weighted undirected graph. The vertices are enumerated from 1 to
 shortest path between the vertex 1 and the vertex n.
 
 Input
-The first line contains two llegers n and m (2 ≤ n ≤ 105, 0 ≤ m ≤ 105), where n is the number of vertices and m 
+The first line contains two integers n and m (2 ≤ n ≤ 10^5, 0 ≤ m ≤ 10^5), where n is the number of vertices and m 
 is the number of edges. Following m lines contain one edge each in form ai, bi and wi (1 ≤ ai, bi ≤ n, 
-1 ≤ wi ≤ 106), where ai, bi are edge endpolls and wi is the length of the edge.
+1 ≤ wi ≤ 10^6), where ai, bi are edge endpoints and wi is the length of the edge.
 
 It is possible that the graph has loops and multiple edges between pair of vertices.
 
 Output
-Write the only lleger -1 in case of no path. Write the shortest path in opposite case. If there are many solutions, prll any of them.
+Write the only integer -1 in case of no path. Write the shortest path in opposite case. If there are many solutions, print any of them.
 
 Examples
 InputCopy
@@ -49,40 +49,54 @@ OutputCopy
 // To print the ROUTE, not just its cost, remember for every node which node
 // we came from when its distance last improved: par[child] = parent. Then walk
 // par[] back from n to 1 and reverse, exactly like BFS path printing.
+//
+// Trace with the example: dis[4]=1 (par 1), dis[2]=2 (par 1), dis[3]=1+3=4
+// (par 4), dis[5]=4+1=5 (par 3). Walk back 5 -> 3 -> 4 -> 1, reverse:
+// "1 4 3 5".
 
-#include <iostream>
-#include <vector>
-#include <queue>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // vector
+#include <queue>        // priority_queue
 #include <algorithm>    // reverse
-#include <string>
+#include <string>       // not used here
 #include <climits>      // LLONG_MAX
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 // long long everywhere: up to 10^5 edges of length up to 10^6 can add up to
 // 10^11, which does not fit in an int.
+// #define is a text replacement done before compiling: every "ll" below is
+// replaced by "long long int".
 #define ll long long int
+// An ARRAY of vectors: adj_list[x] is the vector of x's edges.
 vector<pair<ll, ll>> adj_list[100005];   // adj_list[x] = {neighbour, edge length}
 ll dis[100005];                           // cheapest known distance from node 1
 ll par[100005];                           // node we came from on that cheapest route; -1 = none
 
+// Dijkstra from src: fills dis[] and par[].
 void dijkstra(ll src){
     // Min-heap of {distance, node}: the smallest distance comes out first.
+    // (priority_queue is a max-heap by default; greater<> flips it.)
     priority_queue<pair<ll, ll>, vector<pair<ll, ll>>, greater<pair<ll, ll>>> pq;
-    pq.push({0, src});
+    pq.push({0, src});   // start: src at distance 0
     dis[src] = 0;
 
+    // Each pass handles the closest node still in the heap.
     while(!pq.empty()){
         // Named cur, not par: a local called par would hide the global par[]
         // array, and the line par[child_node] = par_node below would not compile.
-        pair<ll, ll> cur = pq.top();
-        pq.pop();
-        ll par_node = cur.second;
-        ll par_dist = cur.first;
+        pair<ll, ll> cur = pq.top();   // smallest distance
+        pq.pop();                      // remove it
+        ll par_node = cur.second;      // which node
+        ll par_dist = cur.first;       // its distance when pushed
+        // (No "skip if par_dist > dis[par_node]" check here: stale entries are
+        // processed again. Still correct, since they cannot improve anything,
+        // just a bit slower.)
 
+        // Look at every edge leaving par_node. auto = pair<ll,ll>.
         for(auto child : adj_list[par_node]){
-            ll child_node = child.first;
-            ll child_dist = child.second;
+            ll child_node = child.first;    // the neighbour
+            ll child_dist = child.second;   // edge length to it
 
             // Relax: going through par_node is a cheaper way to child_node.
             if(par_dist + child_dist < dis[child_node]){
@@ -95,11 +109,11 @@ void dijkstra(ll src){
 }
 
 int main(){
-    ll n, e;
+    ll n, e;               // vertices, edges
     cin >> n >> e;
 
-    while(e--){
-        ll a, b, c;
+    while(e--){            // read e edges
+        ll a, b, c;        // ends and length
         cin >> a >> b >> c;
         adj_list[a].push_back({b, c});
         adj_list[b].push_back({a, c});   // undirected
@@ -111,7 +125,7 @@ int main(){
         par[i] = -1;          // no parent yet; node 1 keeps -1, which ends the walk-back
     }
 
-    dijkstra(1);
+    dijkstra(1);              // shortest distances from vertex 1
 
     if(dis[n] == LLONG_MAX){
         cout << -1 << endl;   // n was never reached
@@ -120,14 +134,14 @@ int main(){
         ll node = n;
         vector<ll> path;
         while(node != -1){
-            path.push_back(node);
-            node = par[node];
+            path.push_back(node);   // record this node
+            node = par[node];       // step back one node
         }
 
         // The walk collected the route backwards, so flip it to start at 1.
         reverse(path.begin(), path.end());
 
-        for(auto x : path){
+        for(auto x : path){         // print each node, space after each
             cout << x << " ";
         }
         cout << endl;

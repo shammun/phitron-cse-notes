@@ -64,22 +64,28 @@ At most 3 * 104 calls will be made to push, pop, top, and getMin.
  *
  * Every operation is O(1).
  */
+// (No #include: LeetCode's hidden code already includes the standard library
+//  and `using namespace std;`, so `stack` works directly.)
 class MinStack {
-public:
+public:     // callable by the judge
     stack<int> st, min_st;   // st = all values; min_st = the minimums, newest on top
+    // Constructor: nothing to do, both stacks start empty.
     MinStack() {
-        
+
     }
-    
+
+    // Put val on top; also remember it in min_st if it is a new minimum.
     void push(int val) {
         st.push(val);
         // `>=` and not `>`: a value equal to the minimum is pushed again, so
         // popping one copy still leaves the other copy as the minimum.
+        // (min_st.empty() is tested first, so top() is never called on an empty stack.)
         if(min_st.empty() || min_st.top() >= val){
             min_st.push(val);
         }
     }
-    
+
+    // Remove the top value (always called on a non-empty stack).
     void pop() {
         // The value leaving is the current minimum: drop it from min_st too.
         if(st.top() == min_st.top()){
@@ -87,11 +93,12 @@ public:
         }
         st.pop();
     }
-    
+
+    // Read the top value.
     int top() {
         return st.top();
     }
-    
+
     // The top of min_st is the smallest value still in the stack.
     int getMin() {
         return min_st.top();

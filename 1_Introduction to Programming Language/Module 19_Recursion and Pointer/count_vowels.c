@@ -25,7 +25,7 @@ Note
 The vowels are a, a, u, u, e and a.
 */
 
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: fgets, printf, and the name stdin
 
 /* Counts the vowels of s starting at index i.
 
@@ -35,24 +35,31 @@ The vowels are a, a, u, u, e and a.
    1 if the character sitting at i is a vowel.
 
    Base case: when s[i] is the '\0' that ends the string there is nothing left
-   to count, so the answer is 0 and the calls start coming back. */
+   to count, so the answer is 0 and the calls start coming back.
+
+   Parameters: s = the string (char s[] as a parameter really receives the
+   address of the first character, not a copy of the array), i = where to start.
+   Returns: the number of vowels in s[i], s[i+1], ... up to the '\0'.
+   Trace with "ab": countVowels(s,2) = 0 ('\0'), countVowels(s,1) = 0 ('b' is
+   not a vowel), countVowels(s,0) = 0 + 1 = 1 ('a' is a vowel). */
 int countVowels(char s[], int i) {
-    if(s[i] == '\0') {
+    if(s[i] == '\0') { // reached the end of the string
         return 0;
     }
 
     /* the answer for the rest of the string */
     int rest = countVowels(s, i + 1);
 
-    char c = s[i];
+    char c = s[i]; // the character this call is responsible for
+    /* || means "or": the condition is true if c equals any one of the ten vowels */
     if(c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' ||
        c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U') {
-        return rest + 1;
+        return rest + 1; // this character is a vowel: one more than the rest
     }
-    return rest;
+    return rest; // not a vowel: same count as the rest
 }
 
-int main() {
+int main() { // program execution starts here
     /* Why not scanf?
 
        scanf("%s", s) reads one WORD. It stops at the first space, tab or
@@ -107,7 +114,7 @@ int main() {
     char s[205];
     fgets(s, 205, stdin);
 
-    printf("%d\n", countVowels(s, 0));
+    printf("%d\n", countVowels(s, 0)); // start counting at index 0 = the whole string
 
-    return 0;
+    return 0; // program ended successfully
 }

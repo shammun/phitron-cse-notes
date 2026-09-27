@@ -41,34 +41,37 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
-    int t;
-    scanf("%d", &t);
+int main() {        /* the program starts running here */
+    int t;              /* number of test cases (at most 15) */
+    scanf("%d", &t);    /* %d = read a whole number; &t = where to put it */
 
     /* Since T <= 15, a small fixed-size array is plenty.
        We read everything first... */
-    int inputs[15];
-    long long results[15];
+    int inputs[15];             /* inputs[0..14]: each test's N */
+    long long results[15];      /* results[i] = inputs[i]! */
 
     for (int i = 0; i < t; i++) {
-        scanf("%d", &inputs[i]);
+        scanf("%d", &inputs[i]);   /* &inputs[i] = address of box i */
     }
 
     /* ...then compute everything... */
     for (int i = 0; i < t; i++) {
-        long long fact = 1;
+        long long fact = 1;     /* 0! = 1! = 1; fresh for every test */
+        /* fact = 2 * 3 * ... * N. For N = 5: 2, 6, 24, 120. */
         for (int j = 2; j <= inputs[i]; j++) {
-            fact *= j;
+            fact *= j;          /* short for fact = fact * j */
         }
-        results[i] = fact;
+        results[i] = fact;      /* keep it for the printing loop */
     }
 
     /* ...then print everything. */
     for (int i = 0; i < t; i++) {
-        printf("%lld\n", results[i]);
+        printf("%lld\n", results[i]);   /* %lld = print a long long */
     }
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

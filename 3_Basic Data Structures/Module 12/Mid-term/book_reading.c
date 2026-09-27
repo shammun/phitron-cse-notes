@@ -30,11 +30,12 @@ Sample Output 0
 
 
 
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include <stdlib.h>
+#include <stdio.h>      /* scanf (read input) and printf (print output) */
+#include <string.h>     /* string functions - not used here (template leftover) */
+#include <math.h>       /* math functions - not used here (template leftover) */
+#include <stdlib.h>     /* general utilities - not used here (template leftover) */
 
+/* main: the program starts here; returning 0 means "finished normally". */
 int main() {
 
     /* The idea: the times are already sorted from shortest to longest, so
@@ -46,30 +47,33 @@ int main() {
      *
      * total_time is a long long: up to 10^5 books can add up to far more
      * than an int holds. */
-    int N;
-    long long T;
-    int times[100000];
-    long long total_time = 0;
-    int number_of_books = 0;
-    
+    int N;                      /* number of books */
+    long long T;                /* total time available (up to 10^9; long long is 64-bit) */
+    int times[100000];          /* room for the maximum 10^5 reading times */
+    long long total_time = 0;   /* running sum of the times of books read so far */
+    int number_of_books = 0;    /* how many books fit so far - the answer */
+
+    /* %d reads an int, %lld reads a long long. &N gives scanf the ADDRESS of N,
+     * so scanf can store the number into N itself. */
     scanf("%d %lld", &N, &T);
-    
-    /* Read the N reading times. */
+
+    /* Read the N reading times. &times[i] = address of the i-th slot. */
     for(int i=0; i < N; i++){
         scanf("%d", &times[i]);
     }
-    
+
+    /* One pass per book, shortest first; i is the book's index. */
     for(int i=0; i < N; i++){
         total_time += times[i];      /* time needed to finish books 0..i */
         if(total_time <= T){
             number_of_books = number_of_books + 1;   /* this one fits too */
         } else{
             /* Out of time: the remaining books are longer still. */
-            break;
+            break;                   /* leave the loop early */
         }
     }
-    
-    printf("%d", number_of_books);
-    
+
+    printf("%d", number_of_books);   /* print the count as an int */
+
     return 0;
 }

@@ -63,18 +63,18 @@ NO
 Sample Input 4
 
 6 6
-1 0 0 0 0 1 
-0 1 0 0 1 0 
-0 0 1 1 0 0 
-0 0 1 1 0 0 
-0 1 0 0 1 0 
-1 0 0 0 0 1 
+1 0 0 0 0 1
+0 1 0 0 1 0
+0 0 1 1 0 0
+0 0 1 1 0 0
+0 1 0 0 1 0
+1 0 0 0 0 1
 Sample Output 4
 
 YES
 */
 
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: scanf and printf
 
 /*
  * This function checks if a given matrix is a "Jadu Matrix"
@@ -86,10 +86,14 @@ YES
  *
  * Parameters:
  *   matrix: 2D array containing the input matrix
+ *           (like any array parameter it is not copied: the function gets the
+ *           address of main's matrix; the column size 105 must be written so
+ *           the function knows how long each row is in memory)
  *   N: Number of rows
  *   M: Number of columns
  * Returns:
  *   1 if matrix is a Jadu Matrix, 0 otherwise
+ *   (C uses 1 for yes/true and 0 for no/false here)
  */
 int jaduMatrix(int matrix[105][105], int N, int M) {
     // First check: Matrix must be square (N x N)
@@ -98,17 +102,19 @@ int jaduMatrix(int matrix[105][105], int N, int M) {
     }
 
     // Iterate through each element of the matrix
-    for(int i = 0; i < N; i++) {
-        for(int j = 0; j < M; j++) {
-            // Check elements on primary diagonal (i == j) 
+    // (returning from inside the loops stops the whole function at the first bad cell)
+    for(int i = 0; i < N; i++) { // i = row
+        for(int j = 0; j < M; j++) { // j = column
+            // Check elements on primary diagonal (i == j)
             // and secondary diagonal (i + j == N - 1)
             // For example: In a 3x3 matrix
             // Primary diagonal: (0,0), (1,1), (2,2)
             // Secondary diagonal: (0,2), (1,1), (2,0)
+            // (|| = "or", && = "and"; the brackets make the "or" part be checked first)
             if((i == j || i + j == N - 1) && matrix[i][j] != 1) {
                 return 0;  // Diagonal element not 1, invalid Jadu Matrix
             }
-            
+
             // Check non-diagonal elements
             // If position is not on either diagonal (primary or secondary)
             // then it must contain 0
@@ -117,35 +123,37 @@ int jaduMatrix(int matrix[105][105], int N, int M) {
             }
         }
     }
-    
+
     // If we reach here, all conditions are satisfied
     return 1;  // Valid Jadu Matrix
 }
 
-int main() {
+int main() { // program execution starts here
     // Declare variables for matrix dimensions
     int N, M;  // N = rows, M = columns
     // Declare matrix with max size 105x105
+    // (fixed size, big enough for the 100 x 100 limit, so it matches the function's parameter type)
     int matrix[105][105];
 
     // Read matrix dimensions from input
-    scanf("%d %d", &N, &M);
+    scanf("%d %d", &N, &M); // & gives scanf the addresses of N and M
 
     // Read matrix elements row by row
     // Outer loop for rows (i)
     for(int i = 0; i < N; i++) {
         // Inner loop for columns (j)
         for(int j = 0; j < M; j++) {
-            scanf("%d", &matrix[i][j]);
+            scanf("%d", &matrix[i][j]); // store the cell at row i, column j
         }
     }
 
     // Check if matrix is a Jadu Matrix and print result
+    // (the if treats the returned 1 as true and 0 as false)
     if(jaduMatrix(matrix, N, M)) {
         printf("YES\n");  // Valid Jadu Matrix
     } else {
         printf("NO\n");   // Not a valid Jadu Matrix
     }
 
-    return 0;
+    return 0; // program ended successfully
 }

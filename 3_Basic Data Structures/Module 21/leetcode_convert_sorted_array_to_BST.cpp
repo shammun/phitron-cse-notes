@@ -35,6 +35,10 @@ Constraints:
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines TreeNode and calls our function from its own hidden
+ * main, so there are no #includes or main here. After ':' comes an
+ * initializer list; nullptr is the C++11 name for a null pointer.)
  */
 /*
  * Idea: the same trick as array_to_BST.cpp in the lesson.
@@ -49,7 +53,8 @@ Constraints:
  * becomes the left subtree and the right half [5,9] the right subtree.
  */
 class Solution {
-public:
+public:   // LeetCode calls sortedArrayToBST from outside the class
+    // nums is passed by reference (&), so the vector is not copied on every call.
     // Builds a balanced BST from nums[start..end] and returns its root.
     TreeNode* array_to_BST(vector<int>& nums, int start, int end) {
         // Base case: an empty range (start passed end) gives an empty subtree.
@@ -58,7 +63,7 @@ public:
         }
         // The middle index of the current range; its value becomes the root.
         int mid = (start + end) / 2;
-        TreeNode* root = new TreeNode(nums[mid]);
+        TreeNode* root = new TreeNode(nums[mid]);   // `new` builds the node on the heap and returns its address
         // Everything left of mid is smaller: it builds the left subtree.
         TreeNode* leftroot = array_to_BST(nums, start, mid-1);
         // Everything right of mid is bigger: it builds the right subtree.
@@ -71,7 +76,8 @@ public:
 
     // LeetCode calls this one: build from the whole array, index 0 to n-1.
     TreeNode* sortedArrayToBST(vector<int>& nums) {
+        // nums.size() is unsigned, but it is at least 1 here, so size() - 1 is safe.
         TreeNode* root = array_to_BST(nums, 0, nums.size() - 1);
-        return root;
+        return root;                // the root of the balanced BST
     }
 };

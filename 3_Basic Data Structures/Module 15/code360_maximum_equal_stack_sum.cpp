@@ -34,19 +34,30 @@ Sample
  *
  * Every round removes one value, so after at most n1 + n2 + n3 rounds we stop.
  * If a stack runs empty its sum is 0, and then the answer is 0.
+ *
+ * Trace with the sample (sums 8, 9, 7):
+ *   9 is largest -> pop 4 from stack 2   sums 8, 5, 7
+ *   8 is largest -> pop 3 from stack 1   sums 5, 5, 7
+ *   7 is largest -> pop 1 from stack 3   sums 5, 5, 6
+ *   6 is largest -> pop 1 from stack 3   sums 5, 5, 5   -> all equal, answer 5
+ *
+ * Note: no #include or main() - the judge's hidden code includes <stack>
+ * and calls maxSum.
  */
 
 // Adds up a stack. It is taken by value (a copy), so the caller's stack is
 // not emptied by the pops here.
 int stackSum(stack<int> st){
-    int sum = 0;
-    while(!st.empty()){
-        sum += st.top();
-        st.pop();
+    int sum = 0;               // running total
+    while(!st.empty()){        // one pass adds one value; stops when the copy is empty
+        sum += st.top();       // add the value on top
+        st.pop();              // remove it so the next value comes to the top
     }
-    return sum;
+    return sum;                // total of all values in the stack
 }
 
+// The three stacks are passed by reference (&): we pop the judge's real
+// stacks, not copies. Returns the largest equal sum.
 int maxSum(stack<int> &st1, stack<int> &st2, stack<int> &st3)
 {
     // Work out each sum once, then keep them up to date while popping,
@@ -55,17 +66,19 @@ int maxSum(stack<int> &st1, stack<int> &st2, stack<int> &st3)
     int sum2 = stackSum(st2);
     int sum3 = stackSum(st3);
 
+    // Keep going while the three sums are NOT all equal.
+    // (a == b && b == c) means all three are equal; ! turns it around.
     while(!(sum1 == sum2 && sum2 == sum3)){
         // Shrink the tallest (largest sum) stack by one value.
-        if(sum1 >= sum2 && sum1 >= sum3){
-            sum1 -= st1.top();
-            st1.pop();
+        if(sum1 >= sum2 && sum1 >= sum3){          // stack 1 has the largest sum
+            sum1 -= st1.top();                     // its sum loses the top value
+            st1.pop();                             // and the value leaves the stack
         }
-        else if(sum2 >= sum1 && sum2 >= sum3){
+        else if(sum2 >= sum1 && sum2 >= sum3){     // stack 2 has the largest sum
             sum2 -= st2.top();
             st2.pop();
         }
-        else{
+        else{                                      // otherwise stack 3 is the largest
             sum3 -= st3.top();
             st3.pop();
         }

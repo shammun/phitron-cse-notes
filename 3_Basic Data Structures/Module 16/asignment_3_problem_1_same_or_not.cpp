@@ -6,6 +6,9 @@ There is a list of  values that were inserted into a stack and a list of  values
 
 Note: You need to solve it using  Stack and Queue only.
 
+(The blanks above lost their symbols when copied: the stack gets N values,
+the queue gets M values, and you must use the STL stack and queue.)
+
 Input Format
 
 First line will contain  and .
@@ -53,56 +56,61 @@ NO
  *
  * Fill an STL stack and an STL queue, then pop both together and compare
  * st.top() with q.front() every time. O(n).
+ *
+ * Sample 1: stack 10 20 30 40 comes out 40 30 20 10, queue comes out
+ * 10 20 30 40 -> first pair 40 vs 10 differs -> NO.
  */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>    
-#include <string>
-#include <stack>
-#include <queue>
-using namespace std;
+#include <iostream>     // cin (read input) and cout (print output)
+#include <vector>       // vector (not actually used here)
+#include <algorithm>    // sort, reverse, ... (not actually used here)
+#include <string>       // string (not actually used here)
+#include <stack>        // stack<T>: push, pop, top, empty
+#include <queue>        // queue<T>: push, pop, front, empty
+using namespace std;    // lets us write cout, stack, ... instead of std::cout, std::stack
 
 int main(){
-    int n, m;
-    cin >> n >> m;
-    stack<int> st;
-    queue<int> q;
+    int n, m;               // n = how many values go into the stack, m = into the queue
+    cin >> n >> m;          // cin >> skips spaces/newlines and reads one number into each variable
+    stack<int> st;          // an empty STL stack of ints
+    queue<int> q;           // an empty STL queue of ints
 
     // The stack gets n values: the last one typed ends up on top.
+    // i just counts the n reads.
     for(int i=0; i<n; i++){
-        int val;
+        int val;            // one value from the input
         cin >> val;
-        st.push(val);
+        st.push(val);       // put it on top of the stack
     }
 
     // The queue gets m values: the first one typed is at the front.
     for(int i=0; i<m; i++){
         int val;
         cin >> val;
-        q.push(val);
+        q.push(val);        // add it at the back of the queue
     }
 
     // Different sizes can never give the same removal order. Checking this
     // first also means the loop below never touches an empty queue.
     if(n != m){
-        cout << "NO" << endl;
-        return 0;
+        cout << "NO" << endl;   // endl prints a newline and flushes the output
+        return 0;               // end the program right here
     }
 
     // Remove from both side by side: the stack gives top(), the queue gives
-    // front(). The first pair that differs settles it.
+    // front(). The first pair that differs settles it. One pass compares
+    // one pair; the loop stops when the stack is empty.
     while(!st.empty()){
-        if(st.top() != q.front()){
+        if(st.top() != q.front()){      // the next value removed from each differs
             cout << "NO" << endl;
             return 0;
-        } 
-        st.pop();
-        q.pop();
+        }
+        st.pop();           // remove the top of the stack
+        q.pop();            // remove the front of the queue
     }
 
     // Every pair matched.
     cout << "YES" << endl;
 
-    return 0;
+    return 0;               // 0 tells the system the program finished normally
 }

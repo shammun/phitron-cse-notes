@@ -14,16 +14,19 @@
   The trap is in the average, not in the sum. See the (double) cast below.
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main()
+int main()          /* the program starts running here */
 {
-    int n;
+    int n;          /* how many numbers */
     
-    scanf("%d", &n);
+    scanf("%d", &n);    /* %d = read a whole number; &n = where to put it */
     
-    int a[n];
+    int a[n];       /* n boxes, a[0] .. a[n-1] */
     
+    /* Pass i reads one number into box a[i] (&a[i] = its address). */
     for (int i = 0; i < n; i++) {
         scanf("%d", &a[i]);
     }
@@ -42,18 +45,19 @@ int main()
         sum += a[i];
     }
     
-    printf("%d\n", sum);
+    printf("%d\n", sum);   /* print the total; %d = int, \n = newline */
     
     /* Both sum and n are ints, and int / int in C throws the fraction away:
        105 / 4 would be 26, not 26.25. The (double) cast turns sum into a real
        number first, so the division keeps the fraction.
        Casting afterwards, `(double)(sum / n)`, would be too late: by then the
-       .25 is already gone. */
+       .25 is already gone.
+       double = a number with a decimal part (about 15 correct digits). */
     double avg = (double) sum / n;
     
     /* %lf prints a double, and by default it shows six digits after the
        point: 26.250000. */
     printf("%lf\n", avg);
     
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

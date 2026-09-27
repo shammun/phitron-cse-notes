@@ -1,15 +1,17 @@
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
+#include <iostream>  // cin and cout
+#include <vector>    // not needed here, kept from the template
+#include <algorithm> // not needed here
+#include <string>    // not needed here
 using namespace std; // Allows us to avoid prefixing standard library objects with `std::`.
 
+// One node of the list: a value plus the address of the next node.
 class Node {
-    public:
+    public: // usable from outside the class
         int val;     // Value stored in the node (data).
         Node* next;  // Pointer to the next node in the linked list.
 
         // Constructor for the Node class to initialize 'val' and set 'next' to NULL.
+        // Runs on every new Node(x); `this` points at the node being built.
         Node(int val) {
             this->val = val;  // Assign the provided value to the 'val' member.
             this->next = NULL; // Initialize 'next' to NULL, meaning no next node by default.
@@ -20,16 +22,17 @@ class Node {
 // original explains the idea in full; this copy has one typo and will not compile.
 
 // The O(1) tail insert again: `tail` points at the last node, so no walking.
+// Node* & = reference to main's pointer, so main sees the changes.
 void insert_at_tail(Node* & head, Node* &tail, int val){
-    Node* newNode = new Node(val);
-    if(head == NULL){
-        head = newNode;
-        tail = newNode;
-        return;
+    Node* newNode = new Node(val); // the node to add
+    if(head == NULL){ // empty list
+        head = newNode; // first node
+        tail = newNode; // last node
+        return; // done
     }
 
-    tail->next = newNode;
-    tail = newNode;
+    tail->next = newNode; // attach after the last node
+    tail = newNode; // the new node is now the last
 }
 
 // This is recursion_n_to_1 from printing_reverse_printing.cpp with the counter replaced
@@ -46,28 +49,30 @@ void print_reverse(Node* tmp){
     // BUG (left in place on purpose): `end` should be `endl`. There is no name `end` in
     // scope, so the file does not compile and produces no output at all. With `endl` it
     // prints 40 30 20 10 for the input 10 20 30 40 -1.
+    // (std::end does exist, but it is a function template that needs an argument, so
+    // `cout << end` still fails to compile.)
     cout << tmp->val << end;
 }
 
-int main(){
+int main(){ // the program starts running here
     // Both start as NULL so the insert knows the list is empty on the first value.
     Node* head = NULL;
     Node* tail = NULL;
 
     // Read until the sentinel -1, exactly as in input_a_linked_list.cpp. The -1 itself is
     // never inserted, because the break comes before the insert.
-    int val;
-    while(true){
-        cin >> val;
-        if(val == -1){
-            break;
+    int val; // each number read
+    while(true){ // loop until break
+        cin >> val; // read one number
+        if(val == -1){ // sentinel?
+            break; // stop reading
         }
-        insert_at_tail(head, tail, val);
+        insert_at_tail(head, tail, val); // append it
     }
 
     // Note what is NOT here: the list is never rebuilt or reversed in memory. Only the
     // printing order changes, so the list itself is untouched afterwards.
     print_reverse(head);
 
-    return 0;
+    return 0; // program finished (if it compiled)
 }

@@ -44,36 +44,40 @@ In the third test case, the sum of the first three digits is 0+4+5=9 and the sum
 
 */
 
-#include <iostream> // Include the input/output stream library for using cout
-#include <string>   // Include the string library for std::string
-using namespace std; // Use the standard namespace to avoid writing "std::" repeatedly
+#include <iostream> // Gives us cin (read from keyboard) and cout (print to screen)
+#include <string>   // Gives us std::string, a text type that knows its own length
+using namespace std; // Lets us write cin, cout, string instead of std::cin, std::cout, std::string
 
 // The ticket is read as a string, not an int: "045207" as a number would lose
 // its leading zero, but as a string every digit keeps its place.
 // A digit character minus '0' gives its value: '4' - '0' = 52 - 48 = 4.
+// Parameter: num = the 6-digit ticket as text. Returns: true if lucky, false if not.
+// Trace with "213132": 2+1+3 = 6 and 1+3+2 = 6 -> true.
 bool isLuckyTicket(string num){
-    int first_half_sum = (num[0] - '0') + (num[1] - '0') + (num[2] - '0');
-    int second_half_sum = (num[3] - '0') + (num[4] - '0') + (num[5] - '0');
+    int first_half_sum = (num[0] - '0') + (num[1] - '0') + (num[2] - '0'); // digits at positions 0, 1, 2
+    int second_half_sum = (num[3] - '0') + (num[4] - '0') + (num[5] - '0'); // digits at positions 3, 4, 5
     return first_half_sum == second_half_sum; // true when both halves add up the same
-}
+} // end of isLuckyTicket
 
+// main: read every ticket, decide YES/NO for each, then print all the answers.
 int main() {
-    int n;
-    cin >> n;
+    int n; // number of test cases (called t in the statement)
+    cin >> n; // read it
 
-    string results[1000]; // Array for storing results from different test cases
+    string results[1000]; // Array for storing results from different test cases (t is at most 1000)
 
     // Read input and check if each ticket is lucky
+    // One pass = one ticket; i counts tickets 0..n-1.
     for(int i=0; i<n; i++){
-        string ticket;
-        cin >> ticket;
-        results[i] = isLuckyTicket(ticket) ? "YES" : "NO"; // ternary: a one-line if-else
-    }
+        string ticket; // the six digits of this ticket
+        cin >> ticket; // cin >> reads the digits as one word of text
+        results[i] = isLuckyTicket(ticket) ? "YES" : "NO"; // ternary: a one-line if-else (condition ? value_if_true : value_if_false)
+    } // end of the reading loop
 
     // print results
     for(int i=0; i<n; i++){
-        cout << results[i] << endl;
-    }
+        cout << results[i] << endl; // one answer per line; endl = newline
+    } // end of the printing loop
 
     return 0; // Indicate that the program ended successfully
-}
+} // end of main

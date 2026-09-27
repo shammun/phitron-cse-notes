@@ -30,17 +30,18 @@ using namespace std; // Use the standard namespace to avoid writing "std::" repe
 
 // One object holds the three facts about one student
 class Student{
-    public:
+    public: // members can be used from outside the class (from main)
     string name; // no spaces, so cin >> is enough to read it
-    int roll;
-    int marks;
-};
+    int roll; // roll number
+    int marks; // marks obtained
+}; // a class definition ends with a semicolon
 
-int main(){
-    int n;
-    cin >> n;
+int main(){ // Program execution starts here
+    int n; // number of students
+    cin >> n; // read n
 
-    Student a[n]; // an array of n Student objects, a[0] to a[n-1]
+    Student a[n]; // an array of n Student objects, a[0] to a[n-1] (variable size: a g++ extension)
+    // One pass reads one student into box i
     for(int i=0; i<n; i++){
         // a[i] is one whole object; .name, .roll and .marks are its parts
         cin >> a[i].name >> a[i].roll >> a[i].marks;
@@ -51,13 +52,14 @@ int main(){
     // box n-1-i. swap() works on whole objects too - all three members move
     // together, so a student's name, roll and marks never get separated.
     // With 5 students: swap a[0],a[4] and a[1],a[3]; a[2] (Zubair) stays put.
+    // (Going past n/2 would swap every pair back again and undo the reverse.)
     for(int i=0; i<n/2; i++){
-        swap(a[i], a[n-1-i]);
+        swap(a[i], a[n-1-i]); // exchange the two whole objects
     }
 
     // Print the reversed array, one student per line
     for(int i=0; i<n; i++){
-        cout << a[i].name << " " << a[i].roll << " " << a[i].marks << endl;
+        cout << a[i].name << " " << a[i].roll << " " << a[i].marks << endl; // endl = newline
     }
 
     return 0; // Indicate that the program ended successfully

@@ -16,27 +16,31 @@ InputCopy
 5
 1 -2 0 3 4
 OutputCopy
-1 2 0 1 1 
+1 2 0 1 1
 */
 
-#include <stdio.h>
+/* Note on the statement: "105" is 10^5 (the exponent lost its formatting when it was copied). */
 
-int main(){
-    int N;
-    scanf("%d", &N);
+#include <stdio.h> // standard input/output library: scanf and printf
 
-    /* A plain (variable-length) array of N ints. */
+int main(){ // program execution starts here
+    int N; // number of elements
+    scanf("%d", &N); // &N = address where scanf stores the value
+
+    /* A plain (variable-length) array of N ints.
+       ("variable length" = its size comes from a value read at run time; a C99 feature) */
     int A[N];
-    for(int i=0; i<N; i++){
+    for(int i=0; i<N; i++){ // read N numbers into A[0] .. A[N-1]
         scanf("%d", &A[i]);
     }
 
     /* Change the values in place. Zero matches neither test, so it is left
-       as it is - no third branch is needed. */
+       as it is - no third branch is needed.
+       Trace: 1 -2 0 3 4 -> 1 2 0 1 1 */
     for(int i=0; i<N; i++){
-        if(A[i] > 0){
+        if(A[i] > 0){ // positive
             A[i] = 1;
-        } else if(A[i] < 0){
+        } else if(A[i] < 0){ // negative
             A[i] = 2;
         }
     }
@@ -46,7 +50,7 @@ int main(){
         printf("%d ", A[i]);
     }
 
-    printf("\n");
+    printf("\n"); // end the output line
 
-    return 0;
+    return 0; // program ended successfully
 }

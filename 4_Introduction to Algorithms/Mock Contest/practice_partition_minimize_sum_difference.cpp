@@ -68,16 +68,18 @@ Sorting is what makes the binary search legal, and the binary search is what tur
 
 */
 
+// <bits/stdc++.h>: g++'s "include the whole standard library" header.
 #include <bits/stdc++.h>
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
+// LeetCode's required class; minimumDifference is what the judge calls.
 class Solution {
-public:
+public:   // usable from outside the class
     int minimumDifference(vector<int>& nums) {
-        int n = nums.size() / 2;
+        int n = nums.size() / 2;     // each side gets n numbers
 
-        long long total = 0;
+        long long total = 0;         // sum of everything
         for (int i = 0; i < (int)nums.size(); i++) {
             total += nums[i];
         }
@@ -85,12 +87,17 @@ public:
         /* left[c] holds every sum you can make by taking exactly c numbers out of the first
            half; right[c] does the same for the second half. Grouping by the count is the
            whole point - the two sides must end up with n numbers each. */
+        // (The space in "> >" is only for very old compilers.)
         vector<vector<long long> > left(n + 1), right(n + 1);
 
+        // Every subset of n positions is one number "mask" from 0 to 2^n - 1:
+        // bit b of mask is 1 when position b is taken. (1 << n) is 2^n.
+        // Example n = 3, mask = 5 = binary 101 -> positions 0 and 2 are taken.
         for (int mask = 0; mask < (1 << n); mask++) {
             long long sumLeft = 0, sumRight = 0;
-            int taken = 0;
+            int taken = 0;                    // how many positions this mask takes
             for (int bit = 0; bit < n; bit++) {
+                // mask & (1 << bit) is non-zero exactly when that bit is 1.
                 if (mask & (1 << bit)) {
                     taken++;
                     sumLeft += nums[bit];       // first half
@@ -106,10 +113,11 @@ public:
             sort(right[c].begin(), right[c].end());
         }
 
-        long long best = LLONG_MAX;
+        long long best = LLONG_MAX;   // smallest difference found; starts "infinite"
 
         for (int k = 0; k <= n; k++) {
             /* k numbers come from the first half, so n - k must come from the second. */
+            // & makes partners another name for right[n - k] (no copy).
             vector<long long> &partners = right[n - k];
 
             for (int i = 0; i < (int)left[k].size(); i++) {
@@ -124,13 +132,15 @@ public:
                 /* First position whose doubled value is not below the target. Written by
                    hand instead of lower_bound so the "2 *" stays inside the comparison and
                    no halving of an odd number can go wrong. */
+                // Binary search on [lo, hi): the answer always stays inside it,
+                // and the range halves every pass.
                 int lo = 0, hi = partners.size();
                 while (lo < hi) {
                     int mid = (lo + hi) / 2;
                     if (2 * partners[mid] >= target) {
-                        hi = mid;
+                        hi = mid;         // mid works; the answer is mid or earlier
                     } else {
-                        lo = mid + 1;
+                        lo = mid + 1;     // mid too small; the answer is later
                     }
                 }
 
@@ -138,7 +148,7 @@ public:
                    (just below), so check both. */
                 if (lo < (int)partners.size()) {
                     long long diff = target - 2 * partners[lo];
-                    if (diff < 0) diff = -diff;
+                    if (diff < 0) diff = -diff;          // absolute value
                     if (diff < best) best = diff;
                 }
                 if (lo > 0) {
@@ -149,12 +159,13 @@ public:
             }
         }
 
-        return (int)best;
+        return (int)best;   // convert back to the int the judge expects
     }
 };
 
+// Small driver so the file runs on its own.
 int main() {
-    int m;
+    int m;                  // amount of numbers (2n)
     cin >> m;
 
     vector<int> nums(m);
@@ -162,8 +173,8 @@ int main() {
         cin >> nums[i];
     }
 
-    Solution sol;
+    Solution sol;           // object to call the method on
     cout << sol.minimumDifference(nums) << endl;
 
-    return 0;
+    return 0;   // success
 }

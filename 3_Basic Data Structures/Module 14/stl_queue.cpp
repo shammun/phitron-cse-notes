@@ -21,17 +21,17 @@ All of them are O(1).
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here (template leftover)
+#include <algorithm>    // not used here (template leftover)
+#include <string>       // not used here (template leftover)
 #include <queue>        // gives us queue<int>
-using namespace std;
+using namespace std;    // write queue/cin/cout without std::
 
 int main() {
-    queue<int> q;
+    queue<int> q;       // an empty queue of ints
     int n;
-    cin >> n;
+    cin >> n;           // how many values (cin >> skips whitespace)
     // Read n values. Each push() puts the value at the back of the line, so
     // the queue ends up holding them in the order they were typed.
     for(int i=0; i<n; i++){
@@ -53,7 +53,8 @@ int main() {
     // happens at the front, the values come out in arrival order: 1 2 3 4.
     // Run the same input through a stack and you would get 4 3 2 1.
     while(!q.empty()){
-        cout << q.front() << endl;
+        cout << q.front() << endl;  // endl = newline + flush
         q.pop();
     }
+    // (main returns 0 automatically when it reaches its end.)
 }

@@ -58,102 +58,119 @@ Sample Output 3
  * the node before the victim, so its arrow can be bent past the victim.
  * After a deletion `inner` stays put, because its new `next` is a node that
  * has not been checked yet. Two nested walks: O(n^2), fine for n <= 1000.
+ *
+ * Trace with 1 2 1 1 3:
+ *   outer on 1: inner on 1 -> next 2 (keep, step) -> next 1 (delete) -> next 1 (delete)
+ *               -> next 3 (keep, step) -> next NULL: stop.       list: 1 2 3
+ *   outer on 2: nothing after it equals 2.  outer on 3: nothing after it.
+ *   output: 1 2 3
  */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std; 
+#include <iostream>   // cin and cout
+#include <vector>     // std::vector - not used here
+#include <algorithm>  // sort/max/min - not used here
+#include <string>     // std::string - not used here
+using namespace std;  // lets us write cout instead of std::cout
 
+// One node of a singly linked list: a value plus the address of the next node.
 class Node {
-    public:
-        int val;     
-        Node* next;
+    public:            // usable from outside the class
+        int val;       // the data
+        Node* next;    // next node's address; NULL for the last node
 
+    // Constructor, runs on `new Node(x)`. `this->val` is the member,
+    // plain `val` is the parameter with the same name.
     Node(int val) {
-        this->val = val; 
-        this->next = NULL;
+        this->val = val;     // store the value
+        this->next = NULL;   // not linked yet
     }
 };
 
-// Count the nodes from head to NULL.
+// Count the nodes from head to NULL. (Not used in this program.)
 int get_size(Node* head){
-    int size = 0;
-    Node* tmp = head;
-    while(tmp!=NULL){
-        tmp = tmp->next;
-        size++;
+    int size = 0;          // counter
+    Node* tmp = head;      // walker
+    while(tmp!=NULL){      // one pass per node
+        tmp = tmp->next;   // step over a node...
+        size++;            // ...and count it
     }
-    return size;
+    return size;   // number of nodes counted
 }
 
 // Append at the end by walking to the last node (O(n) per value).
+// (`tail` is kept up to date but not used to skip the walk; with n <= 1000
+// the O(n^2) total is still fast. `tail->next = newNode;` would be O(1).)
+// `Node* &` = reference, so main's own head/tail are updated.
 void insert_at_tail(Node* &head, Node* &tail,int val){
-    Node* newNode = new Node(val);
-    if(head == NULL){
-        head = newNode;
-        tail = newNode;
-        return;
+    Node* newNode = new Node(val);   // `new` builds the node on the heap, returns its address
+    if(head == NULL){                // empty list: first and last node
+        head = newNode;   // the new node is the first node...
+        tail = newNode;   // ...and the last node
+        return;   // leave the function now
     }
-    Node* tmp = head;
-    while (tmp->next != NULL){
-        tmp = tmp->next;
+    Node* tmp = head;                // walk to the current last node
+    while (tmp->next != NULL){       // stops when tmp has no next, i.e. on the last node
+        tmp = tmp->next;   // step to the next node
     }
-    tmp->next = newNode;
-    tail = newNode;
+    tmp->next = newNode;             // hook the new node after it
+    tail = newNode;                  // and remember it as the last node
 }
 
 
+// Print the values on one line, separated by spaces, then a newline.
 void print_linked_list(Node* head){
-    Node* tmp = head;
+    Node* tmp = head;                // walker; head is not moved
     while(tmp != NULL){
-        cout << tmp-> val << " ";
-        tmp = tmp->next;
+        cout << tmp-> val << " ";    // `tmp-> val` is the same as `tmp->val`
+        tmp = tmp->next;             // next node
     }
-    cout << endl;
+    cout << endl;                    // endl = newline + flush
 }
 
 // Delete every later copy of each value, keeping the first one.
+// `head` is a reference, though the first node is never deleted (it is
+// always the first copy of its value), so a plain copy would also work.
 void remove_duplicate(Node* &head){
-    Node* outer = head;
+    Node* outer = head;   // the node whose value we are cleaning out of the rest
 
+    // One pass of this loop = remove every later copy of outer->val.
     while(outer != NULL){
         // `inner` starts on `outer` and inspects the node after it.
-        Node* inner = outer;
+        Node* inner = outer;   // start one node before the first node to check
+        // Runs until inner is the last node (nothing after it to check).
         while(inner->next != NULL){
             if(outer->val != inner->next->val){
                 // Not a copy of outer->val: step forward.
-                inner = inner->next;
+                inner = inner->next;   // keep this node, move on
             } else{
                 // A copy: bend inner's arrow past it and free it. `inner` does not move.
-                Node* duplicate = inner->next;
-                inner->next = inner->next->next;
-                delete duplicate;
+                Node* duplicate = inner->next;     // 1. save the victim
+                inner->next = inner->next->next;   // 2. bend the arrow past it
+                delete duplicate;                  // 3. free its memory (`delete` undoes `new`)
             }
         }
         // All later copies of outer->val are gone; move to the next value.
-        outer = outer->next;
+        outer = outer->next;   // next value to clean up
     }
 }
 
 int main(){
-    Node* head = NULL;
-    Node* tail = NULL;
+    Node* head = NULL;   // empty list
+    Node* tail = NULL;   // last node (none yet)
     
-    int val;
-    // Read values until -1.
+    int val;   // holds each number as it is read
+    // Read values until -1 (a stop sign, not stored).
     while(true){
-        cin >> val;
+        cin >> val;          // next integer; spaces/newlines skipped
         if(val == -1){
-            break;
+            break;   // leave the loop; the -1 is not stored
         }
-        insert_at_tail(head, tail, val);
+        insert_at_tail(head, tail, val);   // append at the end, keeping input order
     }
 
-    remove_duplicate(head);
+    remove_duplicate(head);     // keep first copies only
 
-    print_linked_list(head);
+    print_linked_list(head);    // e.g. 1 2 4 3 5 6
 
-    return 0;
+    return 0;   // normal exit
 }

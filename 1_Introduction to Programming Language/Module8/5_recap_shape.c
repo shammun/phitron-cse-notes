@@ -61,39 +61,43 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
+/* putchar(c), used below, also comes from stdio.h: it prints exactly one
+   character, e.g. putchar('*'). It is a lighter printf("%c", c). */
 
-int main() {
-    int n;
-    scanf("%d", &n);
+int main() {            /* the program starts running here */
+    int n;              /* the input number N */
+    scanf("%d", &n);    /* %d = read a whole number; &n = where to put it */
 
     /* Upper half: N rows with widths 1, 3, 5, ..., 2N-1. */
     for (int i = 0; i < n; i++) {
         /* leading spaces */
         for (int j = 0; j < n - i - 1; j++) {
-            putchar(' ');
+            putchar(' ');       /* one space */
         }
         /* stars: 2*i + 1 of them */
         int stars = 2 * i + 1;
         for (int k = 0; k < stars; k++) {
-            putchar('*');
+            putchar('*');       /* one star */
         }
-        putchar('\n');
+        putchar('\n');          /* end the row: '\n' is the newline character */
     }
 
     /* Lower half: N rows with widths 2N-1, 2N-3, ..., 3, 1. */
     for (int i = 0; i < n; i++) {
         /* leading spaces */
         for (int j = 0; j < i; j++) {
-            putchar(' ');
+            putchar(' ');       /* i leading spaces */
         }
         /* stars: 2*(N - i) - 1 of them */
         int stars = 2 * (n - i) - 1;
         for (int k = 0; k < stars; k++) {
-            putchar('*');
+            putchar('*');       /* one star */
         }
-        putchar('\n');
+        putchar('\n');          /* end the row */
     }
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

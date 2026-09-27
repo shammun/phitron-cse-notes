@@ -62,15 +62,18 @@ numDistinct = 5
 
 */
 
+// <bits/stdc++.h>: g++'s "include the whole standard library" header.
 #include <bits/stdc++.h>
-using namespace std;
+using namespace std;    // no std:: prefix
 
+// LeetCode's required class; numDistinct is what the judge calls.
 class Solution {
-public:
+public:   // usable from outside the class
     int numDistinct(string s, string t) {
-        int n = s.size();
-        int m = t.size();
+        int n = s.size();   // length of s
+        int m = t.size();   // length of t
 
+        // (n+1) x (m+1) table of zeros; dp[i][j] as defined in the header.
         vector<vector<long long>> dp(n + 1, vector<long long>(m + 1, 0));
 
         // Building nothing out of any prefix of s is one way: take nothing.
@@ -79,6 +82,7 @@ public:
             dp[i][0] = 1;
         }
 
+        // Fill row by row: row i only reads row i-1, which is already done.
         for (int i = 1; i <= n; i++) {
             for (int j = 1; j <= m; j++) {
                 // Always possible: leave s[i-1] out of the answer.
@@ -92,16 +96,18 @@ public:
             }
         }
 
+        // The judge promises the final answer fits in an int.
         return (int)dp[n][m];
     }
 };
 
+// Small driver so the file runs on its own.
 int main() {
-    string s, t;
+    string s, t;            // two words, one per line
     cin >> s >> t;
 
-    Solution sol;
+    Solution sol;           // object to call numDistinct on
     cout << "numDistinct = " << sol.numDistinct(s, t) << endl;
 
-    return 0;
+    return 0;   // success
 }

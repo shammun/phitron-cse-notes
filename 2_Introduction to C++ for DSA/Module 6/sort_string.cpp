@@ -1,15 +1,25 @@
-#include<iostream> // Include the input/output stream library for using cout
-#include <string>   // Include the string library for std::string
-#include <sstream> // Include the stringstream library for string stream operations
-#include <algorithm> // Include the algorithm library for sort function
-using namespace std; // Use the standard namespace to avoid writing "std::" repeatedly
+/*
+Sorting the characters of a string.
+
+sort(first, last) arranges everything in [first, last) in increasing order.
+For characters "increasing" means by ASCII code, so 'a' < 'b' < ... and all
+capital letters (65..90) come before all small letters (97..122).
+Example: "banana" -> "aaabnn".
+*/
+
+#include<iostream> // Gives us cin (read from keyboard) and cout (print to screen)
+#include <string>   // Gives us std::string
+#include <sstream> // stringstream library; not actually used in this file
+#include <algorithm> // Include the algorithm library for the sort function
+using namespace std; // Lets us write cin, cout, string, sort instead of std::cin, ...
 
 int main() {
-    string s;
-    cin >> s; // Take input from the user with spaces
-    cout << s << endl; // Output the entered string
-    sort(s.begin(), s.end()); // Sort the string
+    string s; // the word to sort
+    cin >> s; // Take ONE word from the user: cin >> stops at the first space
+    cout << s << endl; // Output the entered string, endl = newline
+    // s.begin() marks the first character, s.end() one past the last: the whole string.
+    sort(s.begin(), s.end()); // Sort the string, in place (s itself changes)
     cout << "After sorting using sort function: " << s << endl; // Output the sorted string
 
     return 0; // Indicate that the program ended successfully
-}
+} // end of main

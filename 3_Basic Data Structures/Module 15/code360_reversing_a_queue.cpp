@@ -27,24 +27,29 @@ Sample
  * stack back into the queue: the order comes out reversed.
  *
  *   queue 10 6 8 12 3  -> stack (top) 3 12 8 6 10 (bottom) -> queue 3 12 8 6 10
+ *
+ * Note: no #include or main() - the judge's hidden code includes <queue>
+ * and <stack> and calls this function.
  */
 
+// q is a copy of the judge's queue (passed by value); we reverse it and return it.
 queue<int> reverseQueue(queue<int> q)
 {
-    stack<int> st;
+    stack<int> st;             // temporary holder that flips the order
 
     // Front of the queue first -> it ends up at the bottom of the stack.
+    // One pass moves one value; stops when the queue is empty.
     while(!q.empty()){
-        st.push(q.front());
-        q.pop();
+        st.push(q.front());    // read the front value and put it on the stack
+        q.pop();               // remove it from the front of the queue
     }
 
     // The stack's top is the old BACK of the queue, so it re-enters first
-    // and becomes the new front.
+    // and becomes the new front. Stops when the stack is empty.
     while(!st.empty()){
-        q.push(st.top());
-        st.pop();
+        q.push(st.top());      // queue push adds at the back
+        st.pop();              // remove it from the stack
     }
 
-    return q;
+    return q;                  // the reversed queue
 }

@@ -75,12 +75,18 @@ Sample Output 1:
  */
 
 
+// <bits/stdc++.h> = GCC's "include everything" header (gives std::stack).
+// Code360's template supplies `using namespace std;` and main().
 #include <bits/stdc++.h>
 
 // Adds up a stack. `st` is a copy (passed by value), so popping it here
 // does not empty the caller's stack.
+// BUG: stackData goes up to 10^9 and N up to 10^4, so a sum can reach 10^13,
+// far past the int limit (about 2.1 * 10^9) - the int overflows and the sums
+// become wrong. Fix: use `long long` for sum, sum1, sum2, sum3 and the return type.
 int getSum(stack<int> st) {
     int sum = 0;
+    // One pass per value: add the top, then remove it from this copy.
     while (!st.empty()) {
         sum += st.top();
         st.pop();
@@ -88,6 +94,8 @@ int getSum(stack<int> st) {
     return sum;
 }
 
+// The three stacks come by reference (&), so the pops below change the caller's
+// stacks. Returns the largest sum all three can share.
 int maxSum(stack<int> &st1, stack<int> &st2, stack<int> &st3) {
     // Write your code here
     int sum1 = getSum(st1);
@@ -96,14 +104,14 @@ int maxSum(stack<int> &st1, stack<int> &st2, stack<int> &st3) {
 
     // Keep the three running sums up to date instead of re-adding the
     // stacks after every pop: each pop just subtracts the removed top.
-    while (true) {
+    while (true) {              // ends only through `break`
         if (sum1 == sum2 && sum2 == sum3) {
-            break;
+            break;              // equal: this is the answer
         }
         // Otherwise shrink the stack whose sum is the largest.
         if (sum1 >= sum2 && sum1 >= sum3) {
-            sum1 -= st1.top();
-            st1.pop();
+            sum1 -= st1.top();  // remove the top's value from the sum...
+            st1.pop();          // ...and from the stack
         }
         else if (sum2 >= sum1 && sum2 >= sum3) {
             sum2 -= st2.top();
@@ -113,5 +121,6 @@ int maxSum(stack<int> &st1, stack<int> &st2, stack<int> &st3) {
             st3.pop();
         }
     }
+    // Trace 16, 23, 8: pop 6 -> 16,17,8; pop 9 -> 16,8,8; pop 8 -> 8,8,8.
     return sum1;   // all three sums are equal here
 }

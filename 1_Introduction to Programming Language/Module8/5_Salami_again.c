@@ -36,13 +36,15 @@ Sample Output 0
 
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
-    int n;
-    scanf("%d", &n);
+int main() {            /* the program starts running here */
+    int n;              /* the input number N */
+    scanf("%d", &n);    /* %d = read a whole number; &n = where to put it */
 
-    int salami[n];
+    int salami[n];      /* n boxes salami[0..n-1]; size from the input (C99) */
 
     /* The largest amount seen so far. Every amount is positive, so any
        negative start is beaten by the very first value. */
@@ -51,9 +53,9 @@ int main() {
     /* Walk 1: read the amounts and keep the maximum up to date. We cannot
        print anything yet, because the maximum is only known at the end. */
     for(int i = 0; i < n; i++) {
-        scanf("%d", &salami[i]);
-        if (salami[i] > max) {
-            max = salami[i];
+        scanf("%d", &salami[i]);      /* &salami[i] = address of box i */
+        if (salami[i] > max) {          /* bigger than the best so far? */
+            max = salami[i];            /* then it is the new best */
         }
     }
 
@@ -61,9 +63,10 @@ int main() {
        max - salami[j]. The person with the most gets 0. This second walk is
        why the amounts had to be kept in an array. */
     for (int j = 0; j < n; j++) {
-        printf("%d ", max - salami[j]);
+        /* Sample 5 2 8 3 4: max = 8 -> 3 6 0 5 4. */
+        printf("%d ", max - salami[j]);    /* the difference, then a space */
     }
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 
 }

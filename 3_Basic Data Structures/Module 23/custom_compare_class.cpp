@@ -39,20 +39,23 @@ is O(n log n).
 
 */
 
-#include<iostream>
-#include <vector>
-#include <queue>
-#include <algorithm>
-#include <string>
+#include<iostream>      // cin and cout
+#include <vector>       // vector (the container inside the priority queue)
+#include <queue>        // priority_queue
+#include <algorithm>    // not used here
+#include <string>       // string, for the names
 
-using namespace std;
+using namespace std;    // write cout, string, priority_queue ... without std::
 
+// One student: a name, a roll number and marks.
 class Student{
-    public:
+    public:                 // usable from outside the class
         string name;
         int roll;
         int marks;
 
+        // Constructor: `Student obj(name, roll, marks);` runs this.
+        // this->name is the member; plain name is the parameter.
         Student(string name, int roll, int marks){
             this->name = name;
             this->roll = roll;
@@ -67,8 +70,9 @@ class Student{
    heap than `r`, i.e. when l comes out after r. */
 class cmp{
     public:
+        // l and r are two students the heap wants to compare.
         bool operator()(Student l, Student r){
-            if(l.marks < r.marks){ // Descending order here not ascending order -- higher marks will come first
+            if(l.marks < r.marks){ // Higher marks come out of the priority queue first (descending by marks)
                 return true;       // l has fewer marks -> l loses -> l sinks
             } else if(l.marks > r.marks){
                 return false;      // l has more marks -> l wins -> l rises
@@ -83,16 +87,16 @@ int main(){
     // holds the heap, and the comparison class above.
     priority_queue<Student, vector<Student>, cmp> pq;
     int n;
-    cin >> n;
+    cin >> n;               // number of students
 
     // Read n students and push them in any order -- the heap sorts itself
     // out as they arrive, O(log n) per push.
     for(int i=0; i<n; i++){
         string name;
         int roll, marks;
-        cin >> name >> roll >> marks;
-        Student obj(name, roll, marks);
-        pq.push(obj);
+        cin >> name >> roll >> marks;       // e.g. "rahim 3 90"
+        Student obj(name, roll, marks);     // build the Student with the constructor
+        pq.push(obj);                       // a copy goes into the heap
     }
 
     // top() is the winner by the rule above: highest marks, and on a tie the
@@ -101,7 +105,8 @@ int main(){
     // pop() on an empty priority queue are undefined.
     while(!pq.empty()){
         cout << pq.top().name << " " << pq.top().roll << " " << pq.top().marks << endl;
-        pq.pop();
+        pq.pop();           // remove the student just printed
     }
 
+    // No `return 0;`: main may leave it out and then returns 0 automatically.
 }

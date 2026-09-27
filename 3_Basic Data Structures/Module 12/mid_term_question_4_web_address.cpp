@@ -107,104 +107,118 @@ y
  * our own position. Every command walks the list: O(n) per query.
  */
 
-#include <iostream>
-#include <string>
-#include <list>
-#include <sstream>
-using namespace std;
+#include <iostream>     // cin, cout, endl, getline
+#include <string>       // std::string, a text value that can grow
+#include <list>         // std::list, the STL doubly linked list
+#include <sstream>      // std::stringstream, reads words out of a string like cin does
+using namespace std;    // write string/list/cout without std::
 
+// Handles ONE query line. Web = the list of addresses (by reference &, so it is not
+// copied every call). curr = ADDRESS of main's `curr` string: writing *curr = ...
+// changes main's variable, so the new position is remembered between queries.
 void browse_history(list<string> &Web, string* curr){
     // Read the whole command line, then split it into words.
     string line;
-    getline(cin, line);
-    stringstream ss(line);
+    getline(cin, line);         // reads everything up to (and removes) the newline
+    stringstream ss(line);      // treat the line as a small input stream
     string command;
-    ss >> command;
+    ss >> command;              // first word: "visit", "next" or "prev"
 
-    if(command == "visit"){
+    if(command == "visit"){     // == on strings compares the text
         string address;
-        ss >> address;
+        ss >> address;          // second word: the address to go to
         bool found = false;   // stays false if the address is not in the list
-        
+
+        // Range-for: s takes a copy of each address, front to back.
         for(string s: Web){
             if(s == address){
                 found = true;
-                *curr = s;
-                break;
+                *curr = s;      // move there: update main's curr through the pointer
+                break;          // addresses are unique, stop searching
             }
         }
 
         // Print the new position, or refuse and stay where we were.
         if(found){
-            cout << *curr << endl;
+            cout << *curr << endl;      // *curr = the string the pointer points to
         } else{
             cout << "Not Available" << endl;
         }
-    
+
     } else if(command == "next"){
-        
+
+        // Becomes true once we have walked past our current address.
         bool previous_word_found = false;
 
         for(string s: Web){
             if(previous_word_found){
                 *curr = s; // set the current pointer to this new next word after the previous current word
                 cout << *curr << endl;
-                return;
+                return;     // done with this query
             }
-            // current word is the same as the previous word and so set the previous word found to be true
+            // s is our current address, so the element in the NEXT round is the answer.
             if(s == *curr){
                 previous_word_found = true;
             }
         }
+        // The loop ended without returning: curr was the last address.
         cout << "Not Available" << endl;
-    
+
     } else if(command == "prev"){
-        
+
         // Already on the first address: there is no previous one.
-        string prev = Web.front();
+        string prev = Web.front();  // front() = the first element's value
         if(*curr == prev){
             cout << "Not Available" << endl;
-            return;
+            return;                 // stay where we are
         }
 
+        // Walk with `prev` always holding the element seen just before s.
         for(string s: Web){
             if(s != *curr){
-                // update the previous word to the next word as it has not matched the current word yet
+                // Not our position yet: remember s as the candidate `prev`.
                 prev = s;
             } else{
-                // if the current word is found, then set the previous word to the current word
+                // We reached our current address, so move BACK: the current
+                // position becomes `prev`, the address seen just before it.
                 *curr = prev;
                 cout << *curr << endl;
                 return;
             }
         }
+        // Trace list facebook google phitron, curr = phitron: prev = facebook, google,
+        // then s == phitron -> curr = google, print google.
     }
 }
 
 int main(){
-    list<string> Web;
+    list<string> Web;       // the addresses, in order
     string s;
 
     // Read addresses until the word "end".
+    // `while(cin >> s)` reads one word per pass (words are split at spaces) and
+    // stops if input runs out.
     while(cin >> s){
-        if(s=="end"){
+        if(s=="end"){       // the terminator, not an address
             break;
         }
-        Web.push_back(s);
+        Web.push_back(s);   // append at the end
     }
 
     int Q;
-    cin >> Q;
+    cin >> Q;               // number of queries
     // Skip the newline after Q, or the first getline would read an empty line.
+    // (cin >> leaves the '\n' in the input; getline stops at the first '\n' it sees.)
     cin.ignore();
 
     // We start on the first address (the head).
     string curr = Web.front();
 
+    // Q-- tests Q then decreases it, so the loop runs Q times.
     while(Q--){
-        browse_history(Web, &curr);
+        browse_history(Web, &curr);     // &curr = address of curr, so the function can change it
     }
 
-    return 0;
+    return 0;               // normal exit
 
 }

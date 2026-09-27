@@ -4,17 +4,23 @@
 // shape of the recursion that merge_sort.cpp will hang the work on. Put a
 // cout << l << " " << r << endl; at the top of divide() to watch the ranges
 // being cut in half.
+//
+// For n = 5 the ranges visited are:
+//   [0,4] -> [0,2] -> [0,1] -> [0,0], [1,1]
+//                  -> [2,2]
+//         -> [3,4] -> [3,3], [4,4]
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
+#include <iostream>     // cin
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // not used here
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 // divide(a, l, r) is responsible for the slice a[l..r], BOTH ends included.
 // It never touches anything outside that range - which is what makes it safe for
 // the two halves to work on the same array at the same time.
+// ("int a[]" as a parameter is really a pointer to the caller's array.)
 void divide(int a[], int l, int r){
     // One element (l == r) or none (l > r). A slice that short is already in
     // order, so there is nothing to do. This is the stopping point of the
@@ -46,7 +52,7 @@ int main(){
     int n, m;      // m is read but never used - a leftover from conquer.cpp,
     cin >> n >> m; // which needed two array sizes. The input must still supply it.
 
-    int a[n];
+    int a[n];      // variable length array (g++ extension)
     for(int i=0; i<n; i++){
         cin >> a[i];
     }
@@ -54,5 +60,5 @@ int main(){
     // Start with the whole array: positions 0 to n-1 inclusive.
     divide(a, 0, n-1);
 
-    return 0;
+    return 0;      // success (nothing was printed)
 }

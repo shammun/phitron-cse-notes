@@ -38,6 +38,8 @@ Why recursion is used here:
     - Each recursive call reduces n by 1
     - When n reaches 0, recursion stops
     - The function calls itself n times, printing once in each call
+
+void means the function returns no value; it only prints.
     
 Call stack visualization for n=3:
     printRecursion(3)
@@ -52,7 +54,7 @@ Call stack visualization for n=3:
 void printRecursion(int n){
     // Base case: if n becomes 0, stop recursion
     if(n == 0){
-        return;
+        return;     // stop: leave this call without printing
     }
     
     // Print the message once
@@ -60,7 +62,7 @@ void printRecursion(int n){
     
     // Recursive call with n-1 to print remaining times
     printRecursion(n-1);
-}
+}   // end of printRecursion
 
 /*
 Function name: main
@@ -70,6 +72,7 @@ Purpose: Entry point of program that:
     1. Takes number n as input
     2. Calls printRecursion to print message n times
     3. Returns 0 for successful execution
+Every C program starts running at main.
 */
 int main(){
     // Declare variable to store input number

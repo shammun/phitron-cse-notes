@@ -163,41 +163,52 @@ R -> 9
  * and backward.
  */
 
-#include <iostream>
-#include <list>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+#include <list>         // std::list, the STL doubly linked list (also gives next())
+using namespace std;    // write list/cout without std::
 
 // Front to back with an iterator.
+// An iterator is like a pointer to a list node: begin() = first element, end() = the
+// "one past the last" stop marker, *it = the value, it++ = next node.
+// The list is passed by reference (&) so it is not copied on every print.
 void print_forward(list<int> &l){
     cout << "L -> ";
+    // `auto` = let the compiler figure out the type (list<int>::iterator).
     for(auto it=l.begin(); it!=l.end(); it++){
         cout << *it << " ";
     }
     cout << endl;
 }
 
+// Back to front, starting at the last element.
 void print_backward(list<int> &l){
     cout << "R -> ";
     // Empty list: nothing to print, and size()-1 below would go wrong.
+    // (size() is unsigned, so 0 - 1 would wrap round to a huge number.)
     if(l.empty()){
         cout << endl;
         return;
     }
-    
+
     // at the last element of the list
+    // next(it, k) returns an iterator k steps after it; size()-1 steps from begin() = last.
     auto it = next(l.begin(), l.size()-1);
 
     // Print, stop if this was the first element, otherwise step back.
+    // (Testing before printing would skip the first element; stepping back from
+    //  begin() is not allowed - hence the test in the middle.)
     while(true){
         cout << *it << " ";
         if(it == l.begin()){
             break;
         }
-        it--;
+        it--;               // list iterators can move backwards
     }
     cout << endl;
 }
 
+// One query: X picks the operation, V is the value (or the index for X == 2).
+// After the operation the list is printed both ways.
 void different_queries(list<int> &l, int X, int V){
     if(X == 0){
         l.push_front(V);     // add V at the head
@@ -207,13 +218,15 @@ void different_queries(list<int> &l, int X, int V){
     }
     if(X == 2){
         // Only a real index can be erased; otherwise the query does nothing.
+        // V >= 0 is checked first, so comparing int V with the unsigned size() is safe.
         if(V >= 0 && V < l.size()){
             auto it = l.begin();
             // Walk the iterator to index V.
-            for(int i=0; i<V; i++){
+            for(int i=0; i<V; i++){     // V steps
                 it++;
             }
-            l.erase(it);
+            l.erase(it);    // remove the node the iterator stands on
+            // Example 50 10 20 30, "2 2": it steps to 20 -> erase -> 50 10 30.
         }
     }
 
@@ -222,16 +235,17 @@ void different_queries(list<int> &l, int X, int V){
 }
 
 int main(){
-    int Q;
-    cin >> Q;
-    list<int> l;
+    int Q;              // number of queries
+    cin >> Q;           // cin >> skips whitespace and reads one number
+    list<int> l;        // empty list to start
 
+    // while(Q--) runs exactly Q times (Q is tested, then decreased).
     while(Q--){
         int X, V;
-        cin >> X >> V;
+        cin >> X >> V;  // read the query type and its value
 
         different_queries(l, X, V);
     }
 
-    return 0;
+    return 0;           // normal exit
 }

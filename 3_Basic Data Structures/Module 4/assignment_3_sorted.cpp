@@ -4,7 +4,7 @@ Sorted
 
 Problem Statement
 
-You will given an array A of size N. You need to tell if the array is already sorted or 
+You will given an array A of size N. You need to tell if the array is already sorted or
 not. If the array is sorted in ascending order print "YES", otherwise print "NO".
 
 Input Format
@@ -37,24 +37,24 @@ NO
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std;
+#include <iostream>  // cin and cout
+#include <vector>    // vector
+#include <algorithm> // not needed here, kept from the template
+#include <string>    // not needed here
+using namespace std; // lets us drop the std:: prefix
 
-int main() {
-    int T;
-    cin >> T;
+int main() { // the program starts running here
+    int T; // number of test cases
+    cin >> T; // read T
 
     // Each round of this loop handles one whole test case.
     for(int i=0; i<T; i++){
-        int N;
-        cin >> N;
+        int N; // size of this test's array
+        cin >> N; // read N
         // A fresh vector for every test case, sized for this case's N.
         vector<int> A(N);
-        for(int j=0; j<N; j++){
-            cin >> A[j];
+        for(int j=0; j<N; j++){ // read this test's array
+            cin >> A[j]; // into slot j
         }
 
         /*
@@ -63,14 +63,15 @@ int main() {
          * (120 120 is fine). One "going down" step is enough to say NO.
          */
         bool flag = true;               // assume sorted until proven wrong
-        for(int j=1; j<N; j++){
+        // bool holds only true or false.
+        for(int j=1; j<N; j++){ // compare each element with its left neighbour
             if(A[j] < A[j-1]){
                 flag = false;           // found a step down: 100 1 ...
                 break;                  // no need to look further
             }
         }
 
-        if(flag){
+        if(flag){ // same as if(flag == true)
             cout << "YES" << endl;
         }
         else{
@@ -78,5 +79,5 @@ int main() {
         }
     }
 
-    return 0;
+    return 0; // program finished successfully
 }

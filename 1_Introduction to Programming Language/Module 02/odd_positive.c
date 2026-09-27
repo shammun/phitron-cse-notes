@@ -5,18 +5,23 @@
  * one ladder. There is no else joining them, so the first finishes
  * completely and then the second starts from scratch on the same x.
  * Both always print something, and the output is two words on one line.
+ *
+ * Output (with the bug below):
+ *     Odd Positive
  */
 
+/* stdio.h ("standard input output") declares printf. */
 #include <stdio.h>
 
-int main() {
+int main() {    /* the program starts here */
 
-    int x = 4;
+    int x = 4;  /* a whole-number (int) box holding 4 */
 
-    /* x % 2 != 0 is true when dividing by 2 leaves something over - that
-     * is, when x is odd.
+    /* % gives the remainder of a division: 4 % 2 = 0, 7 % 2 = 1.
+     * != means "is not equal to". So x % 2 != 0 is true when dividing by
+     * 2 leaves something over - that is, when x is odd.
      *
-     * Bug, left in on purpose: the two labels are the wrong way round.
+     * BUG (left in on purpose): the two labels are the wrong way round.
      * The true branch is the odd one, yet it prints "Even". So x = 4,
      * which really is even, fails the test, takes the else, and gets
      * announced as "Odd". The logic is sound; only the words are
@@ -26,11 +31,11 @@ int main() {
      * branches are perfectly legal C. */
     if(x%2!=0)
     {
-        printf("Even ");
+        printf("Even ");    /* runs when x is odd (wrong label) */
     }
     else
     {
-        printf("Odd ");
+        printf("Odd ");     /* runs when x is even (wrong label) */
     }
 
     /* The second question, asked of the same x. Mind the gap here:
@@ -40,11 +45,11 @@ int main() {
      * else if (x == 0), in between. */
     if(x>0)
     {
-        printf("Positive ");
+        printf("Positive ");    /* 4 > 0, so this one prints */
     }
     else
     {
-        printf("Negative ");
+        printf("Negative ");    /* x is 0 or below */
     }
-    return 0;
+    return 0;   /* 0 = finished normally */
 }

@@ -45,12 +45,15 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
+/* stdlib.h declares llabs (absolute value of a long long), used below. */
 #include <stdlib.h>
 
-int main() {
-    int n;
-    scanf("%d", &n);
+int main() {                /* the program starts running here */
+    int n;                  /* how many numbers are coming */
+    scanf("%d", &n);        /* %d = read a whole number; &n = where to put it */
 
     /* The running total starts at 0 and must be long long (see the overflow
        note above). x holds one number at a time, so %lld reads it. */
@@ -60,14 +63,16 @@ int main() {
     /* No array needed: each number is added the moment it is read and never
        looked at again. Negative numbers simply pull the total down. */
     for (int i = 0; i < n; i++) {
-        scanf("%lld", &x);
-        sum += x;
+        scanf("%lld", &x);    /* read the next number into x */
+        sum += x;             /* short for sum = sum + x */
     }
 
     /* llabs() from <stdlib.h> returns |sum| as a long long.
        Using abs() here would be wrong because abs() takes int,
-       silently truncating a long long value. */
+       silently truncating a long long value.
+       %lld is the printf placeholder for a long long; \n ends the line.
+       Trace for -1 2 -3: sum = -1, then 1, then -2; llabs(-2) = 2. */
     printf("%lld\n", llabs(sum));
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

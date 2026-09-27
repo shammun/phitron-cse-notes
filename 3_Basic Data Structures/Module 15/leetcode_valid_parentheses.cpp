@@ -32,15 +32,22 @@ Sample
  *                         is a different type, the string is broken.
  *                         Otherwise pop: that pair is finished.
  *   - at the end       -> the stack must be empty, or something was left open.
+ *
+ * Trace "{[]}":  push { -> [{], push [ -> [{ [], ] matches [ -> pop -> [{],
+ *                } matches { -> pop -> [] ; empty at the end -> true
+ *
+ * Note: no #include or main() - LeetCode's hidden code includes the STL,
+ * creates a Solution object and calls isValid.
  */
 
 class Solution {
-public:
+public:   // LeetCode calls isValid from outside the class
     bool isValid(string s) {
         stack<char> st;   // opening brackets still waiting to be closed
 
+        // Range-for: c is each character of s, left to right.
         for(char c : s){
-            if(c == '(' || c == '[' || c == '{'){
+            if(c == '(' || c == '[' || c == '{'){   // an opening bracket (|| means "or")
                 st.push(c);            // remember it, the newest one is on top
             }
             else{
@@ -51,6 +58,8 @@ public:
 
                 // The top is the bracket this one has to close.
                 char open = st.top();
+                // Each bracket in parentheses is one allowed pair; any one of
+                // the three being true means c closes `open` correctly.
                 if((c == ')' && open == '(') ||
                    (c == ']' && open == '[') ||
                    (c == '}' && open == '{')){

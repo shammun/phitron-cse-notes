@@ -21,20 +21,22 @@ prints 40 30 20 10, one per line.
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <list>
-using namespace std;
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here (template leftover)
+#include <algorithm>    // not used here (template leftover)
+#include <string>       // not used here (template leftover)
+#include <list>         // not used here (template leftover)
+using namespace std;    // write cin/cout without std::
 
 // One link of the chain: a value plus a pointer each way.
 class Node {
-    public:
-        int val;
+    public:             // members usable from outside
+        int val;        // the value stored
         Node* next;  // the node above this one (towards the top)
         Node* prev;  // the node below this one (towards the bottom)
 
+    // Constructor, runs on `new Node(val)`. `this` points to the node being built;
+    // this->val is the member, plain val is the parameter.
     Node(int val) {
         this->val = val;
         // A brand-new node is not linked to anything yet. Leaving these
@@ -45,16 +47,20 @@ class Node {
     }
 };
 
+// Our own stack on a doubly linked list: the tail is the top.
 class myStack{
     public:
         Node* head = NULL;  // the bottom of the pile (the oldest value)
         Node* tail = NULL;  // the TOP of the pile (the newest value)
         // This counter is the name clash with size() below -- see the top.
+        // BUG: member `size` and function `size()` share a name, so the class does
+        // not compile. Fix: `int sz = 0;` and use sz in push/pop/size/empty.
         int size = 0;
 
+        // push: put val on top.
         void push(int val){ // O(1)
-            size++;
-            Node* newNode = new Node(val);
+            size++;                         // one more value
+            Node* newNode = new Node(val);  // `new` builds the node on the heap
             // First value: it is both the bottom and the top at once.
             if(head == NULL){
                 head = newNode;
@@ -63,11 +69,12 @@ class myStack{
             }
             // Otherwise hook it on after the current top, link back with
             // prev, and move tail so it still means "the top".
-            tail->next = newNode;
-            newNode->prev = tail;
-            tail = newNode;
+            tail->next = newNode;       // old top -> new
+            newNode->prev = tail;       // old top <- new
+            tail = newNode;             // new is the top
         }
 
+        // pop: remove the top. Only call when not empty.
         void pop(){ // O(1)
             size--;
             Node* deleteNode = tail;   // hold the old top so it can be freed
@@ -84,14 +91,17 @@ class myStack{
             tail->next = NULL;
         }
 
+        // top: read the newest value.
         int top(){
             return tail->val; // O(1) -- the newest value, LIFO
         }
 
+        // size: how many values (the clashing name, see BUG above).
         int size(){
             return size; // O(1) -- a counter is kept so this is not a walk
         }
 
+        // empty: true when nothing is inside.
         bool empty(){
             return size==0; // O(1)
             // return head==NULL; // O(1)
@@ -102,15 +112,15 @@ class myStack{
 
 
 int main(){
-    myStack s;
+    myStack s;          // an empty stack
 
     // get the input for stack
-    int n;
-    cin >> n;
-    for(int i=0; i<n; i++){
+    int n;              // how many values
+    cin >> n;           // cin >> skips whitespace and reads one number
+    for(int i=0; i<n; i++){     // n passes, one value each
         int x;
         cin >> x;
-        s.push(x);
+        s.push(x);      // 10 20 30 40 -> 40 ends on top
     }
 
     // print the stack
@@ -118,10 +128,10 @@ int main(){
     // version, and for the same reason -- popping an empty stack would step
     // through a NULL pointer.
     while(s.empty() == false){
-        cout << s.top() << endl;
+        cout << s.top() << endl;    // newest first: 40, 30, 20, 10
         s.pop();
     }
 
-    return 0;
+    return 0;           // normal exit
 }
 

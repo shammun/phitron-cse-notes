@@ -15,15 +15,17 @@ Middle of the Linked List
  * the head. size/2 is exactly the index we want for both odd sizes
  * (5/2 = 2 -> node 3) and even sizes (6/2 = 3 -> node 4).
  */
+// (LeetCode defines ListNode - int val, ListNode *next - and calls
+// middleNode from its own hidden main.)
 class Solution {
-public:
+public:   // LeetCode calls middleNode from outside the class
     // Walk the whole list once and count the nodes.
     int get_size(ListNode* head){
         int size = 0;
-        ListNode* temp = head;
-        while(temp != NULL){
-            size++;
-            temp = temp->next;
+        ListNode* temp = head;      // start at the first node
+        while(temp != NULL){        // stops after the last node
+            size++;                 // count this node
+            temp = temp->next;      // step to the next one
         }
         return size;
     }
@@ -34,9 +36,9 @@ public:
         // idx steps from the head land on node number idx.
         ListNode* temp = head;
         for(int i=0; i<idx; i++){
-            temp = temp->next;
+            temp = temp->next;      // one step right
         }
-        return temp;
+        return temp;                // the middle node
     }
 };
 

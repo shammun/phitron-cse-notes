@@ -32,37 +32,40 @@ Sample Output 0
 
 
 
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include <stdlib.h>
+#include <stdio.h>      /* scanf and printf */
+#include <string.h>     /* not used here (template leftover) */
+#include <math.h>       /* not used here (template leftover) */
+#include <stdlib.h>     /* not used here (template leftover) */
 
+/* main: program entry point; return 0 = success. */
 int main() {
 
     /* The idea: count the prices p with X <= p <= Y. One pass over the list
      * with a counter is enough; the order of the prices does not matter.
      * Prices go up to 10^9, so they are stored as long long to be safe. */
-    int N;
-    int count = 0;
-    long long X, Y;
-    long long prices[100000];
-    
+    int N;                      /* number of phones */
+    int count = 0;              /* phones inside the range so far */
+    long long X, Y;             /* the price range, both ends included */
+    long long prices[100000];   /* room for up to 10^5 prices */
+
+    /* %d = int, %lld = long long; & gives scanf the address to write into. */
     scanf("%d %lld %lld", &N, &X, &Y);
-    
+
     // Read the prices
     for(int i=0; i < N; i++){
         scanf("%lld", &prices[i]);
     }
-    
-    // Main logic
+
+    // Main logic: one pass, i = index of the phone being checked
     for(int i=0; i<N; i++){
         /* Inside the range, both ends included? Then count it. */
         if (prices[i] >= X && prices[i] <= Y){
             count = count + 1;
         }
     }
-    
-    printf("%d", count);
-    
+    /* Sample range 4..8: prices 8 7 8 5 qualify -> 4. */
+
+    printf("%d", count);        /* print the answer */
+
     return 0;
 }

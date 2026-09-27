@@ -44,14 +44,22 @@
 ===============================================================================
 */
 
+/* stdio.h ("standard input output") declares scanf and printf; #include
+   pastes it in before compiling so the compiler knows those names. */
 #include <stdio.h>
 
-int main() {
-    int n;
-    scanf("%d", &n);
+int main() {                /* the program starts running here */
+    int n;                  /* how many numbers are coming */
+    scanf("%d", &n);        /* %d = read a whole number; &n = where to put it */
 
+    /* An array of n ints: n boxes a[0] .. a[n-1] under one name. The size
+       comes from the input, which C allows since C99 (a "variable-length
+       array"); n must already be read before this line runs. */
     int a[n];
 
+    /* Fill the boxes: pass i reads the next number into a[i]. &a[i] is the
+       address of box i, which scanf needs in order to write into it.
+       i goes 0, 1, ..., n-1 and the loop stops when i reaches n. */
     for (int i = 0; i < n; i++) {
         scanf("%d", &a[i]);
     }
@@ -67,13 +75,15 @@ int main() {
        we keep the EARLIEST position, which is what the problem asks for. */
     for (int i = 1; i < n; i++) {
         if (a[i] < min_val) {
-            min_val = a[i];
-            min_pos = i;
+            min_val = a[i];     /* a new smallest value... */
+            min_pos = i;        /* ...and where it is */
         }
     }
 
-    /* Convert to 1-indexed position for output */
+    /* Convert to 1-indexed position for output
+       Trace 5 6 2 3 2: min 5@0 -> 6 no -> 2@2 -> 3 no -> 2 not < 2, keep 2@2.
+       Printed: 2 3 */
     printf("%d %d\n", min_val, min_pos + 1);
 
-    return 0;
+    return 0;   /* 0 = the program finished normally */
 }

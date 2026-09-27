@@ -46,11 +46,12 @@ NO
 #include <string>   // std::string and getline
 using namespace std; // write cin/cout/string instead of std::cin/...
 
-int main(){
-    string s;
+int main(){ // Program execution starts here
+    string s; // the whole line of names
+    // cin >> s would stop at the first space and read only "Rahat".
     getline(cin, s); // the names are separated by spaces, so read the whole line
 
-    bool flag = false; // becomes true once the exact word "Jessica" is seen
+    bool flag = false; // becomes true once the exact word "Jessica" is seen (bool holds true/false)
     string word = "";  // the word being built, one letter at a time
 
     // Cut the line into words by hand: letters are added to `word`; a space
@@ -58,28 +59,31 @@ int main(){
     // Comparing whole words matters: "Jessicarvai" contains Jessica but is
     // not the word Jessica, and == on strings is case-sensitive, so
     // "jessica" does not count either.
+    // i walks over every character of s; s.size() is the length of the line.
     for(int i=0; i<s.size(); i++){
-        if(s[i] != ' '){
-            word += s[i];
-        } else{
-            if(word == "Jessica"){
+        if(s[i] != ' '){ // a letter: part of the current word
+            word += s[i]; // append it to the word
+        } else{ // a space: the current word is finished
+            if(word == "Jessica"){ // exact, case-sensitive comparison of the whole word
                 flag = true;
-                break; // found it, no need to read further
+                break; // found it, no need to read further (break leaves the loop at once)
             }
             word = ""; // start collecting the next word
         }
     }
 
     // The last word has no space after it, so the loop never checked it
+    // (e.g. "Rahat Jessica" ends with word = "Jessica" still unchecked)
     if(word == "Jessica"){
         flag = true;
     }
 
+    // Print the answer
     if(flag){
         cout << "YES" << endl;
     } else{
         cout << "NO" << endl;
     }
 
-    return 0;
+    return 0; // the program ended successfully
 }

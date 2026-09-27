@@ -5,12 +5,12 @@ Range sum query
 time limit per test: 1.5 seconds
 memory limit per test: 256 megabytes
 
-Given 2 numbers N and Q, an array A  of N number and Q  number of pairs L, R. For each 
-query Q print a single line that contains the summation of all numbers from index L to 
+Given 2 numbers N and Q, an array A  of N number and Q  number of pairs L, R. For each
+query Q print a single line that contains the summation of all numbers from index L to
 index R.
 
 Input
-First line contains two numbers N, Q (1≤N,Q≤10^5) where N is number of elements in A and 
+First line contains two numbers N, Q (1≤N,Q≤10^5) where N is number of elements in A and
 Q is number of query pairs.
 
 Second line contains N numbers(1≤Ai≤10^9).
@@ -18,7 +18,7 @@ Second line contains N numbers(1≤Ai≤10^9).
 Next Q lines contains L,R (1≤L≤R≤N).
 
 Output
-For each query Q print a single line that contains the summation of all numbers from 
+For each query Q print a single line that contains the summation of all numbers from
 index L to index R.
 
 Examples
@@ -46,49 +46,53 @@ Output
 
 */
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-using namespace std;
+#include <iostream>  // cin and cout
+#include <vector>    // vector
+#include <algorithm> // not needed here, kept from the template
+#include <string>    // not needed here
+using namespace std; // lets us drop the std:: prefix
 
-int main() {
+int main() { // the program starts running here
     /*
      * Brute force: for every query add up a[l-1] .. a[r-1] with a loop.
      * One query can cost up to n steps, so q queries cost O(n*q). With
      * n = q = 10^5 that is 10^10 steps: Time Limit Exceeded. The practice
      * sheet expects this; Module 3 fixes it with a prefix sum.
      */
-    int n, q;
-    cin >> n >> q;
-    vector<int> a(n);
+    int n, q; // n = array length, q = number of queries
+    cin >> n >> q; // read both on one line
+    vector<int> a(n); // n slots; each Ai (up to 10^9) still fits in an int
 
+    // Read the array: pass i fills a[i].
     for(int i=0; i<n; i++){
-        cin >> a[i];
+        cin >> a[i]; // read one number
     }
 
     // Each answer can reach 10^5 * 10^9 = 10^14, far above the int limit
     // (about 2 * 10^9), so answers are stored as long long.
-    vector<long long> results(q);
+    vector<long long> results(q); // results[i] = answer to query i
 
     // Run loops for q times
+    // Each pass reads one (l, r) pair and adds up that range.
     for(int i=0; i<q; i++){
-        int l, r;
-        cin >> l >> r;
+        int l, r; // the 1-based range ends
+        cin >> l >> r; // read them
 
         // The judge counts from 1, the vector from 0: shift both ends by 1.
-        long long sum = 0;
-        for(int j=l-1; j<= r-1; j++){
-            sum += a[j];
+        // Example l = 1, r = 3 on 6 4 2 7 2 7: j = 0,1,2 -> 6+4+2 = 12.
+        long long sum = 0; // running total for this query
+        for(int j=l-1; j<= r-1; j++){ // visit every index in the range
+            sum += a[j]; // add it (int is widened to long long automatically)
         }
 
-        results[i] = sum;
+        results[i] = sum; // remember the answer
     }
 
     // Print all answers at the end, one per line.
+    // (endl flushes every time, which is slow for 10^5 lines; "\n" would be faster.)
     for(int i=0; i<q; i++){
-        cout << results[i] << endl;
+        cout << results[i] << endl; // one answer per line
     }
 
-    return 0;
+    return 0; // program finished successfully
 }

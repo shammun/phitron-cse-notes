@@ -17,13 +17,16 @@
 //
 // No table here: this file is the slow starting point, the way
 // fibonacci_recursion.cpp was in Module 14. knapsack_using_dp.cpp adds the table.
+//
+// Example input: 3 / 30 50 60 / 3 4 5 / 8  (n, values, weights, capacity).
+// Best packing: weights 3 + 5 = 8 kilos, values 30 + 60 = 90.
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
+#include <iostream>     // cin, cout
+#include <vector>       // not used here
+#include <algorithm>    // max
+#include <string>       // not used here
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
 // Global so every recursive call can read them without passing them around.
 int val[1005], weight[1005];
@@ -41,7 +44,7 @@ int knapsack(int i, int max_weight){
         return 0;
     }
 
-    if(weight[i] <= max_weight){ // when we still have space in the bag, we can either take 
+    if(weight[i] <= max_weight){ // when we still have space in the bag, we can either take
         // the current item or not
         // op1 = TAKE item i. Bank val[i], use the item up (so the next call may
         // only choose among 0..i-1), and lose weight[i] kilos of room.
@@ -64,18 +67,18 @@ int knapsack(int i, int max_weight){
 }
 
 int main(){
-    int n, max_weight;
-    cin >> n;
-    
+    int n, max_weight;     // number of items, bag capacity
+    cin >> n;              // how many items
+
     // Input order here: n, then all n values, then all n weights, then the bag
     // capacity. (codeforces_knapsack.cpp reads the judge's order instead.)
     for(int i=0; i<n; i++){
-        cin >> val[i];
+        cin >> val[i];     // value of item i
     }
     for(int i=0; i<n; i++){
-        cin >> weight[i];
+        cin >> weight[i];  // weight of item i
     }
-    cin >> max_weight;
+    cin >> max_weight;     // capacity
 
     // Start from the LAST item with the bag empty; the recursion works its way
     // down to item 0.
@@ -83,7 +86,7 @@ int main(){
     // no cout, so this program prints nothing at all. For the sample input the
     // answer would be 90 (the weight-3 and weight-5 items, 30 + 60).
     // The fix is to wrap the call: cout << knapsack(n-1, max_weight) << endl;
-    knapsack(n-1, max_weight);
+    knapsack(n-1, max_weight); // BUG: result is discarded - nothing is printed
 
-    return 0;
+    return 0;   // success
 }

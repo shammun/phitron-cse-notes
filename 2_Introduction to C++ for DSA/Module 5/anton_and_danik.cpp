@@ -41,36 +41,38 @@ Friendship
 
 */
 
-#include <iostream>
-#include <string>
-using namespace std;
+#include <iostream> // cin (read input) and cout (print output)
+#include <string>   // the C++ string type: a text that knows its own length and grows by itself
+using namespace std; // write cin/cout/string instead of std::cin/std::cout/std::string
 
-int main() {
-    int n;
-    cin >> n;
+int main() { // program starts here
+    int n;     // number of games
+    cin >> n;  // read n from the first line
 
-    string s;
-    cin >> s;
+    string s;  // will hold the results, e.g. "ADAAAA"
+    cin >> s;  // cin >> reads one word (it stops at a space/newline); the results have no spaces
 
     /* One walk over the string is enough. Danik's games are the ones Anton
        did not win, so only one counter is really needed, but two make the
        comparison below easy to read. */
-    int anton = 0, danik = 0;
+    int anton = 0, danik = 0; // wins counted so far for each player
+    // Pass i looks at game i; s[i] is the i-th character (the first one is s[0])
     for(int i = 0; i < n; i++) {
-        if(s[i] == 'A') {
-            anton++;
+        if(s[i] == 'A') { // 'A' in single quotes is one character; == compares it
+            anton++;      // Anton won this game
         } else {
-            danik++;
+            danik++;      // otherwise the letter is 'D': Danik won
         }
     }
+    // Trace "ADAAAA": anton = 5, danik = 1 -> "Anton"
 
-    if(anton > danik) {
+    if(anton > danik) {                  // Anton won more games
         cout << "Anton" << endl;
-    } else if(danik > anton) {
+    } else if(danik > anton) {           // Danik won more games
         cout << "Danik" << endl;
-    } else {
+    } else {                             // neither is bigger, so they are equal
         cout << "Friendship" << endl;
     }
 
-    return 0;
+    return 0; // program ended normally
 }

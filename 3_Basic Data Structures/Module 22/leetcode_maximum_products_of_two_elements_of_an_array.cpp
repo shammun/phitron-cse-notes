@@ -32,13 +32,16 @@ maximum value of (5-1)*(5-1) = 16.
  * With [3,4,5,2]: after 3 -> (3,0), after 4 -> (4,3), after 5 -> (5,4),
  * and 2 changes nothing. Answer (5-1)*(4-1) = 12.
  */
+// (LeetCode's hidden main includes the headers and calls maxProduct.)
 class Solution {
-public:
+public:   // LeetCode calls maxProduct from outside the class
+    // nums is passed by reference (&), so the vector is not copied.
     int maxProduct(vector<int>& nums) {
         // Start both at 0: every value is >= 1, so real values replace them.
         int max_first = 0;
         int max_second = 0;
 
+        // Range-for: num takes each value of nums in turn.
         for(int num : nums){
             if(num > max_first){
                 // New biggest value: the old biggest drops to second place.
@@ -52,6 +55,6 @@ public:
             }
         }
 
-        return (max_first - 1) * (max_second - 1);
+        return (max_first - 1) * (max_second - 1);   // e.g. (5-1)*(4-1) = 12
     }
 };

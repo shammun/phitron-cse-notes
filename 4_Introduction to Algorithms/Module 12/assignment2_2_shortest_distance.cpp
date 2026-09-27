@@ -85,12 +85,15 @@ Sample Output 1
 // Many (X, Y) questions about the same small graph (N <= 100): instead of
 // running a single-source algorithm per query, compute the cheapest cost
 // between EVERY pair once, then each query is a table lookup.
+//
+// Trace with Sample 1: edges 1->2 (4, then 10: keep 4), 2->3 (4), 3->1 (2).
+// Query 2 -> 1: direct none; via 3: 4 + 2 = 6. Query 1 -> 3: 4 + 4 = 8.
 
-#include <iostream>
-#include <vector>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
 #include <climits>      // LLONG_MAX marks "no path known"
 
-using namespace std;
+using namespace std;    // write cout, min without std::
 
 // adj_mat[i][j] starts as the direct edge cost and ends as the cheapest cost
 // from i to j. The array is changed in place (arrays are passed by address).
@@ -99,12 +102,12 @@ void floyd_warshall(long long adj_mat[105][105], int n){
     // After round k, adj_mat[i][j] is the best route whose middle stops are
     // only from 1..k. When k reaches n, every route is allowed.
     for(int k=1; k<=n; k++){
-        for(int i=1; i<=n; i++){
-            for(int j=1; j<=n; j++){
+        for(int i=1; i<=n; i++){          // i = start node
+            for(int j=1; j<=n; j++){      // j = end node
                 // Is "i to k, then k to j" cheaper than what we have for i to j?
                 // Both halves must exist; adding to LLONG_MAX would overflow.
                 if(adj_mat[i][k] != LLONG_MAX && adj_mat[k][j] != LLONG_MAX && adj_mat[i][k] + adj_mat[k][j] < adj_mat[i][j]){
-                    adj_mat[i][j] = adj_mat[i][k] + adj_mat[k][j];
+                    adj_mat[i][j] = adj_mat[i][k] + adj_mat[k][j];   // go via k
                 }
             }
         }
@@ -112,7 +115,7 @@ void floyd_warshall(long long adj_mat[105][105], int n){
 }
 
 int main(){
-    int n, e;
+    int n, e;          // nodes, edges
     cin >> n >> e;
 
     long long adj_mat[105][105];   // adjacency matrix (Module 1), 1-based
@@ -128,9 +131,9 @@ int main(){
         }
     }
 
-    while(e--){
-        int a, b;
-        long long c;
+    while(e--){        // read the e edges
+        int a, b;      // from, to
+        long long c;   // cost (up to 10^9)
         cin >> a >> b >> c;
         // The same pair can be given twice (the sample has 1 -> 2 with cost 4
         // and with cost 10). Keep only the cheaper edge; a plain assignment
@@ -138,14 +141,16 @@ int main(){
         adj_mat[a][b] = min(adj_mat[a][b], c);   // directed: a -> b only
     }
 
+    // Build the all-pairs table. Passing adj_mat passes the address of its
+    // first row, so the function fills THIS array.
     floyd_warshall(adj_mat, n);
 
-    int q;
+    int q;             // number of queries
     cin >> q;
 
     // Every question is now just a look-up in the finished table.
     while(q--){
-        int X, Y;
+        int X, Y;      // source, destination
         cin >> X >> Y;
 
         if(adj_mat[X][Y] == LLONG_MAX){

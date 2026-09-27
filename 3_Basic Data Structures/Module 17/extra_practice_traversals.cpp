@@ -32,23 +32,27 @@ Expected answer (worked out below, and printed by the program):
  * practice: if your paper answer differs, trace the recursion again.
  */
 
-#include <iostream>
-using namespace std;
+#include <iostream>     // cout, endl
+using namespace std;    // write cout instead of std::cout
 
+// One node of the binary tree: a value and pointers to its two children.
 class Node {
     public:
         int val;     // Value stored in the node.
         Node* left;  // Pointer to the left child (NULL = no left child).
         Node* right; // Pointer to the right child (NULL = no right child).
 
+    // Constructor, runs on `new Node(x)`: store the value, no children yet.
     Node(int val) {
-        this->val = val;
+        this->val = val;      // this->val is the member, val is the parameter
         this->left = NULL;
         this->right = NULL;
     }
 };
 
 // Root -> Left -> Right
+// Base case: an empty subtree (NULL). The recursive calls trust that
+// preorder(child) prints that child's whole subtree in pre-order.
 void preorder(Node* root){
     if(root == NULL){       // An empty subtree prints nothing.
         return;
@@ -59,8 +63,9 @@ void preorder(Node* root){
 }
 
 // Left -> Root -> Right
+// Same base case; each call trusts inorder(child) to print that subtree in-order.
 void inorder(Node* root){
-    if(root == NULL){
+    if(root == NULL){           // empty subtree: nothing to print
         return;
     }
     inorder(root->left);        // Finish everything on the left first,
@@ -69,8 +74,9 @@ void inorder(Node* root){
 }
 
 // Left -> Right -> Root
+// Same base case; each call trusts postorder(child) to print that subtree in post-order.
 void postorder(Node* root){
-    if(root == NULL){
+    if(root == NULL){           // empty subtree: nothing to print
         return;
     }
     postorder(root->left);      // Both children are finished first,
@@ -81,6 +87,7 @@ void postorder(Node* root){
 int main(){
     // One Node object per circle in the picture. There are two 9s and two 5s,
     // so the names say where each one sits.
+    // `new` builds each node on the heap and returns its address.
     Node* root   = new Node(1);
     Node* a      = new Node(7);   // left child of 1
     Node* b      = new Node(9);   // right child of 1
@@ -93,27 +100,28 @@ int main(){
 
     // Link the pointers level by level. Any pointer we do not set stays NULL,
     // which is how "no child" is written (for example b->left).
-    root->left = a;
-    root->right = b;
-    a->left = c;
-    a->right = d;
-    b->right = e;
-    d->left = f;
-    d->right = g;
-    e->left = h;
+    // (p->left means "the left member of the node p points to".)
+    root->left = a;     // 1 -> left 7
+    root->right = b;    // 1 -> right 9
+    a->left = c;        // 7 -> left 2
+    a->right = d;       // 7 -> right 6
+    b->right = e;       // upper 9 -> right lower 9
+    d->left = f;        // 6 -> left 5
+    d->right = g;       // 6 -> right 11
+    e->left = h;        // lower 9 -> left 5
 
     // Each traversal gets its own line (endl after each call).
     cout << "Pre-order : ";
-    preorder(root);
-    cout << endl;
+    preorder(root);     // prints 1 7 2 6 5 11 9 9 5
+    cout << endl;       // endl = newline + flush
 
     cout << "In-order  : ";
-    inorder(root);
+    inorder(root);      // prints 2 7 5 6 11 1 9 5 9
     cout << endl;
 
     cout << "Post-order: ";
-    postorder(root);
+    postorder(root);    // prints 2 5 11 6 7 5 9 9 1
     cout << endl;
 
-    return 0;
+    return 0;           // program finished normally
 }

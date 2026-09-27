@@ -30,25 +30,26 @@ the mistake stays visible.
 */
 
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <stack>
-#include <queue>
+#include <iostream>     // cin and cout
+#include <vector>       // not used here
+#include <algorithm>    // not used here
+#include <string>       // not used here
+#include <stack>        // not used here
+#include <queue>        // STL queue, for level-order reading and printing
 
-using namespace std;
+using namespace std;    // write cout, queue ... without std::
 
 // One node of a binary tree: a value and two child pointers. NULL means
 // "no child on that side".
 class Node{
     public:
-        int val;
-        Node* left;
-        Node* right;
+        int val;        // the value stored here
+        Node* left;     // address of the left child (NULL = none)
+        Node* right;    // address of the right child (NULL = none)
 
+    // Constructor, runs on `new Node(x)`: store x, no children yet.
     Node(int val){
-        this->val = val;
+        this->val = val;        // this->val = the member; val = the parameter
         this->left = NULL;
         this->right = NULL;
     }
@@ -63,16 +64,17 @@ void level_order(Node* root){
         return;
     }
 
-    queue<Node*> q;
+    queue<Node*> q;     // nodes waiting to be printed (pointers, oldest first)
     q.push(root);
 
+    // One pass prints one node; stops when nothing is waiting.
     while(!q.empty()){
-        Node* f= q.front();
-        q.pop();
+        Node* f= q.front();     // oldest waiting node
+        q.pop();                // remove it from the queue
 
         cout << f->val << " ";
 
-        if(f->left){
+        if(f->left){            // true when the pointer is not NULL
             q.push(f->left);
         }
         if(f->right){
@@ -87,25 +89,26 @@ void level_order(Node* root){
 // so only they get their own line of input later.
 Node* input_tree(){
     int val;
-    cin >> val;
+    cin >> val;                 // the root's value
     Node* root;
     if(val == -1){
-        root = NULL;
+        root = NULL;            // empty tree
     } else{
-        root = new Node(val);
+        root = new Node(val);   // `new` makes the node on the heap and returns its address
     }
 
-    queue<Node*> q;
+    queue<Node*> q;             // nodes whose children are still to be read
     if(root){
         q.push(root);
     }
 
+    // One pass reads the two children of one node.
     while(!q.empty()){
         Node* p = q.front();
         q.pop();
 
         int l, r;
-        cin >> l >> r;
+        cin >> l >> r;          // p's left and right child values (-1 = none)
 
         Node* myLeft;
         Node* myRight;
@@ -122,9 +125,10 @@ Node* input_tree(){
             myRight = new Node(r);
         }
 
-        p->left = myLeft;
+        p->left = myLeft;       // attach the children to p
         p->right = myRight;
 
+        // Queue the real children so their children are read later, in order.
         if(p->left){
             q.push(p->left);
         }
@@ -137,15 +141,17 @@ Node* input_tree(){
 }
 
 // Every node counts itself once: left side + right side + 1.
+// Base case: NULL -> 0. Each call trusts count_nodes(child) to count that subtree.
 int count_nodes(Node* root){
     if(root == NULL){
         return 0;
     }
-    int l = count_nodes(root->left);
-    int r = count_nodes(root->right);
-    return l + r + 1;
+    int l = count_nodes(root->left);    // nodes in the left subtree
+    int r = count_nodes(root->right);   // nodes in the right subtree
+    return l + r + 1;                   // + 1 for this node
 }
 
+// Number of leaves in the tree under root.
 int count_leaf_nodes(Node* root){
     // Nothing here, so nothing to count. This is also what stops the
     // recursion on the side where a node has only one child.
@@ -188,12 +194,13 @@ int main(){
    */
    // Build the tree, then show it level by level so the shape is visible.
    Node* root = input_tree();
-   level_order(root);
-   cout << endl;
+   level_order(root);           // 10 20 30 40 50 60
+   cout << endl;                // end that line
 
-   // This should be count_leaf_nodes(root) -- see the note at the top of the
-   // file. As written it prints 6, the node count, not the 3 leaves.
+   // BUG: this should be count_leaf_nodes(root) -- see the note at the top of
+   // the file. As written it prints 6, the node count, not the 3 leaves.
+   // Fix: cout << count_leaf_nodes(root) << endl;
    cout << count_nodes(root) << endl;
 
-    return 0;
+    return 0;                   // program finished normally
 }

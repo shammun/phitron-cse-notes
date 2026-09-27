@@ -11,17 +11,24 @@
 // every pair has been allowed to go through every node and the chart is final.
 //
 // Time O(n^3) - three nested loops, each n long. Space O(n^2) for the matrix.
+//
+// Tiny example: 3 nodes, edges 0->1 cost 4, 1->2 cost 1, 0->2 cost 10.
+// Start: [0][2] = 10. Round k=1 (stop-over at node 1): 4 + 1 = 5 < 10, so
+// [0][2] becomes 5. Printed chart:
+//   0 4 5
+//   INF 0 1
+//   INF INF 0
 
-#include <iostream>
+#include <iostream> // cin, cout, endl
 #include <queue>    // not used here; carried over from the earlier graph files
 #include <cstring>  // same - Dijkstra/BFS needed these, Floyd-Warshall does not
-#include <vector>
+#include <vector>   // not used here either; the chart is a plain 2D array
 
-using namespace std;
+using namespace std; // lets us write cout instead of std::cout
 
 int main(){
     int n, e;        // n = number of nodes, e = number of directed edges
-    cin >> n >> e;
+    cin >> n >> e;   // cin >> skips whitespace and reads two numbers
 
     // The chart: one row and one column per node. Note this is a variable length
     // array - its size is only known while the program runs. g++ allows that,
@@ -33,12 +40,12 @@ int main(){
     // int there is. INT_MAX really lives in <climits>, which this file never
     // includes; it only compiles because one of the headers above drags <climits>
     // in. Adding #include <climits> would make that safe instead of lucky.
-    for(int i=0; i<n; i++){
-        for(int j=0; j<n; j++){
+    for(int i=0; i<n; i++){          // i = row (start node)
+        for(int j=0; j<n; j++){      // j = column (end node)
             if(i == j){
-                adj_mat[i][j] = 0;
+                adj_mat[i][j] = 0;         // diagonal
             } else{
-                adj_mat[i][j] = INT_MAX;
+                adj_mat[i][j] = INT_MAX;   // unknown for now
             }
         }
     }
@@ -48,10 +55,10 @@ int main(){
     // undirected graph would need. Plain assignment means a second road between
     // the same pair overwrites the first, even if the first was cheaper; when
     // that can happen, use min() instead (see shortest_route_2.cpp).
-    while(e--){
-        int a, b, c;
+    while(e--){                   // while(e--) runs the body exactly e times
+        int a, b, c;              // from, to, cost
         cin >> a >> b >> c;
-        adj_mat[a][b] = c;
+        adj_mat[a][b] = c;        // the direct road a -> b
         // adj_mat[b][a] = c; // for undirected graph
     }
 
@@ -72,8 +79,10 @@ int main(){
                 // into a negative number, which then looks like a bargain. So both
                 // legs are checked for INT_MAX before they are added together.
                 // adj_mat[i][j] = min(adj_mat[i][j], adj_mat[i][k] + adj_mat[k][j]);
+                // && evaluates left to right and stops at the first false part,
+                // so the sum is only computed when both legs are real numbers.
                 if(adj_mat[i][k] != INT_MAX && adj_mat[k][j] != INT_MAX && adj_mat[i][k] + adj_mat[k][j] < adj_mat[i][j]){
-                    adj_mat[i][j] = adj_mat[i][k] + adj_mat[k][j];
+                    adj_mat[i][j] = adj_mat[i][k] + adj_mat[k][j];   // the detour wins
                 }
             }
         }
@@ -87,11 +96,11 @@ int main(){
             if(adj_mat[i][j] == INT_MAX){
                 cout << "INF ";
             } else{
-                cout << adj_mat[i][j] << " ";
+                cout << adj_mat[i][j] << " ";   // value followed by a space
             }
         }
-        cout << endl;
+        cout << endl;   // endl: newline (and flush) after each row
     }
 
-    return 0;
+    return 0;   // 0 = program ended normally
 }

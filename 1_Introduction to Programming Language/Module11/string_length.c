@@ -16,12 +16,14 @@
   are buying, then use strlen everywhere afterwards.
 */
 
-#include <stdio.h>
+#include <stdio.h> // standard input/output library: gives us printf
 
-int main() {
+int main() { // program execution starts here
     /* 10 slots reserved, 5 of them used: 'a' 'b' 'c' 'd' '\0'. The size of
        the array and the length of the string are two different numbers, and
-       it is the second one the program has to work out. */
+       it is the second one the program has to work out.
+       (When an array is filled from a string literal, the slots not used by
+       the literal are set to 0, which is the same value as '\0'.) */
     char str[10] = "abcd";
 
     /* Nothing counted yet. */
@@ -31,14 +33,15 @@ int main() {
        character is not the end marker. i visits 0, 1, 2 and 3; at i = 4 it
        finds '\0' and the loop stops, so the '\0' is never counted.
        Do not write `i < 10` here. The slots after the '\0' are not part of
-       the string and hold whatever was in that memory before. */
+       the string, and in general (for example after scanf) they hold
+       whatever was in that memory before. */
     for(int i=0; str[i] != '\0'; i++){
-        length++;
+        length++; // one more real character seen
     }
 
     /* Prints 4 - the letters, not the array size 10. There is no "\n", so
        whatever is printed next lands on the same line. */
     printf("%d", length);
 
-    return 0;
+    return 0; // program ended successfully
 }

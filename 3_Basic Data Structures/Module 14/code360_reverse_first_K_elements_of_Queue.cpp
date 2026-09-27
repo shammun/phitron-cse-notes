@@ -27,20 +27,24 @@ Example: q = 1 2 3 4 5, k = 3 -> 3 2 1 4 5.
  * O(n) time.
  */
 
-#include <bits/stdc++.h> 
+// <bits/stdc++.h> = GCC's "include everything" header (queue, stack, ...).
+// Code360's template supplies `using namespace std;` and main().
+#include <bits/stdc++.h>
+// q is a copy (passed by value); the function returns the rearranged copy.
 queue<int> reverseElements(queue<int> q, int k)
 {
     // Write your code here.
     // Nothing to reverse, or k is bigger than the queue: return it unchanged.
+    // (q.size() is unsigned; k is never negative here, so the comparison is safe.)
     if (k == 0 || k > q.size()) {
         return q;
     }
 
     // Step 1: the first k values go onto the stack.
     stack<int> st;
-    for (int i = 0; i < k; i++) {
-        st.push(q.front());
-        q.pop();
+    for (int i = 0; i < k; i++) {       // exactly k passes
+        st.push(q.front());             // read the front value
+        q.pop();                        // remove it from the queue's front
     }
 
     // Step 2: pop them back in reverse order; they join at the back.
@@ -52,9 +56,10 @@ queue<int> reverseElements(queue<int> q, int k)
     // Step 3: rotate the n-k untouched values from the front to the back.
     // q.size() is n again here (all k values were put back), so the loop
     // runs exactly n-k times.
+    // (Each pass pushes one and pops one, so q.size() stays n the whole time.)
     for (int i = 0; i < q.size() - k; i++) {
-        q.push(q.front());
-        q.pop();
+        q.push(q.front());      // copy the front to the back...
+        q.pop();                // ...and remove it from the front
     }
 
     return q;

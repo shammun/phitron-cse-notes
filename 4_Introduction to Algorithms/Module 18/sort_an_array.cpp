@@ -41,19 +41,27 @@ sorted = 0 0 1 1 2 5
 
 */
 
+// <bits/stdc++.h>: g++'s "include the whole standard library" header.
 #include <bits/stdc++.h>
-using namespace std;
+using namespace std;    // no std:: prefix
 
+// LeetCode's required class; sortArray is what the judge calls.
 class Solution {
-public:
+public:   // usable from outside the class
     // Both halves a[l..mid] and a[mid+1..r] are already sorted.
     // Copy them out and write the smaller front back into a, one at a time.
+    // a is passed by reference (&), so the caller's vector is changed.
     void conquer(vector<int>& a, int l, int mid, int r) {
-        vector<int> left(a.begin() + l, a.begin() + mid + 1);
-        vector<int> right(a.begin() + mid + 1, a.begin() + r + 1);
+        // vector(first, last) copies the elements from first up to (not
+        // including) last. a.begin() + l points at a[l].
+        vector<int> left(a.begin() + l, a.begin() + mid + 1);       // a[l..mid]
+        vector<int> right(a.begin() + mid + 1, a.begin() + r + 1);  // a[mid+1..r]
 
+        // i = next unused in left, j = next unused in right,
+        // curr = next slot of a to write.
         int i = 0, j = 0, curr = l;
 
+        // While both halves have values left, place the smaller front.
         while (i < (int)left.size() && j < (int)right.size()) {
             // <= and not <, so that equal values keep their original order.
             if (left[i] <= right[j]) {
@@ -63,7 +71,7 @@ public:
                 a[curr] = right[j];
                 j++;
             }
-            curr++;
+            curr++;             // one slot filled either way
         }
 
         // One side may still have leftovers; they are already in order.
@@ -79,41 +87,45 @@ public:
         }
     }
 
+    // Sorts a[l..r] (both ends included). The two recursive calls are trusted
+    // to return their halves sorted; conquer then merges them.
     void divide(vector<int>& a, int l, int r) { // O(n log n)
         // One value (or none) is already sorted, so there is nothing to do.
         if (l >= r) {
             return;
         }
 
-        int mid = (l + r) / 2;
+        int mid = (l + r) / 2;      // split point (rounds down)
         divide(a, l, mid);          // sort the left half
         divide(a, mid + 1, r);      // sort the right half
         conquer(a, l, mid, r);      // merge the two sorted halves
     }
 
+    // Sort the whole vector in place, then return it.
     vector<int> sortArray(vector<int>& nums) {
         divide(nums, 0, (int)nums.size() - 1);
         return nums;
     }
 };
 
+// Small driver so the file runs on its own.
 int main() {
-    int n;
+    int n;                      // how many values
     cin >> n;
 
-    vector<int> nums(n);
+    vector<int> nums(n);        // n slots
     for (int i = 0; i < n; i++) {
         cin >> nums[i];
     }
 
-    Solution sol;
+    Solution sol;               // object to call sortArray on
     vector<int> ans = sol.sortArray(nums);
 
     cout << "sorted =";
     for (int i = 0; i < (int)ans.size(); i++) {
-        cout << " " << ans[i];
+        cout << " " << ans[i];  // a space before each value
     }
     cout << endl;
 
-    return 0;
+    return 0;   // success
 }

@@ -10,15 +10,22 @@
 //
 // The state is still (i, room left) and the table is still n x (W+1), so the cost
 // stays O(n x W) even though far more combinations are now allowed.
+//
+// The DP in three parts:
+//   meaning     dp[i][w] = best value with items 0..i (each unlimited), w room
+//   base cases  i < 0 or w <= 0 -> 0
+//   transition  dp[i][w] = max(val[i] + dp[i][w - weight[i]],   take one more
+//                              dp[i-1][w])                      stop using i
+//   memo marker -1 = "not worked out yet" (values are never negative)
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
+#include <iostream>     // cin, cout, endl
+#include <vector>       // not used here
+#include <algorithm>    // max
+#include <string>       // not used here
 
-using namespace std;
+using namespace std;    // no std:: prefix
 
-int val[1005], weight[1005];
+int val[1005], weight[1005];   // value and weight of each item type
 // dp[i][w] = "with items 0..i available (each unlimited) and w kilos of room,
 // what is the best value?" -1 means not worked out yet.
 int dp[1005][1005];
@@ -31,11 +38,11 @@ int knapsack(int i, int max_weight){
         return 0;
     }
 
-    if(dp[i][max_weight] != -1){
-        return dp[i][max_weight];
+    if(dp[i][max_weight] != -1){     // already solved?
+        return dp[i][max_weight];    // reuse it
     }
 
-    if(weight[i] <= max_weight){ // when we still have space in the bag, we can either take 
+    if(weight[i] <= max_weight){ // when we still have space in the bag, we can either take
         // the current item or not
         // op1 = TAKE one copy of item i. Bank val[i], lose weight[i] of room -
         // and note the i, not i-1: item i is still available, so the very next
@@ -45,26 +52,27 @@ int knapsack(int i, int max_weight){
         // op2 = have no more of item i at all, and move on to items 0..i-1. This
         // is the branch that makes the recursion shrink and eventually stop.
         int op2 = knapsack(i-1, max_weight); // not taking the current item
-        dp[i][max_weight] = max(op1, op2);
+        dp[i][max_weight] = max(op1, op2);   // store the better choice
         return dp[i][max_weight];
     } else{
+        // Item i does not fit: only "stop using item i" is possible.
         dp[i][max_weight] = knapsack(i-1, max_weight);
         return dp[i][max_weight];
     }
 }
 
 int main(){
-    int n, max_weight;
+    int n, max_weight;     // number of item types, capacity
 
     cin >> n;
-    
-    for(int i=0; i<n; i++){
+
+    for(int i=0; i<n; i++){     // all values first
         cin >> val[i];
     }
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n; i++){     // then all weights
         cin >> weight[i];
     }
-    cin >> max_weight;
+    cin >> max_weight;          // then the capacity
 
     // BUG, left in place - the same one as Module 15's knapsack_using_dp.cpp.
     // The inner loop stops at j < max_weight, so the column j == max_weight keeps
@@ -73,12 +81,12 @@ int main(){
     // finished answer and returns 0 without doing anything. That is why this
     // program prints 0 rather than 35. Fix: j <= max_weight.
     for(int i=0; i<n; i++){
-        for(int j=0; j<max_weight; j++){
+        for(int j=0; j<max_weight; j++){   // BUG: should be j <= max_weight
             dp[i][j] = -1;
         }
     }
 
-    cout << knapsack(n-1, max_weight) << endl;
+    cout << knapsack(n-1, max_weight) << endl;   // all items, full capacity
 
-    return 0;
+    return 0;   // success
 }

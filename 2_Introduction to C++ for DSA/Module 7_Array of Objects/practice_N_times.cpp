@@ -22,51 +22,55 @@ Input
 1 n
 5 O
 Output
-n 
-O O O O O 
+n
+O O O O O
 
 Input
 1
 8 z
 Output
-z z z z z z z z 
+z z z z z z z z
 
 */
 
-#include <iostream> // Include the input/output stream library for using cout
+#include <iostream> // Include the input/output stream library for using cin and cout (it also makes std::string usable here)
 using namespace std; // Use the standard namespace to avoid writing "std::" repeatedly
 
 // The problem asks for a function. This one builds the whole answer line as
 // a string and returns it: n copies of c with one space between them.
+// Parameters: n = how many copies, c = the character. Return value: the finished line.
 // With n = 3, c = 'O' the string grows "O" -> "O O" -> "O O O".
 string generateString(int n, char c){
-    string s = "";
+    string s = ""; // start with an empty string
+    // One pass appends one copy of c; i counts the copies already added (0 .. n-1)
     for(int i=0; i<n; i++){
         s += c; // += adds one character to the end of a string
-        if (i != n-1){
+        if (i != n-1){ // not the last copy yet
             s += " "; // a space after every copy except the last
         }
     }
     return s; // a string can be returned like an int - it is copied out
 }
 
-int main(){
-    int t;
-    cin >> t;
+int main(){ // Program execution starts here
+    int t; // number of test cases
+    cin >> t; // read t
 
     // T is at most 50: keep each test case's line and print them all at the end
-    int n[50];
-    char c[50];
-    string outputs[50];
+    int n[50]; // n[i] = count for test case i
+    char c[50]; // c[i] = character for test case i
+    string outputs[50]; // outputs[i] = finished line for test case i
 
+    // One pass reads one test case and builds its answer
     for(int i=0; i<t; i++){
         cin >> n[i] >> c[i]; // cin skips the space between the number and the character
-        outputs[i] = generateString(n[i], c[i]);
+        outputs[i] = generateString(n[i], c[i]); // call the function and store what it returns
     }
 
+    // Print all answers, one line each
     for(int i=0; i<t; i++){
-        cout << outputs[i] << endl;
+        cout << outputs[i] << endl; // endl = newline (and flush)
     }
 
-    return 0;
+    return 0; // Indicate that the program ended successfully
 }

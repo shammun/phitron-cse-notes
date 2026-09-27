@@ -1,5 +1,6 @@
 // find() with PATH COMPRESSION - the third version, and the one used from here
-// on. The parent array and the -1 marker are as in find_using_recursion.cpp.
+// on. The parent array and the -1 marker are as in find_using_recursion.cpp:
+// par[x] is the node above x, and par[x] == -1 means x is its group's leader.
 //
 // What changed: the recursion already visits every node between `node` and the
 // leader, so on the way back down it re-points each of them straight at the
@@ -11,13 +12,17 @@
 // find effectively constant time in practice - the O(logn) note below is the safe
 // pessimistic figure.
 
-#include <iostream>
-#include <queue>
-#include <cstring>
-#include <vector>
-using namespace std;
-int par[1005];
+#include <iostream>   // cout, endl
+#include <queue>      // not used here
+#include <cstring>    // memset
+#include <vector>     // not used here
+using namespace std;  // no std:: prefix needed
+int par[1005];        // parent of each node; -1 = leader
 
+// find(node): return the leader of node's group.
+// Base case: no parent -> node is the leader. The recursive call trusts that
+// find(par[node]) correctly returns the leader of node's parent - which is
+// node's leader too.
 int find(int node){ // O(logn)
     // Same stopping point: no parent means this node is the leader.
     if(par[node] == -1){
@@ -33,9 +38,12 @@ int find(int node){ // O(logn)
 }
 
 int main(){
+    // memset writes byte 0xFF everywhere; as an int that is -1, so every node
+    // starts alone as its own leader.
     memset(par, -1, sizeof(par));
+    // Hand-built group: 4 -> 5 -> 3 -> 1 (leader), and 0 -> 1, 2 -> 1.
     par[0] = 1;
-    par[1] = -1;
+    par[1] = -1;   // 1 is the leader
     par[2] = 1;
     par[3] = 1;
     par[4] = 5;
@@ -45,7 +53,7 @@ int main(){
     // After the call:   4 -> 1, 5 -> 1, 3 -> 1
     // The printed answer is still 1; what changed is the shape of the tree, which
     // this program does not print. A second find(4) would finish in one step.
-    cout << find(4) << endl;
+    cout << find(4) << endl;   // prints 1
 
-    return 0;
+    return 0;   // success
 }

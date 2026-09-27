@@ -34,17 +34,24 @@ the answer is not unique, output any.
 //      road. There are exactly as many adds as removes (n-1 roads in total,
 //      every useful one cuts the component count by one).
 //   3. Pair them: day i closes remove[i] and builds add[i].
+//
+// Example: n = 7, roads 1-2 2-3 3-1 4-5 5-6 6-7.
+//   3-1 closes the loop 1-2-3 -> remove (3,1). Components: {1,2,3}, {4..7}.
+//   Step 2: city 4 is not with city 1 -> add (1,4).
+//   Output: "1" then "3 1 1 4".
 
-#include <iostream>
-#include <queue>
-#include <cstring>
-#include <vector>
+#include <iostream>   // cin, cout, endl
+#include <queue>      // not used here
+#include <cstring>    // not used here
+#include <vector>     // vector, pair
 
-using namespace std;
+using namespace std;  // no std:: prefix
 
 int par[1005];          // DSU parent; -1 = leader
 int group_size[1005];   // group size, kept at the leader
 
+// Leader of node's group. Base case: par == -1. Otherwise the parent's leader
+// is ours too, and node is re-pointed straight at it.
 int find(int node){
     if(par[node] == -1){
         return node;
@@ -54,12 +61,13 @@ int find(int node){
     return leader;
 }
 
+// Merge the two groups (does nothing if they are already one).
 void dsu_union(int node1, int node2){
     int leader1 = find(node1);
     int leader2 = find(node2);
 
     if(leader1 == leader2){
-        return;
+        return;           // same group already
     }
 
     // Union by size.
@@ -73,19 +81,21 @@ void dsu_union(int node1, int node2){
 }
 
 int main(){
-    int n;
+    int n;            // number of cities (there are n-1 roads)
     cin >> n;
 
+    // Every city starts alone: its own leader, group size 1.
     for(int i=1; i<=n; i++){
         par[i] = -1;
         group_size[i] = 1;
     }
 
+    // pair<int,int> holds two ints: .first and .second (the road's two ends).
     vector<pair<int, int>> remove_roads;   // roads that only closed a cycle
     vector<pair<int, int>> add_roads;      // new roads that join two components
 
     // Step 1: sort the old roads into "useful" (union) and "wasted" (remove).
-    for(int i=0; i<n-1; i++){
+    for(int i=0; i<n-1; i++){              // exactly n-1 roads
         int a, b;
         cin >> a >> b;
         int leaderA = find(a);
@@ -93,7 +103,7 @@ int main(){
         if(leaderA == leaderB){
             remove_roads.push_back({a, b});   // a and b were already connected
         } else {
-            dsu_union(a, b);
+            dsu_union(a, b);                  // a useful road: merge
         }
     }
 
@@ -101,7 +111,7 @@ int main(){
     // build a road 1 - i and merge, so its whole component joins at once.
     // Later cities of that same component now share the leader and are skipped.
     for(int i=2; i<=n; i++){
-        int leader1 = find(1);
+        int leader1 = find(1);     // city 1's current leader (may change after merges)
         int leader2 = find(i);
         if(leader1 != leader2){
             add_roads.push_back({1, i});
@@ -110,13 +120,16 @@ int main(){
     }
 
     // Step 3: one day per wasted road, closing it and building one new road.
-    cout << remove_roads.size() << endl;
+    cout << remove_roads.size() << endl;   // t = number of days
 
+    // Print "i j u v": close road i-j, build road u-v. size() is unsigned;
+    // comparing it with int i gives only a compiler warning here.
     for(int i=0; i<remove_roads.size(); i++){
         cout << remove_roads[i].first << " " << remove_roads[i].second << " " << add_roads[i].first << " " << add_roads[i].second << endl;
     }
 
     // Debug helper: print only the roads that get closed.
+    // (Commented out: extra lines would make the judge reject the output.)
     /*
     for(auto road : remove_roads){
         cout << road.first << " " << road.second << endl;
@@ -124,4 +137,5 @@ int main(){
     */
 
     // Cost: about O(n * alpha(n)).
+    // (main may omit "return 0;" - it then returns 0 automatically.)
 }

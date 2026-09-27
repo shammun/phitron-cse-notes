@@ -26,6 +26,10 @@ root = [4,2,7,1,3], val = 5   ->   []
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines TreeNode and calls our function from its own hidden
+ * main, so there are no #includes or main here. After ':' comes an
+ * initializer list: val(x) sets val to x; nullptr is the C++11 null pointer.)
  */
 
 /*
@@ -41,11 +45,12 @@ root = [4,2,7,1,3], val = 5   ->   []
  * No recursion means no call stack, so the extra space is O(1).
  */
 class Solution {
-public:
+public:   // LeetCode calls searchBST from outside the class
     TreeNode* searchBST(TreeNode* root, int val) {
-        TreeNode* cur = root;
+        TreeNode* cur = root;       // start at the top of the tree
 
         // Stop when we fall off the tree or find the value.
+        // (cur != NULL is checked first: && stops early, so cur->val is never read on NULL.)
         while(cur != NULL && cur->val != val){
             if(val < cur->val){
                 cur = cur->left;    // everything smaller lives on the left

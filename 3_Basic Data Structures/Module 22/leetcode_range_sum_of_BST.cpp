@@ -31,6 +31,10 @@ Explanation: Nodes 6, 7, and 10 are in the range [6, 10]. 6 + 7 + 10 = 23.
  *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
+ *
+ * (LeetCode defines TreeNode and calls our function from its own hidden
+ * main, so there are no #includes or main here. After ':' comes an
+ * initializer list: val(x) sets val to x; nullptr is the C++11 null pointer.)
  */
 /*
  * Idea: use the BST rule to skip whole branches.
@@ -40,7 +44,9 @@ Explanation: Nodes 6, 7, and 10 are in the range [6, 10]. 6 + 7 + 10 = 23.
  * - Otherwise the node is in range: count it and look at both sides.
  */
 class Solution {
-public:
+public:   // LeetCode calls rangeSumBST from outside the class
+    // Base case: NULL. Each recursive call trusts rangeSumBST to return the
+    // in-range sum of that whole subtree.
     int rangeSumBST(TreeNode* root, int low, int high) {
         // Empty subtree adds nothing.
         if(root == NULL){

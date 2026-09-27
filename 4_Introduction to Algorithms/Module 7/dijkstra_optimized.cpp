@@ -17,27 +17,50 @@
 // That argument is exactly where Dijkstra breaks on negative edges. A later,
 // negative edge could make a longer-looking route cheaper after all, so "final
 // when popped" stops being true. That is Bellman-Ford's job, in Module 9.
+//
+// Sample input (n e, then e lines "a b weight"):
+//     3 3
+//     0 1 10
+//     0 2 3
+//     2 1 4
+// Trace of the heap ({distance, node} pairs, smallest on top):
+//   heap = [{0,0}]
+//   pop {0,0}: dis[1]=10 push {10,1}; dis[2]=3 push {3,2}   heap = [{3,2},{10,1}]
+//   pop {3,2}: 3+4 = 7 < 10 -> dis[1]=7 push {7,1}           heap = [{7,1},{10,1}]
+//   pop {7,1}: nothing improves.                             heap = [{10,1}]
+//   pop {10,1}: stale copy (10 > dis[1] = 7); nothing improves. Done.
+// Output: 0->0, 1->7, 2->3
 
-#include <iostream>
-#include <vector>
-#include <algorithm>    
-#include <string>
-#include <stack>
-#include <queue>
-using namespace std;
+#include <iostream>     // cin and cout
+#include <vector>       // vector (growable array)
+#include <algorithm>    // general helpers; not really needed here
+#include <string>       // not used here, left from a template
+#include <stack>        // not used here, left from a template
+#include <queue>        // priority_queue lives in <queue>
+using namespace std;    // write vector instead of std::vector, etc.
 
+// adj_list[u] = list of {neighbour, weight} pairs for every edge leaving u.
+// An array of 105 vectors, so nodes 0..104 are allowed. Global = starts empty.
 vector<pair<int, int>> adj_list[105];
-int dis[105];
+int dis[105];           // dis[v] = cheapest known cost from the source to v
 
+// dijkstra(src): shortest cost from src to every node, stored in dis[].
+// main must fill dis[] with INT_MAX before calling it.
 void dijkstra(int src){
     // greater<> makes it a min-heap: the smallest pair comes out on top.
+    // Read the three template arguments as: item type, container underneath
+    // (a vector), and comparator. The default comparator is less<>, which gives
+    // a MAX-heap (largest on top); greater<> flips it into a min-heap.
+    // Pairs compare on .first first, and on .second only to break a tie.
     priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
     pq.push({0, src});   // {distance, node}: distance first, so the heap sorts on it
-    dis[src] = 0;
+    dis[src] = 0;        // the source is 0 away from itself
 
+    // One pass = take the closest waiting node and relax all of its edges.
+    // Ends when no node is waiting any more.
     while(!pq.empty()){
-        pair<int, int> par = pq.top();   // the closest node still waiting
-        pq.pop();
+        pair<int, int> par = pq.top();   // the closest node still waiting (top() only looks)
+        pq.pop();                        // now remove it; push/pop cost O(log size)
         int par_node = par.second;   // the flipped pair: node in .second
         int par_dist = par.first;    // and its distance in .first
 
@@ -51,12 +74,16 @@ void dijkstra(int src){
         // below simply fails for every neighbour of a stale pair. It just costs a
         // pass over that node's edges. On a big graph it is worth adding.
 
+        // Range-for over every edge {neighbour, weight} leaving par_node.
+        // auto = let the compiler figure out the type (pair<int,int>).
         for(auto child : adj_list[par_node]){
-            int child_node = child.first;
-            int child_dist = child.second;
+            int child_node = child.first;    // the node at the other end of the edge
+            int child_dist = child.second;   // the weight (cost) of the edge
 
+            // Relaxation: is "reach par_node, then take this edge" cheaper than
+            // the best route to child_node found so far?
             if(par_dist + child_dist < dis[child_node]){
-                dis[child_node] = par_dist + child_dist;
+                dis[child_node] = par_dist + child_dist;   // record the better cost
                 // Push {distance, node}, in that order, or the heap will sort by
                 // node number and quietly stop being Dijkstra.
                 pq.push({dis[child_node], child_node});
@@ -66,30 +93,37 @@ void dijkstra(int src){
 }
 
 int main(){
-    int n, e;
-    cin >> n >> e;
-    
+    int n, e;          // n nodes numbered 0..n-1, e edges
+    cin >> n >> e;     // cin >> skips whitespace and reads the next number
 
+
+    // Read each edge "a b c" = an undirected road between a and b costing c.
+    // while(e--) runs e times (tests e, then decrements it).
     while(e--){
         int a, b, c;
         cin >> a >> b >> c;
-        adj_list[a].push_back({b, c});
-        adj_list[b].push_back({a, c});
+        adj_list[a].push_back({b, c});   // from a you can go to b for cost c
+        adj_list[b].push_back({a, c});   // and from b back to a for the same cost
     }
 
+    // INT_MAX (2147483647, the largest int) plays "infinity". Any real route is
+    // cheaper, so the first route found always wins the relaxation test. Safe
+    // here because we only ever add to par_dist, which is always a real cost.
     for(int i=0; i<n; i++){
         dis[i] = INT_MAX;   // infinity until a route is found
     }
 
-    dijkstra(0);
+    dijkstra(0);            // shortest costs from node 0
 
     // This is the printing loop that dijkstra_naive.cpp forgot. On the sample the
     // answer for node 1 is 7, not 10: Dijkstra preferred 0-2-1 (3 + 4) over the
     // single edge 0-1 that costs 10. A node left at INT_MAX would mean no route
     // exists at all.
+    // (Note: dijkstra_naive.cpp does have its printing loop now; this remark is
+    // from an older version of that file.)
     for(int i=0; i<n; i++){
-        cout << i << "->" << dis[i] << endl;
+        cout << i << "->" << dis[i] << endl;   // endl = newline and flush
     }
 
-    return 0;
+    return 0;               // program finished normally
 }
